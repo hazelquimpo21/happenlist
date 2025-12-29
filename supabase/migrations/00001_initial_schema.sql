@@ -209,7 +209,7 @@ CREATE INDEX IF NOT EXISTS idx_events_slug ON events(slug);
 
 -- Composite indexes for filtered queries
 CREATE INDEX IF NOT EXISTS idx_events_published_future ON events(instance_date, category_id)
-  WHERE status = 'published' AND instance_date >= CURRENT_DATE;
+  WHERE status = 'published';
 CREATE INDEX IF NOT EXISTS idx_events_featured ON events(featured_order)
   WHERE is_featured = true AND status = 'published';
 CREATE INDEX IF NOT EXISTS idx_events_free ON events(instance_date)
