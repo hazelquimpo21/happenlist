@@ -49,7 +49,7 @@ Happenlist is a modern, mobile-first events directory for Milwaukee. It helps lo
 ### Prerequisites
 
 - Node.js 18+
-- pnpm (recommended) or npm
+- npm
 - A Supabase project
 
 ### 1. Clone & Install
@@ -57,7 +57,7 @@ Happenlist is a modern, mobile-first events directory for Milwaukee. It helps lo
 ```bash
 git clone <repo-url>
 cd happenlist
-pnpm install
+npm install
 ```
 
 ### 2. Set Up Environment Variables
@@ -94,7 +94,7 @@ In Supabase Dashboard → Authentication → Users:
 ### 5. Run the Development Server
 
 ```bash
-pnpm dev
+npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to see the app.
@@ -323,10 +323,10 @@ Vercel automatically detects Next.js and configures the build.
 
 ```bash
 # Build the app
-pnpm build
+npm run build
 
 # Start production server
-pnpm start
+npm start
 ```
 
 ---
