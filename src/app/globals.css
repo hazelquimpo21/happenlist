@@ -1,0 +1,148 @@
+/**
+ * HAPPENLIST GLOBAL STYLES
+ * ========================
+ * Base styles and CSS custom properties for the design system.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   CSS CUSTOM PROPERTIES
+   ============================================ */
+:root {
+  /* Colors */
+  --color-cream: #FDF8F3;
+  --color-warm-white: #FFFEFA;
+  --color-sand: #E8E0D5;
+  --color-stone: #9C9487;
+  --color-charcoal: #2D2A26;
+  --color-coral: #E07A5F;
+  --color-coral-light: #F4D1C7;
+  --color-coral-dark: #C45D43;
+  --color-sage: #87A878;
+  --color-sage-light: #D4E4CD;
+
+  /* Semantic colors */
+  --color-text-primary: var(--color-charcoal);
+  --color-text-secondary: var(--color-stone);
+  --color-bg-primary: var(--color-cream);
+  --color-bg-card: var(--color-warm-white);
+  --color-border: var(--color-sand);
+  --color-accent: var(--color-coral);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+  --transition-bounce: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================
+   BASE LAYER STYLES
+   ============================================ */
+@layer base {
+  /* HTML & Body */
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-cream text-charcoal font-body antialiased;
+  }
+
+  /* Headings use display font */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+
+  /* Focus styles */
+  :focus-visible {
+    @apply outline-none ring-2 ring-coral ring-offset-2 ring-offset-cream;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-coral-light text-charcoal;
+  }
+}
+
+/* ============================================
+   COMPONENT LAYER
+   ============================================ */
+@layer components {
+  /* Container */
+  .container-page {
+    @apply w-full max-w-7xl mx-auto px-4 md:px-6;
+  }
+
+  /* Prose (for event descriptions) */
+  .prose-event {
+    @apply text-charcoal leading-relaxed;
+  }
+
+  .prose-event p {
+    @apply mb-4;
+  }
+
+  .prose-event a {
+    @apply text-coral underline underline-offset-2 hover:text-coral-dark;
+  }
+
+  .prose-event ul,
+  .prose-event ol {
+    @apply mb-4 pl-6;
+  }
+
+  .prose-event li {
+    @apply mb-2;
+  }
+
+  /* Skeleton shimmer effect */
+  .skeleton {
+    @apply relative overflow-hidden bg-sand;
+    background: linear-gradient(
+      90deg,
+      theme('colors.sand') 0%,
+      theme('colors.warm-white') 50%,
+      theme('colors.sand') 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* Line clamp utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* ============================================
+   UTILITY LAYER
+   ============================================ */
+@layer utilities {
+  /* Hide scrollbar but allow scrolling */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Safe area insets for mobile */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
