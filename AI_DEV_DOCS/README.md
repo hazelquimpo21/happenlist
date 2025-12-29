@@ -1,108 +1,134 @@
 # Happenlist Documentation
 
-> A Milwaukee events directory built with Next.js and Supabase
+## Quick Reference
 
-## Quick Start for AI Developers
+**What is this?** A complete specification for building Happenlist, a local events directory web application.
 
-Read these documents in order:
+**Tech Stack:** Next.js 14 (App Router) + TypeScript + Supabase + Tailwind CSS
 
-1. **[PRD.md](./PRD.md)** — Product vision, personas, and feature requirements by phase
-2. **[TECHNICAL_SPEC.md](./TECHNICAL_SPEC.md)** — Stack, architecture, and infrastructure decisions
-3. **[DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md)** — Complete Supabase schema with SQL migrations
-4. **[DATA_TYPES.md](./DATA_TYPES.md)** — TypeScript interfaces and Zod schemas
-5. **[FILE_STRUCTURE.md](./FILE_STRUCTURE.md)** — Project organization and module boundaries
-6. **[API_SPEC.md](./API_SPEC.md)** — API routes, server actions, and data fetching patterns
-7. **[UI_SPEC.md](./UI_SPEC.md)** — Screens, components, and user flows
-8. **[STYLE_GUIDE.md](./STYLE_GUIDE.md)** — Design tokens, colors, typography, spacing
-9. **[COMPONENT_LIBRARY.md](./COMPONENT_LIBRARY.md)** — Reusable component specifications
-10. **[ADMIN_SPEC.md](./ADMIN_SPEC.md)** — Curator workflows and admin interface
+**Design:** Retro-modern, warm creams, serif headlines, editorial feel
 
 ---
 
-## Project Overview
+## Documentation Index
 
-**Happenlist** is a curated events directory for Milwaukee. Phase 1 focuses on a clean, public-facing browse experience with admin-only event creation.
-
-### Core Principles
-
-- **Curator-first**: Single admin creates all content in Phase 1
-- **Milwaukee-focused**: No multi-tenancy complexity yet
-- **Browse-first**: No auth required to discover events
-- **Mobile-friendly**: Responsive design, touch-optimized
-- **Fast**: Static generation where possible, minimal client JS
-
-### Tech Stack
-
-- **Framework**: Next.js 14+ (App Router)
-- **Database**: Supabase (PostgreSQL)
-- **Auth**: Supabase Auth (admin only in Phase 1)
-- **Styling**: Tailwind CSS
-- **Deployment**: Vercel
-- **Image Storage**: Supabase Storage
-
-### Development Phases
-
-| Phase | Focus | Auth Required |
-|-------|-------|---------------|
-| 1 | Core events, venues, organizers, public browse | Admin only |
-| 2 | Series (recurring events, camps, classes) | Admin only |
-| 3 | User accounts, bookmarking, notifications | Public signup |
-| 4 | Business owner accounts, self-service submissions | Business signup |
+| Doc | Description | Read When... |
+|-----|-------------|--------------|
+| [00-PROJECT-OVERVIEW.md](./00-PROJECT-OVERVIEW.md) | High-level project info, tech stack, phases | Starting the project |
+| [01-DESIGN-SYSTEM.md](./01-DESIGN-SYSTEM.md) | Colors, typography, spacing, shadows | Building any UI |
+| [02-DATABASE-SCHEMA.md](./02-DATABASE-SCHEMA.md) | Tables, indexes, RLS policies | Setting up Supabase |
+| [03-FILE-STRUCTURE.md](./03-FILE-STRUCTURE.md) | Directory organization, naming | Creating new files |
+| [04-COMPONENTS.md](./04-COMPONENTS.md) | Component specs, props, variants | Building components |
+| [05-PAGES.md](./05-PAGES.md) | Page layouts, data requirements | Building pages |
+| [06-DATA-FETCHING.md](./06-DATA-FETCHING.md) | Queries, API routes, utilities | Fetching data |
+| [07-SEO-STRATEGY.md](./07-SEO-STRATEGY.md) | URLs, metadata, structured data | Optimizing for search |
+| [08-FEATURES.md](./08-FEATURES.md) | Filtering, search, hearts, auth | Implementing features |
+| [09-IMPLEMENTATION-GUIDE.md](./09-IMPLEMENTATION-GUIDE.md) | Step-by-step build order | Following the plan |
+| [10-CODE-PATTERNS.md](./10-CODE-PATTERNS.md) | Reusable code snippets | Writing code |
 
 ---
 
-## Code Guidelines
+## Key Decisions Summary
 
-### File Size Limits
-- **Maximum 400 lines per file**
-- Split large components into smaller, focused pieces
-- Extract hooks, utilities, and constants into separate files
+### Data Model
+- **Events** are the core entity, linked to Locations, Organizers, and Categories
+- **Recurring events** use expand-with-template pattern (real rows per instance)
+- **Event URLs** include date for uniqueness: `/event/slug-YYYY-MM-DD`
+- **Pricing** supports: free, fixed, range, varies, donation
 
-### Naming Conventions
-- **Files**: `kebab-case.tsx` for components, `camelCase.ts` for utilities
-- **Components**: `PascalCase`
-- **Functions/Variables**: `camelCase`
-- **Constants**: `SCREAMING_SNAKE_CASE`
-- **Database tables**: `snake_case`
-- **TypeScript types**: `PascalCase`
+### Architecture
+- **Server Components by default** - client only when needed
+- **Data fetching in `/data` folder** - not in components
+- **URL-based filter state** - for shareability and SEO
+- **Maximum 400 lines per file** - split into modules
 
-### Import Organization
-```typescript
-// 1. React/Next imports
-import { useState } from 'react'
-import Link from 'next/link'
+### Design
+- **Warm palette**: cream backgrounds, coral accents, sage for "free"
+- **Typography**: Fraunces (display), Inter (body)
+- **Cards**: 20px radius, subtle shadows, lift on hover
 
-// 2. Third-party libraries
-import { format } from 'date-fns'
+---
 
-// 3. Internal aliases (@/)
-import { Button } from '@/components/ui/button'
-import { getEvents } from '@/lib/queries/events'
+## Development Phases
 
-// 4. Relative imports
-import { EventCardSkeleton } from './event-card-skeleton'
+### Phase 1: Foundation (MVP) ✓ Documented
+- Public event browsing
+- Event, venue, organizer pages
+- Filtering and search
+- SEO optimization
 
-// 5. Types
-import type { Event } from '@/types/database'
+### Phase 2: Series & Recurring
+- Multi-session events
+- Workshop/class series
+- Series detail pages
+
+### Phase 3: Users & Hearts
+- Authentication
+- Save/heart events
+- My Hearts page
+
+### Phase 4: Organizer Dashboard
+- Organizer accounts
+- Event submission
+- Management dashboard
+
+---
+
+## Quick Start Commands
+
+```bash
+# Create project
+npx create-next-app@latest happenlist --typescript --tailwind --eslint --app --src-dir
+
+# Install dependencies
+npm install @supabase/supabase-js @supabase/ssr lucide-react date-fns slugify
+
+# Generate Supabase types
+npx supabase gen types typescript --project-id your-project-id > src/lib/supabase/types.ts
+
+# Run dev server
+npm run dev
 ```
 
-### Component Patterns
-- Prefer Server Components by default
-- Use `'use client'` only when necessary (interactivity, hooks)
-- Colocate related files (component + styles + tests)
-- Extract reusable logic into custom hooks
+---
+
+## File Naming Cheat Sheet
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Components | kebab-case | `event-card.tsx` |
+| Pages | folder/page.tsx | `events/page.tsx` |
+| Hooks | use-*.ts | `use-debounce.ts` |
+| Utils | kebab-case | `format-date.ts` |
+| Types | kebab-case | `event.ts` |
 
 ---
 
-## Current Phase: 1
+## Import Aliases
 
-Implement Phase 1 features only. Do not build Phase 2-4 features, but ensure the architecture supports future expansion.
+```typescript
+import { EventCard } from '@/components/events';
+import { getEvents } from '@/data/events';
+import { formatEventDate } from '@/lib/utils/dates';
+import type { Event } from '@/types';
+```
 
-**Phase 1 Deliverables:**
-- Public event browsing (list + detail views)
-- Category and tag filtering
-- Date-based filtering
-- Venue and organizer pages
-- Admin event/venue/organizer management
-- Responsive design
-- SEO optimization
+---
+
+## Color Quick Reference
+
+| Color | Hex | Use For |
+|-------|-----|---------|
+| Cream | `#FDF8F3` | Page backgrounds |
+| Warm White | `#FFFEFA` | Cards |
+| Sand | `#E8E0D5` | Borders, dividers |
+| Stone | `#9C9487` | Secondary text |
+| Charcoal | `#2D2A26` | Primary text |
+| Coral | `#E07A5F` | CTAs, hearts, accents |
+| Sage | `#87A878` | "Free" badges, success |
+
+---
+
+## Questions?
+
+If something is unclear, check the specific doc for that topic. Each doc is self-contained with examples and specifications.
