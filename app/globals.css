@@ -1,0 +1,201 @@
+/* ============================================================================
+   🎨 HAPPENLIST - Global Styles
+   ============================================================================
+   This file contains global styles and Tailwind directives.
+   Design tokens are imported from styles/tokens.css
+   ============================================================================ */
+
+/* Import design tokens (CSS variables) */
+@import '../styles/tokens.css';
+
+/* Tailwind base, components, and utilities */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   🏗️ BASE LAYER - Default HTML element styles
+   ============================================================================ */
+
+@layer base {
+  /* Smooth scrolling for the whole page */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Default body styling with warm background */
+  body {
+    @apply bg-background text-text-primary;
+    @apply antialiased;
+    font-family: var(--font-sans);
+  }
+
+  /* Focus styles for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2;
+  }
+
+  /* Remove default button styles */
+  button {
+    @apply cursor-pointer;
+  }
+
+  /* Default link styling */
+  a {
+    @apply text-primary hover:text-primary-dark transition-colors;
+  }
+
+  /* Heading defaults */
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-text-primary font-semibold;
+  }
+}
+
+/* ============================================================================
+   🧩 COMPONENTS LAYER - Reusable component styles
+   ============================================================================ */
+
+@layer components {
+  /* ========================================
+     📝 Form Elements
+     ======================================== */
+
+  .label {
+    @apply block text-sm font-medium text-text-primary mb-1.5;
+  }
+
+  .input {
+    @apply w-full px-4 py-2;
+    @apply bg-surface border border-border rounded-lg;
+    @apply text-text-primary placeholder:text-text-tertiary;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary;
+    @apply disabled:bg-background disabled:text-text-tertiary disabled:cursor-not-allowed;
+    @apply transition-colors duration-200;
+  }
+
+  .input-error {
+    @apply border-error focus:ring-error/20 focus:border-error;
+  }
+
+  .helper-text {
+    @apply text-xs text-text-tertiary mt-1;
+  }
+
+  .error-text {
+    @apply text-xs text-error mt-1;
+  }
+
+  /* ========================================
+     📦 Card Styles
+     ======================================== */
+
+  .card {
+    @apply bg-surface rounded-xl shadow-sm;
+    @apply border border-border;
+    @apply overflow-hidden;
+  }
+
+  .card-hover {
+    @apply transition-all duration-200;
+    @apply hover:shadow-md hover:-translate-y-0.5;
+  }
+
+  /* ========================================
+     🏷️ Badge Styles
+     ======================================== */
+
+  .badge {
+    @apply inline-flex items-center gap-1;
+    @apply px-2.5 py-0.5 rounded-full;
+    @apply text-xs font-medium;
+  }
+
+  /* ========================================
+     📄 Page Container
+     ======================================== */
+
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .page-section {
+    @apply py-8 md:py-12;
+  }
+}
+
+/* ============================================================================
+   🔧 UTILITIES LAYER - Custom utility classes
+   ============================================================================ */
+
+@layer utilities {
+  /* ========================================
+     ✨ Animations
+     ======================================== */
+
+  /* Skeleton loading shimmer effect */
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--color-background)) 0%,
+      hsl(var(--color-surface)) 50%,
+      hsl(var(--color-background)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* ========================================
+     📝 Text Utilities
+     ======================================== */
+
+  /* Line clamp for truncating text */
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ========================================
+     🎯 Interactive Utilities
+     ======================================== */
+
+  /* Lift effect on hover */
+  .hover-lift {
+    @apply transition-transform duration-200;
+    @apply hover:-translate-y-1;
+  }
+
+  /* Scale effect on hover */
+  .hover-scale {
+    @apply transition-transform duration-200;
+    @apply hover:scale-105;
+  }
+}
+
+/* ============================================================================
+   🎬 KEYFRAME ANIMATIONS
+   ============================================================================ */
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
