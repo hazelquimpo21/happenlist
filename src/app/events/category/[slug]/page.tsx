@@ -1,7 +1,7 @@
 /**
  * CATEGORY EVENTS PAGE
  * ====================
- * Events filtered by category with clean URLs like /events/music
+ * Events filtered by category with URLs like /events/category/music
  */
 
 import type { Metadata } from 'next';
