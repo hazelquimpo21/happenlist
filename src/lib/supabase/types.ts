@@ -237,6 +237,17 @@ export interface Database {
           created_at: string;
           updated_at: string;
           published_at: string | null;
+          // Source tracking fields (for scraped events)
+          source: string;
+          source_url: string | null;
+          source_id: string | null;
+          scraped_at: string | null;
+          scraped_data: Json | null;
+          // Admin review fields
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          review_notes: string | null;
+          rejection_reason: string | null;
         };
         Insert: {
           id?: string;
@@ -277,6 +288,17 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           published_at?: string | null;
+          // Source tracking fields
+          source?: string;
+          source_url?: string | null;
+          source_id?: string | null;
+          scraped_at?: string | null;
+          scraped_data?: Json | null;
+          // Admin review fields
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          review_notes?: string | null;
+          rejection_reason?: string | null;
         };
         Update: {
           id?: string;
@@ -317,16 +339,95 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           published_at?: string | null;
+          // Source tracking fields
+          source?: string;
+          source_url?: string | null;
+          source_id?: string | null;
+          scraped_at?: string | null;
+          scraped_data?: Json | null;
+          // Admin review fields
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          review_notes?: string | null;
+          rejection_reason?: string | null;
+        };
+      };
+
+      // ==========================================
+      // ADMIN AUDIT LOG TABLE
+      // ==========================================
+      admin_audit_log: {
+        Row: {
+          id: string;
+          action: string;
+          entity_type: string;
+          entity_id: string;
+          admin_id: string | null;
+          admin_email: string | null;
+          changes: Json | null;
+          notes: string | null;
+          ip_address: string | null;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          action: string;
+          entity_type: string;
+          entity_id: string;
+          admin_id?: string | null;
+          admin_email?: string | null;
+          changes?: Json | null;
+          notes?: string | null;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          action?: string;
+          entity_type?: string;
+          entity_id?: string;
+          admin_id?: string | null;
+          admin_email?: string | null;
+          changes?: Json | null;
+          notes?: string | null;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
         };
       };
     };
 
     Views: {
-      [_ in never]: never;
+      admin_event_stats: {
+        Row: {
+          pending_review_count: number;
+          published_count: number;
+          draft_count: number;
+          rejected_count: number;
+          scraped_count: number;
+          scraped_pending_count: number;
+          scraped_last_24h: number;
+          reviewed_last_24h: number;
+          total_count: number;
+        };
+      };
     };
 
     Functions: {
-      [_ in never]: never;
+      log_admin_action: {
+        Args: {
+          p_action: string;
+          p_entity_type: string;
+          p_entity_id: string;
+          p_admin_id?: string;
+          p_admin_email?: string;
+          p_changes?: Json;
+          p_notes?: string;
+        };
+        Returns: string;
+      };
     };
 
     Enums: {
@@ -334,3 +435,38 @@ export interface Database {
     };
   };
 }
+
+// ==========================================
+// EVENT STATUS TYPES
+// ==========================================
+export type EventStatus =
+  | 'draft'
+  | 'pending_review'
+  | 'published'
+  | 'rejected'
+  | 'cancelled'
+  | 'postponed';
+
+// ==========================================
+// EVENT SOURCE TYPES
+// ==========================================
+export type EventSource =
+  | 'manual'
+  | 'scraper'
+  | 'api'
+  | 'import';
+
+// ==========================================
+// ADMIN AUDIT ACTION TYPES
+// ==========================================
+export type AdminAuditAction =
+  | 'event_approved'
+  | 'event_rejected'
+  | 'event_edited'
+  | 'event_deleted'
+  | 'event_published'
+  | 'event_unpublished'
+  | 'venue_created'
+  | 'venue_edited'
+  | 'organizer_created'
+  | 'organizer_edited';
