@@ -17,7 +17,7 @@ export const ROUTES = {
   eventsWeekend: '/events/this-weekend',
   eventDetail: (slug: string, date: string) => `/event/${slug}-${date}`,
   eventsCategory: (categorySlug: string) => `/events/${categorySlug}`,
-  eventsMonth: (year: number, month: string) => `/events/${year}/${month}`,
+  eventsMonth: (year: number, month: string) => `/events/archive/${year}/${month}`,
 
   // Venues
   venues: '/venues',

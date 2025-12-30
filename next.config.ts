@@ -4,6 +4,11 @@ const nextConfig: NextConfig = {
   // Enable React strict mode for better development experience
   reactStrictMode: true,
 
+  // Set Turbopack root to this project directory to avoid lockfile conflicts
+  turbopack: {
+    root: process.cwd(),
+  },
+
   // Configure image domains for external images
   images: {
     remotePatterns: [
