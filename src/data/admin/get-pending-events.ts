@@ -54,17 +54,21 @@ export interface PendingEventsResult {
  * Fetch events pending review with filtering and pagination
  */
 export async function getPendingEvents(
-  filters: PendingEventsFilters = {}
+  filters: PendingEventsFilters = {},
+  options: { skipStatusDefault?: boolean } = {}
 ): Promise<PendingEventsResult> {
   const {
     source,
-    status = 'pending_review',
     search,
     page = 1,
     limit = 20,
     orderBy = 'scraped_at',
     orderDir = 'desc',
   } = filters;
+
+  // Status defaults to 'pending_review' unless skipStatusDefault is true
+  // This allows getAllAdminEvents to show ALL statuses by default
+  const status = options.skipStatusDefault ? filters.status : (filters.status ?? 'pending_review');
 
   const timer = adminDataLogger.time('getPendingEvents', {
     action: 'event_fetch',
@@ -180,12 +184,14 @@ export async function getPendingEvents(
 
 /**
  * Fetch all events with any status for admin view
+ *
+ * NOTE: If status filter is provided, it will be applied.
+ * If no status filter is provided, all events are returned (no default).
  */
 export async function getAllAdminEvents(
   filters: PendingEventsFilters = {}
 ): Promise<PendingEventsResult> {
-  return getPendingEvents({
-    ...filters,
-    status: undefined, // Remove status filter to get all events
-  });
+  // Skip the default status filter so ALL events show when no status is specified
+  // But if a status IS specified, it will be used for filtering
+  return getPendingEvents(filters, { skipStatusDefault: true });
 }

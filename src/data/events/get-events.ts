@@ -96,6 +96,20 @@ export async function getEvents(
     query = query.textSearch('title', search, { type: 'websearch' });
   }
 
+  // Filter by category using the foreign key relationship
+  if (categorySlug) {
+    // First get the category ID, then filter
+    const { data: categoryData } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('slug', categorySlug)
+      .single();
+
+    if (categoryData && typeof categoryData === 'object' && 'id' in categoryData) {
+      query = query.eq('category_id', (categoryData as { id: string }).id);
+    }
+  }
+
   if (dateRange?.start) {
     query = query.gte('instance_date', dateRange.start);
   }
