@@ -34,3 +34,13 @@ export {
 
 // Slug utilities
 export { generateSlug, slugToTitle } from './slug';
+
+// Logger utilities
+export {
+  createLogger,
+  adminEventLogger,
+  adminApiLogger,
+  adminDataLogger,
+  auditLogger,
+  logAdminAction,
+} from './logger';
