@@ -24,13 +24,16 @@ export const metadata = {
 };
 
 interface PageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export default async function ActivityLogPage({ searchParams }: PageProps) {
   const timer = adminDataLogger.time('ActivityLogPage render');
 
-  const limit = typeof searchParams.limit === 'string' ? parseInt(searchParams.limit) : 50;
+  // Await searchParams (Next.js 15+ requirement)
+  const resolvedSearchParams = await searchParams;
+
+  const limit = typeof resolvedSearchParams.limit === 'string' ? parseInt(resolvedSearchParams.limit) : 50;
 
   const activities = await getRecentActivity(limit);
 

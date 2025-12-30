@@ -23,18 +23,21 @@ export const metadata = {
 };
 
 interface PageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export default async function PendingEventsPage({ searchParams }: PageProps) {
   const timer = adminDataLogger.time('PendingEventsPage render');
 
+  // Await searchParams (Next.js 15+ requirement)
+  const resolvedSearchParams = await searchParams;
+
   // Parse search params
-  const page = typeof searchParams.page === 'string' ? parseInt(searchParams.page) : 1;
-  const source = typeof searchParams.source === 'string' ? searchParams.source : undefined;
-  const search = typeof searchParams.q === 'string' ? searchParams.q : undefined;
-  const orderBy = (typeof searchParams.orderBy === 'string' ? searchParams.orderBy : 'scraped_at') as 'scraped_at' | 'created_at' | 'start_datetime' | 'title';
-  const orderDir = (typeof searchParams.orderDir === 'string' ? searchParams.orderDir : 'desc') as 'asc' | 'desc';
+  const page = typeof resolvedSearchParams.page === 'string' ? parseInt(resolvedSearchParams.page) : 1;
+  const source = typeof resolvedSearchParams.source === 'string' ? resolvedSearchParams.source : undefined;
+  const search = typeof resolvedSearchParams.q === 'string' ? resolvedSearchParams.q : undefined;
+  const orderBy = (typeof resolvedSearchParams.orderBy === 'string' ? resolvedSearchParams.orderBy : 'scraped_at') as 'scraped_at' | 'created_at' | 'start_datetime' | 'title';
+  const orderDir = (typeof resolvedSearchParams.orderDir === 'string' ? resolvedSearchParams.orderDir : 'desc') as 'asc' | 'desc';
 
   // Fetch pending events
   const result = await getPendingEvents({

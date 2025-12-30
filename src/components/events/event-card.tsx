@@ -11,7 +11,7 @@ import { Card, Badge } from '@/components/ui';
 import { EventPrice } from './event-price';
 import { formatEventDate } from '@/lib/utils/dates';
 import { buildEventUrl } from '@/lib/utils/url';
-import { cn } from '@/lib/utils';
+import { cn, getBestImageUrl } from '@/lib/utils';
 import type { EventCard as EventCardType } from '@/types';
 
 interface EventCardProps {
@@ -41,6 +41,9 @@ export function EventCard({
   className,
 }: EventCardProps) {
   const eventUrl = buildEventUrl(event);
+  
+  // Get validated image URL (handles invalid page URLs gracefully)
+  const imageUrl = getBestImageUrl(event.thumbnail_url, event.image_url);
 
   // Image aspect ratio by variant
   const aspectRatio = {
@@ -61,19 +64,19 @@ export function EventCard({
       <Link href={eventUrl} className="block">
         {/* Image container */}
         <div className={cn('relative', aspectRatio[variant])}>
-          {event.thumbnail_url || event.image_url ? (
+          {imageUrl ? (
             <Image
-              src={event.thumbnail_url || event.image_url!}
+              src={imageUrl}
               alt={event.title}
               fill
               className="object-cover transition-transform duration-slow group-hover:scale-105"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             />
           ) : (
-            // Placeholder for events without images
-            <div className="w-full h-full bg-sand flex items-center justify-center">
-              <span className="text-stone text-h1 font-display">
-                {event.title.charAt(0)}
+            // Placeholder for events without valid images
+            <div className="w-full h-full bg-gradient-to-br from-sand to-stone/20 flex items-center justify-center">
+              <span className="text-stone text-h1 font-display opacity-50">
+                {event.title.charAt(0).toUpperCase()}
               </span>
             </div>
           )}

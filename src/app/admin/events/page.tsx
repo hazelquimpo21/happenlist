@@ -7,10 +7,8 @@
 import Link from 'next/link';
 import {
   Filter,
-  ArrowUpDown,
-  Plus,
 } from 'lucide-react';
-import { AdminHeader, AdminBreadcrumbs, AdminEventCard } from '@/components/admin';
+import { AdminHeader, AdminBreadcrumbs, AdminEventCard, AdminEventFilters } from '@/components/admin';
 import { Button } from '@/components/ui/button';
 import { getAllAdminEvents } from '@/data/admin';
 import { adminDataLogger } from '@/lib/utils/logger';
@@ -21,19 +19,22 @@ export const metadata = {
 };
 
 interface PageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export default async function AllEventsPage({ searchParams }: PageProps) {
   const timer = adminDataLogger.time('AllEventsPage render');
 
+  // Await searchParams (Next.js 15+ requirement)
+  const resolvedSearchParams = await searchParams;
+
   // Parse search params
-  const page = typeof searchParams.page === 'string' ? parseInt(searchParams.page) : 1;
-  const status = typeof searchParams.status === 'string' ? searchParams.status : undefined;
-  const source = typeof searchParams.source === 'string' ? searchParams.source : undefined;
-  const search = typeof searchParams.q === 'string' ? searchParams.q : undefined;
-  const orderBy = (typeof searchParams.orderBy === 'string' ? searchParams.orderBy : 'created_at') as 'scraped_at' | 'created_at' | 'start_datetime' | 'title';
-  const orderDir = (typeof searchParams.orderDir === 'string' ? searchParams.orderDir : 'desc') as 'asc' | 'desc';
+  const page = typeof resolvedSearchParams.page === 'string' ? parseInt(resolvedSearchParams.page) : 1;
+  const status = typeof resolvedSearchParams.status === 'string' ? resolvedSearchParams.status : undefined;
+  const source = typeof resolvedSearchParams.source === 'string' ? resolvedSearchParams.source : undefined;
+  const search = typeof resolvedSearchParams.q === 'string' ? resolvedSearchParams.q : undefined;
+  const orderBy = (typeof resolvedSearchParams.orderBy === 'string' ? resolvedSearchParams.orderBy : 'created_at') as 'scraped_at' | 'created_at' | 'start_datetime' | 'title';
+  const orderDir = (typeof resolvedSearchParams.orderDir === 'string' ? resolvedSearchParams.orderDir : 'desc') as 'asc' | 'desc';
 
   // Fetch all events
   const result = await getAllAdminEvents({
@@ -91,44 +92,13 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
           ))}
         </div>
 
-        {/* Filters and actions */}
-        <div className="flex items-center gap-3">
-          {/* Source filter */}
-          <div className="relative">
-            <select
-              className="appearance-none bg-warm-white border border-sand rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none"
-              defaultValue={source || 'all'}
-              onChange={(e) => {
-                const newUrl = buildFilterUrl({
-                  source: e.target.value === 'all' ? undefined : e.target.value,
-                  page: undefined,
-                });
-                window.location.href = newUrl;
-              }}
-            >
-              <option value="all">All Sources</option>
-              <option value="scraper">Scraped</option>
-              <option value="manual">Manual</option>
-              <option value="api">API</option>
-              <option value="import">Import</option>
-            </select>
-            <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone pointer-events-none" />
-          </div>
-
-          {/* Sort */}
-          <div className="relative">
-            <select
-              className="appearance-none bg-warm-white border border-sand rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none"
-              defaultValue={orderBy}
-            >
-              <option value="created_at">Created Date</option>
-              <option value="start_datetime">Event Date</option>
-              <option value="title">Title</option>
-              <option value="scraped_at">Scraped Date</option>
-            </select>
-            <ArrowUpDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone pointer-events-none" />
-          </div>
-        </div>
+        {/* Filters and actions - using client component for interactivity */}
+        <AdminEventFilters
+          currentSource={source}
+          currentOrderBy={orderBy}
+          currentOrderDir={orderDir}
+          currentStatus={status}
+        />
       </AdminHeader>
 
       <div className="p-8">

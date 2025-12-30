@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
   // Configure image domains for external images
   images: {
     remotePatterns: [
+      // Supabase storage
       {
         protocol: 'https',
         hostname: '**.supabase.co',
@@ -19,6 +20,62 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: '**.supabase.in',
+      },
+      // Social media and common image hosts (for scraped events)
+      {
+        protocol: 'https',
+        hostname: 'www.instagram.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'instagram.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.cdninstagram.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.fbcdn.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'scontent.**.fbcdn.net',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.facebook.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.cloudinary.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.imgix.net',
+      },
+      // Event platforms
+      {
+        protocol: 'https',
+        hostname: '**.eventbrite.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img.evbuc.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.ticketmaster.com',
+      },
+      // General - allow any HTTPS image (useful for scraped content)
+      // Note: For production, you may want to be more restrictive
+      {
+        protocol: 'https',
+        hostname: '**',
       },
     ],
   },

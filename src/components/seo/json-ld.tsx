@@ -6,6 +6,7 @@
 
 import type { EventWithDetails, Venue, Organizer } from '@/types';
 import { SITE_CONFIG } from '@/lib/constants';
+import { getBestImageUrl } from '@/lib/utils';
 
 /**
  * JSON-LD script component.
@@ -66,6 +67,9 @@ interface EventJsonLdProps {
  * Event schema for individual events.
  */
 export function EventJsonLd({ event }: EventJsonLdProps) {
+  // Use validated image URL for structured data
+  const validImage = getBestImageUrl(event.image_url, event.flyer_url);
+  
   const data: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Event',
@@ -75,7 +79,7 @@ export function EventJsonLd({ event }: EventJsonLdProps) {
     endDate: event.end_datetime,
     eventStatus: 'https://schema.org/EventScheduled',
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-    image: event.image_url,
+    image: validImage,
   };
 
   // Location
@@ -139,6 +143,9 @@ interface VenueJsonLdProps {
  * Place schema for venues.
  */
 export function VenueJsonLd({ venue }: VenueJsonLdProps) {
+  // Use validated image URL for structured data
+  const validImage = getBestImageUrl(venue.image_url);
+  
   const data = {
     '@context': 'https://schema.org',
     '@type': 'Place',
@@ -146,7 +153,7 @@ export function VenueJsonLd({ venue }: VenueJsonLdProps) {
     description: venue.description,
     url: venue.website_url,
     telephone: venue.phone,
-    image: venue.image_url,
+    image: validImage,
     address: {
       '@type': 'PostalAddress',
       streetAddress: venue.address_line,

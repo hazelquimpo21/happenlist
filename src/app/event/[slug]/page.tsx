@@ -22,7 +22,7 @@ import { Button, Badge } from '@/components/ui';
 import { EventGrid, SectionHeader, EventPrice } from '@/components/events';
 import { EventJsonLd } from '@/components/seo';
 import { getEvent, getEvents } from '@/data/events';
-import { parseEventSlug, buildVenueUrl, buildOrganizerUrl } from '@/lib/utils';
+import { parseEventSlug, buildVenueUrl, buildOrganizerUrl, getBestImageUrl } from '@/lib/utils';
 import { formatEventDate } from '@/lib/utils/dates';
 
 interface EventPageProps {
@@ -56,6 +56,9 @@ export async function generateMetadata({
     event.meta_description ||
     event.short_description ||
     event.description?.slice(0, 155);
+  
+  // Use validated image URL for Open Graph
+  const ogImage = getBestImageUrl(event.image_url, event.flyer_url);
 
   return {
     title,
@@ -63,7 +66,7 @@ export async function generateMetadata({
     openGraph: {
       title: event.title,
       description: description || undefined,
-      images: event.image_url ? [event.image_url] : undefined,
+      images: ogImage ? [ogImage] : undefined,
     },
   };
 }
@@ -143,17 +146,27 @@ export default async function EventPage({ params }: EventPageProps) {
         {/* Main content */}
         <div className="lg:col-span-2">
           {/* Hero image */}
-          {event.image_url && (
-            <div className="relative aspect-video rounded-lg overflow-hidden mb-6">
-              <Image
-                src={event.image_url}
-                alt={event.title}
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
-          )}
+          {(() => {
+            const heroImage = getBestImageUrl(event.image_url, event.flyer_url);
+            return heroImage ? (
+              <div className="relative aspect-video rounded-lg overflow-hidden mb-6">
+                <Image
+                  src={heroImage}
+                  alt={event.title}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </div>
+            ) : (
+              // Placeholder for events without valid images
+              <div className="relative aspect-video rounded-lg overflow-hidden mb-6 bg-gradient-to-br from-sand to-stone/20 flex items-center justify-center">
+                <span className="text-stone/30 text-6xl font-display">
+                  {event.title.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            );
+          })()}
 
           {/* Event title and category */}
           <div className="mb-6">

@@ -44,3 +44,12 @@ export {
   auditLogger,
   logAdminAction,
 } from './logger';
+
+// Image utilities
+export {
+  isValidImageUrl,
+  getSafeImageUrl,
+  getBestImageUrl,
+  extractImageFromScrapedData,
+  getImageUrlIssue,
+} from './image';

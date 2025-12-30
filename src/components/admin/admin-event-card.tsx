@@ -22,7 +22,7 @@ import {
   DollarSign,
   MoreVertical,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getBestImageUrl } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { AdminEventCard as AdminEventCardType } from '@/data/admin';
@@ -94,19 +94,22 @@ export function AdminEventCard({
 
         {/* Event image */}
         <div className="flex-shrink-0 w-32 h-24 rounded-lg overflow-hidden bg-sand relative">
-          {event.image_url || event.thumbnail_url ? (
-            <Image
-              src={event.thumbnail_url || event.image_url || ''}
-              alt={event.title}
-              fill
-              className="object-cover"
-              sizes="128px"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-stone">
-              <Calendar className="w-8 h-8" />
-            </div>
-          )}
+          {(() => {
+            const validImageUrl = getBestImageUrl(event.thumbnail_url, event.image_url);
+            return validImageUrl ? (
+              <Image
+                src={validImageUrl}
+                alt={event.title}
+                fill
+                className="object-cover"
+                sizes="128px"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-sand to-stone/20">
+                <Calendar className="w-8 h-8 text-stone/50" />
+              </div>
+            );
+          })()}
         </div>
 
         {/* Event info */}

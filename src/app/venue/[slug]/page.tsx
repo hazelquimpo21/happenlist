@@ -21,6 +21,7 @@ import { EventGrid, SectionHeader } from '@/components/events';
 import { VenueJsonLd } from '@/components/seo';
 import { getVenue } from '@/data/venues';
 import { getEvents } from '@/data/events';
+import { getBestImageUrl } from '@/lib/utils';
 
 interface VenuePageProps {
   params: Promise<{ slug: string }>;
@@ -41,6 +42,9 @@ export async function generateMetadata({
 
   const description = venue.description ||
     `Upcoming events at ${venue.name}. Find concerts, shows, and more.`;
+  
+  // Use validated image URL for Open Graph
+  const ogImage = getBestImageUrl(venue.image_url);
 
   return {
     title: venue.name,
@@ -48,7 +52,7 @@ export async function generateMetadata({
     openGraph: {
       title: venue.name,
       description,
-      images: venue.image_url ? [venue.image_url] : undefined,
+      images: ogImage ? [ogImage] : undefined,
     },
   };
 }
@@ -113,17 +117,20 @@ export default async function VenuePage({ params }: VenuePageProps) {
         {/* Main content */}
         <div className="lg:col-span-2">
           {/* Hero image */}
-          {venue.image_url && (
-            <div className="relative aspect-video rounded-lg overflow-hidden mb-6">
-              <Image
-                src={venue.image_url}
-                alt={venue.name}
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
-          )}
+          {(() => {
+            const heroImage = getBestImageUrl(venue.image_url);
+            return heroImage ? (
+              <div className="relative aspect-video rounded-lg overflow-hidden mb-6">
+                <Image
+                  src={heroImage}
+                  alt={venue.name}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </div>
+            ) : null;
+          })()}
 
           {/* Venue name */}
           <div className="mb-6">

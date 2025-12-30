@@ -29,6 +29,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { getAdminEvent, getEventAuditHistory } from '@/data/admin';
 import { adminDataLogger } from '@/lib/utils/logger';
+import { getBestImageUrl, getImageUrlIssue } from '@/lib/utils';
 import { EventApprovalForm } from './approval-form';
 
 export const metadata = {
@@ -36,23 +37,26 @@ export const metadata = {
 };
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function EventReviewPage({ params }: PageProps) {
+  // Await params (Next.js 15+ requirement)
+  const resolvedParams = await params;
+
   const timer = adminDataLogger.time('EventReviewPage render', {
     entityType: 'event',
-    entityId: params.id,
+    entityId: resolvedParams.id,
   });
 
   // Fetch event and audit history in parallel
   const [event, auditHistory] = await Promise.all([
-    getAdminEvent(params.id),
-    getEventAuditHistory(params.id),
+    getAdminEvent(resolvedParams.id),
+    getEventAuditHistory(resolvedParams.id),
   ]);
 
   if (!event) {
-    adminDataLogger.warn('Event not found', { entityType: 'event', entityId: params.id });
+    adminDataLogger.warn('Event not found', { entityType: 'event', entityId: resolvedParams.id });
     notFound();
   }
 
@@ -153,19 +157,41 @@ export default async function EventReviewPage({ params }: PageProps) {
           {/* Main content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Event image */}
-            {(event.image_url || event.flyer_url) && (
-              <Card className="overflow-hidden">
-                <div className="relative aspect-video">
-                  <Image
-                    src={event.image_url || event.flyer_url || ''}
-                    alt={event.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 66vw"
-                  />
-                </div>
-              </Card>
-            )}
+            {(() => {
+              const validImageUrl = getBestImageUrl(event.image_url, event.flyer_url);
+              const imageIssue = !validImageUrl && (event.image_url || event.flyer_url) 
+                ? getImageUrlIssue(event.image_url || event.flyer_url)
+                : null;
+              
+              return validImageUrl ? (
+                <Card className="overflow-hidden">
+                  <div className="relative aspect-video">
+                    <Image
+                      src={validImageUrl}
+                      alt={event.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 1024px) 100vw, 66vw"
+                    />
+                  </div>
+                </Card>
+              ) : imageIssue ? (
+                <Card className="overflow-hidden border-yellow-200 bg-yellow-50">
+                  <div className="p-6">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-yellow-800">Invalid Image URL</p>
+                        <p className="text-sm text-yellow-700 mt-1">{imageIssue}</p>
+                        <p className="text-xs text-yellow-600 mt-2 font-mono break-all">
+                          {event.image_url || event.flyer_url}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ) : null;
+            })()}
 
             {/* Event details */}
             <Card padding="lg" className="border border-sand">
