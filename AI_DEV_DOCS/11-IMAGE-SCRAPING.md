@@ -1,8 +1,64 @@
-# Happenlist: Image Scraping Guide
+# Happenlist: Image Scraping & Hosting Guide
 
 ## Overview
 
-This document explains how to properly extract image URLs when scraping events from external sources. Incorrect image URL extraction is a common source of errors.
+This document explains how to properly handle images when scraping events:
+1. **Extract** the correct image URL (not the page URL)
+2. **Upload** the image to Supabase Storage (re-host it)
+3. **Store** the hosted URL in the database
+
+**Why re-host images?**
+- External CDN URLs (Instagram, Facebook) expire after hours/days
+- Original source can delete the image
+- More reliable display with permanent URLs
+- Better performance with Next.js Image optimization
+
+---
+
+## Quick Start: Chrome Extension Integration
+
+```javascript
+// After scraping an event, upload the image to Happenlist's storage:
+const uploadImage = async (eventId, imageUrl) => {
+  const response = await fetch('https://your-happenlist.com/api/images/upload', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer YOUR_SCRAPER_API_SECRET',
+    },
+    body: JSON.stringify({
+      eventId,
+      sourceUrl: imageUrl, // The actual image URL (not page URL!)
+      type: 'hero',
+    }),
+  });
+  
+  const result = await response.json();
+  
+  if (result.success) {
+    // Use this URL in the event data
+    return result.url; // https://your-supabase.../storage/.../image.jpg
+  }
+  
+  return null;
+};
+
+// Usage in your scraper:
+const event = {
+  title: '...',
+  // ... other fields
+};
+
+// 1. Extract the OG image (actual image URL)
+const ogImage = document.querySelector('meta[property="og:image"]')?.content;
+
+// 2. Upload to Supabase Storage
+const hostedImageUrl = await uploadImage(event.id, ogImage);
+
+// 3. Use the hosted URL
+event.image_url = hostedImageUrl;
+event.image_hosted = true;
+```
 
 ---
 
@@ -350,16 +406,229 @@ Events have these image-related fields:
 
 | Field | Purpose |
 |-------|---------|
-| `image_url` | Validated image URL (use for display) |
+| `image_url` | Validated/hosted image URL (use for display) |
+| `image_hosted` | Whether image is in our Supabase Storage |
+| `image_storage_path` | Path in storage bucket (for deletion) |
 | `thumbnail_url` | Validated thumbnail URL |
+| `thumbnail_hosted` | Whether thumbnail is hosted |
 | `flyer_url` | Event flyer/poster URL |
 | `raw_image_url` | Original scraped URL (for debugging) |
 | `raw_thumbnail_url` | Original scraped thumbnail |
 | `image_validated` | Whether URL has been verified |
-| `image_validation_notes` | Debug notes |
 
-The scraper should:
-1. Store raw URLs in `raw_image_url` and `raw_thumbnail_url`
-2. Only set `image_url` if it passes validation
-3. The admin can manually fix invalid URLs in the review process
+---
+
+## Image Upload API
+
+### Endpoint
+
+```
+POST /api/images/upload
+```
+
+### Authentication
+
+```
+Authorization: Bearer YOUR_SCRAPER_API_SECRET
+```
+
+Set `SCRAPER_API_SECRET` in your environment variables.
+
+### Request Body
+
+**Option 1: Re-host from URL**
+
+```json
+{
+  "eventId": "abc-123-def",
+  "sourceUrl": "https://img.evbuc.com/actual-image.jpg",
+  "type": "hero"
+}
+```
+
+**Option 2: Upload Base64 directly**
+
+```json
+{
+  "eventId": "abc-123-def",
+  "base64": "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
+  "type": "thumbnail"
+}
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "url": "https://your-project.supabase.co/storage/v1/object/public/event-images/events/abc-123/hero_123456_abcdef.jpg",
+  "path": "events/abc-123/hero_123456_abcdef.jpg"
+}
+```
+
+### Type Options
+
+| Type | Description |
+|------|-------------|
+| `hero` | Main event image (default) |
+| `thumbnail` | Small card thumbnail |
+| `flyer` | Event flyer/poster |
+
+---
+
+## Complete Chrome Extension Example
+
+```javascript
+// config.js
+const HAPPENLIST_API = 'https://your-happenlist.com/api';
+const API_SECRET = 'your-secret-key';
+
+// imageUploader.js
+class ImageUploader {
+  async upload(eventId, imageUrl, type = 'hero') {
+    // Skip if already hosted
+    if (imageUrl?.includes('supabase.co/storage')) {
+      return { success: true, url: imageUrl, alreadyHosted: true };
+    }
+    
+    // Validate URL first
+    if (!this.isValidImageUrl(imageUrl)) {
+      console.warn('Invalid image URL:', imageUrl);
+      return { success: false, error: 'Invalid image URL' };
+    }
+    
+    try {
+      const response = await fetch(`${HAPPENLIST_API}/images/upload`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${API_SECRET}`,
+        },
+        body: JSON.stringify({ eventId, sourceUrl: imageUrl, type }),
+      });
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Upload failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+  
+  isValidImageUrl(url) {
+    if (!url) return false;
+    
+    // Reject page URLs
+    const pagePatterns = [
+      /instagram\.com\/p\//,
+      /eventbrite\.com\/e\//,
+      /facebook\.com\/events\//,
+    ];
+    
+    if (pagePatterns.some(p => p.test(url))) return false;
+    
+    // Accept known image patterns
+    const imagePatterns = [
+      /\.(jpg|jpeg|png|gif|webp)/i,
+      /img\.evbuc\.com/,
+      /scontent.*\.(cdn)?instagram\.com/,
+      /fbcdn\.net/,
+    ];
+    
+    return imagePatterns.some(p => p.test(url));
+  }
+}
+
+// scraper.js
+async function scrapeAndUploadEvent(document) {
+  const uploader = new ImageUploader();
+  
+  // Extract event data
+  const event = {
+    title: document.querySelector('h1')?.textContent,
+    // ... other fields
+  };
+  
+  // Save the event first to get an ID
+  const savedEvent = await saveEventToDB(event);
+  
+  // Extract and upload images
+  const ogImage = document.querySelector('meta[property="og:image"]')?.content;
+  
+  if (ogImage) {
+    const result = await uploader.upload(savedEvent.id, ogImage, 'hero');
+    
+    if (result.success) {
+      // Update event with hosted image URL
+      await updateEvent(savedEvent.id, {
+        image_url: result.url,
+        image_hosted: true,
+        raw_image_url: ogImage, // Keep original for reference
+      });
+    }
+  }
+  
+  return savedEvent;
+}
+```
+
+---
+
+## Setup Checklist
+
+### 1. Create Supabase Storage Bucket
+
+In Supabase Dashboard:
+1. Go to **Storage** > **New Bucket**
+2. Name: `event-images`
+3. Check **Public bucket**
+4. Click Create
+
+### 2. Run SQL Migration
+
+```bash
+# In SQL Editor, run:
+# supabase/migrations/00004_storage_bucket.sql
+```
+
+### 3. Set Environment Variable
+
+```bash
+# .env.local
+SCRAPER_API_SECRET=your-secure-random-string-here
+
+# Generate a secure secret:
+openssl rand -base64 32
+```
+
+### 4. Update Chrome Extension
+
+Configure your extension to:
+1. Extract og:image (not page URL)
+2. Call `/api/images/upload` with the image URL
+3. Use the returned hosted URL
+
+---
+
+## Troubleshooting
+
+### "Invalid source URL - does not appear to be an image URL"
+
+You're passing a page URL instead of an image URL:
+- ❌ `https://www.instagram.com/p/ABC123/`
+- ✅ `https://scontent.cdninstagram.com/v/t51.2885-15/...jpg`
+
+Extract the `og:image` meta tag instead of the page URL.
+
+### "Failed to download image from source"
+
+The image URL might be:
+- Expired (Instagram/Facebook CDN URLs expire)
+- Blocked by CORS
+- Requiring authentication
+
+Solution: Capture the image as base64 in your extension and upload directly.
+
+### Images not displaying
+
+Check if `image_hosted = true` in the database. If false, the image may still be an external URL that has expired.
 
