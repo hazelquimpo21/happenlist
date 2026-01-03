@@ -287,45 +287,68 @@ $$ LANGUAGE plpgsql STABLE;
 COMMENT ON FUNCTION get_series_events IS 'Returns events belonging to a series';
 
 -- Function: Update series stats after event changes
+-- Handles INSERT, UPDATE, and DELETE operations
 CREATE OR REPLACE FUNCTION update_series_stats()
 RETURNS TRIGGER AS $$
+DECLARE
+  v_series_id UUID;
 BEGIN
-  IF NEW.series_id IS NOT NULL THEN
+  -- Determine which series_id to update based on operation type
+  IF TG_OP = 'DELETE' THEN
+    v_series_id := OLD.series_id;
+  ELSIF TG_OP = 'INSERT' THEN
+    v_series_id := NEW.series_id;
+  ELSE -- UPDATE
+    v_series_id := NEW.series_id;
+    -- Also update old series if event was moved to different series
+    IF OLD.series_id IS NOT NULL AND OLD.series_id != NEW.series_id THEN
+      UPDATE series
+      SET
+        sessions_remaining = (
+          SELECT COUNT(*) FROM events
+          WHERE series_id = OLD.series_id
+          AND status = 'published'
+          AND instance_date >= CURRENT_DATE
+        ),
+        updated_at = now()
+      WHERE id = OLD.series_id;
+    END IF;
+  END IF;
+
+  -- Update the target series stats
+  IF v_series_id IS NOT NULL THEN
     UPDATE series
     SET
       sessions_remaining = (
         SELECT COUNT(*) FROM events
-        WHERE series_id = NEW.series_id
+        WHERE series_id = v_series_id
         AND status = 'published'
         AND instance_date >= CURRENT_DATE
       ),
       updated_at = now()
-    WHERE id = NEW.series_id;
+    WHERE id = v_series_id;
   END IF;
 
-  -- Also update old series if event was moved
-  IF OLD.series_id IS NOT NULL AND OLD.series_id != NEW.series_id THEN
-    UPDATE series
-    SET
-      sessions_remaining = (
-        SELECT COUNT(*) FROM events
-        WHERE series_id = OLD.series_id
-        AND status = 'published'
-        AND instance_date >= CURRENT_DATE
-      ),
-      updated_at = now()
-    WHERE id = OLD.series_id;
+  -- Return appropriate value based on operation
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  ELSE
+    RETURN NEW;
   END IF;
-
-  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger to update series stats when events change
-CREATE TRIGGER update_series_on_event_change
-  AFTER INSERT OR UPDATE OR DELETE ON events
+-- Separate triggers for INSERT/UPDATE vs DELETE (WHEN clause restrictions)
+CREATE TRIGGER update_series_on_event_insert_update
+  AFTER INSERT OR UPDATE ON events
   FOR EACH ROW
-  WHEN (NEW.series_id IS NOT NULL OR OLD.series_id IS NOT NULL)
+  WHEN (NEW.series_id IS NOT NULL)
+  EXECUTE FUNCTION update_series_stats();
+
+CREATE TRIGGER update_series_on_event_delete
+  AFTER DELETE ON events
+  FOR EACH ROW
+  WHEN (OLD.series_id IS NOT NULL)
   EXECUTE FUNCTION update_series_stats();
 
 -- ============================================================================
