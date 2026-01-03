@@ -2,12 +2,14 @@
  * EVENT CARD COMPONENT
  * ====================
  * Primary event display card for grids and lists.
+ * Shows series badge when event is part of a series.
  */
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin } from 'lucide-react';
 import { Card, Badge } from '@/components/ui';
+import { SeriesLinkBadge } from '@/components/series';
 import { EventPrice } from './event-price';
 import { formatEventDate } from '@/lib/utils/dates';
 import { buildEventUrl } from '@/lib/utils/url';
@@ -21,6 +23,8 @@ interface EventCardProps {
   variant?: 'default' | 'compact' | 'featured';
   /** Show category badge */
   showCategory?: boolean;
+  /** Show series badge (when event is part of a series) */
+  showSeriesBadge?: boolean;
   /** Additional CSS classes */
   className?: string;
 }
@@ -28,22 +32,30 @@ interface EventCardProps {
 /**
  * Event card for displaying in grids and lists.
  *
- * @example
+ * @example Basic usage
+ * ```tsx
  * <EventCard event={event} />
+ * ```
  *
- * @example
- * <EventCard event={event} variant="featured" showCategory />
+ * @example With all badges
+ * ```tsx
+ * <EventCard event={event} variant="featured" showCategory showSeriesBadge />
+ * ```
  */
 export function EventCard({
   event,
   variant = 'default',
   showCategory = true,
+  showSeriesBadge = true,
   className,
 }: EventCardProps) {
   const eventUrl = buildEventUrl(event);
-  
+
   // Get validated image URL (handles invalid page URLs gracefully)
   const imageUrl = getBestImageUrl(event.thumbnail_url, event.image_url);
+
+  // Check if event is part of a series
+  const isSeriesEvent = event.is_series_instance && event.series_slug;
 
   // Image aspect ratio by variant
   const aspectRatio = {
@@ -81,14 +93,30 @@ export function EventCard({
             </div>
           )}
 
-          {/* Category badge */}
-          {showCategory && event.category_name && (
-            <Badge
-              variant="category"
-              className="absolute bottom-3 left-3 bg-warm-white/90 backdrop-blur-sm"
-            >
-              {event.category_name}
-            </Badge>
+          {/* Badge stack */}
+          <div className="absolute bottom-3 left-3 right-3 flex flex-wrap gap-1.5">
+            {/* Category badge */}
+            {showCategory && event.category_name && (
+              <Badge
+                variant="category"
+                className="bg-warm-white/90 backdrop-blur-sm"
+              >
+                {event.category_name}
+              </Badge>
+            )}
+          </div>
+
+          {/* Series badge (top-right) */}
+          {showSeriesBadge && isSeriesEvent && event.series_slug && event.series_title && (
+            <div className="absolute top-3 right-3">
+              <SeriesLinkBadge
+                seriesSlug={event.series_slug}
+                seriesTitle={event.series_title}
+                seriesType={event.series_type || undefined}
+                sequenceNumber={event.series_sequence}
+                size="sm"
+              />
+            </div>
           )}
         </div>
 

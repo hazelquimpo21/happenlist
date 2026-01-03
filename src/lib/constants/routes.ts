@@ -19,6 +19,11 @@ export const ROUTES = {
   eventsCategory: (categorySlug: string) => `/events/${categorySlug}`,
   eventsMonth: (year: number, month: string) => `/events/archive/${year}/${month}`,
 
+  // Series (Phase 2)
+  series: '/series',
+  seriesDetail: (slug: string) => `/series/${slug}`,
+  seriesByType: (type: string) => `/series?type=${type}`,
+
   // Venues
   venues: '/venues',
   venueDetail: (slug: string) => `/venue/${slug}`,
@@ -52,6 +57,7 @@ export const ROUTES = {
  */
 export const NAV_ITEMS = [
   { label: 'Events', href: ROUTES.events },
+  { label: 'Classes & Series', href: ROUTES.series },
   { label: 'Today', href: ROUTES.eventsToday },
   { label: 'This Weekend', href: ROUTES.eventsWeekend },
   { label: 'Venues', href: ROUTES.venues },
@@ -63,6 +69,7 @@ export const NAV_ITEMS = [
 export const FOOTER_NAV = {
   discover: [
     { label: 'Events', href: ROUTES.events },
+    { label: 'Classes & Series', href: ROUTES.series },
     { label: 'Venues', href: ROUTES.venues },
     { label: 'Organizers', href: ROUTES.organizers },
   ],
