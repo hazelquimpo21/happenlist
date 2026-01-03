@@ -136,9 +136,10 @@ CREATE INDEX IF NOT EXISTS idx_series_dates ON series(start_date, end_date);
 CREATE INDEX IF NOT EXISTS idx_series_featured ON series(featured_order)
   WHERE is_featured = true AND status = 'published';
 
--- Active series lookup
+-- Active series lookup (simplified - no CURRENT_DATE in predicate)
+-- Note: We use a simple index here. Application filters by date dynamically.
 CREATE INDEX IF NOT EXISTS idx_series_active ON series(status, end_date)
-  WHERE status = 'published' AND (end_date IS NULL OR end_date >= CURRENT_DATE);
+  WHERE status = 'published';
 
 -- ============================================================================
 -- 3. ADD SERIES FOREIGN KEY TO EVENTS TABLE
