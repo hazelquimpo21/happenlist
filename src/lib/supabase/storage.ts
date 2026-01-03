@@ -3,9 +3,14 @@
  * ==========================
  * Utilities for uploading and managing images in Supabase Storage.
  * This allows us to host images ourselves instead of linking to external URLs.
+ * 
+ * REQUIREMENTS:
+ * 1. Create bucket "event-images" in Supabase Dashboard > Storage
+ * 2. Make it a PUBLIC bucket
+ * 3. Set SUPABASE_SERVICE_ROLE_KEY in environment variables
  */
 
-import { createClient as createServerClient } from './server';
+import { createAdminClient } from './admin';
 
 // Storage bucket name for event images
 export const EVENT_IMAGES_BUCKET = 'event-images';
@@ -108,7 +113,8 @@ export async function uploadImageBuffer(
   type: 'hero' | 'thumbnail' | 'flyer' = 'hero'
 ): Promise<UploadResult> {
   try {
-    const supabase = await createServerClient();
+    // Use admin client (service role) for storage operations
+    const supabase = createAdminClient();
     
     // Validate content type
     if (!SUPPORTED_TYPES.includes(contentType)) {
@@ -118,6 +124,26 @@ export async function uploadImageBuffer(
     // Generate path
     const extension = getExtensionFromContentType(contentType);
     const path = generateImagePath(eventId, `image.${extension}`, type);
+    
+    console.log(`📤 Uploading to bucket "${EVENT_IMAGES_BUCKET}", path: ${path}`);
+    
+    // Check if bucket exists
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    
+    if (bucketsError) {
+      console.error('Failed to list buckets:', bucketsError);
+      return { success: false, error: `Storage access error: ${bucketsError.message}` };
+    }
+    
+    const bucketExists = buckets?.some(b => b.name === EVENT_IMAGES_BUCKET);
+    if (!bucketExists) {
+      console.error(`Bucket "${EVENT_IMAGES_BUCKET}" does not exist!`);
+      console.error('Available buckets:', buckets?.map(b => b.name).join(', ') || 'none');
+      return { 
+        success: false, 
+        error: `Bucket "${EVENT_IMAGES_BUCKET}" not found. Create it in Supabase Dashboard > Storage > New Bucket. Make it PUBLIC.` 
+      };
+    }
     
     // Upload to Supabase Storage
     const { data, error } = await supabase.storage
@@ -130,13 +156,15 @@ export async function uploadImageBuffer(
     
     if (error) {
       console.error('Supabase storage upload error:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: `Upload failed: ${error.message}` };
     }
     
     // Get the public URL
     const { data: urlData } = supabase.storage
       .from(EVENT_IMAGES_BUCKET)
       .getPublicUrl(path);
+    
+    console.log(`✅ Upload successful: ${urlData.publicUrl}`);
     
     return {
       success: true,
@@ -145,7 +173,8 @@ export async function uploadImageBuffer(
     };
   } catch (error) {
     console.error('Upload error:', error);
-    return { success: false, error: 'Failed to upload image' };
+    const message = error instanceof Error ? error.message : 'Failed to upload image';
+    return { success: false, error: message };
   }
 }
 
@@ -207,7 +236,7 @@ export async function uploadBase64Image(
  */
 export async function deleteImage(path: string): Promise<boolean> {
   try {
-    const supabase = await createServerClient();
+    const supabase = createAdminClient();
     
     const { error } = await supabase.storage
       .from(EVENT_IMAGES_BUCKET)
@@ -230,7 +259,7 @@ export async function deleteImage(path: string): Promise<boolean> {
  */
 export async function deleteEventImages(eventId: string): Promise<boolean> {
   try {
-    const supabase = await createServerClient();
+    const supabase = createAdminClient();
     
     // List all files in the event's folder
     const { data: files, error: listError } = await supabase.storage
