@@ -59,4 +59,11 @@ export interface EventCard {
   category_slug: string | null;
   location_name: string | null;
   location_slug: string | null;
+  // Series info (Phase 2)
+  series_id?: string | null;
+  series_slug?: string | null;
+  series_title?: string | null;
+  series_type?: string | null;
+  series_sequence?: number | null;
+  is_series_instance?: boolean;
 }
