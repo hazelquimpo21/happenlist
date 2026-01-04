@@ -569,7 +569,7 @@ export async function searchAll(query: string): Promise<SearchResults> {
 
 ---
 
-### Hearts (Phase 3)
+### Hearts (Phase 4)
 
 **File:** `src/data/hearts/toggle-heart.ts`
 
@@ -688,7 +688,7 @@ export async function GET(request: NextRequest) {
 }
 ```
 
-### Hearts API (Phase 3)
+### Hearts API (Phase 4)
 
 **File:** `src/app/api/hearts/route.ts`
 
@@ -731,6 +731,240 @@ export async function POST(request: NextRequest) {
     console.error('Heart toggle error:', error);
     return NextResponse.json({ error: 'Failed to toggle heart' }, { status: 500 });
   }
+}
+```
+
+---
+
+### Submission Data (Phase 3) ✅ IMPLEMENTED
+
+**File:** `src/data/submit/draft-actions.ts`
+
+```typescript
+import { createClient } from '@/lib/supabase/server';
+import type { EventDraftData, SeriesDraftData, EventDraft } from '@/types/submission';
+
+// Create a new draft
+export async function createDraft(params: {
+  userId: string;
+  userEmail: string;
+  userName?: string;
+  draftData?: EventDraftData;
+  seriesDraftData?: SeriesDraftData | null;
+}): Promise<{ draft: EventDraft | null; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('event_drafts')
+    .insert({
+      user_id: params.userId,
+      user_email: params.userEmail,
+      user_name: params.userName,
+      draft_data: params.draftData || {},
+      series_draft_data: params.seriesDraftData || null,
+      current_step: 1,
+      completed_steps: [],
+    })
+    .select()
+    .single();
+
+  if (error) return { draft: null, error: error.message };
+  return { draft: data, error: null };
+}
+
+// Update existing draft
+export async function updateDraft(
+  draftId: string,
+  updates: {
+    draftData?: EventDraftData;
+    seriesDraftData?: SeriesDraftData | null;
+    currentStep?: number;
+    completedSteps?: number[];
+  }
+): Promise<{ success: boolean; error: string | null }> {
+  // Implementation...
+}
+
+// Get user's drafts
+export async function getUserDrafts(
+  userEmail: string
+): Promise<{ drafts: EventDraft[]; error: string | null }> {
+  // Implementation...
+}
+```
+
+**File:** `src/data/submit/submit-event.ts`
+
+```typescript
+import { createClient } from '@/lib/supabase/server';
+import type { EventDraftData, SeriesDraftData } from '@/types/submission';
+
+export async function submitEvent(params: {
+  draftId?: string | null;
+  draftData: EventDraftData;
+  seriesDraftData?: SeriesDraftData | null;
+  userEmail: string;
+  userName?: string;
+}): Promise<{
+  eventId: string | null;
+  seriesId: string | null;
+  error: string | null;
+}> {
+  const supabase = await createClient();
+
+  // 1. Create location if needed (new address vs existing venue)
+  // 2. Create series if seriesDraftData provided
+  // 3. Create event with pending_review status
+  // 4. Link draft to submitted event
+  // 5. Log submission in audit log
+
+  // Returns eventId for redirect
+}
+
+export async function resubmitEvent(params: {
+  eventId: string;
+  draftData: EventDraftData;
+  userEmail: string;
+}): Promise<{ success: boolean; error: string | null }> {
+  // Update event and change status from changes_requested → pending_review
+}
+```
+
+**File:** `src/data/submit/get-submissions.ts`
+
+```typescript
+import { createClient } from '@/lib/supabase/server';
+
+export async function getUserSubmissions(params: {
+  userEmail: string;
+  status?: string[];
+  limit?: number;
+}): Promise<{
+  submissions: SubmissionWithDetails[];
+  error: string | null;
+}> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('v_my_submissions')
+    .select('*')
+    .eq('submitted_by_email', params.userEmail)
+    .order('created_at', { ascending: false })
+    .limit(params.limit || 50);
+
+  // Returns submissions with category, location, series info
+}
+
+export async function getSubmissionCounts(
+  userEmail: string
+): Promise<{
+  counts: Record<EventStatus, number>;
+  error: string | null;
+}> {
+  // Returns count by status: { draft: 1, pending_review: 2, ... }
+}
+```
+
+**File:** `src/data/admin/event-actions.ts`
+
+```typescript
+import { createClient } from '@/lib/supabase/server';
+
+export async function approveEvents(params: {
+  eventIds: string[];
+  adminEmail: string;
+}): Promise<{ succeeded: string[]; failed: string[] }> {
+  // Updates status → published, logs to admin_audit_log
+}
+
+export async function rejectEvents(params: {
+  eventIds: string[];
+  reason: string;
+  adminEmail: string;
+}): Promise<{ succeeded: string[]; failed: string[] }> {
+  // Updates status → rejected with reason
+}
+
+export async function requestEventChanges(params: {
+  eventId: string;
+  message: string;
+  adminEmail: string;
+}): Promise<{ success: boolean; error: string | null }> {
+  // Updates status → changes_requested with message
+}
+
+export async function softDeleteEvent(params: {
+  eventId: string;
+  reason?: string;
+  adminEmail: string;
+}): Promise<{ success: boolean; error: string | null }> {
+  // Sets deleted_at, deleted_by, delete_reason
+}
+
+export async function restoreEvent(params: {
+  eventId: string;
+  adminEmail: string;
+}): Promise<{ success: boolean; error: string | null }> {
+  // Clears deleted_at, deleted_by
+}
+```
+
+---
+
+### Submission API Routes (Phase 3) ✅ IMPLEMENTED
+
+**File:** `src/app/api/submit/draft/route.ts`
+
+```typescript
+// POST: Create new draft
+export async function POST(request: NextRequest) {
+  const session = await getSession();
+  if (!session) return unauthorized();
+
+  const body = await request.json();
+  const result = await createDraft({
+    userId: session.id,
+    userEmail: session.email,
+    ...body,
+  });
+
+  return NextResponse.json(result);
+}
+```
+
+**File:** `src/app/api/submit/draft/[id]/route.ts`
+
+```typescript
+// PATCH: Update draft
+export async function PATCH(request: NextRequest, { params }) {
+  // Verify ownership, update draft
+}
+
+// DELETE: Delete draft
+export async function DELETE(request: NextRequest, { params }) {
+  // Verify ownership, delete draft
+}
+```
+
+**File:** `src/app/api/submit/event/route.ts`
+
+```typescript
+// POST: Submit event for review
+export async function POST(request: NextRequest) {
+  const session = await getSession();
+  if (!session) return unauthorized();
+
+  const { draftId, draftData, seriesDraftData } = await request.json();
+
+  const result = await submitEvent({
+    draftId,
+    draftData,
+    seriesDraftData,
+    userEmail: session.email,
+    userName: session.name,
+  });
+
+  return NextResponse.json(result);
 }
 ```
 

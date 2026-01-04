@@ -471,7 +471,7 @@ export function SearchSuggestions({ query, onSelect }: SearchSuggestionsProps) {
 
 ---
 
-## Hearts / Saved Events (Phase 3)
+## Hearts / Saved Events (Phase 4)
 
 ### Heart Button Component
 
@@ -614,7 +614,76 @@ export function useHeart(eventId: string) {
 
 ---
 
-## User Authentication (Phase 3)
+## User Authentication (Phase 3) ✅ IMPLEMENTED
+
+### Magic Link Authentication
+
+Happenlist uses passwordless magic link authentication for simplicity and security.
+
+**Flow:**
+1. User enters email on `/auth/login`
+2. Supabase sends magic link email
+3. User clicks link → `/auth/callback` handles token
+4. User is redirected to original destination
+
+**File:** `src/lib/auth/session.ts`
+
+```typescript
+import { createClient } from '@/lib/supabase/server';
+
+// Get current session (for Server Components)
+export async function getSession(): Promise<{
+  session: Session | null;
+  error: string | null;
+}> {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return { session: null, error: error?.message || null };
+  }
+
+  return {
+    session: {
+      id: user.id,
+      email: user.email!,
+      name: user.user_metadata?.name,
+    },
+    error: null,
+  };
+}
+
+// Require authentication (throws redirect)
+export async function requireAuth(redirectTo?: string) {
+  const { session } = await getSession();
+  if (!session) {
+    redirect(`/auth/login?redirect=${redirectTo || '/'}`);
+  }
+  return session;
+}
+
+// Require admin (throws redirect if not admin)
+export async function requireAdminAuth() {
+  const { session } = await getSession();
+  if (!session) {
+    redirect('/auth/login?redirect=/admin');
+  }
+  if (!isAdmin(session.email)) {
+    redirect('/');
+  }
+  return session;
+}
+```
+
+**File:** `src/lib/auth/is-admin.ts`
+
+```typescript
+// Admin check via environment variable
+export function isAdmin(email: string): boolean {
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
+  return adminEmails.includes(email.toLowerCase());
+}
+```
 
 ### Auth Provider
 
@@ -859,4 +928,291 @@ export function useDebounce<T>(value: T, delay: number): T {
 
   return debouncedValue;
 }
+```
+
+---
+
+## Event Submission (Phase 3) ✅ IMPLEMENTED
+
+### Overview
+
+The event submission system allows community members to submit events for review and publication.
+
+**User Flow:**
+1. User signs in via magic link
+2. User navigates to `/submit/new`
+3. Multi-step form (7 steps) with auto-save
+4. User reviews and submits
+5. Admin reviews in queue
+6. User notified of outcome
+
+### Form Steps
+
+| Step | Name | Fields |
+|------|------|--------|
+| 1 | Basic Info | Title, category, description |
+| 2 | Event Type | Single event, series, or recurring |
+| 3 | Date & Time | Date picker, time, duration |
+| 4 | Location | Venue search, new address, or virtual |
+| 5 | Pricing | Free, fixed price, range, or varies |
+| 6 | Image | Image URL or upload |
+| 7 | Review | Preview all info before submit |
+
+### Event Status Flow
+
+```
+┌─────────┐     submit      ┌────────────────┐
+│  draft  │ ───────────────►│ pending_review │
+└─────────┘                  └───────┬────────┘
+                                     │
+                    ┌────────────────┼────────────────┐
+                    │                │                │
+                    ▼                ▼                ▼
+            ┌───────────┐    ┌────────────┐    ┌──────────────────┐
+            │ published │    │  rejected  │    │ changes_requested│
+            └───────────┘    └────────────┘    └────────┬─────────┘
+                                                        │
+                                                        │ edit & resubmit
+                                                        │
+                                                        ▼
+                                               ┌────────────────┐
+                                               │ pending_review │
+                                               └────────────────┘
+```
+
+### Status Labels & Colors
+
+```typescript
+export const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
+  draft: 'Draft',
+  pending_review: 'Pending Review',
+  published: 'Published',
+  changes_requested: 'Changes Requested',
+  rejected: 'Rejected',
+  cancelled: 'Cancelled',
+  postponed: 'Postponed',
+};
+
+export const EVENT_STATUS_COLORS: Record<EventStatus, string> = {
+  draft: 'bg-stone/20 text-stone',
+  pending_review: 'bg-amber-100 text-amber-800',
+  published: 'bg-sage/20 text-sage-dark',
+  changes_requested: 'bg-orange-100 text-orange-800',
+  rejected: 'bg-red-100 text-red-800',
+  cancelled: 'bg-stone/20 text-stone',
+  postponed: 'bg-amber-100 text-amber-800',
+};
+```
+
+### Form Wrapper Component
+
+**File:** `src/components/submit/form-wrapper.tsx`
+
+```typescript
+'use client';
+
+// Handles:
+// - Step navigation (back/next)
+// - Step validation before proceeding
+// - Auto-save on step changes
+// - Final submission
+// - Last saved timestamp display
+
+interface FormWrapperProps {
+  currentStep: number;
+  setCurrentStep: (step: number) => void;
+  draftData: EventDraftData;
+  completedSteps: number[];
+  onSave: () => Promise<void>;
+  onSubmit: () => Promise<void>;
+  isSaving: boolean;
+  isSubmitting: boolean;
+  lastSaved?: Date;
+  children: React.ReactNode;
+}
+
+export function FormWrapper({
+  currentStep,
+  setCurrentStep,
+  draftData,
+  completedSteps,
+  onSave,
+  onSubmit,
+  isSaving,
+  isSubmitting,
+  lastSaved,
+  children,
+}: FormWrapperProps) {
+  // Validate current step before allowing next
+  const canProceed = validateStep(currentStep, draftData);
+
+  const handleNext = async () => {
+    if (!canProceed) return;
+    await onSave();
+    if (currentStep < TOTAL_STEPS) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (currentStep === TOTAL_STEPS) {
+      await onSubmit();
+    }
+  };
+
+  return (
+    <Container>
+      <StepProgress
+        currentStep={currentStep}
+        completedSteps={completedSteps}
+      />
+
+      <div className="py-8">
+        {children}
+      </div>
+
+      <FormNavigation
+        currentStep={currentStep}
+        totalSteps={TOTAL_STEPS}
+        canProceed={canProceed}
+        isSaving={isSaving}
+        isSubmitting={isSubmitting}
+        lastSaved={lastSaved}
+        onBack={handleBack}
+        onNext={handleNext}
+        onSubmit={handleSubmit}
+      />
+    </Container>
+  );
+}
+```
+
+### Step Validation
+
+**File:** `src/types/submission.ts`
+
+```typescript
+// Step 1: Basic Info
+export function validateStep1(data: EventDraftData): boolean {
+  return !!(data.title?.trim() && data.category_id);
+}
+
+// Step 2: Event Type
+export function validateStep2(data: EventDraftData): boolean {
+  if (!data.event_mode) return false;
+  if (data.event_mode === 'series' && !data.series_id && !data.series_title) {
+    return false;
+  }
+  return true;
+}
+
+// Step 3: Date/Time
+export function validateStep3(data: EventDraftData): boolean {
+  return !!(data.instance_date && data.start_time);
+}
+
+// Step 4: Location
+export function validateStep4(data: EventDraftData): boolean {
+  if (!data.location_mode) return false;
+  if (data.location_mode === 'venue') return !!data.location_id;
+  if (data.location_mode === 'address') return !!(data.address_line && data.city);
+  if (data.location_mode === 'virtual') return true;
+  if (data.location_mode === 'tbd') return true;
+  return false;
+}
+
+// Step 5: Pricing
+export function validateStep5(data: EventDraftData): boolean {
+  if (!data.price_type) return false;
+  if (data.price_type === 'fixed' && !data.price_low) return false;
+  if (data.price_type === 'range' && (!data.price_low || !data.price_high)) return false;
+  return true;
+}
+```
+
+### Admin Actions
+
+**File:** `src/data/admin/event-actions.ts`
+
+```typescript
+// Approve events
+export async function approveEvents(params: {
+  eventIds: string[];
+  adminEmail: string;
+}): Promise<{ succeeded: string[]; failed: string[] }> {
+  // Updates status → published
+  // Sets reviewed_at, reviewed_by
+  // Logs to admin_audit_log
+}
+
+// Reject events
+export async function rejectEvents(params: {
+  eventIds: string[];
+  reason: string;
+  adminEmail: string;
+}): Promise<{ succeeded: string[]; failed: string[] }> {
+  // Updates status → rejected
+  // Sets rejection_reason
+  // Logs to admin_audit_log
+}
+
+// Request changes
+export async function requestEventChanges(params: {
+  eventId: string;
+  message: string;
+  adminEmail: string;
+}): Promise<{ success: boolean; error: string | null }> {
+  // Updates status → changes_requested
+  // Sets change_request_message
+  // Logs to admin_audit_log
+}
+
+// Soft delete
+export async function softDeleteEvent(params: {
+  eventId: string;
+  reason?: string;
+  adminEmail: string;
+}): Promise<{ success: boolean; error: string | null }> {
+  // Sets deleted_at, deleted_by, delete_reason
+  // Logs to admin_audit_log
+}
+
+// Restore deleted event
+export async function restoreEvent(params: {
+  eventId: string;
+  adminEmail: string;
+}): Promise<{ success: boolean; error: string | null }> {
+  // Clears deleted_at, deleted_by
+  // Logs to admin_audit_log
+}
+```
+
+### Console Logging
+
+The submission system uses emoji-prefixed logging for easy debugging:
+
+```
+📝 [createDraft] Creating draft for user@example.com
+✅ [createDraft] Draft created: draft-123
+
+💾 [updateDraft] Saving draft: draft-123, step: 3
+✅ [updateDraft] Draft updated
+
+📤 [submitEvent] Submitting event from draft: draft-123
+🏠 [submitEvent] Creating new location: Art Studio MKE
+📚 [submitEvent] Creating new series: Pottery 101
+✅ [submitEvent] Event submitted: event-456
+
+🔍 [getUserSubmissions] Fetching for user@example.com
+✅ [getUserSubmissions] Found 5 submissions
+
+✅ [approveEvents] Approved 3 events by admin@example.com
+⚠️ [rejectEvents] Rejected event-789: "Not appropriate for platform"
+📝 [requestEventChanges] Changes requested for event-012
 ```

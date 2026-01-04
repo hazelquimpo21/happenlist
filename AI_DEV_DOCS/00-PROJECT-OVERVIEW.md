@@ -39,18 +39,26 @@ Happenlist is a local events directory web application that connects people with
 - Series detail pages
 - "Part of a series" badges and linking
 
-### Phase 3: Users & Hearts
-- User authentication (sign up, log in)
+### Phase 3: Event Management ✅ IMPLEMENTED
+- Magic link authentication
+- Multi-step event submission form (7 steps)
+- Draft auto-save functionality
+- Admin approval workflow (approve/reject/request changes)
+- User submission tracking (/my/submissions)
+- Soft delete with restore capability
+- Series integration in submission flow
+- Comprehensive audit logging
+
+### Phase 4: Users & Hearts
 - Heart/save events
 - "My Hearts" page
 - Email preferences (optional)
 
-### Phase 4: Organizer Accounts
+### Phase 5: Organizer Accounts (Future)
 - Organizer user type
 - Dashboard for managing events
-- Event submission and editing
 - Organization team management
-- Approval workflow (optional)
+- Auto-approve for verified organizers
 
 ## Core Entities
 
@@ -58,8 +66,11 @@ Happenlist is a local events directory web application that connects people with
 EVENTS ←→ LOCATIONS (many-to-one)
 EVENTS ←→ ORGANIZERS (many-to-one)
 EVENTS ←→ CATEGORIES (many-to-one)
-EVENTS ←→ HEARTS (one-to-many, Phase 3)
+EVENTS ←→ HEARTS (one-to-many, Phase 4)
 EVENTS ←→ SERIES (many-to-one, Phase 2)
+EVENTS ←→ EVENT_DRAFTS (one-to-one, Phase 3)
+USERS ←→ EVENT_DRAFTS (one-to-many, Phase 3)
+ADMINS ←→ ADMIN_AUDIT_LOG (one-to-many, Phase 3)
 ```
 
 ## URL Structure
@@ -77,6 +88,21 @@ EVENTS ←→ SERIES (many-to-one, Phase 2)
 /organizers                          → Organizers index
 /organizer/[slug]                    → Organizer detail
 /search                              → Search results
+
+# Phase 2: Series
+/series                              → Series index
+/series/[slug]                       → Series detail
+
+# Phase 3: Event Submission
+/auth/login                          → Magic link login
+/submit/new                          → Multi-step event form
+/submit/success                      → Submission confirmation
+/submit/edit/[id]                    → Edit existing submission
+/my/submissions                      → User's submissions list
+
+# Phase 3: Admin
+/admin/events/pending                → Approval queue
+/admin/events/[id]/review            → Review event
 ```
 
 ## Code Organization Principles
@@ -107,8 +133,14 @@ EVENTS ←→ SERIES (many-to-one, Phase 2)
 ## Environment Variables
 
 ```env
+# Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_key (server only)
+
+# Site
 NEXT_PUBLIC_SITE_URL=https://happenlist.com
+
+# Phase 3: Admin Configuration
+ADMIN_EMAILS=admin@happenlist.com,your@email.com  # Comma-separated admin emails
 ```

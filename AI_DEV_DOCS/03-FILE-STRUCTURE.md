@@ -87,22 +87,32 @@ happenlist/
 │   │   ├── search/
 │   │   │   └── page.tsx                    # /search?q=...
 │   │   │
-│   │   ├── (auth)/                         # Auth pages group (Phase 3)
+│   │   ├── auth/                           # Auth pages (Phase 3) ✅
 │   │   │   ├── login/
-│   │   │   │   └── page.tsx
-│   │   │   ├── signup/
-│   │   │   │   └── page.tsx
+│   │   │   │   └── page.tsx                # Magic link login
 │   │   │   └── callback/
-│   │   │       └── route.ts                # OAuth callback
+│   │   │       └── route.ts                # Magic link callback
 │   │   │
-│   │   ├── my/                             # User pages (Phase 3)
-│   │   │   ├── layout.tsx                  # Requires auth
-│   │   │   ├── hearts/
-│   │   │   │   └── page.tsx
-│   │   │   └── settings/
-│   │   │       └── page.tsx
+│   │   ├── submit/                         # Event submission (Phase 3) ✅
+│   │   │   ├── new/
+│   │   │   │   ├── page.tsx                # Multi-step form page
+│   │   │   │   └── submit-event-form.tsx   # Client form component
+│   │   │   ├── edit/
+│   │   │   │   └── [id]/
+│   │   │   │       └── page.tsx            # Edit draft/resubmit
+│   │   │   └── success/
+│   │   │       └── page.tsx                # Submission confirmed
 │   │   │
-│   │   ├── dashboard/                      # Organizer dashboard (Phase 4)
+│   │   ├── my/                             # User pages (Phase 3) ✅
+│   │   │   └── submissions/
+│   │   │       └── page.tsx                # User's submissions list
+│   │   │
+│   │   ├── admin/                          # Admin pages (Phase 3) ✅
+│   │   │   └── events/
+│   │   │       └── pending/
+│   │   │           └── page.tsx            # Approval queue
+│   │   │
+│   │   ├── dashboard/                      # Organizer dashboard (Phase 5)
 │   │   │   ├── layout.tsx
 │   │   │   ├── page.tsx
 │   │   │   ├── events/
@@ -120,8 +130,29 @@ happenlist/
 │   │   │   │   └── route.ts                # Search API
 │   │   │   ├── events/
 │   │   │   │   └── route.ts                # Events API
-│   │   │   └── hearts/
-│   │   │       └── route.ts                # Hearts toggle API (Phase 3)
+│   │   │   ├── hearts/
+│   │   │   │   └── route.ts                # Hearts toggle API (Phase 4)
+│   │   │   │
+│   │   │   ├── submit/                     # Submission APIs (Phase 3) ✅
+│   │   │   │   ├── draft/
+│   │   │   │   │   ├── route.ts            # POST: create draft
+│   │   │   │   │   └── [id]/
+│   │   │   │   │       └── route.ts        # PATCH/DELETE: update/delete draft
+│   │   │   │   ├── event/
+│   │   │   │   │   └── route.ts            # POST: submit event
+│   │   │   │   └── series/
+│   │   │   │       └── search/
+│   │   │   │           └── route.ts        # GET: search existing series
+│   │   │   │
+│   │   │   └── admin/                      # Admin APIs (Phase 3) ✅
+│   │   │       └── events/
+│   │   │           └── [id]/
+│   │   │               ├── approve/
+│   │   │               │   └── route.ts    # POST: approve event
+│   │   │               ├── reject/
+│   │   │               │   └── route.ts    # POST: reject event
+│   │   │               └── request-changes/
+│   │   │                   └── route.ts    # POST: request changes
 │   │   │
 │   │   └── sitemap.ts                      # Dynamic sitemap
 │   │
@@ -208,12 +239,24 @@ happenlist/
 │   │   │   ├── heart-button.tsx
 │   │   │   └── hearts-list.tsx
 │   │   │
-│   │   ├── auth/                           # Auth components (Phase 3)
+│   │   ├── auth/                           # Auth components (Phase 3) ✅
 │   │   │   ├── index.ts
-│   │   │   ├── login-form.tsx
-│   │   │   ├── signup-form.tsx
-│   │   │   ├── auth-provider.tsx
-│   │   │   └── user-menu.tsx
+│   │   │   ├── login-form.tsx              # Magic link form
+│   │   │   └── user-menu.tsx               # Logged-in user menu
+│   │   │
+│   │   ├── submit/                         # Submission components (Phase 3) ✅
+│   │   │   ├── index.ts
+│   │   │   ├── form-wrapper.tsx            # Form container with nav
+│   │   │   ├── step-progress.tsx           # Progress indicator
+│   │   │   └── steps/
+│   │   │       ├── index.ts
+│   │   │       ├── step-1-basic-info.tsx   # Title, category, description
+│   │   │       ├── step-2-event-type.tsx   # Single/series/recurring
+│   │   │       ├── step-3-datetime.tsx     # Date and time picker
+│   │   │       ├── step-4-location.tsx     # Venue/address/virtual
+│   │   │       ├── step-5-pricing.tsx      # Price type and amounts
+│   │   │       ├── step-6-image.tsx        # Image upload
+│   │   │       └── step-7-review.tsx       # Final review
 │   │   │
 │   │   ├── seo/                            # SEO components
 │   │   │   ├── index.ts
@@ -242,7 +285,13 @@ happenlist/
 │   │   │   ├── price.ts                    # Price formatting utilities
 │   │   │   ├── slug.ts                     # Slug generation
 │   │   │   ├── cn.ts                       # classNames utility
-│   │   │   └── url.ts                      # URL builders
+│   │   │   ├── url.ts                      # URL builders
+│   │   │   └── logger.ts                   # Emoji-prefixed logging
+│   │   │
+│   │   ├── auth/                           # Auth utilities (Phase 3) ✅
+│   │   │   ├── index.ts
+│   │   │   ├── session.ts                  # getSession, requireAuth
+│   │   │   └── is-admin.ts                 # Admin check via env
 │   │   │
 │   │   └── constants/
 │   │       ├── index.ts
@@ -277,10 +326,21 @@ happenlist/
 │   │   │   ├── index.ts
 │   │   │   └── search-events.ts
 │   │   │
-│   │   └── hearts/                         # Phase 3
+│   │   ├── hearts/                         # Phase 4
+│   │   │   ├── index.ts
+│   │   │   ├── get-user-hearts.ts
+│   │   │   └── toggle-heart.ts
+│   │   │
+│   │   ├── submit/                         # Submission data (Phase 3) ✅
+│   │   │   ├── index.ts
+│   │   │   ├── draft-actions.ts            # CRUD for drafts
+│   │   │   ├── submit-event.ts             # Submit and resubmit
+│   │   │   ├── get-submissions.ts          # User submissions list
+│   │   │   └── search-series.ts            # Search existing series
+│   │   │
+│   │   └── admin/                          # Admin data (Phase 3) ✅
 │   │       ├── index.ts
-│   │       ├── get-user-hearts.ts
-│   │       └── toggle-heart.ts
+│   │       └── event-actions.ts            # approve, reject, requestChanges, etc.
 │   │
 │   ├── hooks/                              # React hooks
 │   │   ├── index.ts
@@ -296,7 +356,8 @@ happenlist/
 │   │   ├── organizer.ts
 │   │   ├── category.ts
 │   │   ├── filters.ts
-│   │   └── api.ts
+│   │   ├── api.ts
+│   │   └── submission.ts                   # Submission types (Phase 3) ✅
 │   │
 │   └── middleware.ts                       # Next.js middleware (auth, etc.)
 │
@@ -308,10 +369,9 @@ happenlist/
         ├── 00003_create_organizers.sql
         ├── 00004_create_events.sql
         ├── 00005_create_hearts.sql
-        ├── 00006_create_profiles.sql
-        ├── 00007_create_views.sql
-        ├── 00008_create_functions.sql
-        └── 00009_seed_categories.sql
+        ├── 00006_series_and_recurring.sql  # Phase 2: Series
+        ├── 00007_event_submission_flows.sql # Phase 3: Prep
+        └── 00008_event_management_complete.sql # Phase 3: Complete ✅
 ```
 
 ---
