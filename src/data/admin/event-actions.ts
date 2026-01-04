@@ -401,3 +401,289 @@ export async function bulkRejectEvents(
 
   return { succeeded, failed };
 }
+
+// ============================================================================
+// REQUEST CHANGES
+// ============================================================================
+
+export interface RequestChangesParams {
+  eventId: string;
+  adminEmail: string;
+  message: string;
+  notes?: string;
+}
+
+/**
+ * Request changes on a submitted event
+ * Sets status to changes_requested with a message for the submitter
+ */
+export async function requestEventChanges(params: RequestChangesParams): Promise<ActionResult> {
+  const { eventId, adminEmail, message, notes } = params;
+
+  const timer = adminDataLogger.time('requestEventChanges', {
+    action: 'event_changes_req',
+    entityType: 'event',
+    entityId: eventId,
+    adminEmail,
+  });
+
+  try {
+    const supabase = await createClient();
+
+    // First, get the current event data
+    const { data, error: fetchError } = await supabase
+      .from('events')
+      .select('*')
+      .eq('id', eventId)
+      .single();
+
+    const currentEvent = data as EventRow | null;
+
+    if (fetchError || !currentEvent) {
+      timer.error('Event not found', fetchError);
+      return {
+        success: false,
+        message: 'Event not found',
+        error: fetchError?.message || 'Event not found',
+      };
+    }
+
+    // Update the event
+    const updateData = {
+      status: 'changes_requested',
+      change_request_message: message,
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: adminEmail,
+      review_notes: notes,
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await (supabase as any)
+      .from('events')
+      .update(updateData)
+      .eq('id', eventId);
+
+    if (updateError) {
+      timer.error('Failed to request changes', updateError);
+      return {
+        success: false,
+        message: 'Failed to request changes',
+        error: updateError.message,
+      };
+    }
+
+    // Log to audit trail
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from('admin_audit_log').insert({
+        action: 'event_changes_req',
+        entity_type: 'event',
+        entity_id: eventId,
+        admin_email: adminEmail,
+        changes: {
+          before: { status: currentEvent.status },
+          after: { status: 'changes_requested', message },
+        },
+        notes: notes,
+      });
+    } catch (auditError) {
+      auditLogger.warn('Failed to log audit entry', { metadata: { error: auditError } });
+    }
+
+    timer.success(`Changes requested: ${currentEvent.title}`);
+
+    return {
+      success: true,
+      message: `Changes requested for "${currentEvent.title}"`,
+      eventId,
+    };
+  } catch (error) {
+    timer.error('Unexpected error requesting changes', error);
+    return {
+      success: false,
+      message: 'An unexpected error occurred',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+// ============================================================================
+// SOFT DELETE
+// ============================================================================
+
+export interface SoftDeleteParams {
+  eventId: string;
+  adminEmail: string;
+  reason?: string;
+}
+
+/**
+ * Soft delete an event (mark as deleted without removing from database)
+ */
+export async function softDeleteEvent(params: SoftDeleteParams): Promise<ActionResult> {
+  const { eventId, adminEmail, reason } = params;
+
+  const timer = adminDataLogger.time('softDeleteEvent', {
+    action: 'event_deleted',
+    entityType: 'event',
+    entityId: eventId,
+    adminEmail,
+  });
+
+  try {
+    const supabase = await createClient();
+
+    // Get event title for response
+    const { data, error: fetchError } = await supabase
+      .from('events')
+      .select('title, status')
+      .eq('id', eventId)
+      .single();
+
+    const currentEvent = data as { title: string; status: string } | null;
+
+    if (fetchError || !currentEvent) {
+      timer.error('Event not found', fetchError);
+      return {
+        success: false,
+        message: 'Event not found',
+        error: fetchError?.message || 'Event not found',
+      };
+    }
+
+    // Update the event with soft delete fields
+    const updateData = {
+      deleted_at: new Date().toISOString(),
+      deleted_by: adminEmail,
+      delete_reason: reason || null,
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await (supabase as any)
+      .from('events')
+      .update(updateData)
+      .eq('id', eventId);
+
+    if (updateError) {
+      timer.error('Failed to delete event', updateError);
+      return {
+        success: false,
+        message: 'Failed to delete event',
+        error: updateError.message,
+      };
+    }
+
+    // Log to audit trail
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from('admin_audit_log').insert({
+        action: 'event_soft_deleted',
+        entity_type: 'event',
+        entity_id: eventId,
+        admin_email: adminEmail,
+        changes: {
+          before: { status: currentEvent.status },
+          after: { deleted_at: updateData.deleted_at },
+        },
+        notes: reason,
+      });
+    } catch (auditError) {
+      auditLogger.warn('Failed to log audit entry', { metadata: { error: auditError } });
+    }
+
+    timer.success(`Event soft deleted: ${currentEvent.title}`);
+
+    return {
+      success: true,
+      message: `Event "${currentEvent.title}" has been deleted`,
+      eventId,
+    };
+  } catch (error) {
+    timer.error('Unexpected error deleting event', error);
+    return {
+      success: false,
+      message: 'An unexpected error occurred',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Restore a soft-deleted event
+ */
+export async function restoreEvent(eventId: string, adminEmail: string): Promise<ActionResult> {
+  const timer = adminDataLogger.time('restoreEvent', {
+    action: 'event_restored',
+    entityType: 'event',
+    entityId: eventId,
+    adminEmail,
+  });
+
+  try {
+    const supabase = await createClient();
+
+    // Get event title
+    const { data, error: fetchError } = await supabase
+      .from('events')
+      .select('title')
+      .eq('id', eventId)
+      .single();
+
+    if (fetchError || !data) {
+      timer.error('Event not found', fetchError);
+      return {
+        success: false,
+        message: 'Event not found',
+        error: fetchError?.message || 'Event not found',
+      };
+    }
+
+    // Clear soft delete fields
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await (supabase as any)
+      .from('events')
+      .update({
+        deleted_at: null,
+        deleted_by: null,
+        delete_reason: null,
+      })
+      .eq('id', eventId);
+
+    if (updateError) {
+      timer.error('Failed to restore event', updateError);
+      return {
+        success: false,
+        message: 'Failed to restore event',
+        error: updateError.message,
+      };
+    }
+
+    // Log to audit trail
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from('admin_audit_log').insert({
+        action: 'event_restored',
+        entity_type: 'event',
+        entity_id: eventId,
+        admin_email: adminEmail,
+      });
+    } catch (auditError) {
+      auditLogger.warn('Failed to log audit entry', { metadata: { error: auditError } });
+    }
+
+    timer.success(`Event restored: ${data.title}`);
+
+    return {
+      success: true,
+      message: `Event "${data.title}" has been restored`,
+      eventId,
+    };
+  } catch (error) {
+    timer.error('Unexpected error restoring event', error);
+    return {
+      success: false,
+      message: 'An unexpected error occurred',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
