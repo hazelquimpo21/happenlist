@@ -60,6 +60,7 @@ npm run dev
 │  │  src/data/categories/ Category fetching functions        │    │
 │  │  src/data/submit/     Event submission & drafts          │    │
 │  │  src/data/admin/      Admin review queue & actions       │    │
+│  │  src/data/user/       User hearts, follows, profile      │    │
 │  └─────────────────────────────────────────────────────────┘    │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
@@ -460,17 +461,29 @@ ADMIN_EMAILS=admin@example.com,admin2@example.com
 
 ---
 
+## Phase 4 Features (User Features) ✅
+
+- [x] Heart/save events with optimistic UI
+- [x] My Hearts page at `/my/hearts`
+- [x] Follow organizers, venues, categories
+- [x] User profile settings at `/my/settings`
+- [x] Route protection middleware
+- [x] Mobile navigation drawer
+
+---
+
 ## Future Phases
 
-### Phase 4: User Features
-- Heart/save events
-- User profiles
-- Email notifications
+### Phase 5: Organizer Features
+- Organizer claiming (request to manage an organizer)
+- Organizer dashboard
+- Team management
 
-### Phase 5: Enhanced Organizer Tools
+### Phase 6: Enhanced Features
+- Email notifications
+- Weekly digest emails
 - Analytics dashboard
 - Ticket integration
-- Bulk event management
 
 ---
 

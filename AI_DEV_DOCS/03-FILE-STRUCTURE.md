@@ -105,7 +105,12 @@ happenlist/
 │   │   │   └── success/
 │   │   │       └── page.tsx                # Submission confirmed
 │   │   │
-│   │   ├── my/                             # User pages (Phase 3) ✅
+│   │   ├── my/                             # User pages (Phase 3-4) ✅
+│   │   │   ├── hearts/
+│   │   │   │   └── page.tsx                # Saved events (Phase 4) ✅
+│   │   │   ├── settings/
+│   │   │   │   ├── page.tsx                # Profile settings (Phase 4) ✅
+│   │   │   │   └── profile-form.tsx        # Profile edit form ✅
 │   │   │   └── submissions/
 │   │   │       └── page.tsx                # User's submissions list
 │   │   │
@@ -133,7 +138,13 @@ happenlist/
 │   │   │   ├── events/
 │   │   │   │   └── route.ts                # Events API
 │   │   │   ├── hearts/
-│   │   │   │   └── route.ts                # Hearts toggle API (Phase 4)
+│   │   │   │   └── route.ts                # Hearts toggle API (Phase 4) ✅
+│   │   │   │
+│   │   │   ├── follows/
+│   │   │   │   └── route.ts                # Follows API (Phase 4) ✅
+│   │   │   │
+│   │   │   ├── profile/
+│   │   │   │   └── route.ts                # Profile API (Phase 4) ✅
 │   │   │   │
 │   │   │   ├── submit/                     # Submission APIs (Phase 3) ✅
 │   │   │   │   ├── draft/
@@ -237,10 +248,9 @@ happenlist/
 │   │   │   ├── search-suggestions.tsx
 │   │   │   └── search-empty.tsx
 │   │   │
-│   │   ├── hearts/                         # Heart/save components (Phase 3)
+│   │   ├── hearts/                         # Heart/save components (Phase 4) ✅
 │   │   │   ├── index.ts
-│   │   │   ├── heart-button.tsx
-│   │   │   └── hearts-list.tsx
+│   │   │   └── heart-button.tsx            # Toggle heart with optimistic UI
 │   │   │
 │   │   ├── auth/                           # Auth components (Phase 3) ✅
 │   │   │   ├── index.ts                    # Barrel exports
@@ -330,10 +340,15 @@ happenlist/
 │   │   │   ├── index.ts
 │   │   │   └── search-events.ts
 │   │   │
-│   │   ├── hearts/                         # Phase 4
-│   │   │   ├── index.ts
-│   │   │   ├── get-user-hearts.ts
-│   │   │   └── toggle-heart.ts
+│   │   ├── user/                           # User data (Phase 4) ✅
+│   │   │   ├── index.ts                    # Barrel export
+│   │   │   ├── toggle-heart.ts             # Heart/unheart event
+│   │   │   ├── get-hearts.ts               # Get user hearts
+│   │   │   ├── check-hearts.ts             # Check heart status
+│   │   │   ├── toggle-follow.ts            # Follow/unfollow
+│   │   │   ├── get-follows.ts              # Get user follows
+│   │   │   ├── get-profile.ts              # Get user profile
+│   │   │   └── update-profile.ts           # Update profile
 │   │   │
 │   │   ├── submit/                         # Submission data (Phase 3) ✅
 │   │   │   ├── index.ts
@@ -356,6 +371,8 @@ happenlist/
 │   │   ├── use-debounce.ts
 │   │   ├── use-media-query.ts
 │   │   ├── use-infinite-scroll.ts
+│   │   ├── use-auth.ts                     # Auth hook (Phase 4) ✅
+│   │   └── use-heart.ts                    # Heart hook with optimistic UI (Phase 4) ✅
 │   │   └── use-heart.ts                    # Phase 4
 │   │
 │   ├── types/                              # TypeScript types
@@ -369,7 +386,11 @@ happenlist/
 │   │   ├── user.ts                         # User/auth types (Phase 3) ✅
 │   │   └── submission.ts                   # Submission types (Phase 3) ✅
 │   │
-│   └── middleware.ts                       # Next.js middleware (auth, etc.)
+│   ├── contexts/                           # React contexts (Phase 4) ✅
+│   │   ├── index.ts
+│   │   └── auth-context.tsx                # Auth context + provider
+│   │
+│   └── middleware.ts                       # Route protection middleware (Phase 4) ✅
 │
 └── supabase/
     ├── config.toml                         # Supabase config
@@ -382,7 +403,8 @@ happenlist/
         ├── 00006_series_and_recurring.sql  # Phase 2: Series
         ├── 00007_event_submission_flows.sql # Phase 3: Prep
         ├── 00008_event_management_complete.sql # Phase 3: Complete ✅
-        └── 00010_user_profiles_and_hearts.sql # Phase 3: Auth tables ✅
+        ├── 00010_user_profiles_and_hearts.sql  # Phase 4: Base auth
+        └── 00011_user_auth_complete.sql    # Phase 4: Full user system ✅
 ```
 
 ---
