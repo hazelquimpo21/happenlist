@@ -46,6 +46,10 @@ npm run dev
 │  │  /organizers    Organizers listing                       │    │
 │  │  /organizer/[slug]  Organizer detail page                │    │
 │  │  /search        Search results page                      │    │
+│  │  /auth/login    Magic link login                         │    │
+│  │  /submit/new    Multi-step event submission              │    │
+│  │  /my/submissions  User's submitted events                │    │
+│  │  /admin/events  Admin review queue                       │    │
 │  └─────────────────────────────────────────────────────────┘    │
 │                                                                  │
 │  ┌─────────────────────────────────────────────────────────┐    │
@@ -54,6 +58,8 @@ npm run dev
 │  │  src/data/venues/     Venue fetching functions           │    │
 │  │  src/data/organizers/ Organizer fetching functions       │    │
 │  │  src/data/categories/ Category fetching functions        │    │
+│  │  src/data/submit/     Event submission & drafts          │    │
+│  │  src/data/admin/      Admin review queue & actions       │    │
 │  └─────────────────────────────────────────────────────────┘    │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
@@ -236,7 +242,10 @@ happenlist/
 | Status | Description |
 |--------|-------------|
 | `draft` | Event is being created, not visible to public |
+| `pending_review` | Submitted for admin review |
 | `published` | Event is live and visible to everyone |
+| `changes_requested` | Admin requested edits from submitter |
+| `rejected` | Rejected by admin |
 | `cancelled` | Event was cancelled, may still show with strikethrough |
 
 ### Price Types
@@ -404,11 +413,14 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 # Site URL (for sitemap generation)
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# Admin Emails (comma-separated list for admin access)
+ADMIN_EMAILS=admin@example.com,admin2@example.com
 ```
 
 ---
 
-## Phase 1 Features (MVP)
+## Phase 1 Features (MVP) ✅
 
 - [x] Browse all events
 - [x] Filter by category
@@ -424,24 +436,41 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 ---
 
+## Phase 2 Features (Series & Recurring) ✅
+
+- [x] Series system (classes, camps, workshops, festivals)
+- [x] Recurring events with recurrence rules
+- [x] Series index page at `/series`
+- [x] Series detail pages with event listings
+- [x] Series filtering by type and category
+- [x] Series badges on event cards
+
+---
+
+## Phase 3 Features (Event Management) ✅
+
+- [x] Magic link authentication (passwordless)
+- [x] 7-step event submission form with auto-save
+- [x] Event drafts for work-in-progress submissions
+- [x] User submissions dashboard at `/my/submissions`
+- [x] Admin review queue at `/admin/events`
+- [x] Admin approve/reject/request-changes workflow
+- [x] Status badges with color-coded indicators
+- [x] Admin audit logging
+
+---
+
 ## Future Phases
 
-### Phase 2: Enhanced Discovery
-- Event series (recurring events)
-- Map view
-- Advanced filtering
-- Newsletter signup
-
-### Phase 3: User Features
-- User authentication
+### Phase 4: User Features
 - Heart/save events
 - User profiles
 - Email notifications
 
-### Phase 4: Organizer Dashboard
-- Event submission
-- Analytics
+### Phase 5: Enhanced Organizer Tools
+- Analytics dashboard
 - Ticket integration
+- Bulk event management
 
 ---
 

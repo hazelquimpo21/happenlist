@@ -22,15 +22,15 @@ Happenlist uses Supabase (PostgreSQL) as its database. This document defines all
            │   EVENTS    │◄─────────────┘
            └──────┬──────┘
                   │
-                  │ 1:many (self-ref for recurrence)
+                  │ 1:many
                   │
-                  ├──────────────────────┐
-                  │                      │
-                  ▼                      ▼
-           ┌─────────────┐       ┌─────────────┐
-           │   HEARTS    │       │   SERIES    │
-           │  (Phase 3)  │       │  (Phase 2)  │
-           └─────────────┘       └─────────────┘
+    ┌─────────────┼─────────────┬─────────────────────┐
+    │             │             │                     │
+    ▼             ▼             ▼                     ▼
+┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────────┐
+│   HEARTS    │ │   SERIES    │ │EVENT_DRAFTS │ │ADMIN_AUDIT_LOG  │
+│  (Phase 4)  │ │  (Phase 2)  │ │  (Phase 3)  │ │   (Phase 3)     │
+└─────────────┘ └─────────────┘ └─────────────┘ └─────────────────┘
 ```
 
 ---
@@ -284,8 +284,11 @@ CREATE INDEX idx_events_search ON events
 **Status Values:**
 | Value | Description |
 |-------|-------------|
-| `draft` | Not yet published |
+| `draft` | Not yet published, user editing |
+| `pending_review` | Submitted, awaiting admin approval (Phase 3) |
+| `changes_requested` | Admin requested changes (Phase 3) |
 | `published` | Live and visible |
+| `rejected` | Not accepted (Phase 3) |
 | `cancelled` | Event cancelled |
 | `postponed` | Postponed (date TBD) |
 
@@ -408,6 +411,128 @@ CREATE INDEX idx_series_organizer ON series(organizer_id);
 
 ---
 
+### event_drafts (Phase 3)
+
+Stores incomplete event submissions for users to resume.
+
+```sql
+CREATE TABLE event_drafts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  -- Owner
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_email TEXT NOT NULL,
+  user_name TEXT,
+
+  -- Draft data (flexible JSON for partial event)
+  draft_data JSONB NOT NULL DEFAULT '{}',
+
+  -- Form progress
+  current_step INTEGER DEFAULT 1,
+  completed_steps INTEGER[] DEFAULT ARRAY[]::INTEGER[],
+
+  -- Series draft (if creating new series)
+  series_draft_data JSONB,
+
+  -- Link to submitted event (when complete)
+  submitted_event_id UUID REFERENCES events(id) ON DELETE SET NULL,
+
+  -- Timestamps
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  expires_at TIMESTAMPTZ DEFAULT now() + INTERVAL '30 days'
+);
+
+-- Indexes
+CREATE INDEX idx_drafts_user ON event_drafts(user_id);
+CREATE INDEX idx_drafts_expires ON event_drafts(expires_at) WHERE submitted_event_id IS NULL;
+```
+
+---
+
+### admin_audit_log (Phase 3)
+
+Tracks admin actions on events for accountability.
+
+```sql
+CREATE TABLE admin_audit_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  -- Target
+  event_id UUID REFERENCES events(id) ON DELETE CASCADE,
+  series_id UUID REFERENCES series(id) ON DELETE CASCADE,
+
+  -- Actor
+  admin_email TEXT NOT NULL,
+
+  -- Action details
+  action TEXT NOT NULL,           -- approve, reject, request_changes, edit, delete, restore
+  previous_status TEXT,
+  new_status TEXT,
+  message TEXT,                   -- Reason/notes
+
+  -- Metadata
+  metadata JSONB DEFAULT '{}',
+
+  -- Timestamp
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Indexes
+CREATE INDEX idx_audit_event ON admin_audit_log(event_id);
+CREATE INDEX idx_audit_admin ON admin_audit_log(admin_email);
+CREATE INDEX idx_audit_date ON admin_audit_log(created_at DESC);
+```
+
+**Action Types:**
+| Action | Description |
+|--------|-------------|
+| `approve` | Event approved, status → published |
+| `reject` | Event rejected with reason |
+| `request_changes` | Changes requested with message |
+| `edit` | Admin edited event content |
+| `delete` | Event soft-deleted |
+| `restore` | Deleted event restored |
+
+---
+
+### Events Table Phase 3 Columns
+
+Additional columns added to events table for submission workflow:
+
+```sql
+-- Submission tracking
+ALTER TABLE events ADD COLUMN submitted_by_email TEXT;
+ALTER TABLE events ADD COLUMN submitted_by_name TEXT;
+ALTER TABLE events ADD COLUMN submitted_at TIMESTAMPTZ;
+
+-- Admin review
+ALTER TABLE events ADD COLUMN reviewed_at TIMESTAMPTZ;
+ALTER TABLE events ADD COLUMN reviewed_by TEXT;
+ALTER TABLE events ADD COLUMN rejection_reason TEXT;
+ALTER TABLE events ADD COLUMN change_request_message TEXT;
+
+-- Soft delete
+ALTER TABLE events ADD COLUMN deleted_at TIMESTAMPTZ;
+ALTER TABLE events ADD COLUMN deleted_by TEXT;
+ALTER TABLE events ADD COLUMN delete_reason TEXT;
+
+-- Edit tracking
+ALTER TABLE events ADD COLUMN last_edited_at TIMESTAMPTZ;
+ALTER TABLE events ADD COLUMN last_edited_by TEXT;
+ALTER TABLE events ADD COLUMN edit_count INTEGER DEFAULT 0;
+
+-- Performance indexes for Phase 3
+CREATE INDEX idx_events_submitted_by ON events(submitted_by_email, created_at DESC)
+  WHERE submitted_by_email IS NOT NULL;
+CREATE INDEX idx_events_pending_queue ON events(status, submitted_at DESC)
+  WHERE status IN ('pending_review', 'changes_requested');
+CREATE INDEX idx_events_not_deleted ON events(instance_date)
+  WHERE deleted_at IS NULL;
+```
+
+---
+
 ## Row Level Security (RLS) Policies
 
 ### Public Read Access (Phase 1)
@@ -466,6 +591,55 @@ CREATE POLICY "Users can read their own profile"
 CREATE POLICY "Users can update their own profile"
   ON profiles FOR UPDATE
   USING (auth.uid() = id);
+```
+
+### Event Drafts Policies (Phase 3)
+
+```sql
+-- Event drafts: users manage their own
+ALTER TABLE event_drafts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users manage own drafts" ON event_drafts
+  FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+```
+
+### Submitter Policies (Phase 3)
+
+```sql
+-- Submitters can view their own events (any status)
+CREATE POLICY "Submitters view own events" ON events
+  FOR SELECT
+  USING (
+    submitted_by_email IS NOT NULL
+    AND submitted_by_email = (
+      SELECT email FROM auth.users WHERE id = auth.uid()
+    )
+  );
+
+-- Submitters can update their drafts and changes_requested events
+CREATE POLICY "Submitters update own drafts" ON events
+  FOR UPDATE
+  USING (
+    status IN ('draft', 'changes_requested')
+    AND submitted_by_email = (
+      SELECT email FROM auth.users WHERE id = auth.uid()
+    )
+  )
+  WITH CHECK (
+    status IN ('draft', 'changes_requested', 'pending_review')
+  );
+
+-- Users can create draft events
+CREATE POLICY "Users can create draft events" ON events
+  FOR INSERT
+  WITH CHECK (
+    status = 'draft'
+    AND submitted_by_email = (
+      SELECT email FROM auth.users WHERE id = auth.uid()
+    )
+  );
 ```
 
 ---
@@ -544,4 +718,91 @@ LEFT JOIN categories c ON e.category_id = c.id
 LEFT JOIN locations l ON e.location_id = l.id
 LEFT JOIN organizers o ON e.organizer_id = o.id
 WHERE e.status = 'published';
+```
+
+### v_my_submissions (Phase 3)
+
+View for authenticated users to see their submissions.
+
+```sql
+CREATE OR REPLACE VIEW v_my_submissions AS
+SELECT
+  e.id,
+  e.title,
+  e.slug,
+  e.status,
+  e.instance_date,
+  e.start_datetime,
+  e.image_url,
+  e.submitted_at,
+  e.reviewed_at,
+  e.rejection_reason,
+  e.change_request_message,
+  e.created_at,
+  e.updated_at,
+  c.name as category_name,
+  c.slug as category_slug,
+  l.name as location_name,
+  l.city as location_city,
+  s.title as series_title,
+  s.slug as series_slug
+FROM events e
+LEFT JOIN categories c ON e.category_id = c.id
+LEFT JOIN locations l ON e.location_id = l.id
+LEFT JOIN series s ON e.series_id = s.id
+WHERE e.submitted_by_email IS NOT NULL
+  AND e.deleted_at IS NULL
+ORDER BY e.created_at DESC;
+```
+
+### v_admin_submission_queue (Phase 3)
+
+View for admin approval queue.
+
+```sql
+CREATE OR REPLACE VIEW v_admin_submission_queue AS
+SELECT
+  e.*,
+  c.name as category_name,
+  l.name as location_name,
+  l.city as location_city,
+  o.name as organizer_name,
+  s.title as series_title,
+  (
+    SELECT COUNT(*) FROM events e2
+    WHERE e2.submitted_by_email = e.submitted_by_email
+    AND e2.status = 'published'
+  ) as submitter_approved_count
+FROM events e
+LEFT JOIN categories c ON e.category_id = c.id
+LEFT JOIN locations l ON e.location_id = l.id
+LEFT JOIN organizers o ON e.organizer_id = o.id
+LEFT JOIN series s ON e.series_id = s.id
+WHERE e.status IN ('pending_review', 'changes_requested')
+  AND e.deleted_at IS NULL
+ORDER BY e.submitted_at ASC NULLS LAST;
+```
+
+---
+
+## Database Functions (Phase 3)
+
+### Cleanup Expired Drafts
+
+```sql
+CREATE OR REPLACE FUNCTION cleanup_expired_drafts()
+RETURNS INTEGER AS $$
+DECLARE
+  deleted_count INTEGER;
+BEGIN
+  DELETE FROM event_drafts
+  WHERE expires_at < now()
+    AND submitted_event_id IS NULL;
+
+  GET DIAGNOSTICS deleted_count = ROW_COUNT;
+  RETURN deleted_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+COMMENT ON FUNCTION cleanup_expired_drafts IS 'Removes expired drafts. Run daily via cron.';
 ```
