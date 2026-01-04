@@ -2,16 +2,27 @@
  * ROUTE CONSTANTS
  * ===============
  * Central definition of all application routes.
+ *
+ * All routes are defined here for easy maintenance and type safety.
+ * Use these constants instead of hardcoding route strings.
  */
+
+// ============================================================================
+// PUBLIC ROUTES
+// ============================================================================
 
 /**
- * Public routes accessible to everyone.
+ * Application routes.
  */
 export const ROUTES = {
-  // Home
+  // -------------------------------------------------------------------------
+  // HOME
+  // -------------------------------------------------------------------------
   home: '/',
 
-  // Events
+  // -------------------------------------------------------------------------
+  // EVENTS
+  // -------------------------------------------------------------------------
   events: '/events',
   eventsToday: '/events/today',
   eventsWeekend: '/events/this-weekend',
@@ -19,41 +30,97 @@ export const ROUTES = {
   eventsCategory: (categorySlug: string) => `/events/${categorySlug}`,
   eventsMonth: (year: number, month: string) => `/events/archive/${year}/${month}`,
 
-  // Series (Phase 2)
+  // -------------------------------------------------------------------------
+  // SERIES
+  // -------------------------------------------------------------------------
   series: '/series',
   seriesDetail: (slug: string) => `/series/${slug}`,
   seriesByType: (type: string) => `/series?type=${type}`,
 
-  // Venues
+  // -------------------------------------------------------------------------
+  // VENUES
+  // -------------------------------------------------------------------------
   venues: '/venues',
   venueDetail: (slug: string) => `/venue/${slug}`,
 
-  // Organizers
+  // -------------------------------------------------------------------------
+  // ORGANIZERS
+  // -------------------------------------------------------------------------
   organizers: '/organizers',
   organizerDetail: (slug: string) => `/organizer/${slug}`,
+  organizerClaim: (slug: string) => `/organizer/claim/${slug}`,
+  organizerDashboard: '/organizer/dashboard',
 
-  // Search
+  // -------------------------------------------------------------------------
+  // SEARCH
+  // -------------------------------------------------------------------------
   search: '/search',
   searchWithQuery: (query: string) => `/search?q=${encodeURIComponent(query)}`,
 
-  // Static pages
+  // -------------------------------------------------------------------------
+  // STATIC PAGES
+  // -------------------------------------------------------------------------
   about: '/about',
   contact: '/contact',
 
-  // Auth (Phase 3)
-  login: '/login',
-  signup: '/signup',
+  // -------------------------------------------------------------------------
+  // AUTH ROUTES 🔐
+  // -------------------------------------------------------------------------
+  auth: {
+    login: '/auth/login',
+    loginWithRedirect: (redirect: string) =>
+      `/auth/login?redirect=${encodeURIComponent(redirect)}`,
+    callback: '/auth/callback',
+    logout: '/auth/logout',
+  },
 
-  // User pages (Phase 3)
+  // Shortcut for common login redirect
+  login: '/auth/login',
+
+  // -------------------------------------------------------------------------
+  // USER PAGES 👤
+  // -------------------------------------------------------------------------
+  my: {
+    hearts: '/my/hearts',
+    submissions: '/my/submissions',
+    settings: '/my/settings',
+  },
+
+  // Shortcuts
   myHearts: '/my/hearts',
+  mySubmissions: '/my/submissions',
   mySettings: '/my/settings',
 
-  // Dashboard (Phase 4)
-  dashboard: '/dashboard',
+  // -------------------------------------------------------------------------
+  // SUBMIT EVENT
+  // -------------------------------------------------------------------------
+  submit: {
+    new: '/submit/new',
+    success: '/submit/success',
+    edit: (id: string) => `/submit/edit/${id}`,
+  },
+
+  submitNew: '/submit/new',
+
+  // -------------------------------------------------------------------------
+  // ADMIN ROUTES 🔑
+  // -------------------------------------------------------------------------
+  admin: {
+    home: '/admin',
+    events: '/admin/events',
+    eventsPending: '/admin/events/pending',
+    eventReview: (id: string) => `/admin/events/${id}`,
+    activity: '/admin/activity',
+  },
 } as const;
+
+// ============================================================================
+// NAVIGATION CONFIG
+// ============================================================================
 
 /**
  * Navigation items for the header.
+ * These are the main nav links shown on desktop.
  */
 export const NAV_ITEMS = [
   { label: 'Events', href: ROUTES.events },
@@ -65,6 +132,7 @@ export const NAV_ITEMS = [
 
 /**
  * Footer navigation items.
+ * Grouped by section.
  */
 export const FOOTER_NAV = {
   discover: [
@@ -77,4 +145,31 @@ export const FOOTER_NAV = {
     { label: 'About Us', href: ROUTES.about },
     { label: 'Contact', href: ROUTES.contact },
   ],
+} as const;
+
+// ============================================================================
+// PROTECTED ROUTES CONFIG
+// ============================================================================
+
+/**
+ * Routes that require authentication.
+ * Used by middleware for automatic redirects.
+ */
+export const PROTECTED_ROUTES = {
+  /** Routes requiring any authentication */
+  authenticated: ['/my', '/submit', '/organizer/dashboard', '/organizer/claim'],
+
+  /** Routes requiring admin role */
+  admin: ['/admin'],
+
+  /** Routes requiring verified organizer role */
+  organizer: ['/organizer/dashboard'],
+} as const;
+
+/**
+ * Where to redirect unauthenticated users.
+ */
+export const AUTH_REDIRECTS = {
+  unauthenticated: '/auth/login',
+  unauthorized: '/',
 } as const;
