@@ -10,26 +10,6 @@
 
 ---
 
-## 🚨 Current Status & Priority
-
-### 🔴 CRITICAL BUG: Auth Routes Missing
-
-**Problem**: Users cannot log in. The `/submit/new` page redirects to `/auth/login`, but that page doesn't exist (404 error).
-
-**Impact**: Event submission is completely broken.
-
-**Solution**: Implement auth routes as detailed in:
-- `21-USER-AUTH-IMPLEMENTATION.md` (full guide)
-- `22-AUTH-QUICK-REFERENCE.md` (quick patterns)
-
-**Files needed (in order):**
-1. `src/app/auth/login/page.tsx`
-2. `src/app/auth/callback/route.ts`
-3. `src/components/auth/auth-provider.tsx`
-4. Update `src/components/layout/header.tsx`
-
----
-
 ## Documentation Index
 
 | Doc | Description | Read When... |
@@ -92,12 +72,13 @@
 - Admin review queue
 - Approve/reject/request-changes flow
 
-### Phase 3b: User Authentication 🔴 IN PROGRESS
-- **Critical bug**: `/auth/login` page doesn't exist!
-- Magic link authentication
-- Session management
-- Protected routes
-- See `21-USER-AUTH-IMPLEMENTATION.md`
+### Phase 3b: User Authentication ✅ COMPLETE
+- Magic link authentication via Supabase Auth
+- Session management with AuthProvider context
+- Auth routes (`/auth/login`, `/auth/callback`, `/auth/logout`)
+- Header user menu with avatar and dropdown
+- Mobile menu drawer with auth integration
+- See `AUTH-README.md` for architecture details
 
 ### Phase 4: Hearts & Profiles 📋 PLANNED
 - Save/heart events

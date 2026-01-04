@@ -40,7 +40,7 @@ Happenlist is a local events directory web application that connects people with
 - "Part of a series" badges and linking
 
 ### Phase 3: Event Management ✅ IMPLEMENTED
-- Magic link authentication
+- Magic link authentication via Supabase Auth
 - Multi-step event submission form (7 steps)
 - Draft auto-save functionality
 - Admin approval workflow (approve/reject/request changes)
@@ -48,11 +48,14 @@ Happenlist is a local events directory web application that connects people with
 - Soft delete with restore capability
 - Series integration in submission flow
 - Comprehensive audit logging
+- **Auth UI**: Login page, callback, logout, user menu, mobile menu
+- **Session management**: AuthProvider context, useAuth hook
 
-### Phase 4: Users & Hearts
+### Phase 4: Users & Hearts 📋 PLANNED
 - Heart/save events
 - "My Hearts" page
 - Email preferences (optional)
+- Database migration for hearts table (prepared)
 
 ### Phase 5: Organizer Accounts (Future)
 - Organizer user type
