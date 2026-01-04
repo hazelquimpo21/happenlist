@@ -3,7 +3,24 @@
 > **Purpose**: Complete specification for implementing user types, auth, hearts, organizer claiming, and admin workflows
 > **For**: Claude Code implementation
 > **Created**: 2026-01-04
-> **Status**: 📋 READY TO IMPLEMENT
+> **Updated**: 2026-01-04
+> **Status**: ✅ MOSTLY IMPLEMENTED (Hearts, Follows, Profile, Middleware complete)
+
+---
+
+## 📋 Implementation Status
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Magic link auth | ✅ Complete | Login/callback/logout routes |
+| User session | ✅ Complete | AuthContext + useAuth hook |
+| Route protection | ✅ Complete | Middleware for /my/*, /submit/*, /admin/* |
+| Hearts system | ✅ Complete | Toggle, API, My Hearts page |
+| Follows system | ✅ Complete | Toggle follow for organizers/venues/categories |
+| Profile settings | ✅ Complete | /my/settings with profile form |
+| Organizer claiming | ⏳ Pending | DB schema ready, UI not built |
+| Organizer dashboard | ⏳ Pending | Not started |
+| Email notifications | ⏳ Pending | email_queue table ready |
 
 ---
 

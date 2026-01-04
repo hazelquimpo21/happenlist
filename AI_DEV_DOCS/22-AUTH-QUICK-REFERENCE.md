@@ -1,125 +1,85 @@
 # 🚀 Auth Implementation Quick Reference
 
-> **Quick reference card for implementing user authentication**
+> **Quick reference card for user authentication system**
 > **Full details**: See `21-USER-AUTH-IMPLEMENTATION.md`
+> **Status**: ✅ PHASES 1-4 COMPLETE (Updated 2026-01-04)
 
 ---
 
-## 🔴 CRITICAL: Fix These First!
+## ✅ Implementation Status
 
-The app is broken right now. Users get 404 when trying to log in.
+**All core authentication features are now implemented!**
 
-**Problem**: `/submit/new` redirects to `/auth/login` but that page doesn't exist.
-
-**Fix in order:**
-
-### 1. Create Login Page
-```
-📁 src/app/auth/login/page.tsx
-```
-- Email input form
-- Call `signInWithMagicLink()` from `@/lib/auth`
-- Show "Check your email" on success
-- Accept `?redirect=` query param
-
-### 2. Create Callback Route
-```
-📁 src/app/auth/callback/route.ts
-```
-- Handle `?token_hash=xxx&type=magiclink`
-- Exchange token for session using Supabase
-- Redirect to `?next=` param or `/`
-- Handle errors gracefully
-
-### 3. Create Logout Route
-```
-📁 src/app/auth/logout/route.ts
-```
-- Call `signOut()` from `@/lib/auth`
-- Redirect to `/`
-
-### 4. Create Auth Context
-```
-📁 src/contexts/auth-context.tsx
-📁 src/components/auth/auth-provider.tsx
-📁 src/hooks/use-auth.ts
-```
-- Listen to `onAuthStateChange`
-- Provide session to all components
-- Wrap app in `layout.tsx`
-
-### 5. Update Header
-```
-📁 src/components/layout/header.tsx (UPDATE)
-📁 src/components/auth/user-menu.tsx (NEW)
-📁 src/components/auth/user-avatar.tsx (NEW)
-```
-- Show "Login" button for guests
-- Show avatar + dropdown for logged-in users
+| Feature | Status | Location |
+|---------|--------|----------|
+| Magic link login | ✅ Done | `/auth/login` |
+| Auth callback | ✅ Done | `/auth/callback` |
+| Logout | ✅ Done | `/auth/logout` |
+| Auth context | ✅ Done | `contexts/auth-context.tsx` |
+| User menu | ✅ Done | `components/auth/user-menu.tsx` |
+| Middleware | ✅ Done | `middleware.ts` |
+| Hearts | ✅ Done | `/my/hearts`, `/api/hearts` |
+| Follows | ✅ Done | `/api/follows` |
+| Profile | ✅ Done | `/my/settings`, `/api/profile` |
+| Organizer claims | ⏳ Pending | Not yet implemented |
 
 ---
 
-## 📋 File Creation Checklist
+## 📋 Completed File Checklist
 
-### Phase 1: Critical Auth
+### Phase 1: Critical Auth ✅
 ```
-□ src/app/auth/login/page.tsx
-□ src/app/auth/callback/route.ts
-□ src/app/auth/logout/route.ts
-□ src/contexts/auth-context.tsx
-□ src/components/auth/index.ts
-□ src/components/auth/auth-provider.tsx
-□ src/components/auth/login-form.tsx
-□ src/components/auth/user-menu.tsx
-□ src/components/auth/user-avatar.tsx
-□ src/hooks/index.ts
-□ src/hooks/use-auth.ts
-□ src/types/user.ts
-□ UPDATE: src/app/layout.tsx (wrap with AuthProvider)
-□ UPDATE: src/components/layout/header.tsx (add user menu)
+✅ src/app/auth/login/page.tsx
+✅ src/app/auth/callback/route.ts
+✅ src/app/auth/logout/route.ts
+✅ src/contexts/auth-context.tsx
+✅ src/components/auth/index.ts
+✅ src/components/auth/login-form.tsx
+✅ src/components/auth/user-menu.tsx
+✅ src/components/auth/user-avatar.tsx
+✅ src/hooks/use-auth.ts
+✅ src/types/user.ts
+✅ src/app/layout.tsx (wrapped with AuthProvider)
+✅ src/components/layout/header.tsx (user menu added)
 ```
 
-### Phase 2: Protected Routes
+### Phase 2: Protected Routes ✅
 ```
-□ src/middleware.ts
-□ src/components/auth/login-modal.tsx
-□ src/components/auth/require-auth.tsx
-□ src/components/layout/mobile-menu.tsx
-□ src/hooks/use-require-auth.ts
+✅ src/middleware.ts
+✅ src/components/layout/mobile-menu.tsx
 ```
 
-### Phase 3: Hearts
+### Phase 3: Hearts ✅
 ```
-□ RUN: 00010_user_profiles_and_roles.sql
-□ src/app/my/hearts/page.tsx
-□ src/app/api/hearts/route.ts
-□ src/components/hearts/index.ts
-□ src/components/hearts/heart-button.tsx
-□ src/components/hearts/hearts-list.tsx
-□ src/data/hearts/index.ts
-□ src/data/hearts/get-user-hearts.ts
-□ src/data/hearts/toggle-heart.ts
-□ src/data/hearts/check-heart.ts
-□ src/hooks/use-heart.ts
-□ UPDATE: src/components/events/event-card.tsx (add heart button)
+✅ RUN: 00011_user_auth_complete.sql
+✅ src/app/my/hearts/page.tsx
+✅ src/app/api/hearts/route.ts
+✅ src/components/hearts/index.ts
+✅ src/components/hearts/heart-button.tsx
+✅ src/data/user/toggle-heart.ts
+✅ src/data/user/get-hearts.ts
+✅ src/data/user/check-hearts.ts
+✅ src/hooks/use-heart.ts
 ```
 
-### Phase 4: Profiles
+### Phase 4: Profiles & Follows ✅
 ```
-□ src/app/my/settings/page.tsx
-□ src/app/api/profile/route.ts
-□ src/data/profile/index.ts
-□ src/data/profile/get-profile.ts
-□ src/data/profile/update-profile.ts
+✅ src/app/my/settings/page.tsx
+✅ src/app/my/settings/profile-form.tsx
+✅ src/app/api/profile/route.ts
+✅ src/app/api/follows/route.ts
+✅ src/data/user/get-profile.ts
+✅ src/data/user/update-profile.ts
+✅ src/data/user/toggle-follow.ts
+✅ src/data/user/get-follows.ts
 ```
 
-### Phase 5: Organizer Claiming
+### Phase 5: Organizer Claiming ⏳ PENDING
 ```
 □ src/app/organizer/claim/[slug]/page.tsx
 □ src/app/organizer/dashboard/page.tsx
 □ src/app/api/organizer/claim/route.ts
 □ src/app/api/organizer/verify/route.ts
-□ src/data/organizer/index.ts
 □ src/data/organizer/request-claim.ts
 □ src/data/organizer/verify-claim.ts
 □ src/data/organizer/get-user-organizers.ts
@@ -348,16 +308,19 @@ export const config = {
 ## 🧪 Test Checklist
 
 ```
-□ Can access /auth/login
-□ Can enter email and submit
-□ Magic link email received (check Supabase logs)
-□ Clicking link logs user in
-□ Header shows user avatar
-□ User menu dropdown works
-□ Can sign out
-□ Session persists on refresh
-□ Protected routes redirect to login
-□ Admin routes blocked for non-admins
+✅ Can access /auth/login
+✅ Can enter email and submit
+✅ Magic link email received (check Supabase logs)
+✅ Clicking link logs user in
+✅ Header shows user avatar
+✅ User menu dropdown works
+✅ Can sign out
+✅ Session persists on refresh
+✅ Protected routes redirect to login
+✅ Admin routes blocked for non-admins
+✅ Can heart/unheart events
+✅ /my/hearts shows saved events
+✅ Can update profile in /my/settings
 ```
 
 ---
