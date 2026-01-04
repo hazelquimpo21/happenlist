@@ -9,6 +9,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { createLogger } from '@/lib/utils/logger';
 import { isAdmin } from './is-admin';
+import { isSuperAdmin } from './is-superadmin';
 
 const logger = createLogger('Auth');
 
@@ -24,6 +25,7 @@ export interface UserSession {
   email: string;
   name: string | null;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
   createdAt: string;
 }
 
@@ -77,6 +79,7 @@ export async function getSession(): Promise<SessionResult> {
       email: user.email!,
       name,
       isAdmin: isAdmin(user.email),
+      isSuperAdmin: isSuperAdmin(user.email),
       createdAt: user.created_at,
     };
 
@@ -141,6 +144,35 @@ export async function requireAdminAuth(): Promise<UserSession> {
     });
     throw new Error('Admin access required');
   }
+
+  return session;
+}
+
+/**
+ * Require superadmin authentication - throws if not superadmin
+ *
+ * @returns Superadmin user session
+ * @throws Error if not authenticated or not superadmin
+ *
+ * @example
+ * ```ts
+ * const session = await requireSuperadminAuth();
+ * // Continue with superadmin-only operation (edit any event, etc.)
+ * ```
+ */
+export async function requireSuperadminAuth(): Promise<UserSession> {
+  const session = await requireAuth();
+
+  if (!session.isSuperAdmin) {
+    logger.warn('🦸 Non-superadmin attempted superadmin action', {
+      metadata: { email: session.email },
+    });
+    throw new Error('Superadmin access required');
+  }
+
+  logger.info('🦸 Superadmin access granted', {
+    metadata: { email: session.email },
+  });
 
   return session;
 }
