@@ -89,9 +89,11 @@ happenlist/
 │   │   │
 │   │   ├── auth/                           # Auth pages (Phase 3) ✅
 │   │   │   ├── login/
-│   │   │   │   └── page.tsx                # Magic link login
-│   │   │   └── callback/
-│   │   │       └── route.ts                # Magic link callback
+│   │   │   │   └── page.tsx                # Magic link login page
+│   │   │   ├── callback/
+│   │   │   │   └── route.ts                # Magic link token handler
+│   │   │   └── logout/
+│   │   │       └── route.ts                # Sign out and redirect
 │   │   │
 │   │   ├── submit/                         # Event submission (Phase 3) ✅
 │   │   │   ├── new/
@@ -185,10 +187,11 @@ happenlist/
 │   │   │
 │   │   ├── layout/                         # Layout components
 │   │   │   ├── index.ts
-│   │   │   ├── header.tsx
+│   │   │   ├── header.tsx                  # Main header component
+│   │   │   ├── header-auth.tsx             # Auth controls (login/user menu)
 │   │   │   ├── header-nav.tsx
 │   │   │   ├── header-search.tsx
-│   │   │   ├── mobile-menu.tsx
+│   │   │   ├── mobile-menu.tsx             # Radix dialog drawer
 │   │   │   ├── footer.tsx
 │   │   │   ├── container.tsx
 │   │   │   └── breadcrumbs.tsx
@@ -250,9 +253,10 @@ happenlist/
 │   │   │   └── heart-button.tsx            # Toggle heart with optimistic UI
 │   │   │
 │   │   ├── auth/                           # Auth components (Phase 3) ✅
-│   │   │   ├── index.ts
-│   │   │   ├── login-form.tsx              # Magic link form
-│   │   │   └── user-menu.tsx               # Logged-in user menu
+│   │   │   ├── index.ts                    # Barrel exports
+│   │   │   ├── login-form.tsx              # Magic link email form
+│   │   │   ├── user-menu.tsx               # Radix dropdown for logged-in users
+│   │   │   └── user-avatar.tsx             # Avatar with initials fallback
 │   │   │
 │   │   ├── submit/                         # Submission components (Phase 3) ✅
 │   │   │   ├── index.ts
@@ -357,13 +361,19 @@ happenlist/
 │   │       ├── index.ts
 │   │       └── event-actions.ts            # approve, reject, requestChanges, etc.
 │   │
+│   ├── contexts/                           # React contexts (Phase 3) ✅
+│   │   ├── index.ts                        # Barrel exports
+│   │   └── auth-context.tsx                # AuthProvider + useAuth
+│   │
 │   ├── hooks/                              # React hooks
 │   │   ├── index.ts
+│   │   ├── use-auth.ts                     # Re-export from auth-context ✅
 │   │   ├── use-debounce.ts
 │   │   ├── use-media-query.ts
 │   │   ├── use-infinite-scroll.ts
 │   │   ├── use-auth.ts                     # Auth hook (Phase 4) ✅
 │   │   └── use-heart.ts                    # Heart hook with optimistic UI (Phase 4) ✅
+│   │   └── use-heart.ts                    # Phase 4
 │   │
 │   ├── types/                              # TypeScript types
 │   │   ├── index.ts
@@ -373,6 +383,7 @@ happenlist/
 │   │   ├── category.ts
 │   │   ├── filters.ts
 │   │   ├── api.ts
+│   │   ├── user.ts                         # User/auth types (Phase 3) ✅
 │   │   └── submission.ts                   # Submission types (Phase 3) ✅
 │   │
 │   ├── contexts/                           # React contexts (Phase 4) ✅
