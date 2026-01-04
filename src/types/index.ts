@@ -49,3 +49,20 @@ export type {
   SortOption,
   EventQueryParams,
 } from './filters';
+
+// User & Auth types
+export type {
+  UserRole,
+  UserSession,
+  AuthContextValue,
+  Profile,
+  ProfileUpdateData,
+  LoginFormState,
+  AuthCallbackResult,
+  AuthCheckResult,
+  Heart,
+  HeartedEvent,
+  ClaimStatus,
+  OrganizerWithClaim,
+  ClaimOrganizerRequest,
+} from './user';

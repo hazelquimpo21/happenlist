@@ -1,14 +1,25 @@
 /**
  * ROOT LAYOUT
  * ===========
- * Main application layout with header, footer, and fonts.
+ * Main application layout with header, footer, fonts, and auth.
+ *
+ * This layout wraps the entire app with:
+ * - AuthProvider for authentication state
+ * - Toaster for toast notifications
+ * - Header and Footer components
  */
 
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { Toaster } from 'sonner';
+import { AuthProvider } from '@/contexts/auth-context';
 import { Header, Footer } from '@/components/layout';
 import { SITE_CONFIG } from '@/lib/constants';
 import './globals.css';
+
+// ============================================================================
+// FONTS
+// ============================================================================
 
 // Load Inter font for body text
 const inter = Inter({
@@ -16,6 +27,10 @@ const inter = Inter({
   display: 'swap',
   variable: '--font-body',
 });
+
+// ============================================================================
+// METADATA
+// ============================================================================
 
 /**
  * Root metadata for the application.
@@ -55,22 +70,31 @@ export const metadata: Metadata = {
   },
 };
 
+// ============================================================================
+// LAYOUT COMPONENT
+// ============================================================================
+
 interface RootLayoutProps {
   children: React.ReactNode;
 }
 
 export default function RootLayout({ children }: RootLayoutProps) {
-  // Log app startup for debugging
-  console.log(`
+  // Log app startup for debugging (only runs on server)
+  if (typeof window === 'undefined') {
+    console.log(`
   ╔═══════════════════════════════════════════════════════════╗
   ║                                                           ║
   ║   🎉 HAPPENLIST - Discover Local Events                   ║
   ║                                                           ║
-  ║   Environment: ${process.env.NODE_ENV}                               ║
-  ║   URL: ${SITE_CONFIG.url}                    ║
+  ║   Environment: ${process.env.NODE_ENV?.padEnd(20) || 'unknown'}             ║
+  ║   URL: ${SITE_CONFIG.url.padEnd(40)}     ║
+  ║                                                           ║
+  ║   🔐 Auth: Magic Link (Supabase)                          ║
+  ║   📦 Database: Supabase PostgreSQL                        ║
   ║                                                           ║
   ╚═══════════════════════════════════════════════════════════╝
-  `);
+    `);
+  }
 
   return (
     <html lang="en" className={inter.variable}>
@@ -88,14 +112,31 @@ export default function RootLayout({ children }: RootLayoutProps) {
         />
       </head>
       <body className="min-h-screen flex flex-col">
-        {/* Site Header */}
-        <Header />
+        {/* Auth Provider - Wraps entire app for auth state */}
+        <AuthProvider>
+          {/* Site Header */}
+          <Header />
 
-        {/* Main Content */}
-        <main className="flex-1">{children}</main>
+          {/* Main Content */}
+          <main className="flex-1">{children}</main>
 
-        {/* Site Footer */}
-        <Footer />
+          {/* Site Footer */}
+          <Footer />
+
+          {/* Toast Notifications */}
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              duration: 4000,
+              className: 'font-body',
+              style: {
+                background: 'white',
+                border: '1px solid hsl(var(--sand))',
+                borderRadius: '12px',
+              },
+            }}
+          />
+        </AuthProvider>
       </body>
     </html>
   );

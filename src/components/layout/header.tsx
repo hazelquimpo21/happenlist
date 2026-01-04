@@ -1,20 +1,38 @@
 /**
  * HEADER COMPONENT
  * ================
- * Site navigation header with logo, nav links, and search.
+ * Site navigation header with logo, nav links, search, and auth.
+ *
+ * The header shows:
+ * - Logo (links to home)
+ * - Navigation links (desktop only)
+ * - Search button
+ * - Auth controls (login button or user menu)
+ * - Mobile menu button (mobile only)
+ *
+ * Auth state is handled by the HeaderAuth client component.
  */
 
 import Link from 'next/link';
-import { Search, Menu } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Container } from './container';
-import { Button } from '@/components/ui';
+import { HeaderAuth } from './header-auth';
+import { MobileMenu } from './mobile-menu';
 import { NAV_ITEMS, ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 interface HeaderProps {
   /** Transparent header for hero overlays */
   transparent?: boolean;
 }
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
 
 /**
  * Site header with navigation.
@@ -38,7 +56,9 @@ export function Header({ transparent = false }: HeaderProps) {
     >
       <Container>
         <nav className="flex items-center justify-between h-16 md:h-18">
-          {/* Logo */}
+          {/* ---------------------------------------------------------------- */}
+          {/* LOGO                                                            */}
+          {/* ---------------------------------------------------------------- */}
           <Link
             href={ROUTES.home}
             className="flex items-center gap-2 font-display text-h3 text-charcoal hover:text-coral transition-colors"
@@ -47,7 +67,9 @@ export function Header({ transparent = false }: HeaderProps) {
             <span className="hidden sm:inline">Happenlist</span>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* ---------------------------------------------------------------- */}
+          {/* DESKTOP NAVIGATION                                              */}
+          {/* ---------------------------------------------------------------- */}
           <div className="hidden md:flex items-center gap-1">
             {NAV_ITEMS.map((item) => (
               <Link
@@ -65,7 +87,9 @@ export function Header({ transparent = false }: HeaderProps) {
             ))}
           </div>
 
-          {/* Right side actions */}
+          {/* ---------------------------------------------------------------- */}
+          {/* RIGHT SIDE ACTIONS                                              */}
+          {/* ---------------------------------------------------------------- */}
           <div className="flex items-center gap-2">
             {/* Search button */}
             <Link
@@ -80,17 +104,15 @@ export function Header({ transparent = false }: HeaderProps) {
               <Search className="w-5 h-5" />
             </Link>
 
-            {/* Mobile menu button */}
-            <button
-              className={cn(
-                'md:hidden p-2 rounded-md',
-                'text-stone hover:text-charcoal hover:bg-sand/50',
-                'transition-colors duration-fast'
-              )}
-              aria-label="Open menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
+            {/* Auth controls (login/user menu) - desktop */}
+            <div className="hidden md:block">
+              <HeaderAuth />
+            </div>
+
+            {/* Mobile menu (includes auth on mobile) */}
+            <div className="md:hidden">
+              <MobileMenu />
+            </div>
           </div>
         </nav>
       </Container>
