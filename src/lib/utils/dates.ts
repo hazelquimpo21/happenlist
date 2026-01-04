@@ -186,3 +186,35 @@ export function parseMonthName(monthName: string): number {
 
   return months[monthName.toLowerCase()] || 1;
 }
+
+/**
+ * Format a date with a custom pattern
+ *
+ * @example
+ * formatDate('2025-02-14', 'EEE, MMM d')
+ * // => 'Fri, Feb 14'
+ */
+export function formatDate(dateString: string, pattern: string = 'MMM d, yyyy'): string {
+  try {
+    const date = parseISO(dateString);
+    return format(date, pattern);
+  } catch {
+    return dateString;
+  }
+}
+
+/**
+ * Format a time from a datetime string
+ *
+ * @example
+ * formatTime('2025-02-14T19:00:00')
+ * // => '7:00 PM'
+ */
+export function formatTime(datetimeString: string, pattern: string = 'h:mm a'): string {
+  try {
+    const date = parseISO(datetimeString);
+    return format(date, pattern);
+  } catch {
+    return '';
+  }
+}

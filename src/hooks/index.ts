@@ -2,12 +2,27 @@
  * HOOKS INDEX
  * ===========
  * Central export for all custom hooks.
+ *
+ * @module hooks
  */
 
-// Auth hooks
+// ============================================================================
+// AUTH HOOKS
+// ============================================================================
+
 export { useAuth } from './use-auth';
 
-// UI hooks
+// ============================================================================
+// USER FEATURE HOOKS
+// ============================================================================
+
+export { useHeart } from './use-heart';
+export type { UseHeartOptions, UseHeartReturn } from './use-heart';
+
+// ============================================================================
+// UI HOOKS
+// ============================================================================
+
 export { useDebounce } from './use-debounce';
 export {
   useMediaQuery,
