@@ -43,6 +43,16 @@ const ACTION_PREFIXES: Record<string, string> = {
   event_unpublished: '📥 🎫',
   event_fetch: '📋 🎫',
   event_fetch_single: '🔎 🎫',
+  event_changes_req: '📝 🎫',
+
+  // Superadmin actions
+  superadmin_edit: '🦸 ✏️',
+  superadmin_soft_delete: '🦸 🗑️',
+  superadmin_hard_delete: '🦸 💥',
+  superadmin_restore: '🦸 ♻️',
+  superadmin_status_change: '🦸 🔄',
+  superadmin_bulk_delete: '🦸 🗑️📦',
+  superadmin_bulk_status: '🦸 🔄📦',
 
   // Admin actions
   admin_login: '🔐 👤',
@@ -230,6 +240,11 @@ export const adminDataLogger = createLogger('AdminData');
  * Logger for audit trail
  */
 export const auditLogger = createLogger('Audit');
+
+/**
+ * Logger for superadmin operations
+ */
+export const superadminLogger = createLogger('Superadmin');
 
 // ============================================================================
 // HELPER FUNCTIONS

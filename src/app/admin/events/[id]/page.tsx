@@ -22,12 +22,15 @@ import {
   Edit,
   History,
   AlertCircle,
+  Shield,
+  Pencil,
 } from 'lucide-react';
 import { AdminHeader, AdminBreadcrumbs } from '@/components/admin';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { getAdminEvent, getEventAuditHistory } from '@/data/admin';
+import { getSession, isSuperAdmin } from '@/lib/auth';
 import { adminDataLogger } from '@/lib/utils/logger';
 import { getBestImageUrl, getImageUrlIssue } from '@/lib/utils';
 import { EventApprovalForm } from './approval-form';
@@ -48,6 +51,10 @@ export default async function EventReviewPage({ params }: PageProps) {
     entityType: 'event',
     entityId: resolvedParams.id,
   });
+
+  // Check if current user is superadmin
+  const { session } = await getSession();
+  const userIsSuperAdmin = session ? isSuperAdmin(session.email) : false;
 
   // Fetch event and audit history in parallel
   const [event, auditHistory] = await Promise.all([
@@ -139,6 +146,20 @@ export default async function EventReviewPage({ params }: PageProps) {
               leftIcon={<ExternalLink className="w-4 h-4" />}
             >
               View Source
+            </Button>
+          )}
+
+          {/* Superadmin Edit Button */}
+          {userIsSuperAdmin && (
+            <Button
+              href={`/admin/events/${event.id}/edit`}
+              variant="secondary"
+              size="sm"
+              leftIcon={<Pencil className="w-4 h-4" />}
+              className="bg-purple-100 text-purple-800 hover:bg-purple-200 border-purple-200"
+            >
+              <Shield className="w-3.5 h-3.5 mr-1" />
+              Edit Event
             </Button>
           )}
         </div>
