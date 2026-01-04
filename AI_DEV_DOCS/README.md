@@ -10,6 +10,26 @@
 
 ---
 
+## 🚨 Current Status & Priority
+
+### 🔴 CRITICAL BUG: Auth Routes Missing
+
+**Problem**: Users cannot log in. The `/submit/new` page redirects to `/auth/login`, but that page doesn't exist (404 error).
+
+**Impact**: Event submission is completely broken.
+
+**Solution**: Implement auth routes as detailed in:
+- `21-USER-AUTH-IMPLEMENTATION.md` (full guide)
+- `22-AUTH-QUICK-REFERENCE.md` (quick patterns)
+
+**Files needed (in order):**
+1. `src/app/auth/login/page.tsx`
+2. `src/app/auth/callback/route.ts`
+3. `src/components/auth/auth-provider.tsx`
+4. Update `src/components/layout/header.tsx`
+
+---
+
 ## Documentation Index
 
 | Doc | Description | Read When... |
@@ -25,6 +45,10 @@
 | [08-FEATURES.md](./08-FEATURES.md) | Filtering, search, hearts, auth | Implementing features |
 | [09-IMPLEMENTATION-GUIDE.md](./09-IMPLEMENTATION-GUIDE.md) | Step-by-step build order | Following the plan |
 | [10-CODE-PATTERNS.md](./10-CODE-PATTERNS.md) | Reusable code snippets | Writing code |
+| [11-IMAGE-SCRAPING.md](./11-IMAGE-SCRAPING.md) | Image extraction & Supabase hosting | Handling event images |
+| [20-EVENT-FLOWS-ARCHITECTURE.md](./20-EVENT-FLOWS-ARCHITECTURE.md) | Event submission, approval, admin flows | Building event management |
+| [21-USER-AUTH-IMPLEMENTATION.md](./21-USER-AUTH-IMPLEMENTATION.md) | **🔴 START HERE** - Auth, roles, permissions | Implementing user system |
+| [22-AUTH-QUICK-REFERENCE.md](./22-AUTH-QUICK-REFERENCE.md) | Quick patterns & checklist for auth | Quick reference during coding |
 
 ---
 
@@ -51,26 +75,40 @@
 
 ## Development Phases
 
-### Phase 1: Foundation (MVP) ✓ Documented
+### Phase 1: Foundation (MVP) ✅ COMPLETE
 - Public event browsing
 - Event, venue, organizer pages
 - Filtering and search
 - SEO optimization
 
-### Phase 2: Series & Recurring
+### Phase 2: Series & Recurring ✅ COMPLETE
 - Multi-session events
 - Workshop/class series
 - Series detail pages
 
-### Phase 3: Users & Hearts
-- Authentication
-- Save/heart events
-- My Hearts page
+### Phase 3a: Event Submission ✅ COMPLETE
+- Multi-step submission form
+- Draft auto-save
+- Admin review queue
+- Approve/reject/request-changes flow
 
-### Phase 4: Organizer Dashboard
-- Organizer accounts
-- Event submission
-- Management dashboard
+### Phase 3b: User Authentication 🔴 IN PROGRESS
+- **Critical bug**: `/auth/login` page doesn't exist!
+- Magic link authentication
+- Session management
+- Protected routes
+- See `21-USER-AUTH-IMPLEMENTATION.md`
+
+### Phase 4: Hearts & Profiles 📋 PLANNED
+- Save/heart events
+- User profiles table
+- My Hearts page
+- Account settings
+
+### Phase 5: Organizer Claiming 📋 PLANNED
+- Claim organizer profiles
+- Verification system
+- Organizer dashboard
 
 ---
 
