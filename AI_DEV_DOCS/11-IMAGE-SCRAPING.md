@@ -406,15 +406,30 @@ Events have these image-related fields:
 
 | Field | Purpose |
 |-------|---------|
+| **Hero Image** | |
 | `image_url` | Validated/hosted image URL (use for display) |
 | `image_hosted` | Whether image is in our Supabase Storage |
 | `image_storage_path` | Path in storage bucket (for deletion) |
+| `raw_image_url` | Original scraped URL (for debugging) |
+| `image_validated` | Whether URL has been verified |
+| **Flyer/Poster** | |
+| `flyer_url` | Event flyer/poster URL (**must be Supabase hosted**) |
+| `flyer_hosted` | Whether flyer is in our Supabase Storage |
+| `flyer_storage_path` | Path in storage bucket |
+| **Thumbnail** | |
 | `thumbnail_url` | Validated thumbnail URL |
 | `thumbnail_hosted` | Whether thumbnail is hosted |
-| `flyer_url` | Event flyer/poster URL |
-| `raw_image_url` | Original scraped URL (for debugging) |
+| `thumbnail_storage_path` | Path in storage bucket |
 | `raw_thumbnail_url` | Original scraped thumbnail |
-| `image_validated` | Whether URL has been verified |
+
+### ⚠️ Important: All Images Must Be Hosted
+
+**Do NOT store external URLs** for any image type. All images must be:
+1. Downloaded from source
+2. Uploaded to Supabase Storage
+3. Stored with Supabase CDN URL
+
+This ensures images don't expire or break when external sources change.
 
 ---
 

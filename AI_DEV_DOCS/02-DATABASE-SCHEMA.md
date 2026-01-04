@@ -200,8 +200,10 @@ CREATE TABLE events (
   -- Basic Info
   title TEXT NOT NULL,
   slug TEXT NOT NULL,
-  description TEXT,
-  short_description TEXT,             -- For cards, max ~160 chars
+  description TEXT,                   -- General event description
+  short_description TEXT,             -- One-liner for cards, max ~160 chars
+  happenlist_summary TEXT,            -- Editorial summary from Happenlist's perspective
+  organizer_description TEXT,         -- Verbatim description from the organizer
   
   -- Timing
   start_datetime TIMESTAMPTZ NOT NULL,
@@ -233,9 +235,15 @@ CREATE TABLE events (
   ticket_url TEXT,
   
   -- Media
-  image_url TEXT,                     -- Main hero image
-  flyer_url TEXT,                     -- Event flyer/poster (separate from hero)
-  thumbnail_url TEXT,                 -- Small card thumbnail
+  image_url TEXT,                     -- Main hero image (Supabase hosted)
+  image_hosted BOOLEAN DEFAULT false, -- True if uploaded to Supabase Storage
+  image_storage_path TEXT,            -- Path in storage bucket
+  flyer_url TEXT,                     -- Event flyer/poster (Supabase hosted)
+  flyer_hosted BOOLEAN DEFAULT false, -- True if uploaded to Supabase Storage
+  flyer_storage_path TEXT,            -- Path in storage bucket
+  thumbnail_url TEXT,                 -- Small card thumbnail (Supabase hosted)
+  thumbnail_hosted BOOLEAN DEFAULT false,
+  thumbnail_storage_path TEXT,
   
   -- SEO
   meta_title TEXT,

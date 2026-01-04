@@ -457,6 +457,52 @@ Fetches and displays related events based on category, venue, or organizer.
 
 ---
 
+### FlyerLightbox
+
+**File:** `src/components/events/flyer-lightbox.tsx`
+
+Displays event flyer thumbnail that opens in a fullscreen lightbox.
+
+```typescript
+interface FlyerLightboxProps {
+  flyerUrl: string;           // URL of the flyer image (Supabase hosted)
+  alt: string;                // Alt text for the image
+  eventTitle?: string;        // Event title for download filename
+  className?: string;         // Additional CSS classes for thumbnail
+}
+```
+
+**Structure:**
+```
+┌──────────────────┐
+│ ┌──────────────┐ │
+│ │              │ │
+│ │    FLYER     │ │  ← Aspect 3:4 (portrait)
+│ │    IMAGE     │ │
+│ │              │ │
+│ └──────────────┘ │
+│  [View Flyer]    │  ← Click opens lightbox
+└──────────────────┘
+```
+
+**Behavior:**
+- Uses Radix UI Dialog for accessible modal
+- Shows flyer thumbnail with "View Flyer" label
+- Hover: Shows expand icon overlay
+- Click: Opens fullscreen lightbox with backdrop blur
+- Lightbox includes download button
+- ESC or click outside to close
+- Smooth fade/zoom animations
+
+**Lightbox Features:**
+- Full-size image view (object-contain)
+- Download button (top right)
+- Close button (top right)
+- Click outside or ESC to dismiss
+- Accessible focus management
+
+---
+
 ## Venue Components
 
 ### VenueCard

@@ -16,10 +16,13 @@ import {
   ExternalLink,
   Share2,
   User,
+  Sparkles,
+  Quote,
+  Info,
 } from 'lucide-react';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { Button, Badge } from '@/components/ui';
-import { EventGrid, SectionHeader, EventPrice } from '@/components/events';
+import { EventGrid, SectionHeader, EventPrice, FlyerLightbox } from '@/components/events';
 import { EventJsonLd } from '@/components/seo';
 import { getEvent, getEvents } from '@/data/events';
 import { parseEventSlug, buildVenueUrl, buildOrganizerUrl, getBestImageUrl } from '@/lib/utils';
@@ -145,28 +148,57 @@ export default async function EventPage({ params }: EventPageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main content */}
         <div className="lg:col-span-2">
-          {/* Hero image */}
-          {(() => {
-            const heroImage = getBestImageUrl(event.image_url, event.flyer_url);
-            return heroImage ? (
-              <div className="relative aspect-video rounded-lg overflow-hidden mb-6">
-                <Image
-                  src={heroImage}
-                  alt={event.title}
-                  fill
-                  className="object-cover"
-                  priority
+          {/* Hero image with optional flyer */}
+          <div className="flex gap-4 mb-6">
+            {/* Main hero image */}
+            <div className="flex-1">
+              {(() => {
+                const heroImage = getBestImageUrl(event.image_url, null);
+                return heroImage ? (
+                  <div className="relative aspect-video rounded-lg overflow-hidden">
+                    <Image
+                      src={heroImage}
+                      alt={event.title}
+                      fill
+                      className="object-cover"
+                      priority
+                    />
+                  </div>
+                ) : (
+                  // Placeholder for events without valid images
+                  <div className="relative aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-sand to-stone/20 flex items-center justify-center">
+                    <span className="text-stone/30 text-6xl font-display">
+                      {event.title.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
+            
+            {/* Event flyer (if exists) */}
+            {event.flyer_url && (
+              <div className="hidden sm:block w-40 lg:w-48 flex-shrink-0">
+                <FlyerLightbox
+                  flyerUrl={event.flyer_url}
+                  alt={`${event.title} event flyer`}
+                  eventTitle={event.title}
+                  className="w-full"
                 />
               </div>
-            ) : (
-              // Placeholder for events without valid images
-              <div className="relative aspect-video rounded-lg overflow-hidden mb-6 bg-gradient-to-br from-sand to-stone/20 flex items-center justify-center">
-                <span className="text-stone/30 text-6xl font-display">
-                  {event.title.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            );
-          })()}
+            )}
+          </div>
+          
+          {/* Mobile flyer (shown below hero on mobile) */}
+          {event.flyer_url && (
+            <div className="sm:hidden mb-6">
+              <FlyerLightbox
+                flyerUrl={event.flyer_url}
+                alt={`${event.title} event flyer`}
+                eventTitle={event.title}
+                className="w-full max-w-[200px] mx-auto"
+              />
+            </div>
+          )}
 
           {/* Event title and category */}
           <div className="mb-6">
@@ -178,17 +210,70 @@ export default async function EventPage({ params }: EventPageProps) {
             <h1 className="font-display text-h1 text-charcoal">
               {event.title}
             </h1>
+            
+            {/* One-line summary */}
+            {event.short_description && (
+              <p className="mt-3 text-lg text-stone italic">
+                {event.short_description}
+              </p>
+            )}
           </div>
 
-          {/* Description */}
+          {/* Happenlist Editorial Summary */}
+          {event.happenlist_summary && (
+            <div className="mb-8 p-6 bg-coral/5 rounded-lg border border-coral/20">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-5 h-5 text-coral" />
+                <h2 className="font-display text-h4 text-charcoal">
+                  Happenlist Highlights
+                </h2>
+              </div>
+              <div className="prose-event text-charcoal/90">
+                {event.happenlist_summary}
+              </div>
+            </div>
+          )}
+
+          {/* Organizer Description (Verbatim) */}
+          {event.organizer_description && (
+            <div className="mb-8 p-6 bg-warm-white rounded-lg border border-sand">
+              <div className="flex items-center gap-2 mb-3">
+                <Quote className="w-5 h-5 text-stone" />
+                <h2 className="font-display text-h4 text-charcoal">
+                  From the Organizer
+                </h2>
+              </div>
+              <div className="prose-event whitespace-pre-wrap text-charcoal/80 italic">
+                {event.organizer_description}
+              </div>
+            </div>
+          )}
+
+          {/* Main Description (fallback/additional info) */}
           {event.description && (
             <div className="mb-8">
-              <h2 className="font-display text-h3 text-charcoal mb-4">
-                About This Event
-              </h2>
+              <div className="flex items-center gap-2 mb-4">
+                <Info className="w-5 h-5 text-stone" />
+                <h2 className="font-display text-h3 text-charcoal">
+                  About This Event
+                </h2>
+              </div>
               <div className="prose-event whitespace-pre-wrap">
                 {event.description}
               </div>
+            </div>
+          )}
+
+          {/* Price Details Section (if exists and has detailed info) */}
+          {event.price_details && (
+            <div className="mb-8 p-4 bg-sage/10 rounded-lg border border-sage/30">
+              <h3 className="font-display text-h4 text-charcoal mb-2 flex items-center gap-2">
+                <Ticket className="w-5 h-5 text-sage" />
+                Pricing Details
+              </h3>
+              <p className="text-charcoal/80">
+                {event.price_details}
+              </p>
             </div>
           )}
 

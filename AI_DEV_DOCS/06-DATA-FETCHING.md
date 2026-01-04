@@ -85,6 +85,10 @@ type OrganizerRow = Database['public']['Tables']['organizers']['Row'];
 type CategoryRow = Database['public']['Tables']['categories']['Row'];
 
 // Event with joined relations
+// Note: EventRow includes all event fields from the database including:
+// - description, short_description, happenlist_summary, organizer_description
+// - price_details (for detailed pricing info)
+// - image_url, flyer_url (both Supabase hosted)
 export interface EventWithDetails extends EventRow {
   category: Pick<CategoryRow, 'id' | 'name' | 'slug' | 'icon'> | null;
   location: Pick<LocationRow, 'id' | 'name' | 'slug' | 'city' | 'address_line' | 'latitude' | 'longitude'> | null;

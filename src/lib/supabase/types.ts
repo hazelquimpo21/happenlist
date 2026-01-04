@@ -201,6 +201,8 @@ export interface Database {
           slug: string;
           description: string | null;
           short_description: string | null;
+          happenlist_summary: string | null;
+          organizer_description: string | null;
           start_datetime: string;
           end_datetime: string | null;
           instance_date: string;
@@ -263,6 +265,8 @@ export interface Database {
           slug: string;
           description?: string | null;
           short_description?: string | null;
+          happenlist_summary?: string | null;
+          organizer_description?: string | null;
           start_datetime: string;
           end_datetime?: string | null;
           instance_date: string;
@@ -325,6 +329,8 @@ export interface Database {
           slug?: string;
           description?: string | null;
           short_description?: string | null;
+          happenlist_summary?: string | null;
+          organizer_description?: string | null;
           start_datetime?: string;
           end_datetime?: string | null;
           instance_date?: string;
