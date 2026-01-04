@@ -652,6 +652,118 @@ interface SearchResultsProps {
 
 ---
 
+## Auth Components ✅ IMPLEMENTED
+
+### LoginForm
+
+**File:** `src/components/auth/login-form.tsx`
+
+```typescript
+interface LoginFormProps {
+  redirectTo?: string;        // Where to redirect after login
+  onSuccess?: () => void;     // Called after magic link sent
+  compact?: boolean;          // Smaller variant for modals
+}
+```
+
+**States:**
+- `idle`: Email input + submit button
+- `loading`: Sending magic link (spinner)
+- `success`: "Check your email" message + resend option (60s cooldown)
+- `error`: Error message + retry
+
+**Specifications:**
+- Validates email format before submission
+- Shows resend cooldown timer
+- Displays user-friendly error messages
+
+---
+
+### UserAvatar
+
+**File:** `src/components/auth/user-avatar.tsx`
+
+```typescript
+interface UserAvatarProps {
+  session: UserSession;
+  size?: 'sm' | 'md' | 'lg';
+  showRing?: boolean;         // Show focus ring on hover
+}
+```
+
+**Specifications:**
+- Shows profile image if available
+- Falls back to initials with consistent color based on email hash
+- Sizes: sm (32px), md (40px), lg (48px)
+
+---
+
+### UserMenu
+
+**File:** `src/components/auth/user-menu.tsx`
+
+```typescript
+interface UserMenuProps {
+  session: UserSession;
+  onSignOut: () => void;
+}
+```
+
+**Structure (dropdown):**
+```
+┌──────────────────────────────────────────────┐
+│  John Doe                                    │
+│  john@example.com                   ADMIN    │
+├──────────────────────────────────────────────┤
+│  ❤️ My Saved Events                          │
+│  📝 My Submissions                           │
+│  📣 My Organizer          (if organizer)     │
+├──────────────────────────────────────────────┤
+│  🔐 Admin Dashboard       (if admin)         │
+├──────────────────────────────────────────────┤
+│  ⚙️ Settings                                 │
+│  🚪 Sign Out                                 │
+└──────────────────────────────────────────────┘
+```
+
+**Specifications:**
+- Uses Radix UI DropdownMenu for accessibility
+- Shows role badge (Admin/Organizer)
+- Menu items vary by user role
+
+---
+
+### HeaderAuth
+
+**File:** `src/components/layout/header-auth.tsx`
+
+```typescript
+// No props - uses useAuth() internally
+```
+
+**States:**
+- `loading`: Skeleton while auth initializing
+- `guest`: Login button + Submit Event button
+- `authenticated`: UserMenu dropdown + Submit Event button
+
+---
+
+### MobileMenu
+
+**File:** `src/components/layout/mobile-menu.tsx`
+
+```typescript
+// No props - uses useAuth() internally
+```
+
+**Specifications:**
+- Uses Radix UI Dialog for slide-out drawer
+- Shows user info if authenticated
+- Navigation links + auth actions
+- Hamburger icon trigger
+
+---
+
 ## Heart Components
 
 ### HeartButton
