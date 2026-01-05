@@ -244,3 +244,4 @@ export function getImageUrlIssue(url: string | null | undefined): string | null 
   return 'Unknown URL pattern - cannot verify if image';
 }
 
+
