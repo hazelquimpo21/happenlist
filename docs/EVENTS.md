@@ -470,3 +470,13 @@ src/
 - [ ] Link event to series works
 - [ ] Create new series works
 - [ ] Events show series badge
+
+---
+
+## Related Documentation
+
+| Doc | Description |
+|-----|-------------|
+| [AUTH.md](./AUTH.md) | Authentication, user roles, permissions |
+| [ADMIN-ANYWHERE.md](./ADMIN-ANYWHERE.md) | Superadmin edit from any event page |
+| [SUPERADMIN-EVENT-MANAGEMENT.md](../AI_DEV_DOCS_ARCHIVE/SUPERADMIN-EVENT-MANAGEMENT.md) | Full superadmin system reference |
