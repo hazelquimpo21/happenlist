@@ -40,6 +40,7 @@ import {
 } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { isAdmin } from '@/lib/auth/is-admin';
+import { isSuperAdmin } from '@/lib/auth/is-superadmin';
 import { createLogger } from '@/lib/utils/logger';
 import type { AuthContextValue, UserSession } from '@/types/user';
 import type { User } from '@supabase/supabase-js';
@@ -67,6 +68,11 @@ export const AuthContext = createContext<AuthContextValue | undefined>(undefined
 
 /**
  * Build a UserSession from a Supabase user
+ *
+ * Determines user role based on email:
+ * - Superadmin emails (SUPERADMIN_EMAILS env var) → 'superadmin' role
+ * - Admin emails (ADMIN_EMAILS env var) → 'admin' role
+ * - All other logged-in users → 'attendee' role
  */
 function buildUserSession(user: User): UserSession {
   const email = user.email ?? '';
@@ -77,10 +83,17 @@ function buildUserSession(user: User): UserSession {
     null;
   const avatarUrl = user.user_metadata?.avatar_url || null;
 
-  // Determine role
-  // TODO: In the future, check profiles table for organizer status
-  const userIsAdmin = isAdmin(email);
-  const role = userIsAdmin ? 'admin' : 'attendee';
+  // Check admin and superadmin status
+  const userIsSuperAdmin = isSuperAdmin(email);
+  const userIsAdmin = isAdmin(email) || userIsSuperAdmin; // Superadmins are also admins
+
+  // Determine role (superadmin > admin > attendee)
+  let role: 'superadmin' | 'admin' | 'attendee' = 'attendee';
+  if (userIsSuperAdmin) {
+    role = 'superadmin';
+  } else if (userIsAdmin) {
+    role = 'admin';
+  }
 
   return {
     id: user.id,
@@ -89,6 +102,7 @@ function buildUserSession(user: User): UserSession {
     avatarUrl,
     role,
     isAdmin: userIsAdmin,
+    isSuperAdmin: userIsSuperAdmin,
     organizerId: null, // TODO: Fetch from profiles/organizers
     createdAt: user.created_at,
   };

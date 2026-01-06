@@ -86,7 +86,8 @@ happenlist/
 │   │   ├── layout/             #    Header, Footer, Container
 │   │   ├── events/             #    EventCard, EventGrid, EventImage
 │   │   ├── auth/               #    LoginForm, UserMenu
-│   │   └── submit/             #    Event submission form steps
+│   │   ├── submit/             #    Event submission form steps
+│   │   └── admin-anywhere/     #    Superadmin edit from any page
 │   │
 │   ├── data/                   # 📊 Data Fetching Layer
 │   │   ├── events/             #    getEvents, getEvent, getFeaturedEvents
@@ -474,6 +475,16 @@ npx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/lib/supabas
 1. Check `NEXT_PUBLIC_SITE_URL` matches your domain
 2. Check Supabase auth settings → URL Configuration
 3. Check `/auth/callback` route exists
+
+---
+
+## 📖 Internal Documentation
+
+| Doc | Description |
+|-----|-------------|
+| [docs/AUTH.md](./docs/AUTH.md) | Authentication, user roles, sessions |
+| [docs/EVENTS.md](./docs/EVENTS.md) | Event submission, approval, series |
+| [docs/ADMIN-ANYWHERE.md](./docs/ADMIN-ANYWHERE.md) | Superadmin edit from any page |
 
 ---
 

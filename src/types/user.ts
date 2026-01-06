@@ -15,12 +15,13 @@
 /**
  * User role levels (hierarchical)
  *
- * 🌐 guest     → Not logged in (anonymous visitor)
- * 👤 attendee  → Logged in user (can submit events, save hearts)
- * 📣 organizer → Verified organizer (can manage their events)
- * 🔑 admin     → Super admin (full access to everything)
+ * 🌐 guest      → Not logged in (anonymous visitor)
+ * 👤 attendee   → Logged in user (can submit events, save hearts)
+ * 📣 organizer  → Verified organizer (can manage their events)
+ * 🔑 admin      → Admin (can approve/reject events)
+ * 🦸 superadmin → Superadmin (can edit ANY event from anywhere)
  */
-export type UserRole = 'guest' | 'attendee' | 'organizer' | 'admin';
+export type UserRole = 'guest' | 'attendee' | 'organizer' | 'admin' | 'superadmin';
 
 // ============================================================================
 // USER SESSION
@@ -50,6 +51,9 @@ export interface UserSession {
 
   /** Quick check: is this user an admin? */
   isAdmin: boolean;
+
+  /** Quick check: is this user a superadmin? (can edit any event from anywhere) */
+  isSuperAdmin: boolean;
 
   /** If user has claimed an organizer, this is the organizer ID */
   organizerId: string | null;

@@ -2,6 +2,12 @@
  * EVENT DETAIL PAGE
  * =================
  * Individual event page with full details.
+ *
+ * Features:
+ * - Full event information display
+ * - Related events section
+ * - SEO structured data
+ * - Admin toolbar for superadmins (edit from anywhere!)
  */
 
 import { notFound } from 'next/navigation';
@@ -24,7 +30,9 @@ import { Container, Breadcrumbs } from '@/components/layout';
 import { Button, Badge } from '@/components/ui';
 import { EventGrid, SectionHeader, EventPrice, FlyerLightbox } from '@/components/events';
 import { EventJsonLd } from '@/components/seo';
+import { AdminToolbar, type AdminToolbarEvent } from '@/components/admin-anywhere';
 import { getEvent, getEvents } from '@/data/events';
+import { getSession, isSuperAdmin } from '@/lib/auth';
 import { parseEventSlug, buildVenueUrl, buildOrganizerUrl, getBestImageUrl } from '@/lib/utils';
 import { formatEventDate } from '@/lib/utils/dates';
 
@@ -90,15 +98,25 @@ export default async function EventPage({ params }: EventPageProps) {
     notFound();
   }
 
-  // Fetch event
-  const event = await getEvent({
-    slug: parsed.slug,
-    instanceDate: parsed.date,
-  });
+  // Fetch event and session in parallel
+  const [event, { session }] = await Promise.all([
+    getEvent({
+      slug: parsed.slug,
+      instanceDate: parsed.date,
+    }),
+    getSession(),
+  ]);
 
   if (!event) {
     console.log('⚠️ [EventPage] Event not found');
     notFound();
+  }
+
+  // Check if current user is superadmin
+  const userIsSuperAdmin = session ? isSuperAdmin(session.email) : false;
+
+  if (userIsSuperAdmin) {
+    console.log('🛡️ [EventPage] Superadmin detected, showing admin toolbar');
   }
 
   // Fetch related events (same category)
@@ -108,6 +126,29 @@ export default async function EventPage({ params }: EventPageProps) {
   });
 
   console.log('✅ [EventPage] Event loaded:', event.title);
+
+  // Build admin toolbar event data (only if superadmin)
+  const adminToolbarEvent: AdminToolbarEvent | null = userIsSuperAdmin
+    ? {
+        id: event.id,
+        title: event.title,
+        slug: event.slug,
+        status: event.status,
+        instance_date: event.instance_date,
+        start_datetime: event.start_datetime,
+        end_datetime: event.end_datetime,
+        description: event.description,
+        short_description: event.short_description,
+        price_type: event.price_type,
+        price_low: event.price_low,
+        price_high: event.price_high,
+        is_free: event.is_free,
+        ticket_url: event.ticket_url,
+        is_all_day: event.is_all_day,
+        series_id: event.series_id,
+        series_title: event.series?.title || null,
+      }
+    : null;
 
   // Format full address
   const fullAddress = event.location
@@ -126,6 +167,14 @@ export default async function EventPage({ params }: EventPageProps) {
     <>
       {/* Structured data for SEO */}
       <EventJsonLd event={event} />
+
+      {/* Admin toolbar for superadmins */}
+      {adminToolbarEvent && (
+        <AdminToolbar
+          event={adminToolbarEvent}
+          isSuperAdmin={userIsSuperAdmin}
+        />
+      )}
 
       <Container className="py-8">
         {/* Breadcrumbs */}
