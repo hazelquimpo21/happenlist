@@ -4,6 +4,16 @@
 
 ---
 
+## Documentation
+
+| Guide | Description |
+|-------|-------------|
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Full system architecture, data flow, component taxonomy |
+| [docs/AUTH.md](./docs/AUTH.md) | Authentication, user roles, hearts, follows |
+| [docs/EVENTS.md](./docs/EVENTS.md) | Event submission, approval, series |
+
+---
+
 ## Quick Start
 
 ```bash
@@ -72,11 +82,10 @@ npm run dev
 
 ```
 happenlist/
-├── AI_DEV_DOCS/              # Documentation for developers
-│   ├── 00-PROJECT-OVERVIEW.md
-│   ├── 01-DESIGN-SYSTEM.md
-│   ├── 02-DATABASE-SCHEMA.md
-│   └── ...
+├── docs/                     # Documentation
+│   ├── AUTH.md               # Auth system guide
+│   └── EVENTS.md             # Event flows guide
+├── ARCHITECTURE.md           # System architecture
 │
 ├── supabase/
 │   └── migrations/           # SQL migration files
