@@ -11,6 +11,7 @@
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Full system architecture, data flow, component taxonomy |
 | [docs/AUTH.md](./docs/AUTH.md) | Authentication, user roles, hearts, follows |
 | [docs/EVENTS.md](./docs/EVENTS.md) | Event submission, approval, series |
+| [docs/EVENT-DETAIL-COMPONENTS.md](./docs/EVENT-DETAIL-COMPONENTS.md) | Event page: time display, external links |
 
 ---
 

@@ -125,7 +125,11 @@ export async function submitEvent(params: SubmitEventParams): Promise<SubmitEven
       ticket_url: draftData.ticket_url || null,
       image_url: draftData.image_url || null,
       thumbnail_url: draftData.thumbnail_url || null,
+      // External links
       website_url: draftData.website_url || null,
+      instagram_url: draftData.instagram_url || null,
+      facebook_url: draftData.facebook_url || null,
+      registration_url: draftData.registration_url || null,
       status: 'pending_review',
       source: 'user_submission',
       submitted_by_email: userEmail,

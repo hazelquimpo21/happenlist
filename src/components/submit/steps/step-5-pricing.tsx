@@ -14,7 +14,7 @@
 
 'use client';
 
-import { Gift, DollarSign, Ticket, ExternalLink, Heart } from 'lucide-react';
+import { Gift, DollarSign, Ticket, ExternalLink, Heart, Globe, Instagram, Facebook, ClipboardList } from 'lucide-react';
 import { StepHeader } from '../step-progress';
 import { Input } from '@/components/ui';
 import type { EventDraftData, PriceType } from '@/types/submission';
@@ -269,8 +269,8 @@ export function Step5Pricing({ draftData, updateData }: Step5Props) {
           className="block text-sm font-medium text-charcoal mb-1"
         >
           <span className="flex items-center">
-            <ExternalLink className="w-4 h-4 mr-1" />
-            Ticket/Registration URL
+            <Ticket className="w-4 h-4 mr-1" />
+            Ticket Purchase URL
           </span>
         </label>
         <Input
@@ -281,10 +281,99 @@ export function Step5Pricing({ draftData, updateData }: Step5Props) {
           placeholder="https://tickets.example.com/my-event"
         />
         <p className="text-xs text-stone mt-1">
-          {draftData.location_mode === 'online'
-            ? 'For online events, you can use this for the meeting link'
-            : 'Where can people buy tickets or register?'}
+          Where can people buy tickets? (e.g., Eventbrite, Ticketmaster)
         </p>
+      </div>
+
+      {/* ========== Registration URL (for free events/RSVPs) ========== */}
+      <div>
+        <label
+          htmlFor="registration_url"
+          className="block text-sm font-medium text-charcoal mb-1"
+        >
+          <span className="flex items-center">
+            <ClipboardList className="w-4 h-4 mr-1" />
+            Registration / RSVP URL
+          </span>
+        </label>
+        <Input
+          id="registration_url"
+          type="url"
+          value={draftData.registration_url || ''}
+          onChange={(e) => updateData({ registration_url: e.target.value })}
+          placeholder="https://rsvp.example.com/my-event"
+        />
+        <p className="text-xs text-stone mt-1">
+          {draftData.price_type === 'free'
+            ? 'Free events often need RSVP — add the link here!'
+            : 'For events that require registration separate from ticket purchase'}
+        </p>
+      </div>
+
+      {/* ========== External Links Section ========== */}
+      <div className="p-4 bg-cream rounded-lg border border-sand">
+        <p className="text-sm font-medium text-charcoal mb-3 flex items-center">
+          <Globe className="w-4 h-4 mr-2 text-coral" />
+          Event Links (optional)
+        </p>
+        <p className="text-xs text-stone mb-4">
+          Help attendees find more info about your event
+        </p>
+        <div className="space-y-4">
+          {/* Event Website */}
+          <div>
+            <label
+              htmlFor="website_url"
+              className="block text-sm text-charcoal mb-1 flex items-center"
+            >
+              <Globe className="w-4 h-4 mr-1.5 text-coral" />
+              Event Website
+            </label>
+            <Input
+              id="website_url"
+              type="url"
+              value={draftData.website_url || ''}
+              onChange={(e) => updateData({ website_url: e.target.value })}
+              placeholder="https://myevent.com"
+            />
+          </div>
+
+          {/* Instagram */}
+          <div>
+            <label
+              htmlFor="instagram_url"
+              className="block text-sm text-charcoal mb-1 flex items-center"
+            >
+              <Instagram className="w-4 h-4 mr-1.5 text-pink-500" />
+              Instagram
+            </label>
+            <Input
+              id="instagram_url"
+              type="url"
+              value={draftData.instagram_url || ''}
+              onChange={(e) => updateData({ instagram_url: e.target.value })}
+              placeholder="https://instagram.com/myevent"
+            />
+          </div>
+
+          {/* Facebook */}
+          <div>
+            <label
+              htmlFor="facebook_url"
+              className="block text-sm text-charcoal mb-1 flex items-center"
+            >
+              <Facebook className="w-4 h-4 mr-1.5 text-blue-600" />
+              Facebook Event
+            </label>
+            <Input
+              id="facebook_url"
+              type="url"
+              value={draftData.facebook_url || ''}
+              onChange={(e) => updateData({ facebook_url: e.target.value })}
+              placeholder="https://facebook.com/events/123456"
+            />
+          </div>
+        </div>
       </div>
 
       {/* ========== Free Event Message ========== */}

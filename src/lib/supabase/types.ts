@@ -239,6 +239,11 @@ export interface Database {
           thumbnail_hosted: boolean;
           thumbnail_storage_path: string | null;
           raw_thumbnail_url: string | null;
+          // External link fields (added 2026-01-06)
+          website_url: string | null;
+          instagram_url: string | null;
+          facebook_url: string | null;
+          registration_url: string | null;
           meta_title: string | null;
           meta_description: string | null;
           heart_count: number;
@@ -303,6 +308,11 @@ export interface Database {
           thumbnail_hosted?: boolean;
           thumbnail_storage_path?: string | null;
           raw_thumbnail_url?: string | null;
+          // External link fields (added 2026-01-06)
+          website_url?: string | null;
+          instagram_url?: string | null;
+          facebook_url?: string | null;
+          registration_url?: string | null;
           meta_title?: string | null;
           meta_description?: string | null;
           heart_count?: number;
@@ -367,6 +377,11 @@ export interface Database {
           thumbnail_hosted?: boolean;
           thumbnail_storage_path?: string | null;
           raw_thumbnail_url?: string | null;
+          // External link fields (added 2026-01-06)
+          website_url?: string | null;
+          instagram_url?: string | null;
+          facebook_url?: string | null;
+          registration_url?: string | null;
           meta_title?: string | null;
           meta_description?: string | null;
           heart_count?: number;

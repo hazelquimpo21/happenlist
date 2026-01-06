@@ -16,7 +16,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   Calendar,
-  Clock,
   MapPin,
   Ticket,
   ExternalLink,
@@ -28,7 +27,7 @@ import {
 } from 'lucide-react';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { Button, Badge } from '@/components/ui';
-import { EventGrid, SectionHeader, EventPrice, FlyerLightbox } from '@/components/events';
+import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox } from '@/components/events';
 import { EventJsonLd } from '@/components/seo';
 import { AdminToolbar, type AdminToolbarEvent } from '@/components/admin-anywhere';
 import { getEvent, getEvents } from '@/data/events';
@@ -145,6 +144,11 @@ export default async function EventPage({ params }: EventPageProps) {
         is_free: event.is_free,
         ticket_url: event.ticket_url,
         is_all_day: event.is_all_day,
+        // External links
+        website_url: event.website_url,
+        instagram_url: event.instagram_url,
+        facebook_url: event.facebook_url,
+        registration_url: event.registration_url,
         series_id: event.series_id,
         series_title: event.series?.title || null,
       }
@@ -365,19 +369,26 @@ export default async function EventPage({ params }: EventPageProps) {
           <div className="sticky top-24 space-y-6">
             {/* Event info card */}
             <div className="p-6 bg-warm-white rounded-lg border border-sand">
-              {/* Date & Time */}
+              {/* Date */}
               <div className="flex items-start gap-3 mb-4">
                 <Calendar className="w-5 h-5 text-coral mt-0.5" />
                 <div>
                   <p className="font-medium text-charcoal">
                     {formatEventDate(event.start_datetime, { format: 'long', includeTime: false })}
                   </p>
-                  {!event.is_all_day && (
-                    <p className="text-body-sm text-stone">
-                      {formatEventDate(event.start_datetime, { format: 'short', includeTime: true }).split(' - ')[1] || formatEventDate(event.start_datetime, { format: 'short' })}
-                    </p>
-                  )}
                 </div>
+              </div>
+
+              {/* Time (Start & End) */}
+              <div className="mb-4">
+                <EventDateTime
+                  startDatetime={event.start_datetime}
+                  endDatetime={event.end_datetime}
+                  isAllDay={event.is_all_day}
+                  timezone={event.timezone}
+                  variant="full"
+                  showIcon
+                />
               </div>
 
               {/* Location */}
@@ -404,7 +415,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 <EventPrice event={event} showDetails />
               </div>
 
-              {/* CTA Button */}
+              {/* Primary CTA Button */}
               {event.ticket_url ? (
                 <Button
                   href={event.ticket_url}
@@ -414,12 +425,37 @@ export default async function EventPage({ params }: EventPageProps) {
                 >
                   Get Tickets
                 </Button>
+              ) : event.registration_url ? (
+                <Button
+                  href={event.registration_url}
+                  external
+                  fullWidth
+                  rightIcon={<ExternalLink className="w-4 h-4" />}
+                >
+                  Register / RSVP
+                </Button>
               ) : (
-                <Button href={event.ticket_url || '#'} fullWidth disabled>
+                <Button href="#" fullWidth disabled>
                   More Info Coming Soon
                 </Button>
               )}
             </div>
+
+            {/* External Links */}
+            {(event.website_url || event.instagram_url || event.facebook_url || event.registration_url) && (
+              <div className="p-4 bg-warm-white rounded-lg border border-sand">
+                <h3 className="text-body-sm font-medium text-charcoal mb-3">
+                  Links & More
+                </h3>
+                <EventLinks
+                  websiteUrl={event.website_url}
+                  instagramUrl={event.instagram_url}
+                  facebookUrl={event.facebook_url}
+                  registrationUrl={event.registration_url}
+                  variant="full"
+                />
+              </div>
+            )}
 
             {/* Share button (placeholder) */}
             <Button variant="ghost" fullWidth leftIcon={<Share2 className="w-4 h-4" />}>

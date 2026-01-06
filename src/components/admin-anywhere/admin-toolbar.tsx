@@ -58,6 +58,11 @@ export interface AdminToolbarEvent {
   is_free: boolean;
   ticket_url: string | null;
   is_all_day: boolean;
+  // External links (added 2026-01-06)
+  website_url: string | null;
+  instagram_url: string | null;
+  facebook_url: string | null;
+  registration_url: string | null;
   // Series info
   series_id: string | null;
   series_title?: string | null;

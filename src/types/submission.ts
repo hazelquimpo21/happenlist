@@ -178,13 +178,18 @@ export interface EventDraftData {
   location_id?: string;
   new_location?: NewLocationData;
 
-  // Step 5: Pricing
+  // Step 5: Pricing & Links
   price_type?: PriceType;
   price_low?: number;
   price_high?: number;
   price_details?: string;
   is_free?: boolean;
   ticket_url?: string;
+  // External links (added 2026-01-06)
+  website_url?: string;
+  instagram_url?: string;
+  facebook_url?: string;
+  registration_url?: string;
 
   // Step 6: Media
   image_url?: string;
@@ -192,7 +197,6 @@ export interface EventDraftData {
 
   // Step 7: Additional
   organizer_id?: string;
-  website_url?: string;
 
   // Metadata
   source?: 'user_submission';

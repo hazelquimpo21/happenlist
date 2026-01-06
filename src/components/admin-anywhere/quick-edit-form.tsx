@@ -66,6 +66,11 @@ interface FormState {
   price_high: string;
   is_free: boolean;
   ticket_url: string;
+  // External links (added 2026-01-06)
+  website_url: string;
+  instagram_url: string;
+  facebook_url: string;
+  registration_url: string;
   status: string;
   notes: string;
 }
@@ -139,6 +144,11 @@ export function QuickEditForm({
     price_high: event.price_high?.toString() || '',
     is_free: event.is_free || false,
     ticket_url: event.ticket_url || '',
+    // External links
+    website_url: event.website_url || '',
+    instagram_url: event.instagram_url || '',
+    facebook_url: event.facebook_url || '',
+    registration_url: event.registration_url || '',
     status: event.status || 'draft',
     notes: '',
   });
@@ -242,6 +252,20 @@ export function QuickEditForm({
 
     if (formState.ticket_url !== (event.ticket_url || '')) {
       updates.ticket_url = formState.ticket_url;
+    }
+
+    // Handle external links
+    if (formState.website_url !== (event.website_url || '')) {
+      updates.website_url = formState.website_url || null;
+    }
+    if (formState.instagram_url !== (event.instagram_url || '')) {
+      updates.instagram_url = formState.instagram_url || null;
+    }
+    if (formState.facebook_url !== (event.facebook_url || '')) {
+      updates.facebook_url = formState.facebook_url || null;
+    }
+    if (formState.registration_url !== (event.registration_url || '')) {
+      updates.registration_url = formState.registration_url || null;
     }
 
     // Handle status change separately
@@ -549,8 +573,94 @@ export function QuickEditForm({
           value={formState.ticket_url}
           onChange={handleChange}
           className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
-          placeholder="https://..."
+          placeholder="https://tickets.example.com"
         />
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* External Links */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="p-4 bg-cream/50 rounded-lg border border-sand/50">
+        <p className="text-sm font-medium text-charcoal mb-3">
+          🔗 External Links <span className="text-stone font-normal">(optional)</span>
+        </p>
+        <div className="space-y-3">
+          {/* Website URL */}
+          <div>
+            <label
+              htmlFor="website_url"
+              className="block text-xs text-stone mb-1"
+            >
+              🌐 Event Website
+            </label>
+            <input
+              type="url"
+              id="website_url"
+              name="website_url"
+              value={formState.website_url}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+              placeholder="https://myevent.com"
+            />
+          </div>
+
+          {/* Registration URL */}
+          <div>
+            <label
+              htmlFor="registration_url"
+              className="block text-xs text-stone mb-1"
+            >
+              📝 Registration / RSVP URL
+            </label>
+            <input
+              type="url"
+              id="registration_url"
+              name="registration_url"
+              value={formState.registration_url}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+              placeholder="https://rsvp.example.com"
+            />
+          </div>
+
+          {/* Instagram URL */}
+          <div>
+            <label
+              htmlFor="instagram_url"
+              className="block text-xs text-stone mb-1"
+            >
+              📸 Instagram
+            </label>
+            <input
+              type="url"
+              id="instagram_url"
+              name="instagram_url"
+              value={formState.instagram_url}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+              placeholder="https://instagram.com/event"
+            />
+          </div>
+
+          {/* Facebook URL */}
+          <div>
+            <label
+              htmlFor="facebook_url"
+              className="block text-xs text-stone mb-1"
+            >
+              📘 Facebook Event
+            </label>
+            <input
+              type="url"
+              id="facebook_url"
+              name="facebook_url"
+              value={formState.facebook_url}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+              placeholder="https://facebook.com/events/123"
+            />
+          </div>
+        </div>
       </div>
 
       {/* ------------------------------------------------------------------ */}
