@@ -27,6 +27,10 @@ import {
   Clock,
   ChevronDown,
   X,
+  MapPin,
+  Search,
+  Star,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { AdminEventDetails } from '@/data/admin/get-admin-event';
@@ -41,6 +45,24 @@ interface EventEditFormProps {
 }
 
 type FormStatus = 'idle' | 'saving' | 'saved' | 'error';
+
+/**
+ * Venue search result from the API.
+ */
+interface VenueSearchResult {
+  id: string;
+  name: string;
+  address_line: string | null;
+  city: string;
+  state: string | null;
+  venue_type: string;
+  category: string | null;
+  rating: number | null;
+  review_count: number;
+  latitude: number | null;
+  longitude: number | null;
+  similarity_score?: number;
+}
 
 interface FormState {
   title: string;
@@ -108,6 +130,29 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
   const [deleteReason, setDeleteReason] = useState('');
   const [notes, setNotes] = useState('');
 
+  // Venue state
+  const [selectedVenue, setSelectedVenue] = useState<VenueSearchResult | null>(
+    event.location
+      ? {
+          id: event.location.id,
+          name: event.location.name,
+          address_line: event.location.address_line,
+          city: event.location.city,
+          state: event.location.state,
+          venue_type: event.location.venue_type,
+          category: null,
+          rating: null,
+          review_count: 0,
+          latitude: null,
+          longitude: null,
+        }
+      : null
+  );
+  const [venueQuery, setVenueQuery] = useState('');
+  const [venueResults, setVenueResults] = useState<VenueSearchResult[]>([]);
+  const [isSearchingVenue, setIsSearchingVenue] = useState(false);
+  const [showVenueSearch, setShowVenueSearch] = useState(false);
+
   // ============================================================================
   // 📝 FORM HANDLERS
   // ============================================================================
@@ -124,6 +169,59 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
     }));
 
     // Reset status when user makes changes
+    if (status === 'saved' || status === 'error') {
+      setStatus('idle');
+    }
+  }, [status]);
+
+  // ============================================================================
+  // 🏛️ VENUE SEARCH
+  // ============================================================================
+
+  const handleVenueSearch = useCallback(async (query: string) => {
+    setVenueQuery(query);
+
+    if (query.length < 2) {
+      setVenueResults([]);
+      return;
+    }
+
+    setIsSearchingVenue(true);
+
+    try {
+      const response = await fetch(
+        `/api/submit/venues/search?q=${encodeURIComponent(query)}&limit=10`
+      );
+      const result = await response.json();
+
+      if (result.success) {
+        setVenueResults(result.venues);
+        console.log(`🏛️ [SuperadminForm] Found ${result.venues.length} venues for "${query}"`);
+      } else {
+        setVenueResults([]);
+      }
+    } catch (error) {
+      console.error('🏛️ [SuperadminForm] Venue search failed:', error);
+      setVenueResults([]);
+    } finally {
+      setIsSearchingVenue(false);
+    }
+  }, []);
+
+  const selectVenue = useCallback((venue: VenueSearchResult) => {
+    setSelectedVenue(venue);
+    setShowVenueSearch(false);
+    setVenueQuery('');
+    setVenueResults([]);
+    // Reset status to allow saving
+    if (status === 'saved' || status === 'error') {
+      setStatus('idle');
+    }
+    console.log(`🏛️ [SuperadminForm] Selected venue: ${venue.name}`);
+  }, [status]);
+
+  const clearVenue = useCallback(() => {
+    setSelectedVenue(null);
     if (status === 'saved' || status === 'error') {
       setStatus('idle');
     }
@@ -171,8 +269,17 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
         if (priceHigh !== event.price_high) updates.price_high = priceHigh;
       }
 
+      // Handle venue/location change
+      const currentLocationId = event.location?.id || null;
+      const newLocationId = selectedVenue?.id || null;
+      if (newLocationId !== currentLocationId) {
+        updates.location_id = newLocationId;
+        console.log(`🏛️ [SuperadminForm] Venue changed: ${currentLocationId} → ${newLocationId}`);
+      }
+
       // Check if there are any changes
-      if (Object.keys(updates).length === 0 && formState.status === event.status) {
+      const venueChanged = newLocationId !== currentLocationId;
+      if (Object.keys(updates).length === 0 && formState.status === event.status && !venueChanged) {
         setStatus('idle');
         setStatusMessage('No changes to save');
         return;
@@ -514,6 +621,156 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
             className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
             placeholder="https://..."
           />
+        </div>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* VENUE / LOCATION */}
+        {/* ------------------------------------------------------------------ */}
+        <div>
+          <label className="block text-sm font-medium text-charcoal mb-2">
+            🏛️ Venue / Location
+          </label>
+
+          {/* Selected Venue Display */}
+          {selectedVenue && !showVenueSearch && (
+            <div className="p-4 bg-sage/10 border border-sage/30 rounded-lg">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-sage mt-0.5" />
+                  <div>
+                    <p className="font-medium text-charcoal">{selectedVenue.name}</p>
+                    <p className="text-sm text-stone">
+                      {selectedVenue.address_line && `${selectedVenue.address_line}, `}
+                      {selectedVenue.city}
+                      {selectedVenue.state && `, ${selectedVenue.state}`}
+                    </p>
+                    {selectedVenue.rating && (
+                      <div className="flex items-center gap-1 mt-1 text-xs text-stone">
+                        <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                        <span>{selectedVenue.rating.toFixed(1)}</span>
+                        {selectedVenue.review_count > 0 && (
+                          <span className="text-stone/60">({selectedVenue.review_count})</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowVenueSearch(true)}
+                    className="text-sm text-coral hover:text-coral/80"
+                  >
+                    Change
+                  </button>
+                  <button
+                    type="button"
+                    onClick={clearVenue}
+                    className="text-sm text-stone hover:text-charcoal"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* No Venue Selected */}
+          {!selectedVenue && !showVenueSearch && (
+            <button
+              type="button"
+              onClick={() => setShowVenueSearch(true)}
+              className="w-full p-4 border border-dashed border-sand rounded-lg hover:border-coral hover:bg-coral/5 transition-colors text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-sand rounded-lg">
+                  <MapPin className="w-5 h-5 text-stone" />
+                </div>
+                <div>
+                  <p className="font-medium text-charcoal">No venue selected</p>
+                  <p className="text-sm text-stone">Click to search and select a venue</p>
+                </div>
+              </div>
+            </button>
+          )}
+
+          {/* Venue Search */}
+          {showVenueSearch && (
+            <div className="p-4 bg-cream rounded-lg border border-sand space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-charcoal">Search Venues</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowVenueSearch(false);
+                    setVenueQuery('');
+                    setVenueResults([]);
+                  }}
+                  className="text-sm text-stone hover:text-charcoal"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              {/* Search Input */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
+                <input
+                  type="text"
+                  value={venueQuery}
+                  onChange={(e) => handleVenueSearch(e.target.value)}
+                  placeholder="Type venue name or address..."
+                  className="w-full pl-10 pr-10 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+                  autoFocus
+                />
+                {isSearchingVenue && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone animate-spin" />
+                )}
+              </div>
+
+              {/* Search Results */}
+              {venueResults.length > 0 && (
+                <div className="max-h-64 overflow-y-auto space-y-1">
+                  {venueResults.map((venue) => (
+                    <button
+                      key={venue.id}
+                      type="button"
+                      onClick={() => selectVenue(venue)}
+                      className="w-full flex items-start justify-between p-3 rounded-lg border border-sand bg-warm-white hover:border-coral hover:bg-coral/5 transition-all text-left"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-medium text-charcoal truncate">{venue.name}</p>
+                        <p className="text-sm text-stone truncate">
+                          {venue.address_line && `${venue.address_line}, `}
+                          {venue.city}
+                          {venue.state && `, ${venue.state}`}
+                        </p>
+                        {venue.rating && (
+                          <div className="flex items-center gap-1 mt-1 text-xs text-stone">
+                            <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                            <span>{venue.rating.toFixed(1)}</span>
+                            {venue.review_count > 0 && (
+                              <span className="text-stone/60">({venue.review_count})</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-xs bg-sand text-stone px-2 py-0.5 rounded capitalize flex-shrink-0 ml-2">
+                        {venue.category || venue.venue_type}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* No Results */}
+              {venueQuery.length >= 2 && !isSearchingVenue && venueResults.length === 0 && (
+                <div className="p-3 bg-sand/30 rounded-lg text-center">
+                  <p className="text-sm text-stone">No venues found for &quot;{venueQuery}&quot;</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Status */}
