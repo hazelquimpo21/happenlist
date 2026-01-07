@@ -224,6 +224,10 @@ export interface NewLocationData {
   postal_code?: string;
   country?: string;
   venue_type?: string;
+  /** Latitude from Mapbox geocoding */
+  latitude?: number;
+  /** Longitude from Mapbox geocoding */
+  longitude?: number;
 }
 
 // ============================================================================

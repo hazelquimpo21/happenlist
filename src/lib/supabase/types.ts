@@ -85,6 +85,15 @@ export interface Database {
           is_active: boolean;
           created_at: string;
           updated_at: string;
+          // New fields for venue import system
+          google_place_id: string | null;
+          external_image_url: string | null;
+          rating: number | null;
+          review_count: number;
+          working_hours: Record<string, string> | null;
+          category: string | null;
+          source: string;
+          import_batch_id: string | null;
         };
         Insert: {
           id?: string;
@@ -108,6 +117,15 @@ export interface Database {
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;
+          // New fields for venue import system
+          google_place_id?: string | null;
+          external_image_url?: string | null;
+          rating?: number | null;
+          review_count?: number;
+          working_hours?: Record<string, string> | null;
+          category?: string | null;
+          source?: string;
+          import_batch_id?: string | null;
         };
         Update: {
           id?: string;
@@ -131,6 +149,15 @@ export interface Database {
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;
+          // New fields for venue import system
+          google_place_id?: string | null;
+          external_image_url?: string | null;
+          rating?: number | null;
+          review_count?: number;
+          working_hours?: Record<string, string> | null;
+          category?: string | null;
+          source?: string;
+          import_batch_id?: string | null;
         };
       };
 
