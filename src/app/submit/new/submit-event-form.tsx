@@ -79,6 +79,37 @@ export function SubmitEventForm({
     existingDraft ? new Date(existingDraft.updated_at) : undefined
   );
   const [error, setError] = useState<string | null>(null);
+  const [popularVenues, setPopularVenues] = useState<Array<{
+    id: string;
+    name: string;
+    slug?: string;
+    address_line: string | null;
+    city: string;
+    state: string | null;
+    venue_type: string;
+    category: string | null;
+    rating: number | null;
+    review_count: number;
+    latitude: number | null;
+    longitude: number | null;
+  }>>([]);
+
+  // ========== Load Popular Venues ==========
+  useEffect(() => {
+    const loadPopularVenues = async () => {
+      try {
+        const response = await fetch('/api/submit/venues/search?limit=12');
+        const result = await response.json();
+        if (result.success && result.venues) {
+          setPopularVenues(result.venues);
+          console.log(`🏛️ [SubmitForm] Loaded ${result.venues.length} popular venues`);
+        }
+      } catch (error) {
+        console.error('🏛️ [SubmitForm] Failed to load popular venues:', error);
+      }
+    };
+    loadPopularVenues();
+  }, []);
 
   // ========== Update Data Helpers ==========
   const updateDraftData = useCallback((updates: Partial<EventDraftData>) => {
@@ -175,10 +206,18 @@ export function SubmitEventForm({
     }
   }, []);
 
-  // ========== Venue Search (placeholder) ==========
+  // ========== Venue Search ==========
   const searchVenues = useCallback(async (query: string) => {
-    // TODO: Implement actual venue search
-    return [];
+    try {
+      const response = await fetch(
+        `/api/submit/venues/search?q=${encodeURIComponent(query)}`
+      );
+      const result = await response.json();
+      return result.success ? result.venues : [];
+    } catch (error) {
+      console.error('🏛️ [SubmitForm] Venue search failed:', error);
+      return [];
+    }
   }, []);
 
   // ========== Render Current Step ==========
@@ -215,6 +254,7 @@ export function SubmitEventForm({
             draftData={draftData}
             updateData={updateDraftData}
             venues={[]}
+            popularVenues={popularVenues}
             onSearchVenues={searchVenues}
           />
         );

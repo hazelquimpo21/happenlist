@@ -30,6 +30,7 @@ import { Button, Badge } from '@/components/ui';
 import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox } from '@/components/events';
 import { EventJsonLd } from '@/components/seo';
 import { AdminToolbar, type AdminToolbarEvent } from '@/components/admin-anywhere';
+import { VenueMap } from '@/components/maps';
 import { getEvent, getEvents } from '@/data/events';
 import { getSession, isSuperAdmin } from '@/lib/auth';
 import { parseEventSlug, buildVenueUrl, buildOrganizerUrl, getBestImageUrl } from '@/lib/utils';
@@ -455,6 +456,19 @@ export default async function EventPage({ params }: EventPageProps) {
                   variant="full"
                 />
               </div>
+            )}
+
+            {/* Interactive Map (if venue has coordinates) */}
+            {event.location?.latitude && event.location?.longitude && (
+              <VenueMap
+                latitude={Number(event.location.latitude)}
+                longitude={Number(event.location.longitude)}
+                venueName={event.location.name}
+                address={fullAddress || undefined}
+                venueType={event.location.venue_type}
+                height="180px"
+                zoom={15}
+              />
             )}
 
             {/* Share button (placeholder) */}

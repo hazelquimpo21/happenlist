@@ -19,6 +19,7 @@ import { Container, Breadcrumbs } from '@/components/layout';
 import { Button, Badge } from '@/components/ui';
 import { EventGrid, SectionHeader } from '@/components/events';
 import { VenueJsonLd } from '@/components/seo';
+import { VenueMap } from '@/components/maps';
 import { getVenue } from '@/data/venues';
 import { getEvents } from '@/data/events';
 import { getBestImageUrl } from '@/lib/utils';
@@ -218,6 +219,19 @@ export default async function VenuePage({ params }: VenuePageProps) {
                 </Button>
               )}
             </div>
+
+            {/* Interactive Map (if coordinates available) */}
+            {venue.latitude && venue.longitude && (
+              <VenueMap
+                latitude={Number(venue.latitude)}
+                longitude={Number(venue.longitude)}
+                venueName={venue.name}
+                address={fullAddress || undefined}
+                venueType={venue.venue_type}
+                height="200px"
+                zoom={15}
+              />
+            )}
           </div>
         </div>
       </div>
