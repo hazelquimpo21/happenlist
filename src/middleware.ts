@@ -22,6 +22,13 @@ export async function middleware(request: NextRequest) {
     request,
   });
 
+  // Skip Supabase auth if environment variables are not configured
+  // This allows the app to run in development without Supabase
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.warn('⚠️ Supabase environment variables not configured - skipping auth middleware');
+    return supabaseResponse;
+  }
+
   // Create Supabase client with cookie handling
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
