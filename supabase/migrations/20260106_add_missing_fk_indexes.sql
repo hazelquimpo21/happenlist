@@ -53,3 +53,4 @@ CREATE INDEX IF NOT EXISTS idx_events_recurrence_parent_id
 --
 -- ============================================================================
 
+

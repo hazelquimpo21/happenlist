@@ -83,3 +83,4 @@ CREATE INDEX IF NOT EXISTS idx_events_has_links ON events (
 -- LEFT JOIN categories c ON e.category_id = c.id
 -- ... etc;
 
+
