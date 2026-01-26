@@ -11,6 +11,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { createLogger, auditLogger } from '@/lib/utils/logger';
 import { generateSlug } from '@/lib/utils/slug';
+import { reHostImage, isHostedImage } from '@/lib/supabase/storage';
 import type {
   EventDraftData,
   SeriesDraftData,
@@ -161,7 +162,15 @@ export async function submitEvent(params: SubmitEventParams): Promise<SubmitEven
     }
 
     // ========================================
-    // Step 5: Log to audit trail
+    // Step 5: Re-host external images to Supabase
+    // ========================================
+    await reHostEventImages(supabase, event.id, {
+      image_url: draftData.image_url,
+      thumbnail_url: draftData.thumbnail_url,
+    });
+
+    // ========================================
+    // Step 6: Log to audit trail
     // ========================================
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -289,6 +298,80 @@ async function createSeries(
 }
 
 // ============================================================================
+// HELPER: RE-HOST EVENT IMAGES
+// ============================================================================
+
+/**
+ * Re-hosts external image URLs to Supabase Storage.
+ * This runs asynchronously after event creation and doesn't block submission.
+ */
+async function reHostEventImages(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  eventId: string,
+  images: {
+    image_url?: string | null;
+    thumbnail_url?: string | null;
+  }
+): Promise<void> {
+  const updates: Record<string, unknown> = {};
+
+  // Re-host main image
+  if (images.image_url && !isHostedImage(images.image_url)) {
+    try {
+      logger.info(`Re-hosting main image for event ${eventId}`);
+      const result = await reHostImage(images.image_url, eventId, 'hero');
+
+      if (result.success && result.url) {
+        updates.image_url = result.url;
+        updates.image_storage_path = result.path;
+        updates.image_hosted = true;
+        updates.raw_image_url = images.image_url; // Keep original URL
+        logger.info(`Successfully re-hosted main image: ${result.url}`);
+      } else {
+        logger.warn(`Failed to re-host main image: ${result.error}`);
+      }
+    } catch (error) {
+      logger.warn('Error re-hosting main image', { metadata: { error } });
+    }
+  }
+
+  // Re-host thumbnail
+  if (images.thumbnail_url && !isHostedImage(images.thumbnail_url)) {
+    try {
+      logger.info(`Re-hosting thumbnail for event ${eventId}`);
+      const result = await reHostImage(images.thumbnail_url, eventId, 'thumbnail');
+
+      if (result.success && result.url) {
+        updates.thumbnail_url = result.url;
+        updates.thumbnail_storage_path = result.path;
+        updates.thumbnail_hosted = true;
+        updates.raw_thumbnail_url = images.thumbnail_url;
+        logger.info(`Successfully re-hosted thumbnail: ${result.url}`);
+      } else {
+        logger.warn(`Failed to re-host thumbnail: ${result.error}`);
+      }
+    } catch (error) {
+      logger.warn('Error re-hosting thumbnail', { metadata: { error } });
+    }
+  }
+
+  // Update event with hosted image URLs
+  if (Object.keys(updates).length > 0) {
+    try {
+      await supabase
+        .from('events')
+        .update(updates)
+        .eq('id', eventId);
+
+      logger.info(`Updated event ${eventId} with ${Object.keys(updates).length} hosted images`);
+    } catch (error) {
+      logger.warn('Failed to update event with hosted image URLs', { metadata: { error } });
+    }
+  }
+}
+
+// ============================================================================
 // RESUBMIT EVENT (after changes requested)
 // ============================================================================
 
@@ -332,6 +415,14 @@ export async function resubmitEvent(
     if (error) {
       timer.error('Failed to resubmit event', error);
       return { success: false, error: error.message };
+    }
+
+    // Re-host images if updated
+    if (updates.image_url || updates.thumbnail_url) {
+      await reHostEventImages(supabase, eventId, {
+        image_url: updates.image_url,
+        thumbnail_url: updates.thumbnail_url,
+      });
     }
 
     // Log to audit trail
