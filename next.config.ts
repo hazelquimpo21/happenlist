@@ -71,10 +71,24 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '**.ticketmaster.com',
       },
+      // Squarespace (for scraped events)
+      {
+        protocol: 'https',
+        hostname: '**.squarespace.com',
+      },
+      {
+        protocol: 'http',
+        hostname: '**.squarespace.com',
+      },
       // General - allow any HTTPS image (useful for scraped content)
       // Note: For production, you may want to be more restrictive
       {
         protocol: 'https',
+        hostname: '**',
+      },
+      // Allow HTTP images as fallback (some external sources don't use HTTPS)
+      {
+        protocol: 'http',
         hostname: '**',
       },
     ],
