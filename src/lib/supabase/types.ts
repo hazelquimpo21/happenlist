@@ -283,10 +283,30 @@ export interface Database {
           source_id: string | null;
           scraped_at: string | null;
           scraped_data: Record<string, unknown> | null;
+          // Submission tracking
+          submitted_by_email: string | null;
+          submitted_by_name: string | null;
+          submitted_at: string | null;
+          // Change request flow
+          change_request_message: string | null;
+          // Review tracking
           reviewed_at: string | null;
           reviewed_by: string | null;
           review_notes: string | null;
           rejection_reason: string | null;
+          // Edit tracking
+          last_edited_at: string | null;
+          last_edited_by: string | null;
+          edit_count: number;
+          // Soft delete
+          deleted_at: string | null;
+          deleted_by: string | null;
+          delete_reason: string | null;
+          // Age/audience fields (migration 00008)
+          age_low: number | null;
+          age_high: number | null;
+          age_restriction: string | null;
+          is_family_friendly: boolean | null;
           created_at: string;
           updated_at: string;
           published_at: string | null;
@@ -352,10 +372,30 @@ export interface Database {
           source_id?: string | null;
           scraped_at?: string | null;
           scraped_data?: Record<string, unknown> | null;
+          // Submission tracking
+          submitted_by_email?: string | null;
+          submitted_by_name?: string | null;
+          submitted_at?: string | null;
+          // Change request flow
+          change_request_message?: string | null;
+          // Review tracking
           reviewed_at?: string | null;
           reviewed_by?: string | null;
           review_notes?: string | null;
           rejection_reason?: string | null;
+          // Edit tracking
+          last_edited_at?: string | null;
+          last_edited_by?: string | null;
+          edit_count?: number;
+          // Soft delete
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+          delete_reason?: string | null;
+          // Age/audience fields (migration 00008)
+          age_low?: number | null;
+          age_high?: number | null;
+          age_restriction?: string | null;
+          is_family_friendly?: boolean | null;
           created_at?: string;
           updated_at?: string;
           published_at?: string | null;
@@ -421,10 +461,30 @@ export interface Database {
           source_id?: string | null;
           scraped_at?: string | null;
           scraped_data?: Record<string, unknown> | null;
+          // Submission tracking
+          submitted_by_email?: string | null;
+          submitted_by_name?: string | null;
+          submitted_at?: string | null;
+          // Change request flow
+          change_request_message?: string | null;
+          // Review tracking
           reviewed_at?: string | null;
           reviewed_by?: string | null;
           review_notes?: string | null;
           rejection_reason?: string | null;
+          // Edit tracking
+          last_edited_at?: string | null;
+          last_edited_by?: string | null;
+          edit_count?: number;
+          // Soft delete
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+          delete_reason?: string | null;
+          // Age/audience fields (migration 00008)
+          age_low?: number | null;
+          age_high?: number | null;
+          age_restriction?: string | null;
+          is_family_friendly?: boolean | null;
           created_at?: string;
           updated_at?: string;
           published_at?: string | null;
@@ -627,6 +687,177 @@ export interface Database {
           days_of_week?: number[] | null;
           term_name?: string | null;
           parent_series_id?: string | null;
+        };
+      };
+
+      // =====================================================================
+      // HEARTS TABLE (User saved events)
+      // =====================================================================
+      hearts: {
+        Row: {
+          id: string;
+          user_id: string;
+          event_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          event_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          event_id?: string;
+          created_at?: string;
+        };
+      };
+
+      // =====================================================================
+      // USER FOLLOWS TABLE (Polymorphic follows)
+      // =====================================================================
+      user_follows: {
+        Row: {
+          id: string;
+          user_id: string;
+          entity_type: string; // 'organizer' | 'venue' | 'category'
+          entity_id: string;
+          notify_new_events: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          entity_type: string;
+          entity_id: string;
+          notify_new_events?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          entity_type?: string;
+          entity_id?: string;
+          notify_new_events?: boolean;
+          created_at?: string;
+        };
+      };
+
+      // =====================================================================
+      // PROFILES TABLE (User preferences)
+      // =====================================================================
+      profiles: {
+        Row: {
+          id: string;
+          email: string;
+          display_name: string | null;
+          avatar_url: string | null;
+          email_notifications: boolean;
+          email_weekly_digest: boolean;
+          timezone: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string; // matches auth.users.id
+          email: string;
+          display_name?: string | null;
+          avatar_url?: string | null;
+          email_notifications?: boolean;
+          email_weekly_digest?: boolean;
+          timezone?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          display_name?: string | null;
+          avatar_url?: string | null;
+          email_notifications?: boolean;
+          email_weekly_digest?: boolean;
+          timezone?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      // =====================================================================
+      // EVENT DRAFTS TABLE (In-progress submissions)
+      // =====================================================================
+      event_drafts: {
+        Row: {
+          id: string;
+          user_id: string;
+          user_email: string;
+          user_name: string | null;
+          draft_data: Record<string, unknown>;
+          series_draft_data: Record<string, unknown> | null;
+          current_step: number;
+          completed_steps: number[];
+          submitted_event_id: string | null;
+          created_at: string;
+          updated_at: string;
+          expires_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          user_email: string;
+          user_name?: string | null;
+          draft_data?: Record<string, unknown>;
+          series_draft_data?: Record<string, unknown> | null;
+          current_step?: number;
+          completed_steps?: number[];
+          submitted_event_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          expires_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          user_email?: string;
+          user_name?: string | null;
+          draft_data?: Record<string, unknown>;
+          series_draft_data?: Record<string, unknown> | null;
+          current_step?: number;
+          completed_steps?: number[];
+          submitted_event_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          expires_at?: string;
+        };
+      };
+
+      // =====================================================================
+      // ORGANIZER USERS TABLE (Organizer claims/team)
+      // =====================================================================
+      organizer_users: {
+        Row: {
+          id: string;
+          user_id: string;
+          organizer_id: string;
+          role: string; // 'member' | 'admin'
+          status: string; // 'pending' | 'verified' | 'rejected'
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          organizer_id: string;
+          role?: string;
+          status?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          organizer_id?: string;
+          role?: string;
+          status?: string;
+          created_at?: string;
         };
       };
 
