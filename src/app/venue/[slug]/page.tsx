@@ -4,6 +4,8 @@
  * Individual venue page with upcoming events.
  */
 
+export const dynamic = 'force-dynamic';
+
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Image from 'next/image';

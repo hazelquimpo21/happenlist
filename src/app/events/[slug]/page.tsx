@@ -4,6 +4,8 @@
  * Events filtered by category with clean URLs like /events/music
  */
 
+export const dynamic = 'force-dynamic';
+
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Container, Breadcrumbs } from '@/components/layout';

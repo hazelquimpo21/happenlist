@@ -4,6 +4,8 @@
  * Lists all venues with their event counts.
  */
 
+export const dynamic = 'force-dynamic';
+
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { MapPin } from 'lucide-react';

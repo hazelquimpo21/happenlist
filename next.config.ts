@@ -4,6 +4,14 @@ const nextConfig: NextConfig = {
   // Enable React strict mode for better development experience
   reactStrictMode: true,
 
+  // Disable client-side Router Cache so navigations always show fresh data
+  experimental: {
+    staleTimes: {
+      dynamic: 0,
+      static: 0,
+    },
+  },
+
   // Set Turbopack root to this project directory to avoid lockfile conflicts
   turbopack: {
     root: process.cwd(),

@@ -4,6 +4,8 @@
  * Main events listing with filtering and pagination.
  */
 
+export const dynamic = 'force-dynamic';
+
 import type { Metadata } from 'next';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { EventGrid, SectionHeader } from '@/components/events';
