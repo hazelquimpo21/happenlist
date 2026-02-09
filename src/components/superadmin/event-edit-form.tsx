@@ -98,6 +98,7 @@ const PRICE_TYPES = [
   { value: 'range', label: 'Price Range' },
   { value: 'varies', label: 'Varies' },
   { value: 'donation', label: 'Donation' },
+  { value: 'per_session', label: 'Per Session' },
 ];
 
 // ============================================================================

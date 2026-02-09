@@ -110,6 +110,32 @@ export async function approveEvent(params: ApproveEventParams): Promise<ActionRe
       };
     }
 
+    // If the event belongs to a series, publish the series too (if not already published).
+    // Without this, series created via the submission form stay in 'pending_review'
+    // and never appear on the /series page.
+    if (currentEvent.series_id) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: seriesError } = await (supabase as any)
+          .from('series')
+          .update({
+            status: 'published',
+            published_at: new Date().toISOString(),
+          })
+          .eq('id', currentEvent.series_id)
+          .neq('status', 'published'); // Only update if not already published
+
+        if (seriesError) {
+          adminDataLogger.warn(`Failed to publish series ${currentEvent.series_id}: ${seriesError.message}`);
+        } else {
+          adminDataLogger.info(`Series ${currentEvent.series_id} published alongside event`);
+        }
+      } catch (seriesErr) {
+        // Non-fatal: series publish failure shouldn't block event approval
+        adminDataLogger.warn('Failed to publish associated series', { metadata: { error: seriesErr } });
+      }
+    }
+
     // Log to audit trail
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -121,6 +147,7 @@ export async function approveEvent(params: ApproveEventParams): Promise<ActionRe
         changes: {
           before: { status: currentEvent.status },
           after: { status: 'published' },
+          series_id: currentEvent.series_id || null,
           updates: updates || {},
         },
         notes: notes,
