@@ -5,6 +5,13 @@
  *
  * URL: /series
  * Filters: ?type=class, ?category=music, ?free=true
+ *
+ * Phase E additions:
+ *   - Parses new URL params: attendance, skill, age, aftercare, day
+ *   - Passes them to getSeries() which already supports all these filters (Phase B)
+ *   - Passes them to SeriesFilters for display state
+ *
+ * @module app/series/page
  */
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +23,8 @@ import { SeriesGrid, SeriesGridSkeleton } from '@/components/series';
 import { SeriesFilters } from './series-filters';
 import { getSeries } from '@/data/series';
 import { getCategories } from '@/data/categories';
-import type { SeriesType, SeriesSortOption } from '@/lib/supabase/types';
+import type { SeriesType, AttendanceMode, SkillLevel } from '@/lib/supabase/types';
+import type { SeriesSortOption } from '@/types';
 import { SERIES_TYPE_INFO } from '@/types';
 
 // ============================================================================
@@ -41,6 +49,12 @@ interface SeriesPageProps {
     free?: string;
     sort?: string;
     q?: string;
+    // Phase E: New filter params
+    attendance?: string;
+    skill?: string;
+    age?: string;
+    aftercare?: string;
+    day?: string;
   }>;
 }
 
@@ -56,19 +70,39 @@ interface SeriesPageProps {
  * /series?type=class          - Only classes
  * /series?category=music      - Music series
  * /series?free=true           - Free series
+ * /series?attendance=drop_in  - Drop-in welcome series
+ * /series?skill=beginner      - Beginner-level series
+ * /series?age=9               - Series suitable for age 9 (kids)
+ * /series?aftercare=true      - Camps with after care
+ * /series?day=2               - Series running on Tuesday (0=Sun..6=Sat)
  */
 export default async function SeriesPage({ searchParams }: SeriesPageProps) {
   const params = await searchParams;
 
-  console.log('📚 [SeriesPage] Rendering series page with params:', params);
-
-  // Parse search params
+  // Parse basic search params
   const page = parseInt(params.page || '1', 10);
   const type = params.type as SeriesType | undefined;
   const categorySlug = params.category;
   const isFree = params.free === 'true';
   const orderBy = (params.sort as SeriesSortOption) || 'start-date-asc';
   const search = params.q;
+
+  // Parse Phase E advanced filter params
+  const attendanceMode = params.attendance as AttendanceMode | undefined;
+  const skillLevel = params.skill as SkillLevel | undefined;
+  const age = params.age ? parseInt(params.age, 10) : undefined;
+  const hasExtendedCare = params.aftercare === 'true';
+  const dayOfWeek = params.day ? parseInt(params.day, 10) : undefined;
+
+  console.log('📚 [SeriesPage] Rendering with params:', {
+    page, type, categorySlug, isFree, orderBy, search,
+    // Log advanced filters when present
+    ...(attendanceMode && { attendanceMode }),
+    ...(skillLevel && { skillLevel }),
+    ...(age !== undefined && { age }),
+    ...(hasExtendedCare && { hasExtendedCare }),
+    ...(dayOfWeek !== undefined && { dayOfWeek }),
+  });
 
   // Fetch data in parallel
   const [seriesResult, categories] = await Promise.all([
@@ -80,6 +114,12 @@ export default async function SeriesPage({ searchParams }: SeriesPageProps) {
       orderBy,
       page,
       limit: 12,
+      // Phase E: Pass new filter params to data layer
+      attendanceMode,
+      skillLevel,
+      age,
+      hasExtendedCare: hasExtendedCare || undefined,
+      dayOfWeek,
     }),
     getCategories(),
   ]);
@@ -121,6 +161,12 @@ export default async function SeriesPage({ searchParams }: SeriesPageProps) {
           currentSort={orderBy}
           isFree={isFree}
           searchQuery={search}
+          // Phase E: Pass new filter values to client component
+          currentAttendanceMode={attendanceMode}
+          currentSkillLevel={skillLevel}
+          currentAge={params.age}
+          hasExtendedCare={hasExtendedCare}
+          currentDayOfWeek={params.day}
           className="mb-8"
         />
       </Suspense>
@@ -190,7 +236,7 @@ function buildPageUrl(
 ): string {
   const searchParams = new URLSearchParams();
 
-  // Copy existing params
+  // Copy existing params (preserving Phase E filter params too)
   Object.entries(params).forEach(([key, value]) => {
     if (value && key !== 'page') {
       searchParams.set(key, value);
