@@ -187,6 +187,7 @@ function formatDescription(text: string): string {
 
 /**
  * Transform SeriesWithDetails to SeriesCard format for the grid.
+ * Phase C: Now includes camps/classes display fields for related series cards.
  */
 function transformToCard(series: Awaited<ReturnType<typeof getRelatedSeries>>[0]) {
   return {
@@ -212,5 +213,12 @@ function transformToCard(series: Awaited<ReturnType<typeof getRelatedSeries>>[0]
     location_slug: series.location?.slug || null,
     organizer_name: series.organizer?.name || null,
     organizer_slug: series.organizer?.slug || null,
+    // Phase C: Camps/classes card display fields
+    attendance_mode: series.attendance_mode as 'registered' | 'drop_in' | 'hybrid' | undefined,
+    per_session_price: series.per_session_price,
+    age_low: series.age_low,
+    age_high: series.age_high,
+    skill_level: series.skill_level as 'beginner' | 'intermediate' | 'advanced' | 'all_levels' | null,
+    has_extended_care: series.extended_end_time != null,
   };
 }

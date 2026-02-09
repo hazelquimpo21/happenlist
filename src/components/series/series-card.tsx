@@ -2,7 +2,8 @@
  * SERIES CARD COMPONENT
  * =====================
  * Primary series display card for grids and lists.
- * Shows series info with type badge, session count, and dates.
+ * Shows series info with type badge, session count, dates,
+ * and Phase C camps/classes badges (attendance, age, skill, care).
  */
 
 import Link from 'next/link';
@@ -12,8 +13,14 @@ import { Card, Badge } from '@/components/ui';
 import { SeriesTypeBadge } from './series-type-badge';
 import { SeriesPrice } from './series-price';
 import { formatDateRange } from '@/lib/utils/dates';
+import {
+  formatAgeRange,
+  ATTENDANCE_MODE_INFO,
+  SKILL_LEVEL_INFO,
+} from '@/types';
 import { cn, getBestImageUrl } from '@/lib/utils';
 import type { SeriesCard as SeriesCardType } from '@/types';
+import type { AttendanceMode, SkillLevel } from '@/lib/supabase/types';
 
 // ============================================================================
 // COMPONENT PROPS
@@ -164,10 +171,79 @@ export function SeriesCard({
             </p>
           )}
 
+          {/* Phase C: Camps/classes info badges */}
+          <SeriesInfoBadges series={series} />
+
           {/* Price */}
           <SeriesPrice series={series} size="sm" />
         </div>
       </Link>
     </Card>
+  );
+}
+
+// ============================================================================
+// SERIES INFO BADGES (Phase C)
+// ============================================================================
+
+/**
+ * Renders contextual badges for camps/classes enhancements.
+ * Shows attendance mode (drop-in/hybrid), age range, skill level,
+ * and extended care availability. Only renders when data exists.
+ */
+function SeriesInfoBadges({ series }: { series: SeriesCardType }) {
+  const badges: React.ReactNode[] = [];
+
+  // Attendance mode badge -- only show for non-default (drop_in or hybrid)
+  // "registered" is the default and doesn't need a badge
+  if (series.attendance_mode && series.attendance_mode !== 'registered') {
+    const info = ATTENDANCE_MODE_INFO[series.attendance_mode as AttendanceMode];
+    if (info) {
+      badges.push(
+        <span key="attendance" className={cn('inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium', info.badgeColor)}>
+          {info.label}
+        </span>
+      );
+    }
+  }
+
+  // Age range badge
+  const ageText = formatAgeRange(series.age_low, series.age_high);
+  if (ageText) {
+    badges.push(
+      <span key="age" className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+        {ageText}
+      </span>
+    );
+  }
+
+  // Skill level badge
+  if (series.skill_level) {
+    const info = SKILL_LEVEL_INFO[series.skill_level as SkillLevel];
+    if (info) {
+      badges.push(
+        <span key="skill" className={cn('inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium', info.badgeColor)}>
+          {info.label}
+        </span>
+      );
+    }
+  }
+
+  // Extended care badge (for camps)
+  if (series.has_extended_care) {
+    badges.push(
+      <span key="care" className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-sky-100 text-sky-800">
+        Extended Care
+      </span>
+    );
+  }
+
+  // Don't render anything if no badges
+  if (badges.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-1 mb-2">
+      {badges}
+    </div>
   );
 }
