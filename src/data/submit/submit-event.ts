@@ -110,6 +110,33 @@ export async function submitEvent(params: SubmitEventParams): Promise<SubmitEven
       logger.info(`Created new series: ${seriesId}`);
     }
 
+    // Auto-create a series for recurring events so they are grouped
+    // and appear on the /series page.
+    if (draftData.event_mode === 'recurring' && !seriesId) {
+      const recurringSeriesData: SeriesDraftData = {
+        title: draftData.title || 'Recurring Event',
+        series_type: 'recurring',
+        description: draftData.description,
+        short_description: draftData.short_description,
+        category_id: draftData.category_id,
+        organizer_id: draftData.organizer_id,
+        price_type: draftData.price_type,
+        price_low: draftData.price_low,
+        price_high: draftData.price_high,
+        is_free: draftData.is_free,
+        registration_url: draftData.registration_url,
+        image_url: draftData.image_url,
+        attendance_mode: 'drop_in',
+      };
+      const seriesResult = await createSeries(supabase, recurringSeriesData, locationId);
+      if (!seriesResult.success) {
+        timer.error('Failed to create recurring series', new Error(seriesResult.error));
+        return { success: false, error: `Failed to create series: ${seriesResult.error}` };
+      }
+      seriesId = seriesResult.seriesId!;
+      logger.info(`Created recurring series: ${seriesId}`);
+    }
+
     // ========================================
     // Step 3: Create the event(s)
     // ========================================
@@ -171,6 +198,101 @@ export async function submitEvent(params: SubmitEventParams): Promise<SubmitEven
 
       primaryEventId = recurResult.firstEventId;
       eventCount = recurResult.eventCount;
+
+      // Update recurring series with computed dates
+      if (seriesId && recurResult.eventCount > 0) {
+        const rule = draftData.recurrence_rule!;
+        const firstDate = draftData.start_datetime?.split('T')[0];
+        const dates = calculateRecurringDates(rule, firstDate!);
+        if (dates.length > 0) {
+          await updateSeriesDates(supabase, seriesId, {
+            start_date: dates[0],
+            end_date: dates[dates.length - 1],
+            total_sessions: recurResult.eventCount,
+          });
+        }
+      }
+    } else if (
+      draftData.event_mode === 'new_series' &&
+      draftData.additional_dates &&
+      draftData.additional_dates.length > 0 &&
+      seriesId
+    ) {
+      // ---- Manual multi-session (class/workshop): create events for each date ----
+      const allDates = [
+        draftData.start_datetime?.split('T')[0],
+        ...draftData.additional_dates,
+      ].filter((d): d is string => !!d);
+
+      const startTime = seriesDraftData?.core_start_time || draftData.start_datetime?.split('T')[1]?.slice(0, 5) || '19:00';
+      const endTime = seriesDraftData?.core_end_time || draftData.end_datetime?.split('T')[1]?.slice(0, 5) || '21:00';
+
+      const events = allDates.map((date, index) => {
+        const seqNum = index + 1;
+        const eventTitle = allDates.length > 1
+          ? `${draftData.title} - Session ${seqNum}`
+          : draftData.title;
+        const slug = generateSlug(eventTitle || 'event');
+
+        return {
+          title: eventTitle,
+          slug,
+          description: draftData.description || null,
+          short_description: draftData.short_description || null,
+          start_datetime: `${date}T${startTime}:00`,
+          end_datetime: `${date}T${endTime}:00`,
+          instance_date: date,
+          is_all_day: false,
+          timezone: draftData.timezone || 'America/Chicago',
+          category_id: draftData.category_id || null,
+          location_id: locationId,
+          organizer_id: draftData.organizer_id || null,
+          series_id: seriesId,
+          is_series_instance: true,
+          series_sequence: seqNum,
+          price_type: draftData.price_type || 'free',
+          price_low: draftData.price_low || null,
+          price_high: draftData.price_high || null,
+          price_details: draftData.price_details || null,
+          is_free: draftData.is_free ?? draftData.price_type === 'free',
+          ticket_url: draftData.ticket_url || null,
+          image_url: draftData.image_url || null,
+          thumbnail_url: draftData.thumbnail_url || null,
+          website_url: draftData.website_url || null,
+          instagram_url: draftData.instagram_url || null,
+          facebook_url: draftData.facebook_url || null,
+          registration_url: draftData.registration_url || null,
+          status: 'pending_review',
+          source: 'user_submission',
+          submitted_by_email: userEmail,
+          submitted_by_name: userName || null,
+          submitted_at: new Date().toISOString(),
+        };
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: insertedEvents, error: insertError } = await (supabase as any)
+        .from('events')
+        .insert(events)
+        .select('id, title, instance_date, series_sequence');
+
+      if (insertError) {
+        timer.error('Failed to create multi-session events', new Error(insertError.message));
+        return { success: false, error: insertError.message };
+      }
+
+      primaryEventId = insertedEvents?.[0]?.id;
+      eventCount = insertedEvents?.length || 1;
+
+      // Update series dates
+      const sortedDates = allDates.sort();
+      await updateSeriesDates(supabase, seriesId, {
+        start_date: sortedDates[0],
+        end_date: sortedDates[sortedDates.length - 1],
+        total_sessions: eventCount,
+      });
+
+      logger.info(`Created ${eventCount} multi-session events for series ${seriesId}`);
     } else {
       // ---- Single event or existing series: create one event ----
       const singleResult = await createSingleEvent(

@@ -19,7 +19,7 @@
 'use client';
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Search, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Badge } from '@/components/ui';
 import { SERIES_TYPE_INFO } from '@/types';
@@ -135,6 +135,9 @@ export function SeriesFilters({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  // Debounce timer for search input
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Toggle for showing/hiding advanced filters
   const [showAdvanced, setShowAdvanced] = useState(
     // Auto-open if any advanced filter is active
@@ -211,10 +214,12 @@ export function SeriesFilters({
             defaultValue={searchQuery}
             onChange={(e) => {
               const value = e.target.value;
-              const timeout = setTimeout(() => {
+              if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+              }
+              searchTimeoutRef.current = setTimeout(() => {
                 updateFilter('q', value || null);
               }, 300);
-              return () => clearTimeout(timeout);
             }}
             className={cn(
               'w-full h-11 pl-10 pr-4 rounded-full',

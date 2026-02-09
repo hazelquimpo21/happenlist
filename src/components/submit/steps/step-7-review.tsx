@@ -37,6 +37,11 @@ import {
   LOCATION_MODE_LABELS,
   PRICE_TYPE_LABELS,
 } from '@/types/submission';
+import {
+  ATTENDANCE_MODE_OPTIONS,
+  SKILL_LEVEL_OPTIONS,
+} from '@/lib/constants/series-limits';
+import { formatAgeRange } from '@/types';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -237,6 +242,62 @@ export function Step7Review({ draftData, seriesDraftData, categories, onEditStep
               <div>
                 <span className="text-stone">New Series:</span>{' '}
                 <span className="font-medium">{seriesDraftData.title}</span>
+                {seriesDraftData.series_type && (
+                  <span className="text-stone ml-1">({seriesDraftData.series_type})</span>
+                )}
+              </div>
+            )}
+            {seriesDraftData?.attendance_mode && (
+              <div>
+                <span className="text-stone">Attendance:</span>{' '}
+                <span className="font-medium">
+                  {ATTENDANCE_MODE_OPTIONS.find((o) => o.value === seriesDraftData.attendance_mode)?.label || seriesDraftData.attendance_mode}
+                </span>
+              </div>
+            )}
+            {(seriesDraftData?.age_low != null || seriesDraftData?.age_high != null) && (
+              <div>
+                <span className="text-stone">Age Range:</span>{' '}
+                <span className="font-medium">
+                  {formatAgeRange(seriesDraftData.age_low ?? null, seriesDraftData.age_high ?? null) || 'All ages'}
+                </span>
+              </div>
+            )}
+            {seriesDraftData?.skill_level && (
+              <div>
+                <span className="text-stone">Skill Level:</span>{' '}
+                <span className="font-medium">
+                  {SKILL_LEVEL_OPTIONS.find((o) => o.value === seriesDraftData.skill_level)?.label || seriesDraftData.skill_level}
+                </span>
+              </div>
+            )}
+            {seriesDraftData?.core_start_time && (
+              <div>
+                <span className="text-stone">Core Hours:</span>{' '}
+                <span className="font-medium">
+                  {seriesDraftData.core_start_time}
+                  {seriesDraftData.core_end_time && ` – ${seriesDraftData.core_end_time}`}
+                </span>
+              </div>
+            )}
+            {(seriesDraftData?.extended_start_time || seriesDraftData?.extended_end_time) && (
+              <div>
+                <span className="text-stone">Extended Care:</span>{' '}
+                <span className="font-medium">
+                  {seriesDraftData.extended_start_time && `Before: ${seriesDraftData.extended_start_time}`}
+                  {seriesDraftData.extended_start_time && seriesDraftData.extended_end_time && ' / '}
+                  {seriesDraftData.extended_end_time && `After: ${seriesDraftData.extended_end_time}`}
+                </span>
+              </div>
+            )}
+            {seriesDraftData?.days_of_week && seriesDraftData.days_of_week.length > 0 && (
+              <div>
+                <span className="text-stone">Days:</span>{' '}
+                <span className="font-medium">
+                  {seriesDraftData.days_of_week.map((d) =>
+                    ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]
+                  ).join(', ')}
+                </span>
               </div>
             )}
           </div>
@@ -307,6 +368,24 @@ export function Step7Review({ draftData, seriesDraftData, categories, onEditStep
               <span className="text-stone">Price:</span>{' '}
               <span className="font-medium">{formatPrice()}</span>
             </div>
+            {seriesDraftData?.per_session_price != null && seriesDraftData.per_session_price > 0 && (
+              <div>
+                <span className="text-stone">Per Session:</span>{' '}
+                <span className="font-medium">${seriesDraftData.per_session_price}</span>
+              </div>
+            )}
+            {seriesDraftData?.materials_fee != null && seriesDraftData.materials_fee > 0 && (
+              <div>
+                <span className="text-stone">Materials Fee:</span>{' '}
+                <span className="font-medium">${seriesDraftData.materials_fee}</span>
+              </div>
+            )}
+            {seriesDraftData?.pricing_notes && (
+              <div>
+                <span className="text-stone">Pricing Notes:</span>{' '}
+                <span>{seriesDraftData.pricing_notes}</span>
+              </div>
+            )}
             {draftData.price_details && (
               <div>
                 <span className="text-stone">Details:</span> <span>{draftData.price_details}</span>
