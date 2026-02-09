@@ -12,7 +12,7 @@
  *   - Seasons (Symphony 2025 Season)
  */
 
-import type { Database, RecurrenceRule, SeriesType } from '@/lib/supabase/types';
+import type { Database, RecurrenceRule, SeriesType, AttendanceMode, SkillLevel } from '@/lib/supabase/types';
 
 // ============================================================================
 // BASE TYPES FROM DATABASE
@@ -89,6 +89,20 @@ export interface SeriesCard {
   upcoming_event_count?: number;
   /** Next event date */
   next_event_date?: string | null;
+
+  // -- Camps/classes card display fields --
+  /** How participants attend: 'registered' | 'drop_in' | 'hybrid' */
+  attendance_mode?: AttendanceMode;
+  /** Drop-in / single-session price (shown as badge on card) */
+  per_session_price?: number | null;
+  /** Minimum age for participants */
+  age_low?: number | null;
+  /** Maximum age for participants */
+  age_high?: number | null;
+  /** Skill level for classes */
+  skill_level?: SkillLevel | null;
+  /** Whether extended care (after care) is available -- derived: extended_end_time IS NOT NULL */
+  has_extended_care?: boolean;
 }
 
 /**
@@ -232,6 +246,66 @@ export const SERIES_TYPE_INFO: Record<SeriesType, SeriesTypeInfo> = {
 };
 
 // ============================================================================
+// ATTENDANCE MODE DISPLAY INFO
+// ============================================================================
+
+/**
+ * Display labels and descriptions for each attendance mode.
+ * Used for badges on cards and detail pages.
+ */
+export const ATTENDANCE_MODE_INFO: Record<AttendanceMode, {
+  label: string;
+  description: string;
+  badgeColor: string;
+}> = {
+  registered: {
+    label: 'Registration Required',
+    description: 'Must sign up for the full series',
+    badgeColor: 'bg-blue-100 text-blue-800',
+  },
+  drop_in: {
+    label: 'Drop-in Welcome',
+    description: 'Show up to any individual session',
+    badgeColor: 'bg-green-100 text-green-800',
+  },
+  hybrid: {
+    label: 'Register or Drop In',
+    description: 'Register for the series or drop in to individual sessions',
+    badgeColor: 'bg-teal-100 text-teal-800',
+  },
+};
+
+// ============================================================================
+// SKILL LEVEL DISPLAY INFO
+// ============================================================================
+
+/**
+ * Display labels for skill levels.
+ * Used for badges on class cards and detail pages.
+ */
+export const SKILL_LEVEL_INFO: Record<SkillLevel, {
+  label: string;
+  badgeColor: string;
+}> = {
+  beginner: {
+    label: 'Beginner',
+    badgeColor: 'bg-emerald-100 text-emerald-800',
+  },
+  intermediate: {
+    label: 'Intermediate',
+    badgeColor: 'bg-amber-100 text-amber-800',
+  },
+  advanced: {
+    label: 'Advanced',
+    badgeColor: 'bg-red-100 text-red-800',
+  },
+  all_levels: {
+    label: 'All Levels',
+    badgeColor: 'bg-violet-100 text-violet-800',
+  },
+};
+
+// ============================================================================
 // RECURRENCE HELPERS
 // ============================================================================
 
@@ -281,6 +355,48 @@ export const DAY_OF_WEEK_SHORT = [
  */
 export function getSeriesTypeInfo(type: string): SeriesTypeInfo {
   return SERIES_TYPE_INFO[type as SeriesType] || SERIES_TYPE_INFO.class;
+}
+
+/**
+ * Get display label for an attendance mode.
+ * Returns null for unrecognized values (defensive).
+ */
+export function getAttendanceModeLabel(mode: string | null | undefined): string | null {
+  if (!mode) return null;
+  return ATTENDANCE_MODE_INFO[mode as AttendanceMode]?.label ?? null;
+}
+
+/**
+ * Get display label for a skill level.
+ * Returns null for unrecognized values (defensive).
+ */
+export function getSkillLevelLabel(level: string | null | undefined): string | null {
+  if (!level) return null;
+  return SKILL_LEVEL_INFO[level as SkillLevel]?.label ?? null;
+}
+
+/**
+ * Format an age range to a human-readable string.
+ * Examples: "Ages 6-12", "Ages 6+", "Ages 0-5", null (if no age set)
+ */
+export function formatAgeRange(ageLow: number | null | undefined, ageHigh: number | null | undefined): string | null {
+  if (ageLow == null && ageHigh == null) return null;
+  if (ageLow != null && ageHigh != null) return `Ages ${ageLow}-${ageHigh}`;
+  if (ageLow != null) return `Ages ${ageLow}+`;
+  return `Ages up to ${ageHigh}`;
+}
+
+/**
+ * Format a TIME string (HH:MM:SS or HH:MM) to 12-hour display.
+ * Example: "09:00" -> "9:00 AM", "17:30:00" -> "5:30 PM"
+ */
+export function formatTimeDisplay(time: string | null | undefined): string | null {
+  if (!time) return null;
+  const [hours, minutes] = time.split(':').map(Number);
+  if (isNaN(hours) || isNaN(minutes)) return null;
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 || 12;
+  return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
 }
 
 /**

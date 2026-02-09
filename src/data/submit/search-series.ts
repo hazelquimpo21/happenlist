@@ -25,7 +25,7 @@ export interface SeriesSearchResult {
   organizer_name: string | null;
   location_name: string | null;
   location_city: string | null;
-  upcoming_count: number;
+  upcoming_event_count: number;
   total_sessions: number | null;
 }
 
@@ -116,7 +116,7 @@ export async function searchSeries(
         organizer_name: row.organizers?.name || null,
         location_name: row.locations?.name || null,
         location_city: row.locations?.city || null,
-        upcoming_count: 0, // Would need subquery to get this
+        upcoming_event_count: 0, // Would need subquery to get this
         total_sessions: row.total_sessions,
       })
     );
@@ -192,7 +192,7 @@ export async function getRecentSeries(
         organizer_name: row.organizers?.name || null,
         location_name: row.locations?.name || null,
         location_city: row.locations?.city || null,
-        upcoming_count: 0,
+        upcoming_event_count: 0,
         total_sessions: row.total_sessions,
       })
     );
@@ -275,7 +275,7 @@ export async function getSeriesForLink(
         organizer_name: data.organizers?.name || null,
         location_name: data.locations?.name || null,
         location_city: data.locations?.city || null,
-        upcoming_count: 0,
+        upcoming_event_count: 0,
         total_sessions: data.total_sessions,
       },
     };

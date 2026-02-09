@@ -33,10 +33,16 @@ export type {
 
 export {
   SERIES_TYPE_INFO,
+  ATTENDANCE_MODE_INFO,
+  SKILL_LEVEL_INFO,
   RECURRENCE_LABELS,
   DAY_OF_WEEK_LABELS,
   DAY_OF_WEEK_SHORT,
   getSeriesTypeInfo,
+  getAttendanceModeLabel,
+  getSkillLevelLabel,
+  formatAgeRange,
+  formatTimeDisplay,
   formatRecurrence,
 } from './series';
 

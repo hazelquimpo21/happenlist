@@ -316,31 +316,53 @@ Step 5 (Pricing) for series should additionally show:
 
 ## Implementation Phases
 
-### Phase A: Schema + Types (do first)
-1. Write SQL migration adding new columns to `series` table
-2. Update `types.ts` (Database interface, SeriesType, new enums)
-3. Update `series.ts` types (SeriesCard, SeriesWithDetails)
-4. Update `submission.ts` types (SeriesDraftData, NewSeriesData)
+### Phase A: Schema + Types -- COMPLETED (2026-02-09)
 
-### Phase B: Data Layer
+**What was done:**
+1. SQL migration: `supabase/migrations/20260209_series_camps_classes.sql`
+2. Consolidated duplicate types (EventStatus, PriceType, RecurrenceRule) -- single source of truth in `src/lib/supabase/types.ts`
+3. Added new canonical enums: `AttendanceMode`, `SkillLevel` to `src/lib/supabase/types.ts`
+4. Updated series DB types (Row/Insert/Update) with all new columns
+5. Updated `SeriesCard` in `src/types/series.ts` with display-relevant new fields
+6. Updated `SeriesDraftData` and `NewSeriesData` in `src/types/submission.ts`
+7. Added display info maps: `ATTENDANCE_MODE_INFO`, `SKILL_LEVEL_INFO` in `src/types/series.ts`
+8. Added utility functions: `getAttendanceModeLabel()`, `getSkillLevelLabel()`, `formatAgeRange()`, `formatTimeDisplay()`
+9. Updated `src/lib/constants/series-limits.ts` with `supportsExtendedCare`, `supportsSkillLevel`, `defaultAttendanceMode`, `defaultDaysOfWeek` per series type
+10. Added `ATTENDANCE_MODE_OPTIONS` and `SKILL_LEVEL_OPTIONS` for form UI
+11. Fixed naming inconsistency: `upcoming_count` → `upcoming_event_count` everywhere
+12. Fixed double `updateData` race condition in step-2 submission form
+
+**Cleanup done:**
+- `EventStatus` no longer duplicated (was missing `'changes_requested'` in DB types)
+- `PriceType` no longer duplicated (submission.ts now includes `'per_session'`)
+- `RecurrenceRule` no longer duplicated (submission.ts imports from DB types, adds `RecurrenceRuleFormData` for strict form validation)
+- `DAY_OF_WEEK_LABELS` / `DAY_OF_WEEK_SHORT` no longer duplicated (canonical in series.ts, re-exported from submission.ts)
+
+**SQL migration must be run:** `supabase/migrations/20260209_series_camps_classes.sql`
+
+### Phase B: Data Layer -- NEXT UP
 1. Update `get-series.ts` to support new filters (attendance_mode, age, skill_level, has_extended_care)
 2. Update `get-series-detail.ts` to return new fields
-3. Update `submit-event.ts` / series creation to handle new fields
+3. Update `submit-event.ts` / series creation to handle new fields when inserting series
+4. Implement `upcoming_event_count` subquery in `search-series.ts` (currently hardcoded to 0)
 
 ### Phase C: Display (Series Detail + Cards)
 1. Update series detail page to show care options, pricing, attendance mode
-2. Update series cards to show key info (drop-in badge, age range)
-3. Add new badges/indicators for attendance mode, skill level
+2. Update series cards to show key info (drop-in badge, age range, skill level)
+3. Add new badges/indicators using the `ATTENDANCE_MODE_INFO` and `SKILL_LEVEL_INFO` maps
 
 ### Phase D: Submission Form
-1. Update Step 2 to collect new series fields
+1. Update Step 2 to collect new series fields (attendance_mode, age range, skill level)
+   - Use `SERIES_LIMITS[type].supportsExtendedCare` and `supportsSkillLevel` to conditionally show fields
 2. Update Step 3 camp date range → auto-generate daily events
+   - Use `SERIES_LIMITS[type].defaultDaysOfWeek` for camp defaults
 3. Update Step 5 for per-session pricing + materials fee
+4. Implement recurring event generation in `submit-event.ts` (currently advertised in UI but not implemented)
 
 ### Phase E: Filtering
 1. Add filter controls to series browse page
-2. Add "camps with after care" filter
-3. Add age group, skill level, day of week filters
+2. Add "camps with after care" filter (uses `idx_series_extended_care` index)
+3. Add age group, skill level, day of week filters (indexes already created)
 
 ---
 
@@ -427,10 +449,10 @@ They overlap conceptually with the series system (`series_id`, `is_series_instan
 
 ### Cleanup Priority Order
 
-1. Merge duplicate type definitions (EventStatus, PriceType, RecurrenceRule) -- blocks new type work
-2. Fix naming inconsistency (upcoming_count vs upcoming_event_count)
-3. Implement upcoming_count subquery or remove display code
-4. Implement recurring event generation -- blocks camps/classes
-5. Decide on recurrence_parent_id/is_recurrence_template fields
-6. Fix hardcoded timezone
-7. Consolidate updateData calls
+1. ~~Merge duplicate type definitions (EventStatus, PriceType, RecurrenceRule)~~ -- DONE (Phase A)
+2. ~~Fix naming inconsistency (upcoming_count vs upcoming_event_count)~~ -- DONE (Phase A)
+3. Implement upcoming_event_count subquery or remove display code -- Phase B
+4. Implement recurring event generation -- Phase D
+5. Decide on recurrence_parent_id/is_recurrence_template fields -- still open
+6. Fix hardcoded timezone -- still open
+7. ~~Consolidate updateData calls~~ -- DONE (Phase A)

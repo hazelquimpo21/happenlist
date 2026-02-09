@@ -39,7 +39,7 @@ interface SeriesSearchResult {
   title: string;
   series_type: string;
   organizer_name: string | null;
-  upcoming_count: number;
+  upcoming_event_count: number;
 }
 
 // ============================================================================
@@ -103,10 +103,11 @@ export function Step2EventType({
               key={mode}
               type="button"
               onClick={() => {
-                updateData({ event_mode: mode });
-                if (mode !== 'existing_series') {
-                  updateData({ series_id: undefined });
-                }
+                // Single merged update to avoid potential stale-state from sequential calls
+                updateData({
+                  event_mode: mode,
+                  ...(mode !== 'existing_series' ? { series_id: undefined } : {}),
+                });
                 if (mode !== 'new_series') {
                   updateSeriesData(null);
                 }
@@ -186,9 +187,9 @@ export function Step2EventType({
                       {series.series_type} • {series.organizer_name || 'Unknown organizer'}
                     </p>
                   </div>
-                  {series.upcoming_count > 0 && (
+                  {series.upcoming_event_count > 0 && (
                     <span className="text-xs bg-sage/20 text-sage px-2 py-1 rounded">
-                      {series.upcoming_count} upcoming
+                      {series.upcoming_event_count} upcoming
                     </span>
                   )}
                 </button>
