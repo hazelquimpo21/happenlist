@@ -9,15 +9,21 @@
  *   - Ticket URL
  *   - Price details
  *
+ * Phase D additions:
+ *   - Per-session / drop-in price (for hybrid/drop-in attendance series)
+ *   - Materials fee (optional, for classes/camps/workshops)
+ *   - Pricing notes (early bird, discounts, sibling rates)
+ *   - Series pricing fields stored on seriesDraftData
+ *
  * @module components/submit/steps/step-5-pricing
  */
 
 'use client';
 
-import { Gift, DollarSign, Ticket, ExternalLink, Heart, Globe, Instagram, Facebook, ClipboardList } from 'lucide-react';
+import { Gift, DollarSign, Ticket, ExternalLink, Heart, Globe, Instagram, Facebook, ClipboardList, Package, FileText } from 'lucide-react';
 import { StepHeader } from '../step-progress';
 import { Input } from '@/components/ui';
-import type { EventDraftData, PriceType } from '@/types/submission';
+import type { EventDraftData, PriceType, SeriesDraftData } from '@/types/submission';
 import { PRICE_TYPE_LABELS } from '@/types/submission';
 import { cn } from '@/lib/utils';
 
@@ -28,13 +34,40 @@ import { cn } from '@/lib/utils';
 interface Step5Props {
   draftData: EventDraftData;
   updateData: (updates: Partial<EventDraftData>) => void;
+  /** Series draft data — needed for per-session pricing and materials fee */
+  seriesDraftData?: SeriesDraftData | null;
+  /** Update series draft data — for writing per-session pricing fields */
+  updateSeriesData?: (data: SeriesDraftData | null) => void;
 }
 
 // ============================================================================
 // COMPONENT
 // ============================================================================
 
-export function Step5Pricing({ draftData, updateData }: Step5Props) {
+export function Step5Pricing({
+  draftData,
+  updateData,
+  seriesDraftData,
+  updateSeriesData,
+}: Step5Props) {
+  const isSeriesMode = draftData.event_mode === 'new_series';
+  const attendanceMode = seriesDraftData?.attendance_mode;
+  // Show per-session pricing when attendance is drop_in or hybrid
+  const showPerSessionPrice = isSeriesMode && (attendanceMode === 'drop_in' || attendanceMode === 'hybrid');
+  // Show materials fee for any new series
+  const showMaterialsFee = isSeriesMode;
+  // Show pricing notes for any new series
+  const showPricingNotes = isSeriesMode;
+
+  // Helper to merge series data updates
+  const mergeSeriesData = (updates: Partial<SeriesDraftData>) => {
+    if (!updateSeriesData || !seriesDraftData) return;
+    updateSeriesData({
+      ...seriesDraftData,
+      ...updates,
+    });
+  };
+
   const priceOptions: { type: PriceType; icon: React.ReactNode; description: string }[] = [
     {
       type: 'free',
@@ -130,7 +163,7 @@ export function Step5Pricing({ draftData, updateData }: Step5Props) {
             htmlFor="price"
             className="block text-sm font-medium text-charcoal mb-1"
           >
-            Ticket Price <span className="text-coral">*</span>
+            {isSeriesMode ? 'Series Price' : 'Ticket Price'} <span className="text-coral">*</span>
           </label>
           <div className="relative w-40">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone">$</span>
@@ -149,6 +182,11 @@ export function Step5Pricing({ draftData, updateData }: Step5Props) {
               className="pl-7"
             />
           </div>
+          {isSeriesMode && (
+            <p className="text-xs text-stone mt-1">
+              Full series / registration price
+            </p>
+          )}
         </div>
       )}
 
@@ -258,6 +296,99 @@ export function Step5Pricing({ draftData, updateData }: Step5Props) {
           />
           <p className="text-xs text-stone mt-1">
             Add extra details about pricing tiers or discounts
+          </p>
+        </div>
+      )}
+
+      {/* ====================================================== */}
+      {/* PHASE D: Series-Specific Pricing Fields                 */}
+      {/* ====================================================== */}
+
+      {/* Per-session / Drop-in price (only for drop_in or hybrid attendance) */}
+      {showPerSessionPrice && (
+        <div className="p-4 bg-cream rounded-lg border border-sand">
+          <label
+            htmlFor="per_session_price"
+            className="block text-sm font-medium text-charcoal mb-1 flex items-center"
+          >
+            <DollarSign className="w-4 h-4 mr-1.5" />
+            Drop-in / Per-Session Price
+          </label>
+          <p className="text-xs text-stone mb-2">
+            Price for attending a single session without full registration
+          </p>
+          <div className="relative w-40">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone">$</span>
+            <Input
+              id="per_session_price"
+              type="number"
+              min={0}
+              step={0.01}
+              value={seriesDraftData?.per_session_price ?? ''}
+              onChange={(e) => {
+                const val = e.target.value ? parseFloat(e.target.value) : undefined;
+                console.log(`💰 [Step5] Per-session price set: $${val ?? 'cleared'}`);
+                mergeSeriesData({ per_session_price: val });
+              }}
+              placeholder="20.00"
+              className="pl-7"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Materials fee (for any new series) */}
+      {showMaterialsFee && (
+        <div className="p-4 bg-cream rounded-lg border border-sand">
+          <label
+            htmlFor="materials_fee"
+            className="block text-sm font-medium text-charcoal mb-1 flex items-center"
+          >
+            <Package className="w-4 h-4 mr-1.5" />
+            Materials / Supply Fee (optional)
+          </label>
+          <p className="text-xs text-stone mb-2">
+            Separate fee for supplies, materials, or equipment
+          </p>
+          <div className="relative w-40">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone">$</span>
+            <Input
+              id="materials_fee"
+              type="number"
+              min={0}
+              step={0.01}
+              value={seriesDraftData?.materials_fee ?? ''}
+              onChange={(e) => {
+                const val = e.target.value ? parseFloat(e.target.value) : undefined;
+                console.log(`💰 [Step5] Materials fee set: $${val ?? 'cleared'}`);
+                mergeSeriesData({ materials_fee: val });
+              }}
+              placeholder="15.00"
+              className="pl-7"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Pricing notes (for any new series) */}
+      {showPricingNotes && (
+        <div>
+          <label
+            htmlFor="pricing_notes"
+            className="block text-sm font-medium text-charcoal mb-1 flex items-center"
+          >
+            <FileText className="w-4 h-4 mr-1.5" />
+            Pricing Notes (optional)
+          </label>
+          <Input
+            id="pricing_notes"
+            type="text"
+            value={seriesDraftData?.pricing_notes || ''}
+            onChange={(e) => mergeSeriesData({ pricing_notes: e.target.value })}
+            placeholder="e.g., Early bird: $180 before May 1. Sibling discount: 10%."
+          />
+          <p className="text-xs text-stone mt-1">
+            Early bird rates, sibling discounts, scholarship info, etc.
           </p>
         </div>
       )}

@@ -246,6 +246,8 @@ export function SubmitEventForm({
           <Step3DateTime
             draftData={draftData}
             updateData={updateDraftData}
+            seriesDraftData={seriesDraftData}
+            updateSeriesData={updateSeriesDraftData}
           />
         );
       case 4:
@@ -263,6 +265,8 @@ export function SubmitEventForm({
           <Step5Pricing
             draftData={draftData}
             updateData={updateDraftData}
+            seriesDraftData={seriesDraftData}
+            updateSeriesData={updateSeriesDraftData}
           />
         );
       case 6:

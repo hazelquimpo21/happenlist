@@ -385,18 +385,68 @@ Step 5 (Pricing) for series should additionally show:
 3. Updated `src/app/series/[slug]/page.tsx` `transformToCard()`:
    - Now passes camps/classes fields to related series cards for consistent display
 
-### Phase D: Submission Form -- NEXT UP
-1. Update Step 2 to collect new series fields (attendance_mode, age range, skill level)
-   - Use `SERIES_LIMITS[type].supportsExtendedCare` and `supportsSkillLevel` to conditionally show fields
-2. Update Step 3 camp date range → auto-generate daily events
-   - Use `SERIES_LIMITS[type].defaultDaysOfWeek` for camp defaults
-3. Update Step 5 for per-session pricing + materials fee
-4. Implement recurring event generation in `submit-event.ts` (currently advertised in UI but not implemented)
+### Phase D: Submission Form -- COMPLETED (2026-02-09)
 
-### Phase E: Filtering
-1. Add filter controls to series browse page
-2. Add "camps with after care" filter (uses `idx_series_extended_care` index)
-3. Add age group, skill level, day of week filters (indexes already created)
+**What was done:**
+1. Updated `src/components/submit/steps/step-2-event-type.tsx`:
+   - Added attendance mode selector (registered / drop-in / hybrid) with `ATTENDANCE_MODE_OPTIONS`
+   - Added age range inputs (age_low, age_high, age_details)
+   - Added skill level selector (conditionally shown via `SERIES_LIMITS[type].supportsSkillLevel`)
+   - Added extended care time fields (conditionally shown via `supportsExtendedCare` — before/after care times + details)
+   - Added term/semester name field
+   - `handleSeriesTypeChange()` applies type-specific defaults (defaultAttendanceMode, defaultDaysOfWeek) and clears inapplicable fields
+   - `mergeSeriesData()` helper for ergonomic series draft updates
+
+2. Updated `src/components/submit/steps/step-3-datetime.tsx`:
+   - Added camp mode detection (`SERIES_LIMITS[type].dateSelection === 'consecutive'`)
+   - Camp mode: date range picker (start/end), days-of-week toggle buttons, core hours
+   - `calculateCampDates()` generates preview of all session dates (capped at 60 days)
+   - Visual preview shows generated session count and dates as badges
+   - Wired camp times to `seriesDraftData.core_start_time/core_end_time`
+   - Wired to parent form via new `seriesDraftData` and `updateSeriesData` props
+
+3. Updated `src/components/submit/steps/step-5-pricing.tsx`:
+   - Per-session / drop-in price field (shown when attendance is drop_in or hybrid)
+   - Materials / supply fee field (shown for any new series)
+   - Pricing notes textarea (shown for any new series)
+   - All series pricing fields stored on `seriesDraftData` (not `draftData`)
+   - Wired to parent form via new `seriesDraftData` and `updateSeriesData` props
+
+4. Updated `src/app/submit/new/submit-event-form.tsx`:
+   - Step 3 now receives `seriesDraftData` and `updateSeriesData` props
+   - Step 5 now receives `seriesDraftData` and `updateSeriesData` props
+
+5. Updated `src/data/submit/submit-event.ts` — **Major: multi-event generation**:
+   - Camp event generation (`generateCampEvents()`): auto-creates daily events from date range + days_of_week, titles as "Camp Title - Day N", batch insert
+   - Recurring event generation (`generateRecurringEvents()`): generates events from recurrence_rule (daily, weekly, biweekly, monthly), supports end_type: count/date/never
+   - `calculateDatesInRange()`: date utility for camps (60-day safety cap)
+   - `calculateRecurringDates()`: date utility for recurrence (52-occurrence safety cap, 12-week default window)
+   - `addMinutesToTime()`: time math helper for calculating end times from duration
+   - `updateSeriesDates()`: updates series start_date, end_date, total_sessions after generation
+   - `createSeries()` now persists ALL new fields including attendance_mode, extended care, pricing, age, skill, days_of_week, term_name
+   - Comprehensive console logging throughout (emoji-prefixed for consistency)
+   - `SubmitEventResult` now includes `eventCount` field
+
+### Phase E: Filtering -- COMPLETED (2026-02-09)
+
+**What was done:**
+1. Updated `src/app/series/series-filters.tsx`:
+   - "More Filters" toggle button with badge count of active advanced filters
+   - Collapsible advanced filters panel with responsive grid layout
+   - Attendance mode dropdown (Any / Registration Required / Drop-in Welcome / Hybrid)
+   - Age group dropdown (Toddler 0-3, Preschool 3-5, Kids 6-12, Teens 13-17, Adults 18+)
+   - Skill level dropdown (Any / All Levels / Beginner / Intermediate / Advanced)
+   - Day of week pill buttons (Sun-Sat) with toggle behavior
+   - "Has After Care" toggle button (for camp search)
+   - All new filters appear as removable badges in the "Active filters" summary
+   - Advanced panel auto-opens when any advanced filter is active
+
+2. Updated `src/app/series/page.tsx`:
+   - Parses new URL search params: `attendance`, `skill`, `age`, `aftercare`, `day`
+   - Passes parsed values to `getSeries()` as `attendanceMode`, `skillLevel`, `age`, `hasExtendedCare`, `dayOfWeek`
+   - Passes raw param values to `SeriesFilters` for display state
+   - Enhanced logging to show advanced filters when present
+   - Pagination preserves all filter params including Phase E additions
 
 ---
 
@@ -486,7 +536,7 @@ They overlap conceptually with the series system (`series_id`, `is_series_instan
 1. ~~Merge duplicate type definitions (EventStatus, PriceType, RecurrenceRule)~~ -- DONE (Phase A)
 2. ~~Fix naming inconsistency (upcoming_count vs upcoming_event_count)~~ -- DONE (Phase A)
 3. ~~Implement upcoming_event_count subquery~~ -- DONE (Phase B) via `getUpcomingEventCounts()` in search-series.ts
-4. Implement recurring event generation -- Phase D
+4. ~~Implement recurring event generation~~ -- DONE (Phase D) via `generateCampEvents()` and `generateRecurringEvents()` in submit-event.ts
 5. Decide on recurrence_parent_id/is_recurrence_template fields -- still open
 6. Fix hardcoded timezone -- still open
 7. ~~Consolidate updateData calls~~ -- DONE (Phase A)
@@ -495,55 +545,63 @@ They overlap conceptually with the series system (`series_id`, `is_series_instan
 
 ## Notes for Next AI Developer
 
-### What's Ready for Phase D (Submission Form)
+### All Phases Complete (A through E)
 
-The data layer and display are complete. The submission form needs to collect the new fields:
+Phases A-E are all complete. The camps/classes/series enhancement is fully implemented:
+- **Phase A**: Schema + Types (SQL migration, TypeScript types, constants)
+- **Phase B**: Data Layer (queries, filters, persistence)
+- **Phase C**: Display (series cards, detail page, badges)
+- **Phase D**: Submission Form (Step 2/3/5 UI, camp/recurring event generation)
+- **Phase E**: Filtering UI (advanced filters panel, URL params, wiring)
 
-**Key files to modify:**
-- `src/components/submit/steps/step-2-event-type.tsx` -- Add attendance_mode, age range, skill level fields
-- `src/components/submit/steps/step-3-datetime.tsx` -- Add camp date range → auto-generate daily events
-- `src/components/submit/steps/step-5-pricing.tsx` -- Add per-session price, materials fee fields
-- `src/data/submit/submit-event.ts` -- The `createSeries()` function already persists all fields; just ensure the form populates them
+### What Could Come Next
 
-**Key resources already in place:**
-- `SERIES_LIMITS[type].supportsExtendedCare` / `supportsSkillLevel` -- Use these to conditionally show fields
-- `SERIES_LIMITS[type].defaultDaysOfWeek` -- Pre-fill [1,2,3,4,5] for camps
-- `SERIES_LIMITS[type].defaultAttendanceMode` -- Pre-fill the default
-- `ATTENDANCE_MODE_OPTIONS` / `SKILL_LEVEL_OPTIONS` -- Ready-made UI option arrays in `series-limits.ts`
-- `SeriesDraftData` type already has all new fields defined
+1. **Testing**: End-to-end testing of the full submission flow for camps, classes, and recurring events. Verify that:
+   - Camp submission generates the correct number of daily events
+   - Recurring event submission generates events matching the recurrence pattern
+   - All series fields persist correctly to the database
+   - Filters on `/series` page correctly narrow results
 
-**The big Phase D item is recurring event generation:**
-- `submit-event.ts` currently creates a single event for a series
-- For camps: need to auto-generate daily events from start_date to end_date using days_of_week
-- For recurring: need to generate events from recurrence_rule pattern
-- The UI advertises this but it's not implemented yet
+2. **Program grouping (Option B from Decision 2)**: `parent_series_id` is in the migration but not wired up. This would let orgs group multiple camp weeks under one "Summer Art Camp" umbrella. Needs a UI for browsing programs.
 
-### What's Ready for Phase E (Filter UI)
+3. **Unused DB fields**: `recurrence_parent_id`, `is_recurrence_template`, `recurrence_pattern` on the events table overlap with the series system. Consider dropping them to reduce confusion.
 
-The data layer already supports all new filters. Phase E only needs UI controls:
+4. **Hardcoded timezone**: Step 3 says "Central Time (CT)" but should reference `DEFAULT_TIMEZONE` from config.
 
-**Key files to modify:**
-- `src/app/series/series-filters.tsx` -- Add filter dropdowns/toggles
-- `src/app/series/page.tsx` -- Parse new URL params and pass to `getSeries()`
+5. **Recurring event regeneration**: Currently, recurring events are generated once at submission. A cron job or on-demand regeneration would keep the event list fresh as time passes (e.g., always have 12 weeks of upcoming events).
 
-**Filters already working in data layer (`getSeries()`):**
-- `attendanceMode` -- eq filter on `attendance_mode` column
-- `skillLevel` -- eq filter on `skill_level` column
-- `age` -- range filter: `age_low <= age <= age_high` (handles nulls)
-- `hasExtendedCare` -- not-null filter on `extended_end_time`
-- `dayOfWeek` -- array containment filter on `days_of_week`
-
-**DB indexes already created (Phase A migration):**
-- `idx_series_attendance_mode` -- for attendance mode filter
-- `idx_series_skill_level` -- for skill level filter
-- `idx_series_age_range` -- for age range filter
-- `idx_series_extended_care` -- for extended care filter
-- `idx_series_term` -- for term grouping
+6. **Review/approval flow**: Multi-event submissions (camps, recurring) create many events at once. The admin review flow may need a way to approve/reject an entire series at once rather than individual events.
 
 ### Architecture Notes
-- All new fields flow: DB (migration) → types (supabase/types.ts) → data layer (get-series.ts) → display (series-card.tsx, series-header.tsx)
+- All new fields flow: DB (migration) → types (supabase/types.ts) → data layer (get-series.ts) → display (series-card.tsx, series-header.tsx) → form (step-2, step-3, step-5) → submit (submit-event.ts)
 - `SeriesCard` type has card-display fields; `SeriesWithDetails` extends `SeriesRow` for full data
 - `transformToSeriesCard()` in get-series.ts handles the DB→card mapping
 - `transformToCard()` in the detail page maps `SeriesWithDetails` → `SeriesCard` for related series
 - Extended care is a derived boolean (`has_extended_care = extended_end_time IS NOT NULL`)
-- All logging uses emoji-prefix format consistent with the existing codebase
+- Camp event generation uses `calculateDatesInRange()` with 60-day safety cap
+- Recurring event generation uses `calculateRecurringDates()` with 52-occurrence safety cap
+- All logging uses emoji-prefixed console.log consistent with the codebase
+- Series pricing fields (per_session_price, materials_fee, pricing_notes) live on `seriesDraftData`, not `draftData`
+- Step 3 and Step 5 receive `seriesDraftData` + `updateSeriesData` via parent form orchestrator
+- Filter URL params: `attendance`, `skill`, `age`, `aftercare`, `day` — all mapped to `getSeries()` query params
+
+### Key Files Reference
+| Phase | File | Purpose |
+|-------|------|---------|
+| A | `supabase/migrations/20260209_series_camps_classes.sql` | DB migration |
+| A | `src/lib/supabase/types.ts` | Canonical DB types |
+| A | `src/lib/constants/series-limits.ts` | Series type configs, UI options |
+| A | `src/types/series.ts` | SeriesCard, display info maps |
+| A | `src/types/submission.ts` | Draft types, validation |
+| B | `src/data/series/get-series.ts` | List/filter queries |
+| B | `src/data/series/get-series-detail.ts` | Detail queries |
+| B | `src/data/submit/submit-event.ts` | Event creation + generation |
+| B | `src/data/submit/search-series.ts` | Series search with counts |
+| C | `src/components/series/series-card.tsx` | Card display with badges |
+| C | `src/components/series/series-header.tsx` | Detail page header |
+| D | `src/components/submit/steps/step-2-event-type.tsx` | New series fields form |
+| D | `src/components/submit/steps/step-3-datetime.tsx` | Camp date range + preview |
+| D | `src/components/submit/steps/step-5-pricing.tsx` | Series pricing fields |
+| D | `src/app/submit/new/submit-event-form.tsx` | Form orchestrator (prop wiring) |
+| E | `src/app/series/series-filters.tsx` | Advanced filter UI |
+| E | `src/app/series/page.tsx` | URL param parsing + data wiring |

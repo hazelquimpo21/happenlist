@@ -8,18 +8,48 @@
  *   - New series vs existing series
  *   - Recurring pattern (if applicable)
  *
+ * Phase D additions:
+ *   - Attendance mode (registered / drop-in / hybrid) for new series
+ *   - Age range (age_low, age_high, age_details) for new series
+ *   - Skill level (conditionally shown via supportsSkillLevel)
+ *   - Extended care times (conditionally shown via supportsExtendedCare)
+ *   - Term name for semester/session labeling
+ *
  * @module components/submit/steps/step-2-event-type
  */
 
 'use client';
 
 import { useState } from 'react';
-import { Search, Plus, Layers, Calendar, RefreshCw, Link2 } from 'lucide-react';
+import {
+  Search,
+  Plus,
+  Layers,
+  Calendar,
+  RefreshCw,
+  Link2,
+  Users,
+  Baby,
+  GraduationCap,
+  Clock,
+  Tag,
+} from 'lucide-react';
 import { StepHeader } from '../step-progress';
 import { Input } from '@/components/ui';
-import type { EventDraftData, EventMode, SeriesDraftData } from '@/types/submission';
+import type {
+  EventDraftData,
+  EventMode,
+  SeriesDraftData,
+  AttendanceMode,
+  SkillLevel,
+} from '@/types/submission';
 import { EVENT_MODE_LABELS } from '@/types/submission';
-import { SERIES_TYPE_OPTIONS } from '@/lib/constants/series-limits';
+import {
+  SERIES_TYPE_OPTIONS,
+  ATTENDANCE_MODE_OPTIONS,
+  SKILL_LEVEL_OPTIONS,
+  SERIES_LIMITS,
+} from '@/lib/constants/series-limits';
 import { cn } from '@/lib/utils';
 
 // ============================================================================
@@ -43,6 +73,19 @@ interface SeriesSearchResult {
 }
 
 // ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Get the series type config for the current series draft, with safe fallback.
+ * Used to conditionally show fields like extended care and skill level.
+ */
+function getSeriesTypeConfig(seriesType: string | undefined) {
+  if (!seriesType) return null;
+  return SERIES_LIMITS[seriesType] ?? null;
+}
+
+// ============================================================================
 // COMPONENT
 // ============================================================================
 
@@ -57,6 +100,9 @@ export function Step2EventType({
   const [seriesResults, setSeriesResults] = useState<SeriesSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
+  // Current series type config (controls which optional sections appear)
+  const seriesConfig = getSeriesTypeConfig(seriesDraftData?.series_type);
+
   // ========== Series Search ==========
   const handleSeriesSearch = async (query: string) => {
     setSeriesQuery(query);
@@ -70,10 +116,47 @@ export function Step2EventType({
       const results = await searchSeries(query);
       setSeriesResults(results);
     } catch (error) {
-      console.error('Series search failed:', error);
+      console.error('❌ [Step2] Series search failed:', error);
     } finally {
       setIsSearching(false);
     }
+  };
+
+  // ========== Update series draft with merge helper ==========
+  const mergeSeriesData = (updates: Partial<SeriesDraftData>) => {
+    updateSeriesData({
+      ...seriesDraftData,
+      title: seriesDraftData?.title || '',
+      series_type: seriesDraftData?.series_type || 'class',
+      ...updates,
+    });
+  };
+
+  // ========== Handle series type change (resets type-dependent defaults) ==========
+  const handleSeriesTypeChange = (newType: string) => {
+    const config = SERIES_LIMITS[newType];
+    console.log(`📋 [Step2] Series type changed to "${newType}"`, {
+      supportsExtendedCare: config?.supportsExtendedCare,
+      supportsSkillLevel: config?.supportsSkillLevel,
+      defaultAttendanceMode: config?.defaultAttendanceMode,
+      defaultDaysOfWeek: config?.defaultDaysOfWeek,
+    });
+
+    updateSeriesData({
+      ...seriesDraftData,
+      title: seriesDraftData?.title || '',
+      series_type: newType,
+      // Apply type-specific defaults
+      attendance_mode: config?.defaultAttendanceMode || 'registered',
+      days_of_week: config?.defaultDaysOfWeek || undefined,
+      // Clear fields that don't apply to new type
+      ...(!config?.supportsSkillLevel && { skill_level: undefined }),
+      ...(!config?.supportsExtendedCare && {
+        extended_start_time: undefined,
+        extended_end_time: undefined,
+        extended_care_details: undefined,
+      }),
+    });
   };
 
   // ========== Mode Selection ==========
@@ -229,14 +312,8 @@ export function Step2EventType({
               id="series_title"
               type="text"
               value={seriesDraftData?.title || ''}
-              onChange={(e) =>
-                updateSeriesData({
-                  ...seriesDraftData,
-                  title: e.target.value,
-                  series_type: seriesDraftData?.series_type || 'class',
-                })
-              }
-              placeholder="e.g., Pottery 101 - Spring 2025"
+              onChange={(e) => mergeSeriesData({ title: e.target.value })}
+              placeholder="e.g., Pottery 101 - Spring 2026"
             />
           </div>
 
@@ -250,13 +327,7 @@ export function Step2EventType({
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() =>
-                    updateSeriesData({
-                      ...seriesDraftData,
-                      title: seriesDraftData?.title || '',
-                      series_type: option.value,
-                    })
-                  }
+                  onClick={() => handleSeriesTypeChange(option.value)}
                   className={cn(
                     'px-3 py-2 rounded-lg border text-left transition-all',
                     'hover:border-coral hover:bg-coral/5',
@@ -287,10 +358,7 @@ export function Step2EventType({
               max={52}
               value={seriesDraftData?.total_sessions || ''}
               onChange={(e) =>
-                updateSeriesData({
-                  ...seriesDraftData,
-                  title: seriesDraftData?.title || '',
-                  series_type: seriesDraftData?.series_type || 'class',
+                mergeSeriesData({
                   total_sessions: e.target.value ? parseInt(e.target.value) : undefined,
                 })
               }
@@ -299,6 +367,244 @@ export function Step2EventType({
             />
             <p className="text-xs text-stone mt-1">
               Leave blank if the number of sessions is not fixed
+            </p>
+          </div>
+
+          {/* ====================================================== */}
+          {/* PHASE D: Attendance Mode                                */}
+          {/* ====================================================== */}
+          <div className="pt-4 border-t border-sand">
+            <label className="block text-sm font-medium text-charcoal mb-2 flex items-center">
+              <Users className="w-4 h-4 mr-1.5" />
+              Attendance Mode
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              {ATTENDANCE_MODE_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    console.log(`📋 [Step2] Attendance mode set: ${option.value}`);
+                    mergeSeriesData({ attendance_mode: option.value });
+                  }}
+                  className={cn(
+                    'flex flex-col p-3 rounded-lg border text-left transition-all',
+                    'hover:border-coral hover:bg-coral/5',
+                    seriesDraftData?.attendance_mode === option.value
+                      ? 'border-coral bg-coral/10'
+                      : 'border-sand bg-warm-white'
+                  )}
+                >
+                  <span className="text-sm font-medium">
+                    <span className="mr-1">{option.emoji}</span>
+                    {option.label}
+                  </span>
+                  <span className="text-xs text-stone mt-1">{option.description}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ====================================================== */}
+          {/* PHASE D: Age Range                                      */}
+          {/* ====================================================== */}
+          <div className="pt-4 border-t border-sand">
+            <label className="block text-sm font-medium text-charcoal mb-2 flex items-center">
+              <Baby className="w-4 h-4 mr-1.5" />
+              Age Range (optional)
+            </label>
+            <div className="flex items-center gap-3">
+              <div className="w-24">
+                <label htmlFor="age_low" className="text-xs text-stone">Min Age</label>
+                <Input
+                  id="age_low"
+                  type="number"
+                  min={0}
+                  max={99}
+                  value={seriesDraftData?.age_low ?? ''}
+                  onChange={(e) =>
+                    mergeSeriesData({
+                      age_low: e.target.value ? parseInt(e.target.value) : undefined,
+                    })
+                  }
+                  placeholder="0"
+                />
+              </div>
+              <span className="text-stone mt-4">–</span>
+              <div className="w-24">
+                <label htmlFor="age_high" className="text-xs text-stone">Max Age</label>
+                <Input
+                  id="age_high"
+                  type="number"
+                  min={0}
+                  max={99}
+                  value={seriesDraftData?.age_high ?? ''}
+                  onChange={(e) =>
+                    mergeSeriesData({
+                      age_high: e.target.value ? parseInt(e.target.value) : undefined,
+                    })
+                  }
+                  placeholder="99"
+                />
+              </div>
+            </div>
+            <div className="mt-2">
+              <Input
+                id="age_details"
+                type="text"
+                value={seriesDraftData?.age_details || ''}
+                onChange={(e) => mergeSeriesData({ age_details: e.target.value })}
+                placeholder="e.g., Must be potty-trained, parent must attend under 5"
+              />
+              <p className="text-xs text-stone mt-1">
+                Additional age-related notes (optional)
+              </p>
+            </div>
+          </div>
+
+          {/* ====================================================== */}
+          {/* PHASE D: Skill Level (conditional on series type)       */}
+          {/* ====================================================== */}
+          {seriesConfig?.supportsSkillLevel && (
+            <div className="pt-4 border-t border-sand">
+              <label className="block text-sm font-medium text-charcoal mb-2 flex items-center">
+                <GraduationCap className="w-4 h-4 mr-1.5" />
+                Skill Level (optional)
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {/* "Not specified" option */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    console.log('📋 [Step2] Skill level cleared');
+                    mergeSeriesData({ skill_level: undefined });
+                  }}
+                  className={cn(
+                    'px-4 py-2 rounded-lg border transition-all',
+                    !seriesDraftData?.skill_level
+                      ? 'border-coral bg-coral/10 text-coral'
+                      : 'border-sand bg-warm-white text-charcoal hover:border-coral/50'
+                  )}
+                >
+                  Not specified
+                </button>
+                {SKILL_LEVEL_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      console.log(`📋 [Step2] Skill level set: ${option.value}`);
+                      mergeSeriesData({ skill_level: option.value as SkillLevel });
+                    }}
+                    className={cn(
+                      'px-4 py-2 rounded-lg border transition-all',
+                      seriesDraftData?.skill_level === option.value
+                        ? 'border-coral bg-coral/10 text-coral'
+                        : 'border-sand bg-warm-white text-charcoal hover:border-coral/50'
+                    )}
+                  >
+                    <span className="mr-1">{option.emoji}</span>
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ====================================================== */}
+          {/* PHASE D: Extended Care (conditional on series type)     */}
+          {/* ====================================================== */}
+          {seriesConfig?.supportsExtendedCare && (
+            <div className="pt-4 border-t border-sand">
+              <label className="block text-sm font-medium text-charcoal mb-2 flex items-center">
+                <Clock className="w-4 h-4 mr-1.5" />
+                Extended Care / Before & After Care (optional)
+              </label>
+              <p className="text-xs text-stone mb-3">
+                Does this camp offer before-care or after-care options?
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="core_start_time" className="text-xs text-stone">
+                    Core Start Time
+                  </label>
+                  <Input
+                    id="core_start_time"
+                    type="time"
+                    value={seriesDraftData?.core_start_time || ''}
+                    onChange={(e) => mergeSeriesData({ core_start_time: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="core_end_time" className="text-xs text-stone">
+                    Core End Time
+                  </label>
+                  <Input
+                    id="core_end_time"
+                    type="time"
+                    value={seriesDraftData?.core_end_time || ''}
+                    onChange={(e) => mergeSeriesData({ core_end_time: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="extended_start_time" className="text-xs text-stone">
+                    Before Care Starts
+                  </label>
+                  <Input
+                    id="extended_start_time"
+                    type="time"
+                    value={seriesDraftData?.extended_start_time || ''}
+                    onChange={(e) => mergeSeriesData({ extended_start_time: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="extended_end_time" className="text-xs text-stone">
+                    After Care Ends
+                  </label>
+                  <Input
+                    id="extended_end_time"
+                    type="time"
+                    value={seriesDraftData?.extended_end_time || ''}
+                    onChange={(e) => mergeSeriesData({ extended_end_time: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="mt-3">
+                <label htmlFor="extended_care_details" className="text-xs text-stone">
+                  Care Details & Pricing
+                </label>
+                <Input
+                  id="extended_care_details"
+                  type="text"
+                  value={seriesDraftData?.extended_care_details || ''}
+                  onChange={(e) => mergeSeriesData({ extended_care_details: e.target.value })}
+                  placeholder="e.g., Before care 7:30-9am ($25/wk). After care 3-5:30pm ($50/wk)."
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ====================================================== */}
+          {/* PHASE D: Term / Semester Name (optional)                */}
+          {/* ====================================================== */}
+          <div className="pt-4 border-t border-sand">
+            <label
+              htmlFor="term_name"
+              className="block text-sm font-medium text-charcoal mb-1 flex items-center"
+            >
+              <Tag className="w-4 h-4 mr-1.5" />
+              Term / Semester (optional)
+            </label>
+            <Input
+              id="term_name"
+              type="text"
+              value={seriesDraftData?.term_name || ''}
+              onChange={(e) => mergeSeriesData({ term_name: e.target.value })}
+              placeholder="e.g., Fall 2026, Summer Session A"
+              className="max-w-xs"
+            />
+            <p className="text-xs text-stone mt-1">
+              Helps group sessions by academic term or camp session
             </p>
           </div>
         </div>
