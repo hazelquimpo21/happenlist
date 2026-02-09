@@ -4,6 +4,8 @@
  * Search for events, venues, and organizers.
  */
 
+export const dynamic = 'force-dynamic';
+
 import type { Metadata } from 'next';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { EventGrid, SectionHeader } from '@/components/events';

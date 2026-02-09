@@ -42,6 +42,10 @@ export async function createClient() {
     supabaseUrl,
     supabaseAnonKey,
     {
+      global: {
+        fetch: (url, options) =>
+          fetch(url, { ...options, cache: 'no-store' }),
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll();

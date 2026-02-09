@@ -4,6 +4,8 @@
  * Main landing page with featured events, categories, and quick filters.
  */
 
+export const dynamic = 'force-dynamic';
+
 import Link from 'next/link';
 import { Search, Calendar, CalendarDays, Ticket, ChevronRight } from 'lucide-react';
 import { Container } from '@/components/layout';

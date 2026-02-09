@@ -7,6 +7,8 @@
  * Example: /series/pottery-101-spring-2025
  */
 
+export const dynamic = 'force-dynamic';
+
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';

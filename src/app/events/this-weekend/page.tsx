@@ -4,6 +4,8 @@
  * Events happening this weekend (Friday - Sunday).
  */
 
+export const dynamic = 'force-dynamic';
+
 import type { Metadata } from 'next';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { EventGrid } from '@/components/events';

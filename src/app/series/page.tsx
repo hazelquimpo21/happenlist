@@ -7,6 +7,8 @@
  * Filters: ?type=class, ?category=music, ?free=true
  */
 
+export const dynamic = 'force-dynamic';
+
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Container, Breadcrumbs } from '@/components/layout';

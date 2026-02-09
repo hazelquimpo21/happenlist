@@ -4,6 +4,8 @@
  * Events filtered by month with URLs like /events/2025/january
  */
 
+export const dynamic = 'force-dynamic';
+
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
