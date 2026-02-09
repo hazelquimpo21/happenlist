@@ -131,6 +131,10 @@ async function searchVenuesFallback(
 
   const supabase = await createClient();
 
+  // Sanitize query for use in PostgREST filter strings by escaping
+  // special characters that could alter filter syntax (commas, dots, parens).
+  const sanitized = query.replace(/[,().%_\\]/g, (c) => `\\${c}`);
+
   const { data, error } = await supabase
     .from('locations')
     .select(`
@@ -147,7 +151,7 @@ async function searchVenuesFallback(
       longitude
     `)
     .eq('is_active', true)
-    .or(`name.ilike.%${query}%,address_line.ilike.%${query}%`)
+    .or(`name.ilike.%${sanitized}%,address_line.ilike.%${sanitized}%`)
     .order('rating', { ascending: false, nullsFirst: false })
     .limit(limit);
 

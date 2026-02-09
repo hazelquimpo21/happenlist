@@ -921,6 +921,9 @@ async function createLocation(
         postal_code: locationData.postal_code || null,
         country: locationData.country || 'US',
         venue_type: locationData.venue_type || 'venue',
+        latitude: locationData.latitude ?? null,
+        longitude: locationData.longitude ?? null,
+        source: 'user_submitted',
         is_active: true,
       })
       .select()

@@ -25,6 +25,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { MapPin, Navigation, AlertCircle } from 'lucide-react';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import {
   MAPBOX_ACCESS_TOKEN,
   isMapboxConfigured,

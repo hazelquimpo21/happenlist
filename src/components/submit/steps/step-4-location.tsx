@@ -21,7 +21,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   MapPin,
   Search,
@@ -185,12 +185,13 @@ export function Step4Location({
     }
   }, [draftData.location_id, initialVenues, selectedVenue]);
 
-  // ========== Venue Search ==========
-  const handleVenueSearch = async (query: string) => {
-    setVenueQuery(query);
+  // ========== Venue Search (debounced) ==========
+  const debounceRef = useRef<NodeJS.Timeout>();
 
+  const performSearch = useCallback(async (query: string) => {
     if (query.length < 2) {
       setVenueResults([]);
+      setIsSearching(false);
       return;
     }
 
@@ -204,6 +205,26 @@ export function Step4Location({
     } finally {
       setIsSearching(false);
     }
+  }, [onSearchVenues]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  const handleVenueSearch = (query: string) => {
+    setVenueQuery(query);
+
+    if (query.length < 2) {
+      setVenueResults([]);
+      return;
+    }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      performSearch(query);
+    }, 300);
   };
 
   // ========== Select Venue ==========
