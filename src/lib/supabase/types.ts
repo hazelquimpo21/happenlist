@@ -476,6 +476,39 @@ export interface Database {
           created_at: string;
           updated_at: string;
           published_at: string | null;
+          // -- Camps/classes enhancements (migration: 20260209_series_camps_classes) --
+          /** Core program start time (HH:MM:SS) */
+          core_start_time: string | null;
+          /** Core program end time (HH:MM:SS) */
+          core_end_time: string | null;
+          /** Before-care / early drop-off start (HH:MM:SS). NULL = not offered */
+          extended_start_time: string | null;
+          /** After-care / late pickup end (HH:MM:SS). NULL = not offered */
+          extended_end_time: string | null;
+          /** Human-readable care options & pricing */
+          extended_care_details: string | null;
+          /** Drop-in / single-session price. NULL = no drop-in */
+          per_session_price: number | null;
+          /** Separate materials/supply fee. NULL = none */
+          materials_fee: number | null;
+          /** Pricing notes: early bird, sibling discount, etc. */
+          pricing_notes: string | null;
+          /** How participants attend: 'registered' | 'drop_in' | 'hybrid' */
+          attendance_mode: string;
+          /** Minimum age. NULL = no minimum */
+          age_low: number | null;
+          /** Maximum age. NULL = no maximum */
+          age_high: number | null;
+          /** Human-readable age details */
+          age_details: string | null;
+          /** Skill level: 'beginner' | 'intermediate' | 'advanced' | 'all_levels' */
+          skill_level: string | null;
+          /** Days of week (0=Sun..6=Sat). For camps: [1,2,3,4,5] = Mon-Fri */
+          days_of_week: number[] | null;
+          /** Semester/term label (e.g., "Fall 2026") */
+          term_name: string | null;
+          /** Parent series ID for multi-week camp programs */
+          parent_series_id: string | null;
         };
         Insert: {
           id?: string;
@@ -518,6 +551,23 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           published_at?: string | null;
+          // -- Camps/classes enhancements --
+          core_start_time?: string | null;
+          core_end_time?: string | null;
+          extended_start_time?: string | null;
+          extended_end_time?: string | null;
+          extended_care_details?: string | null;
+          per_session_price?: number | null;
+          materials_fee?: number | null;
+          pricing_notes?: string | null;
+          attendance_mode?: string;
+          age_low?: number | null;
+          age_high?: number | null;
+          age_details?: string | null;
+          skill_level?: string | null;
+          days_of_week?: number[] | null;
+          term_name?: string | null;
+          parent_series_id?: string | null;
         };
         Update: {
           id?: string;
@@ -560,6 +610,23 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           published_at?: string | null;
+          // -- Camps/classes enhancements --
+          core_start_time?: string | null;
+          core_end_time?: string | null;
+          extended_start_time?: string | null;
+          extended_end_time?: string | null;
+          extended_care_details?: string | null;
+          per_session_price?: number | null;
+          materials_fee?: number | null;
+          pricing_notes?: string | null;
+          attendance_mode?: string;
+          age_low?: number | null;
+          age_high?: number | null;
+          age_details?: string | null;
+          skill_level?: string | null;
+          days_of_week?: number[] | null;
+          term_name?: string | null;
+          parent_series_id?: string | null;
         };
       };
 
@@ -667,16 +734,30 @@ export interface Database {
 /**
  * Recurrence rule for recurring series/events.
  * Based on iCal RRULE standard but simplified.
+ *
+ * CANONICAL DEFINITION: This is the single source of truth.
+ * All fields are optional here because this represents what's stored in the DB.
+ * For form validation, use `RecurrenceRuleFormData` from types/submission.ts
+ * which makes user-facing required fields non-optional.
  */
 export interface RecurrenceRule {
+  /** How often the event repeats */
   frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly';
+  /** Repeat every N frequency units (e.g., every 2 weeks). Default: 1 */
   interval?: number;
-  days_of_week?: number[]; // 0=Sun, 1=Mon, 2=Tue, etc.
+  /** Which days of the week (0=Sun, 1=Mon, ..., 6=Sat) */
+  days_of_week?: number[];
+  /** Day of month for monthly recurrence (1-31) */
   day_of_month?: number;
-  time?: string; // HH:MM format
+  /** Start time in HH:MM format */
+  time?: string;
+  /** Duration of each session in minutes */
   duration_minutes?: number;
+  /** How the recurrence ends */
   end_type?: 'date' | 'count' | 'never';
+  /** End date if end_type is 'date' (YYYY-MM-DD) */
   end_date?: string;
+  /** Number of occurrences if end_type is 'count' */
   end_count?: number;
 }
 
@@ -693,10 +774,21 @@ export type SeriesType =
 
 /**
  * Event status enum values.
+ *
+ * State transitions:
+ *   draft -> pending_review (user submits)
+ *   pending_review -> published | changes_requested | rejected (admin)
+ *   changes_requested -> pending_review (user resubmits)
+ *   published -> cancelled | postponed (admin)
+ *   postponed -> published (admin reschedules)
+ *
+ * CANONICAL DEFINITION: This is the single source of truth.
+ * Import this type everywhere -- do not redefine.
  */
 export type EventStatus =
   | 'draft'
   | 'pending_review'
+  | 'changes_requested'
   | 'published'
   | 'rejected'
   | 'cancelled'
@@ -704,6 +796,9 @@ export type EventStatus =
 
 /**
  * Price type enum values.
+ *
+ * CANONICAL DEFINITION: This is the single source of truth.
+ * Import this type everywhere -- do not redefine.
  */
 export type PriceType =
   | 'free'
@@ -712,6 +807,24 @@ export type PriceType =
   | 'varies'
   | 'donation'
   | 'per_session';
+
+/**
+ * Attendance mode for series.
+ *
+ * - 'registered': Must sign up for the full series
+ * - 'drop_in': Show up to any individual session
+ * - 'hybrid': Register for series OR drop in to individual sessions
+ *
+ * CANONICAL DEFINITION: This is the single source of truth.
+ */
+export type AttendanceMode = 'registered' | 'drop_in' | 'hybrid';
+
+/**
+ * Skill level for classes/workshops.
+ *
+ * CANONICAL DEFINITION: This is the single source of truth.
+ */
+export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'all_levels';
 
 /**
  * Venue type enum values.

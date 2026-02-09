@@ -13,14 +13,15 @@
 // ============================================================================
 
 /**
- * Configuration for each series type
+ * Configuration for each series type.
+ * Controls validation, date selection behavior, and UI hints.
  */
 export interface SeriesTypeConfig {
   /** Minimum number of sessions/events */
   minSessions: number;
   /** Maximum sessions (null = unlimited for recurring) */
   maxSessions: number | null;
-  /** How dates are selected */
+  /** How dates are selected: manual pick, consecutive days, or recurrence pattern */
   dateSelection: 'manual' | 'consecutive' | 'pattern';
   /** Human-readable description */
   description: string;
@@ -28,6 +29,14 @@ export interface SeriesTypeConfig {
   emoji: string;
   /** For recurring: how many weeks ahead to generate */
   generationWindow?: number;
+  /** Default days of week for this type (e.g., [1,2,3,4,5] for camps) */
+  defaultDaysOfWeek?: number[];
+  /** Whether extended care options are relevant for this type */
+  supportsExtendedCare: boolean;
+  /** Whether skill level is relevant for this type */
+  supportsSkillLevel: boolean;
+  /** Default attendance mode for this type */
+  defaultAttendanceMode: 'registered' | 'drop_in' | 'hybrid';
 }
 
 /**
@@ -40,6 +49,9 @@ export const SERIES_LIMITS: Record<string, SeriesTypeConfig> = {
     dateSelection: 'manual',
     description: 'Multi-session class (2-52 sessions)',
     emoji: '📚',
+    supportsExtendedCare: false,
+    supportsSkillLevel: true,
+    defaultAttendanceMode: 'registered',
   },
   camp: {
     minSessions: 2,
@@ -47,6 +59,10 @@ export const SERIES_LIMITS: Record<string, SeriesTypeConfig> = {
     dateSelection: 'consecutive',
     description: 'Day camp or intensive (2-14 days)',
     emoji: '🏕️',
+    defaultDaysOfWeek: [1, 2, 3, 4, 5], // Mon-Fri
+    supportsExtendedCare: true,
+    supportsSkillLevel: false,
+    defaultAttendanceMode: 'registered',
   },
   workshop: {
     minSessions: 2,
@@ -54,6 +70,9 @@ export const SERIES_LIMITS: Record<string, SeriesTypeConfig> = {
     dateSelection: 'manual',
     description: 'Workshop series (2-12 sessions)',
     emoji: '🔧',
+    supportsExtendedCare: false,
+    supportsSkillLevel: true,
+    defaultAttendanceMode: 'registered',
   },
   recurring: {
     minSessions: 1,
@@ -62,6 +81,9 @@ export const SERIES_LIMITS: Record<string, SeriesTypeConfig> = {
     generationWindow: 12, // weeks
     description: 'Recurring event (weekly, monthly, etc.)',
     emoji: '🔁',
+    supportsExtendedCare: false,
+    supportsSkillLevel: false,
+    defaultAttendanceMode: 'drop_in',
   },
   festival: {
     minSessions: 1,
@@ -69,6 +91,9 @@ export const SERIES_LIMITS: Record<string, SeriesTypeConfig> = {
     dateSelection: 'consecutive',
     description: 'Multi-day festival (1-14 days)',
     emoji: '🎪',
+    supportsExtendedCare: false,
+    supportsSkillLevel: false,
+    defaultAttendanceMode: 'registered',
   },
   season: {
     minSessions: 2,
@@ -76,6 +101,9 @@ export const SERIES_LIMITS: Record<string, SeriesTypeConfig> = {
     dateSelection: 'manual',
     description: 'Performance season (2-100 events)',
     emoji: '🎭',
+    supportsExtendedCare: false,
+    supportsSkillLevel: false,
+    defaultAttendanceMode: 'registered',
   },
 };
 
@@ -137,6 +165,49 @@ export const SERIES_TYPE_OPTIONS = [
     description: 'Performance or sports season',
     emoji: '🎭',
   },
+] as const;
+
+// ============================================================================
+// ATTENDANCE MODE OPTIONS FOR UI
+// ============================================================================
+
+/**
+ * Attendance mode options for the submission form.
+ * Controls which options appear in the series creation UI.
+ */
+export const ATTENDANCE_MODE_OPTIONS = [
+  {
+    value: 'registered' as const,
+    label: 'Registration Required',
+    description: 'Participants must sign up for the full series',
+    emoji: '📋',
+  },
+  {
+    value: 'drop_in' as const,
+    label: 'Drop-in Welcome',
+    description: 'Anyone can show up to individual sessions',
+    emoji: '🚪',
+  },
+  {
+    value: 'hybrid' as const,
+    label: 'Register or Drop In',
+    description: 'Register for the series or drop in to individual sessions',
+    emoji: '🔄',
+  },
+] as const;
+
+// ============================================================================
+// SKILL LEVEL OPTIONS FOR UI
+// ============================================================================
+
+/**
+ * Skill level options for classes and workshops.
+ */
+export const SKILL_LEVEL_OPTIONS = [
+  { value: 'all_levels' as const, label: 'All Levels', emoji: '🌟' },
+  { value: 'beginner' as const, label: 'Beginner', emoji: '🌱' },
+  { value: 'intermediate' as const, label: 'Intermediate', emoji: '🌿' },
+  { value: 'advanced' as const, label: 'Advanced', emoji: '🌳' },
 ] as const;
 
 // ============================================================================

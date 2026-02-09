@@ -4,37 +4,32 @@
  * Type definitions for the event submission flow.
  *
  * These types define:
- *   - Event statuses and their transitions
  *   - Draft data structures
  *   - Form step configurations
  *   - Recurrence patterns for series
  *   - Admin queue items
  *
+ * NOTE: Shared enums (EventStatus, PriceType, RecurrenceRule, etc.) are
+ * defined canonically in `@/lib/supabase/types` and re-exported here
+ * for convenience. Do NOT redefine them in this file.
+ *
  * @module types/submission
  */
 
-// ============================================================================
-// EVENT STATUS TYPES
-// ============================================================================
+import type {
+  EventStatus,
+  PriceType,
+  RecurrenceRule,
+  AttendanceMode,
+  SkillLevel,
+} from '@/lib/supabase/types';
 
-/**
- * All possible event status values
- *
- * State machine transitions:
- *   draft -> pending_review (user submits)
- *   pending_review -> published | changes_requested | rejected (admin)
- *   changes_requested -> pending_review (user resubmits)
- *   published -> cancelled | postponed (admin)
- *   postponed -> published (admin reschedules)
- */
-export type EventStatus =
-  | 'draft'
-  | 'pending_review'
-  | 'changes_requested'
-  | 'published'
-  | 'rejected'
-  | 'cancelled'
-  | 'postponed';
+// Re-export shared types so existing imports still work
+export type { EventStatus, PriceType, RecurrenceRule, AttendanceMode, SkillLevel };
+
+// ============================================================================
+// EVENT STATUS DISPLAY
+// ============================================================================
 
 /**
  * Human-readable status labels with emoji
@@ -129,12 +124,7 @@ export const LOCATION_MODE_LABELS: Record<LocationMode, { title: string; descrip
 // ============================================================================
 
 /**
- * Event pricing model
- */
-export type PriceType = 'free' | 'fixed' | 'range' | 'varies' | 'donation';
-
-/**
- * Labels for price types
+ * Labels for price types (PriceType is imported from @/lib/supabase/types)
  */
 export const PRICE_TYPE_LABELS: Record<PriceType, string> = {
   free: 'Free',
@@ -142,6 +132,7 @@ export const PRICE_TYPE_LABELS: Record<PriceType, string> = {
   range: 'Price Range',
   varies: 'Prices Vary',
   donation: 'Pay What You Can',
+  per_session: 'Per Session',
 };
 
 // ============================================================================
@@ -203,7 +194,8 @@ export interface EventDraftData {
 }
 
 /**
- * Data for creating a new series alongside an event
+ * Data for creating a new series alongside an event.
+ * This is the minimal version collected in the "New Series" section of Step 2.
  */
 export interface NewSeriesData {
   title: string;
@@ -211,6 +203,19 @@ export interface NewSeriesData {
   description?: string;
   short_description?: string;
   total_sessions?: number;
+
+  // -- Camps/classes enhancements (Phase: camps-classes-series) --
+
+  /** How participants attend: must register, can drop in, or both */
+  attendance_mode?: AttendanceMode;
+  /** Minimum age for participants */
+  age_low?: number;
+  /** Maximum age for participants */
+  age_high?: number;
+  /** Human-readable age details (e.g., "Must be potty-trained") */
+  age_details?: string;
+  /** Skill level, primarily for classes */
+  skill_level?: SkillLevel;
 }
 
 /**
@@ -231,58 +236,50 @@ export interface NewLocationData {
 }
 
 // ============================================================================
-// RECURRENCE TYPES
+// RECURRENCE FORM TYPES
 // ============================================================================
 
-/**
- * Frequency of recurring events
- */
-export type RecurrenceFrequency = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly';
+// RecurrenceRule is imported from @/lib/supabase/types (DB shape, all optional).
+// RecurrenceFrequency and RecurrenceEndType are derived from RecurrenceRule.
+
+/** Frequency values extracted from RecurrenceRule for convenience */
+export type RecurrenceFrequency = RecurrenceRule['frequency'];
+
+/** End type values for recurrence rules */
+export type RecurrenceEndType = NonNullable<RecurrenceRule['end_type']>;
 
 /**
- * How the recurrence ends
+ * Stricter version of RecurrenceRule used in the submission form.
+ * The DB version has most fields optional (nullable JSONB). The form
+ * requires these fields before submission is allowed.
  */
-export type RecurrenceEndType = 'date' | 'count' | 'never';
-
-/**
- * Complete recurrence rule for generating events
- */
-export interface RecurrenceRule {
+export interface RecurrenceRuleFormData {
   frequency: RecurrenceFrequency;
-  interval: number; // e.g., every 2 weeks
-  days_of_week?: number[]; // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
-  day_of_month?: number; // For monthly on specific day
-  time: string; // "19:00" format
+  /** Repeat every N frequency units (e.g., every 2 weeks). Required in form. */
+  interval: number;
+  days_of_week?: number[];
+  day_of_month?: number;
+  /** Start time in HH:MM format. Required in form. */
+  time: string;
+  /** Duration of each session in minutes. Required in form. */
   duration_minutes: number;
+  /** How the recurrence ends. Required in form. */
   end_type: RecurrenceEndType;
-  end_date?: string; // YYYY-MM-DD
+  end_date?: string;
   end_count?: number;
 }
 
-/**
- * Day of week labels
- */
-export const DAY_OF_WEEK_LABELS = [
-  'Sunday',
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-] as const;
-
-/**
- * Short day labels for compact display
- */
-export const DAY_OF_WEEK_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+// Day-of-week labels are defined canonically in @/types/series.ts.
+// Re-exported here so existing imports from '@/types/submission' still work.
+export { DAY_OF_WEEK_LABELS, DAY_OF_WEEK_SHORT } from '@/types/series';
 
 // ============================================================================
 // SERIES DRAFT DATA
 // ============================================================================
 
 /**
- * Data for creating a new series (complete)
+ * Complete data for creating a new series.
+ * This is the full version used when submitting a series + events.
  */
 export interface SeriesDraftData {
   title: string;
@@ -299,6 +296,42 @@ export interface SeriesDraftData {
   location_id?: string;
   organizer_id?: string;
   image_url?: string;
+
+  // -- Camps/classes enhancements (Phase: camps-classes-series) --
+
+  /** How participants attend: must register, can drop in, or both */
+  attendance_mode?: AttendanceMode;
+  /** Drop-in / single-session price (null = no drop-in option) */
+  per_session_price?: number;
+  /** Separate materials/supply fee (null = none) */
+  materials_fee?: number;
+  /** Human-readable pricing notes (early bird, sibling discount, etc.) */
+  pricing_notes?: string;
+
+  /** Core program start time, HH:MM (e.g., "09:00") */
+  core_start_time?: string;
+  /** Core program end time, HH:MM (e.g., "15:00") */
+  core_end_time?: string;
+  /** Before-care / early drop-off start time, HH:MM (e.g., "07:30") */
+  extended_start_time?: string;
+  /** After-care / late pickup end time, HH:MM (e.g., "17:30") */
+  extended_end_time?: string;
+  /** Human-readable care options & pricing */
+  extended_care_details?: string;
+
+  /** Minimum age for participants */
+  age_low?: number;
+  /** Maximum age for participants */
+  age_high?: number;
+  /** Human-readable age details (e.g., "Must be potty-trained") */
+  age_details?: string;
+  /** Skill level, primarily for classes */
+  skill_level?: SkillLevel;
+
+  /** Which days of the week (0=Sun, 1=Mon, ..., 6=Sat) -- for camps: [1,2,3,4,5] = Mon-Fri */
+  days_of_week?: number[];
+  /** Semester/term grouping label (e.g., "Fall 2026", "Summer Session A") */
+  term_name?: string;
 }
 
 // ============================================================================
