@@ -5,4 +5,4 @@
  */
 
 export { getVenues, getVenue } from './get-venues';
-export { searchVenues, getPopularVenues, type VenueSearchResult } from './search-venues';
+export { searchVenues, getPopularVenues, getVenueById, type VenueSearchResult } from './search-venues';

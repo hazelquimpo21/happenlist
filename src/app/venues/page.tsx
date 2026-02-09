@@ -7,12 +7,13 @@
 export const dynamic = 'force-dynamic';
 
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin } from 'lucide-react';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { Card } from '@/components/ui';
 import { getVenues } from '@/data/venues';
-import { buildVenueUrl } from '@/lib/utils';
+import { buildVenueUrl, getBestImageUrl } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Venues',
@@ -66,28 +67,41 @@ export default async function VenuesPage({ searchParams }: VenuesPageProps) {
           {venues.map((venue) => (
             <Link key={venue.id} href={buildVenueUrl(venue)}>
               <Card
-                className="h-full hover:shadow-card-hover transition-shadow"
-                padding="lg"
+                className="h-full hover:shadow-card-hover transition-shadow overflow-hidden"
+                padding="none"
               >
-                <div className="flex items-start gap-3">
-                  <div className="w-12 h-12 rounded-full bg-sage/20 flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-6 h-6 text-sage" />
-                  </div>
-                  <div>
-                    <h2 className="font-display text-h4 text-charcoal group-hover:text-coral transition-colors">
-                      {venue.name}
-                    </h2>
-                    {venue.address_line && (
-                      <p className="text-body-sm text-stone mt-1">
-                        {venue.address_line}
-                      </p>
-                    )}
-                    {venue.city && (
-                      <p className="text-body-sm text-stone">
-                        {venue.city}, {venue.state}
-                      </p>
-                    )}
-                  </div>
+                {(() => {
+                  const img = getBestImageUrl(venue.image_url, venue.external_image_url);
+                  return img ? (
+                    <div className="relative h-32 w-full">
+                      <Image
+                        src={img}
+                        alt={venue.name}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-32 w-full bg-sage/10 flex items-center justify-center">
+                      <MapPin className="w-8 h-8 text-sage/40" />
+                    </div>
+                  );
+                })()}
+                <div className="p-4">
+                  <h2 className="font-display text-h4 text-charcoal group-hover:text-coral transition-colors">
+                    {venue.name}
+                  </h2>
+                  {venue.address_line && (
+                    <p className="text-body-sm text-stone mt-1">
+                      {venue.address_line}
+                    </p>
+                  )}
+                  {venue.city && (
+                    <p className="text-body-sm text-stone">
+                      {venue.city}, {venue.state}
+                    </p>
+                  )}
                 </div>
               </Card>
             </Link>

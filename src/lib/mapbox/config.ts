@@ -58,10 +58,15 @@ export type MapStyle = keyof typeof MAP_STYLES;
 // ============================================================================
 
 /**
- * Default map center - Milwaukee, WI
+ * Default map center.
+ * Override with NEXT_PUBLIC_DEFAULT_CENTER_LNG / NEXT_PUBLIC_DEFAULT_CENTER_LAT.
+ * Defaults to Milwaukee, WI.
  * [longitude, latitude]
  */
-export const DEFAULT_CENTER: [number, number] = [-87.9065, 43.0389];
+export const DEFAULT_CENTER: [number, number] = [
+  parseFloat(process.env.NEXT_PUBLIC_DEFAULT_CENTER_LNG || '-87.9065'),
+  parseFloat(process.env.NEXT_PUBLIC_DEFAULT_CENTER_LAT || '43.0389'),
+];
 
 /**
  * Default zoom levels for different contexts.
@@ -102,8 +107,8 @@ export const GEOCODING_CONFIG = {
   /** API endpoint */
   endpoint: 'https://api.mapbox.com/geocoding/v5/mapbox.places',
 
-  /** Limit results to US */
-  country: 'us',
+  /** Limit results to a country. Override with NEXT_PUBLIC_GEO_COUNTRY. */
+  country: process.env.NEXT_PUBLIC_GEO_COUNTRY || 'us',
 
   /** Bias results toward Milwaukee area */
   proximity: DEFAULT_CENTER,

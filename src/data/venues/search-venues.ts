@@ -182,6 +182,49 @@ async function searchVenuesFallback(
  * @param limit - Maximum venues to return (default: 12)
  * @returns Array of popular venues
  */
+/**
+ * Gets a single venue by ID.
+ * Used to restore a selected venue when returning to Step 4 from a saved draft.
+ */
+export async function getVenueById(
+  id: string
+): Promise<VenueSearchResult | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('locations')
+    .select(`
+      id,
+      name,
+      address_line,
+      city,
+      state,
+      venue_type,
+      category,
+      rating,
+      review_count,
+      latitude,
+      longitude
+    `)
+    .eq('id', id)
+    .eq('is_active', true)
+    .single();
+
+  if (error) {
+    console.error('❌ [getVenueById] Error:', error);
+    return null;
+  }
+
+  return { ...data, similarity_score: 0 };
+}
+
+/**
+ * Gets popular venues based on rating and review count.
+ * Useful for showing quick-select options in the location picker.
+ *
+ * @param limit - Maximum venues to return (default: 12)
+ * @returns Array of popular venues
+ */
 export async function getPopularVenues(
   limit: number = 12
 ): Promise<VenueSearchResult[]> {
