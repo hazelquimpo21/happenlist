@@ -340,18 +340,52 @@ Step 5 (Pricing) for series should additionally show:
 
 **SQL migration must be run:** `supabase/migrations/20260209_series_camps_classes.sql`
 
-### Phase B: Data Layer -- NEXT UP
-1. Update `get-series.ts` to support new filters (attendance_mode, age, skill_level, has_extended_care)
-2. Update `get-series-detail.ts` to return new fields
-3. Update `submit-event.ts` / series creation to handle new fields when inserting series
-4. Implement `upcoming_event_count` subquery in `search-series.ts` (currently hardcoded to 0)
+### Phase B: Data Layer -- COMPLETED (2026-02-09)
 
-### Phase C: Display (Series Detail + Cards)
-1. Update series detail page to show care options, pricing, attendance mode
-2. Update series cards to show key info (drop-in badge, age range, skill level)
-3. Add new badges/indicators using the `ATTENDANCE_MODE_INFO` and `SKILL_LEVEL_INFO` maps
+**What was done:**
+1. Updated `src/data/series/get-series.ts`:
+   - Added new camps/classes columns to SELECT: `attendance_mode`, `per_session_price`, `age_low`, `age_high`, `skill_level`, `extended_end_time`, `days_of_week`
+   - Added 5 new filter params to `SeriesQueryParams`: `attendanceMode`, `skillLevel`, `age`, `hasExtendedCare`, `dayOfWeek`
+   - Updated `transformToSeriesCard()` to map new fields to `SeriesCard` type
+   - `has_extended_care` is derived: `true` when `extended_end_time IS NOT NULL`
+   - Comprehensive logging for each new filter when active
 
-### Phase D: Submission Form
+2. Updated `src/data/series/get-series-detail.ts`:
+   - Added Phase B doc comment (the `select('*')` already returns all new columns)
+   - Enhanced logging to show new fields when present (attendance_mode, age, skill, care times, etc.)
+
+3. Updated `src/data/submit/submit-event.ts` `createSeries()`:
+   - Now persists all new fields: `attendance_mode`, `core_start_time/end_time`, `extended_start_time/end_time`, `extended_care_details`, `per_session_price`, `materials_fee`, `pricing_notes`, `age_low/high`, `age_details`, `skill_level`, `days_of_week`, `term_name`
+   - Added detailed logging for series creation with new field summary
+
+4. Updated `src/data/submit/search-series.ts`:
+   - Implemented `getUpcomingEventCounts()` helper using batch `.in()` query
+   - Replaced hardcoded `upcoming_event_count: 0` in all 3 functions (`searchSeries`, `getRecentSeries`, `getSeriesForLink`)
+   - Graceful degradation: if count query fails, falls back to 0 silently
+
+### Phase C: Display (Series Detail + Cards) -- COMPLETED (2026-02-09)
+
+**What was done:**
+1. Updated `src/components/series/series-card.tsx`:
+   - Added `SeriesInfoBadges` sub-component rendering attendance mode, age range, skill level, and extended care badges
+   - Badges only render when data exists (no empty badges)
+   - Uses `ATTENDANCE_MODE_INFO` and `SKILL_LEVEL_INFO` maps for consistent styling
+
+2. Updated `src/components/series/series-header.tsx`:
+   - Added `SeriesQuickBadges` row below title (attendance, age, skill badges)
+   - Added core hours display (Clock icon with formatted times)
+   - Added days of week display (`formatDaysOfWeek()` handles "Mon – Fri" range and individual days)
+   - Added age range with details (Baby icon)
+   - Added skill level display (GraduationCap icon)
+   - Added `ExtendedCareSection` callout box (sky-blue card with before/after care times and details)
+   - Enhanced pricing section: per-session/drop-in price, materials fee, pricing notes
+   - CTA button label adapts to attendance mode ("Register Now" / "More Info" / "Register or Drop In")
+   - Added term/semester label display
+
+3. Updated `src/app/series/[slug]/page.tsx` `transformToCard()`:
+   - Now passes camps/classes fields to related series cards for consistent display
+
+### Phase D: Submission Form -- NEXT UP
 1. Update Step 2 to collect new series fields (attendance_mode, age range, skill level)
    - Use `SERIES_LIMITS[type].supportsExtendedCare` and `supportsSkillLevel` to conditionally show fields
 2. Update Step 3 camp date range → auto-generate daily events
@@ -451,8 +485,65 @@ They overlap conceptually with the series system (`series_id`, `is_series_instan
 
 1. ~~Merge duplicate type definitions (EventStatus, PriceType, RecurrenceRule)~~ -- DONE (Phase A)
 2. ~~Fix naming inconsistency (upcoming_count vs upcoming_event_count)~~ -- DONE (Phase A)
-3. Implement upcoming_event_count subquery or remove display code -- Phase B
+3. ~~Implement upcoming_event_count subquery~~ -- DONE (Phase B) via `getUpcomingEventCounts()` in search-series.ts
 4. Implement recurring event generation -- Phase D
 5. Decide on recurrence_parent_id/is_recurrence_template fields -- still open
 6. Fix hardcoded timezone -- still open
 7. ~~Consolidate updateData calls~~ -- DONE (Phase A)
+
+---
+
+## Notes for Next AI Developer
+
+### What's Ready for Phase D (Submission Form)
+
+The data layer and display are complete. The submission form needs to collect the new fields:
+
+**Key files to modify:**
+- `src/components/submit/steps/step-2-event-type.tsx` -- Add attendance_mode, age range, skill level fields
+- `src/components/submit/steps/step-3-datetime.tsx` -- Add camp date range → auto-generate daily events
+- `src/components/submit/steps/step-5-pricing.tsx` -- Add per-session price, materials fee fields
+- `src/data/submit/submit-event.ts` -- The `createSeries()` function already persists all fields; just ensure the form populates them
+
+**Key resources already in place:**
+- `SERIES_LIMITS[type].supportsExtendedCare` / `supportsSkillLevel` -- Use these to conditionally show fields
+- `SERIES_LIMITS[type].defaultDaysOfWeek` -- Pre-fill [1,2,3,4,5] for camps
+- `SERIES_LIMITS[type].defaultAttendanceMode` -- Pre-fill the default
+- `ATTENDANCE_MODE_OPTIONS` / `SKILL_LEVEL_OPTIONS` -- Ready-made UI option arrays in `series-limits.ts`
+- `SeriesDraftData` type already has all new fields defined
+
+**The big Phase D item is recurring event generation:**
+- `submit-event.ts` currently creates a single event for a series
+- For camps: need to auto-generate daily events from start_date to end_date using days_of_week
+- For recurring: need to generate events from recurrence_rule pattern
+- The UI advertises this but it's not implemented yet
+
+### What's Ready for Phase E (Filter UI)
+
+The data layer already supports all new filters. Phase E only needs UI controls:
+
+**Key files to modify:**
+- `src/app/series/series-filters.tsx` -- Add filter dropdowns/toggles
+- `src/app/series/page.tsx` -- Parse new URL params and pass to `getSeries()`
+
+**Filters already working in data layer (`getSeries()`):**
+- `attendanceMode` -- eq filter on `attendance_mode` column
+- `skillLevel` -- eq filter on `skill_level` column
+- `age` -- range filter: `age_low <= age <= age_high` (handles nulls)
+- `hasExtendedCare` -- not-null filter on `extended_end_time`
+- `dayOfWeek` -- array containment filter on `days_of_week`
+
+**DB indexes already created (Phase A migration):**
+- `idx_series_attendance_mode` -- for attendance mode filter
+- `idx_series_skill_level` -- for skill level filter
+- `idx_series_age_range` -- for age range filter
+- `idx_series_extended_care` -- for extended care filter
+- `idx_series_term` -- for term grouping
+
+### Architecture Notes
+- All new fields flow: DB (migration) → types (supabase/types.ts) → data layer (get-series.ts) → display (series-card.tsx, series-header.tsx)
+- `SeriesCard` type has card-display fields; `SeriesWithDetails` extends `SeriesRow` for full data
+- `transformToSeriesCard()` in get-series.ts handles the DB→card mapping
+- `transformToCard()` in the detail page maps `SeriesWithDetails` → `SeriesCard` for related series
+- Extended care is a derived boolean (`has_extended_care = extended_end_time IS NOT NULL`)
+- All logging uses emoji-prefix format consistent with the existing codebase

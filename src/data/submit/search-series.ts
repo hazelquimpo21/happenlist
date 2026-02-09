@@ -3,6 +3,10 @@
  * ==============
  * Functions for searching existing series to link events to.
  *
+ * Phase B: Implements real upcoming_event_count via a batch count query
+ * instead of the previous hardcoded 0 value. Uses a separate query to
+ * count upcoming events for each returned series.
+ *
  * @module data/submit/search-series
  */
 
@@ -103,7 +107,11 @@ export async function searchSeries(
       return { success: false, error: error.message };
     }
 
-    // Transform results
+    // Phase B: Fetch upcoming event counts for all returned series in one batch query
+    const seriesIds = (data || []).map((row: { id: string }) => row.id);
+    const upcomingCounts = await getUpcomingEventCounts(supabase, seriesIds);
+
+    // Transform results with real upcoming counts
     const series: SeriesSearchResult[] = (data || []).map(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (row: any) => ({
@@ -116,12 +124,12 @@ export async function searchSeries(
         organizer_name: row.organizers?.name || null,
         location_name: row.locations?.name || null,
         location_city: row.locations?.city || null,
-        upcoming_event_count: 0, // Would need subquery to get this
+        upcoming_event_count: upcomingCounts.get(row.id) ?? 0,
         total_sessions: row.total_sessions,
       })
     );
 
-    timer.success(`Found ${series.length} series matching "${query}"`);
+    timer.success(`Found ${series.length} series matching "${query}" (with upcoming counts)`);
 
     return {
       success: true,
@@ -179,7 +187,11 @@ export async function getRecentSeries(
       return { success: false, error: error.message };
     }
 
-    // Transform results
+    // Phase B: Fetch upcoming event counts for returned series
+    const seriesIds = (data || []).map((row: { id: string }) => row.id);
+    const upcomingCounts = await getUpcomingEventCounts(supabase, seriesIds);
+
+    // Transform results with real upcoming counts
     const series: SeriesSearchResult[] = (data || []).map(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (row: any) => ({
@@ -192,12 +204,12 @@ export async function getRecentSeries(
         organizer_name: row.organizers?.name || null,
         location_name: row.locations?.name || null,
         location_city: row.locations?.city || null,
-        upcoming_event_count: 0,
+        upcoming_event_count: upcomingCounts.get(row.id) ?? 0,
         total_sessions: row.total_sessions,
       })
     );
 
-    timer.success(`Got ${series.length} recent series`);
+    timer.success(`Got ${series.length} recent series (with upcoming counts)`);
 
     return {
       success: true,
@@ -261,7 +273,10 @@ export async function getSeriesForLink(
       return { success: false, error: error.message };
     }
 
-    timer.success('Series found');
+    // Phase B: Get real upcoming event count for this series
+    const upcomingCounts = await getUpcomingEventCounts(supabase, [data.id]);
+
+    timer.success(`Series found: "${data.title}" (upcoming: ${upcomingCounts.get(data.id) ?? 0})`);
 
     return {
       success: true,
@@ -275,7 +290,7 @@ export async function getSeriesForLink(
         organizer_name: data.organizers?.name || null,
         location_name: data.locations?.name || null,
         location_city: data.locations?.city || null,
-        upcoming_event_count: 0,
+        upcoming_event_count: upcomingCounts.get(data.id) ?? 0,
         total_sessions: data.total_sessions,
       },
     };
@@ -286,4 +301,64 @@ export async function getSeriesForLink(
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
+}
+
+// ============================================================================
+// HELPER: GET UPCOMING EVENT COUNTS
+// ============================================================================
+
+/**
+ * Fetches the count of upcoming (future) published events for a batch of series IDs.
+ *
+ * Phase B: Replaces the previous hardcoded `upcoming_event_count: 0` in all
+ * search/recent/link functions. Uses a single query with `.in()` filter
+ * to batch-fetch counts efficiently.
+ *
+ * @param supabase - Supabase client instance
+ * @param seriesIds - Array of series UUIDs to count events for
+ * @returns Map of series_id -> upcoming event count
+ */
+async function getUpcomingEventCounts(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  seriesIds: string[]
+): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+
+  // Short-circuit: no series IDs means no counts to fetch
+  if (seriesIds.length === 0) {
+    return counts;
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+
+  try {
+    // Fetch all upcoming published events for the given series IDs
+    // We select only series_id and count by grouping client-side
+    const { data, error } = await supabase
+      .from('events')
+      .select('series_id')
+      .in('series_id', seriesIds)
+      .eq('status', 'published')
+      .gte('instance_date', today);
+
+    if (error) {
+      console.warn('⚠️ [getUpcomingEventCounts] Failed to fetch counts, falling back to 0:', error.message);
+      return counts;
+    }
+
+    // Group by series_id and count
+    for (const row of data || []) {
+      const sid = row.series_id as string;
+      counts.set(sid, (counts.get(sid) || 0) + 1);
+    }
+
+    console.log(`📊 [getUpcomingEventCounts] Counted upcoming events for ${seriesIds.length} series:`,
+      Object.fromEntries(counts));
+  } catch (err) {
+    // Non-fatal: if counting fails, we return 0 for all (graceful degradation)
+    console.warn('⚠️ [getUpcomingEventCounts] Unexpected error, falling back to 0:', err);
+  }
+
+  return counts;
 }

@@ -4,11 +4,15 @@
  * Fetches a list of series with filtering and pagination.
  *
  * Used by: /series page, category pages, organizer pages
+ *
+ * Phase B additions:
+ *   - Select new camps/classes fields for card display
+ *   - Filter by attendance_mode, skill_level, age, has_extended_care, day_of_week
  */
 
 import { createClient } from '@/lib/supabase/server';
 import type { SeriesCard, SeriesQueryParams, SeriesQueryResult } from '@/types';
-import type { SeriesType } from '@/lib/supabase/types';
+import type { SeriesType, AttendanceMode, SkillLevel } from '@/lib/supabase/types';
 
 // ============================================================================
 // TRANSFORM FUNCTION
@@ -16,7 +20,7 @@ import type { SeriesType } from '@/lib/supabase/types';
 
 /**
  * Transform raw database row to SeriesCard format.
- * Handles nested relationships safely.
+ * Handles nested relationships and new camps/classes fields safely.
  */
 function transformToSeriesCard(row: Record<string, unknown>): SeriesCard {
   const category = row.category as Record<string, unknown> | null;
@@ -48,6 +52,15 @@ function transformToSeriesCard(row: Record<string, unknown>): SeriesCard {
     organizer_slug: (organizer?.slug as string) ?? null,
     upcoming_event_count: row.upcoming_event_count as number | undefined,
     next_event_date: row.next_event_date as string | null | undefined,
+
+    // -- Camps/classes card display fields (Phase B) --
+    attendance_mode: (row.attendance_mode as AttendanceMode) ?? undefined,
+    per_session_price: (row.per_session_price as number | null) ?? null,
+    age_low: (row.age_low as number | null) ?? null,
+    age_high: (row.age_high as number | null) ?? null,
+    skill_level: (row.skill_level as SkillLevel | null) ?? null,
+    // Derived: has_extended_care is true when extended_end_time is set
+    has_extended_care: row.extended_end_time != null,
   };
 }
 
@@ -63,12 +76,13 @@ function transformToSeriesCard(row: Record<string, unknown>): SeriesCard {
  * const { series, total } = await getSeries({ limit: 12 });
  * ```
  *
- * @example With filters
+ * @example With camps/classes filters
  * ```ts
  * const result = await getSeries({
- *   type: 'class',
- *   categorySlug: 'arts-culture',
- *   isFree: true,
+ *   type: 'camp',
+ *   hasExtendedCare: true,
+ *   age: 8,
+ *   attendanceMode: 'registered',
  * });
  * ```
  */
@@ -87,6 +101,12 @@ export async function getSeries(
     page = 1,
     limit = 12,
     includePast = false,
+    // Phase B: new filter params
+    attendanceMode,
+    skillLevel,
+    age,
+    hasExtendedCare,
+    dayOfWeek,
   } = params;
 
   console.log('📚 [getSeries] Fetching series with params:', {
@@ -97,12 +117,18 @@ export async function getSeries(
     featured,
     page,
     limit,
+    // Log new filter params when present for troubleshooting
+    ...(attendanceMode && { attendanceMode }),
+    ...(skillLevel && { skillLevel }),
+    ...(age !== undefined && { age }),
+    ...(hasExtendedCare && { hasExtendedCare }),
+    ...(dayOfWeek !== undefined && { dayOfWeek }),
   });
 
   const supabase = await createClient();
   const offset = (page - 1) * limit;
 
-  // Build query
+  // Build query -- includes new camps/classes columns for card display
   let query = supabase
     .from('series')
     .select(
@@ -113,6 +139,9 @@ export async function getSeries(
       image_url, thumbnail_url,
       price_type, price_low, price_high, is_free,
       heart_count,
+      attendance_mode, per_session_price,
+      age_low, age_high, skill_level,
+      extended_end_time, days_of_week,
       category:categories(name, slug),
       location:locations(name, slug),
       organizer:organizers(name, slug)
@@ -127,7 +156,10 @@ export async function getSeries(
     query = query.or(`end_date.gte.${today},end_date.is.null`);
   }
 
-  // Apply filters
+  // ========================================
+  // Existing filters
+  // ========================================
+
   if (search) {
     query = query.textSearch('title', search, { type: 'websearch' });
   }
@@ -146,6 +178,8 @@ export async function getSeries(
 
     if (categoryData?.id) {
       query = query.eq('category_id', categoryData.id);
+    } else {
+      console.warn(`⚠️ [getSeries] Category slug not found: "${categorySlug}" -- skipping filter`);
     }
   }
 
@@ -159,11 +193,12 @@ export async function getSeries(
 
     if (organizerData?.id) {
       query = query.eq('organizer_id', organizerData.id);
+    } else {
+      console.warn(`⚠️ [getSeries] Organizer slug not found: "${organizerSlug}" -- skipping filter`);
     }
   }
 
   if (city) {
-    // Join filter on location city
     query = query.eq('location.city', city);
   }
 
@@ -175,7 +210,47 @@ export async function getSeries(
     query = query.eq('is_featured', true);
   }
 
+  // ========================================
+  // Phase B: Camps/classes filters
+  // ========================================
+
+  // Filter by attendance mode (uses idx_series_attendance_mode index)
+  if (attendanceMode) {
+    console.log(`🔍 [getSeries] Filtering by attendance_mode: ${attendanceMode}`);
+    query = query.eq('attendance_mode', attendanceMode);
+  }
+
+  // Filter by skill level (uses idx_series_skill_level index)
+  if (skillLevel) {
+    console.log(`🔍 [getSeries] Filtering by skill_level: ${skillLevel}`);
+    query = query.eq('skill_level', skillLevel);
+  }
+
+  // Filter by age: find series where age_low <= age AND age_high >= age
+  // null age_low means no minimum restriction; null age_high means no maximum
+  if (age !== undefined) {
+    console.log(`🔍 [getSeries] Filtering by age: ${age} (uses idx_series_age_range)`);
+    query = query.or(`age_low.is.null,age_low.lte.${age}`);
+    query = query.or(`age_high.is.null,age_high.gte.${age}`);
+  }
+
+  // Filter for extended care availability (uses idx_series_extended_care index)
+  if (hasExtendedCare) {
+    console.log('🔍 [getSeries] Filtering for series with extended care (after/before care)');
+    query = query.not('extended_end_time', 'is', null);
+  }
+
+  // Filter by day of week (series running on a specific day)
+  // Uses PostgreSQL array containment: days_of_week @> [dayOfWeek]
+  if (dayOfWeek !== undefined) {
+    console.log(`🔍 [getSeries] Filtering by day_of_week containing: ${dayOfWeek}`);
+    query = query.contains('days_of_week', [dayOfWeek]);
+  }
+
+  // ========================================
   // Apply sorting
+  // ========================================
+
   switch (orderBy) {
     case 'start-date-asc':
       query = query.order('start_date', { ascending: true, nullsFirst: false });

@@ -4,6 +4,11 @@
  * Fetches a single series with full details and relationships.
  *
  * Used by: /series/[slug] detail page
+ *
+ * Phase B note: The `select('*')` already returns all new camps/classes columns
+ * (attendance_mode, age_low/high, skill_level, extended care times, etc.)
+ * since they are part of the series table. SeriesWithDetails extends SeriesRow
+ * which includes all these fields via the DB types.
  */
 
 import { createClient } from '@/lib/supabase/server';
@@ -53,7 +58,20 @@ export async function getSeriesBySlug(
     throw error;
   }
 
-  console.log(`✅ [getSeriesBySlug] Found series: ${data.title}`);
+  // Log camps/classes fields for troubleshooting (only when they have values)
+  console.log(`✅ [getSeriesBySlug] Found series: ${data.title}`, {
+    series_type: data.series_type,
+    attendance_mode: data.attendance_mode,
+    ...(data.age_low != null && { age_low: data.age_low }),
+    ...(data.age_high != null && { age_high: data.age_high }),
+    ...(data.skill_level && { skill_level: data.skill_level }),
+    ...(data.extended_start_time && { extended_start_time: data.extended_start_time }),
+    ...(data.extended_end_time && { extended_end_time: data.extended_end_time }),
+    ...(data.per_session_price != null && { per_session_price: data.per_session_price }),
+    ...(data.materials_fee != null && { materials_fee: data.materials_fee }),
+    ...(data.days_of_week && { days_of_week: data.days_of_week }),
+    ...(data.term_name && { term_name: data.term_name }),
+  });
 
   return data as SeriesWithDetails;
 }

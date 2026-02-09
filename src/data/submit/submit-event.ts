@@ -252,6 +252,12 @@ async function createLocation(
 // HELPER: CREATE SERIES
 // ============================================================================
 
+/**
+ * Creates a new series record with all fields including camps/classes enhancements.
+ *
+ * Phase B: Now persists attendance_mode, extended care times, per_session_price,
+ * materials_fee, pricing_notes, age range, skill_level, days_of_week, and term_name.
+ */
 async function createSeries(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
@@ -261,9 +267,20 @@ async function createSeries(
   try {
     const slug = generateSlug(seriesData.title);
 
+    console.log(`📝 [createSeries] Creating series: "${seriesData.title}" (type: ${seriesData.series_type})`, {
+      attendance_mode: seriesData.attendance_mode,
+      has_extended_care: !!(seriesData.extended_start_time || seriesData.extended_end_time),
+      age_range: seriesData.age_low != null || seriesData.age_high != null
+        ? `${seriesData.age_low ?? '?'}-${seriesData.age_high ?? '?'}`
+        : null,
+      skill_level: seriesData.skill_level || null,
+      days_of_week: seriesData.days_of_week || null,
+    });
+
     const { data, error } = await supabase
       .from('series')
       .insert({
+        // -- Core fields (existing) --
         title: seriesData.title,
         slug,
         description: seriesData.description || null,
@@ -280,16 +297,48 @@ async function createSeries(
         registration_url: seriesData.registration_url || null,
         image_url: seriesData.image_url || null,
         status: 'pending_review',
+
+        // -- Camps/classes enhancements (Phase B) --
+
+        // Attendance model
+        attendance_mode: seriesData.attendance_mode || 'registered',
+
+        // Extended care / before & after care times
+        core_start_time: seriesData.core_start_time || null,
+        core_end_time: seriesData.core_end_time || null,
+        extended_start_time: seriesData.extended_start_time || null,
+        extended_end_time: seriesData.extended_end_time || null,
+        extended_care_details: seriesData.extended_care_details || null,
+
+        // Pricing enhancements
+        per_session_price: seriesData.per_session_price ?? null,
+        materials_fee: seriesData.materials_fee ?? null,
+        pricing_notes: seriesData.pricing_notes || null,
+
+        // Age restrictions
+        age_low: seriesData.age_low ?? null,
+        age_high: seriesData.age_high ?? null,
+        age_details: seriesData.age_details || null,
+
+        // Skill level
+        skill_level: seriesData.skill_level || null,
+
+        // Day pattern & term
+        days_of_week: seriesData.days_of_week || null,
+        term_name: seriesData.term_name || null,
       })
       .select()
       .single();
 
     if (error) {
+      console.error(`❌ [createSeries] Failed to create series: ${error.message}`, error);
       return { success: false, error: error.message };
     }
 
+    console.log(`✅ [createSeries] Series created: ${data.id} ("${data.title}")`);
     return { success: true, seriesId: data.id };
   } catch (error) {
+    console.error('❌ [createSeries] Unexpected error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

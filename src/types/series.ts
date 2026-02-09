@@ -152,6 +152,19 @@ export interface SeriesQueryParams {
   limit?: number;
   /** Include past series */
   includePast?: boolean;
+
+  // -- Phase B: Camps/classes filters --
+
+  /** Filter by attendance mode (registered, drop_in, hybrid) */
+  attendanceMode?: AttendanceMode;
+  /** Filter by skill level (beginner, intermediate, advanced, all_levels) */
+  skillLevel?: SkillLevel;
+  /** Filter series suitable for this age (matches age_low <= age <= age_high) */
+  age?: number;
+  /** Only show series with extended care (before/after care available) */
+  hasExtendedCare?: boolean;
+  /** Filter by day of week (0=Sun..6=Sat) */
+  dayOfWeek?: number;
 }
 
 /**
