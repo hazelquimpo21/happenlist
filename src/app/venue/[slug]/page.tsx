@@ -46,8 +46,8 @@ export async function generateMetadata({
   const description = venue.description ||
     `Upcoming events at ${venue.name}. Find concerts, shows, and more.`;
   
-  // Use validated image URL for Open Graph
-  const ogImage = getBestImageUrl(venue.image_url);
+  // Use validated image URL for Open Graph (fall back to external Google photo)
+  const ogImage = getBestImageUrl(venue.image_url, venue.external_image_url);
 
   return {
     title: venue.name,
@@ -121,7 +121,7 @@ export default async function VenuePage({ params }: VenuePageProps) {
         <div className="lg:col-span-2">
           {/* Hero image */}
           {(() => {
-            const heroImage = getBestImageUrl(venue.image_url);
+            const heroImage = getBestImageUrl(venue.image_url, venue.external_image_url);
             return heroImage ? (
               <div className="relative aspect-video rounded-lg overflow-hidden mb-6">
                 <Image

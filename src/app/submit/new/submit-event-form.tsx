@@ -220,6 +220,19 @@ export function SubmitEventForm({
     }
   }, []);
 
+  // ========== Fetch Venue by ID (for draft restoration) ==========
+  const fetchVenueById = useCallback(async (id: string) => {
+    try {
+      const response = await fetch(
+        `/api/submit/venues/search?id=${encodeURIComponent(id)}`
+      );
+      const result = await response.json();
+      return result.success ? result.venue : null;
+    } catch {
+      return null;
+    }
+  }, []);
+
   // ========== Render Current Step ==========
   const renderStep = () => {
     switch (currentStep) {
@@ -255,9 +268,9 @@ export function SubmitEventForm({
           <Step4Location
             draftData={draftData}
             updateData={updateDraftData}
-            venues={[]}
             popularVenues={popularVenues}
             onSearchVenues={searchVenues}
+            onFetchVenueById={fetchVenueById}
           />
         );
       case 5:

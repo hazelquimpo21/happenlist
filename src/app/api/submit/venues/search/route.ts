@@ -15,7 +15,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { searchVenues, getPopularVenues } from '@/data/venues';
+import { searchVenues, getPopularVenues, getVenueById } from '@/data/venues';
 import { createLogger } from '@/lib/utils/logger';
 
 const logger = createLogger('API.Venues');
@@ -30,7 +30,18 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get('q') || '';
+    const id = searchParams.get('id') || '';
     const limit = parseInt(searchParams.get('limit') || '20', 10);
+
+    // Fetch a single venue by ID (for draft restoration)
+    if (id) {
+      const venue = await getVenueById(id);
+      timer.success(`Fetched venue by id: ${id}`);
+      return NextResponse.json({
+        success: true,
+        venue: venue || null,
+      });
+    }
 
     // 📝 Log the search request
     console.log(`🏛️ [VenueSearchAPI] Query: "${query}", Limit: ${limit}`);

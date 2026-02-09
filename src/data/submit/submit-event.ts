@@ -908,6 +908,21 @@ async function createLocation(
   locationData: NewLocationData
 ): Promise<{ success: boolean; locationId?: string; error?: string }> {
   try {
+    // Check for near-duplicate venues before inserting
+    const { data: matches } = await supabase.rpc('search_venues', {
+      search_query: locationData.name,
+      result_limit: 3,
+    });
+
+    if (matches && matches.length > 0) {
+      const best = matches[0];
+      // Use existing venue if similarity is high enough
+      if (best.similarity_score > 0.7) {
+        logger.info(`Matched existing venue "${best.name}" (score: ${best.similarity_score}) instead of creating duplicate "${locationData.name}"`);
+        return { success: true, locationId: best.id };
+      }
+    }
+
     const slug = generateSlug(locationData.name);
 
     const { data, error } = await supabase
@@ -921,6 +936,9 @@ async function createLocation(
         postal_code: locationData.postal_code || null,
         country: locationData.country || 'US',
         venue_type: locationData.venue_type || 'venue',
+        latitude: locationData.latitude ?? null,
+        longitude: locationData.longitude ?? null,
+        source: 'user_submitted',
         is_active: true,
       })
       .select()

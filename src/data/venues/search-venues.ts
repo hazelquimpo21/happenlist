@@ -131,6 +131,10 @@ async function searchVenuesFallback(
 
   const supabase = await createClient();
 
+  // Sanitize query for use in PostgREST filter strings by escaping
+  // special characters that could alter filter syntax (commas, dots, parens).
+  const sanitized = query.replace(/[,().%_\\]/g, (c) => `\\${c}`);
+
   const { data, error } = await supabase
     .from('locations')
     .select(`
@@ -147,7 +151,7 @@ async function searchVenuesFallback(
       longitude
     `)
     .eq('is_active', true)
-    .or(`name.ilike.%${query}%,address_line.ilike.%${query}%`)
+    .or(`name.ilike.%${sanitized}%,address_line.ilike.%${sanitized}%`)
     .order('rating', { ascending: false, nullsFirst: false })
     .limit(limit);
 
@@ -170,6 +174,49 @@ async function searchVenuesFallback(
 // ============================================================================
 // GET POPULAR VENUES
 // ============================================================================
+
+/**
+ * Gets popular venues based on rating and review count.
+ * Useful for showing quick-select options in the location picker.
+ *
+ * @param limit - Maximum venues to return (default: 12)
+ * @returns Array of popular venues
+ */
+/**
+ * Gets a single venue by ID.
+ * Used to restore a selected venue when returning to Step 4 from a saved draft.
+ */
+export async function getVenueById(
+  id: string
+): Promise<VenueSearchResult | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('locations')
+    .select(`
+      id,
+      name,
+      address_line,
+      city,
+      state,
+      venue_type,
+      category,
+      rating,
+      review_count,
+      latitude,
+      longitude
+    `)
+    .eq('id', id)
+    .eq('is_active', true)
+    .single();
+
+  if (error) {
+    console.error('❌ [getVenueById] Error:', error);
+    return null;
+  }
+
+  return { ...data, similarity_score: 0 };
+}
 
 /**
  * Gets popular venues based on rating and review count.

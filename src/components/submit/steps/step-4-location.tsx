@@ -21,7 +21,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   MapPin,
   Search,
@@ -65,9 +65,9 @@ interface Venue {
 interface Step4Props {
   draftData: EventDraftData;
   updateData: (updates: Partial<EventDraftData>) => void;
-  venues: Venue[];
   popularVenues?: Venue[];
   onSearchVenues: (query: string) => Promise<Venue[]>;
+  onFetchVenueById?: (id: string) => Promise<Venue | null>;
 }
 
 // ============================================================================
@@ -158,9 +158,9 @@ function VenueCard({
 export function Step4Location({
   draftData,
   updateData,
-  venues: initialVenues,
   popularVenues = [],
   onSearchVenues,
+  onFetchVenueById,
 }: Step4Props) {
   // ========== State ==========
   const [venueQuery, setVenueQuery] = useState('');
@@ -168,29 +168,33 @@ export function Step4Location({
   const [isSearching, setIsSearching] = useState(false);
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
   const [showAllPopular, setShowAllPopular] = useState(false);
+  const [duplicateSuggestions, setDuplicateSuggestions] = useState<Venue[]>([]);
 
   // Number of popular venues to show initially
   const INITIAL_POPULAR_COUNT = 6;
 
   // ========== Effects ==========
 
-  // Load selected venue on mount if location_id exists
+  // Restore selected venue on mount if location_id exists in draft
   useEffect(() => {
-    if (draftData.location_id && !selectedVenue) {
-      const venue = initialVenues.find((v) => v.id === draftData.location_id);
-      if (venue) {
-        setSelectedVenue(venue);
-        setVenueQuery(venue.name);
-      }
+    if (draftData.location_id && !selectedVenue && onFetchVenueById) {
+      onFetchVenueById(draftData.location_id).then((venue) => {
+        if (venue) {
+          setSelectedVenue(venue);
+          setVenueQuery(venue.name);
+        }
+      });
     }
-  }, [draftData.location_id, initialVenues, selectedVenue]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftData.location_id]);
 
-  // ========== Venue Search ==========
-  const handleVenueSearch = async (query: string) => {
-    setVenueQuery(query);
+  // ========== Venue Search (debounced) ==========
+  const debounceRef = useRef<NodeJS.Timeout>();
 
+  const performSearch = useCallback(async (query: string) => {
     if (query.length < 2) {
       setVenueResults([]);
+      setIsSearching(false);
       return;
     }
 
@@ -204,7 +208,55 @@ export function Step4Location({
     } finally {
       setIsSearching(false);
     }
+  }, [onSearchVenues]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  const handleVenueSearch = (query: string) => {
+    setVenueQuery(query);
+
+    if (query.length < 2) {
+      setVenueResults([]);
+      return;
+    }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      performSearch(query);
+    }, 300);
   };
+
+  // ========== Duplicate Check (for new venue name) ==========
+  const dupDebounceRef = useRef<NodeJS.Timeout>();
+
+  const checkDuplicateVenue = useCallback((name: string) => {
+    if (dupDebounceRef.current) clearTimeout(dupDebounceRef.current);
+
+    if (name.length < 3) {
+      setDuplicateSuggestions([]);
+      return;
+    }
+
+    dupDebounceRef.current = setTimeout(async () => {
+      try {
+        const results = await onSearchVenues(name);
+        // Only show high-relevance matches
+        setDuplicateSuggestions(results.slice(0, 3));
+      } catch {
+        setDuplicateSuggestions([]);
+      }
+    }, 500);
+  }, [onSearchVenues]);
+
+  useEffect(() => {
+    return () => {
+      if (dupDebounceRef.current) clearTimeout(dupDebounceRef.current);
+    };
+  }, []);
 
   // ========== Select Venue ==========
   const selectVenue = (venue: Venue) => {
@@ -353,7 +405,7 @@ export function Step4Location({
           {!selectedVenue && (
             <div className="p-4 bg-cream rounded-lg border border-sand">
               <label className="block text-sm font-medium text-charcoal mb-2">
-                Search {initialVenues.length > 0 ? `${initialVenues.length}+` : ''} Venues
+                Search Venues
               </label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
@@ -459,17 +511,47 @@ export function Step4Location({
               id="venue_name"
               type="text"
               value={draftData.new_location?.name || ''}
-              onChange={(e) =>
+              onChange={(e) => {
+                const name = e.target.value;
                 updateData({
                   new_location: {
                     ...draftData.new_location,
-                    name: e.target.value,
+                    name,
                     city: draftData.new_location?.city || '',
                   },
-                })
-              }
+                });
+                checkDuplicateVenue(name);
+              }}
               placeholder="e.g., The Music Hall"
             />
+
+            {/* Did you mean? - duplicate venue suggestions */}
+            {duplicateSuggestions.length > 0 && (
+              <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-xs font-medium text-amber-800 mb-2">
+                  Did you mean one of these existing venues?
+                </p>
+                <div className="space-y-1">
+                  {duplicateSuggestions.map((venue) => (
+                    <button
+                      key={venue.id}
+                      type="button"
+                      onClick={() => {
+                        selectVenue(venue);
+                        updateData({ location_mode: 'existing' });
+                        setDuplicateSuggestions([]);
+                      }}
+                      className="w-full flex items-center justify-between p-2 rounded text-left text-sm hover:bg-amber-100 transition-colors"
+                    >
+                      <span className="text-charcoal font-medium truncate">{venue.name}</span>
+                      <span className="text-stone text-xs flex-shrink-0 ml-2">
+                        {venue.city}{venue.state ? `, ${venue.state}` : ''}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Address Autocomplete */}
