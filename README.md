@@ -272,8 +272,9 @@ happenlist/
 |------|-------------|
 | `venue` | Fixed location like theater, club |
 | `outdoor` | Parks, outdoor spaces |
-| `virtual` | Online events |
-| `popup` | Temporary locations |
+| `online` | Virtual/online events |
+| `various` | Multiple or varying locations |
+| `tbd` | Location to be announced |
 
 ---
 

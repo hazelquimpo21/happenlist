@@ -28,7 +28,7 @@ export interface VenueSearchResult {
   city: string;
   state: string | null;
   venue_type: string;
-  category: string | null;
+  google_category: string | null;
   rating: number | null;
   review_count: number;
   latitude: number | null;
@@ -144,7 +144,7 @@ async function searchVenuesFallback(
       city,
       state,
       venue_type,
-      category,
+      google_category,
       rating,
       review_count,
       latitude,
@@ -200,7 +200,7 @@ export async function getVenueById(
       city,
       state,
       venue_type,
-      category,
+      google_category,
       rating,
       review_count,
       latitude,
@@ -241,7 +241,7 @@ export async function getPopularVenues(
       city,
       state,
       venue_type,
-      category,
+      google_category,
       rating,
       review_count,
       latitude,

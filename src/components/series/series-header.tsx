@@ -422,7 +422,6 @@ function ExtendedCareSection({ series }: { series: SeriesWithDetails }) {
  * - registered: "Register Now"
  * - drop_in: "More Info"
  * - hybrid: "Register or Drop In"
- * - fallback: uses registration_required field
  */
 function getCtaLabel(series: SeriesWithDetails): string {
   switch (series.attendance_mode) {
@@ -433,7 +432,7 @@ function getCtaLabel(series: SeriesWithDetails): string {
     case 'registered':
       return 'Register Now';
     default:
-      return series.registration_required ? 'Register Now' : 'Get Tickets';
+      return 'Get Tickets';
   }
 }
 

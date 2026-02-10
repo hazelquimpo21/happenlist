@@ -235,10 +235,8 @@ export function QuickEditForm({
     if (formState.price_type !== event.price_type) {
       updates.price_type = formState.price_type;
     }
-    if (formState.is_free !== event.is_free) {
-      updates.is_free = formState.is_free;
-    }
-    if (!formState.is_free && formState.price_type !== 'free') {
+    // is_free is auto-computed from price_type (generated column)
+    if (formState.price_type !== 'free') {
       const priceLow = formState.price_low
         ? parseFloat(formState.price_low)
         : null;
