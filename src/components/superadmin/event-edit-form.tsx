@@ -258,11 +258,11 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
 
       if (formState.is_all_day !== event.is_all_day) updates.is_all_day = formState.is_all_day;
       if (formState.price_type !== event.price_type) updates.price_type = formState.price_type;
-      if (formState.is_free !== event.is_free) updates.is_free = formState.is_free;
+      // is_free is auto-computed from price_type (generated column)
       if (formState.ticket_url !== (event.ticket_url || '')) updates.ticket_url = formState.ticket_url;
 
       // Handle price - only if not free
-      if (!formState.is_free && formState.price_type !== 'free') {
+      if (formState.price_type !== 'free') {
         const priceLow = formState.price_low ? parseFloat(formState.price_low) : null;
         const priceHigh = formState.price_high ? parseFloat(formState.price_high) : null;
 

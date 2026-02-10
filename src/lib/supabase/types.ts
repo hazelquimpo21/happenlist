@@ -91,7 +91,7 @@ export interface Database {
           rating: number | null;
           review_count: number;
           working_hours: Record<string, string> | null;
-          category: string | null;
+          google_category: string | null;
           source: string;
           import_batch_id: string | null;
         };
@@ -123,7 +123,7 @@ export interface Database {
           rating?: number | null;
           review_count?: number;
           working_hours?: Record<string, string> | null;
-          category?: string | null;
+          google_category?: string | null;
           source?: string;
           import_batch_id?: string | null;
         };
@@ -155,7 +155,7 @@ export interface Database {
           rating?: number | null;
           review_count?: number;
           working_hours?: Record<string, string> | null;
-          category?: string | null;
+          google_category?: string | null;
           source?: string;
           import_batch_id?: string | null;
         };
@@ -339,7 +339,7 @@ export interface Database {
           price_low?: number | null;
           price_high?: number | null;
           price_details?: string | null;
-          is_free?: boolean;
+          // is_free is a generated column — do not include in Insert/Update
           ticket_url?: string | null;
           image_url?: string | null;
           image_hosted?: boolean;
@@ -428,7 +428,7 @@ export interface Database {
           price_low?: number | null;
           price_high?: number | null;
           price_details?: string | null;
-          is_free?: boolean;
+          // is_free is a generated column — do not include in Insert/Update
           ticket_url?: string | null;
           image_url?: string | null;
           image_hosted?: boolean;
@@ -516,7 +516,6 @@ export interface Database {
           price_details: string | null;
           is_free: boolean;
           registration_url: string | null;
-          registration_required: boolean;
           capacity: number | null;
           waitlist_enabled: boolean;
           image_url: string | null;
@@ -589,9 +588,7 @@ export interface Database {
           price_low?: number | null;
           price_high?: number | null;
           price_details?: string | null;
-          is_free?: boolean;
           registration_url?: string | null;
-          registration_required?: boolean;
           capacity?: number | null;
           waitlist_enabled?: boolean;
           image_url?: string | null;
@@ -648,9 +645,7 @@ export interface Database {
           price_low?: number | null;
           price_high?: number | null;
           price_details?: string | null;
-          is_free?: boolean;
           registration_url?: string | null;
-          registration_required?: boolean;
           capacity?: number | null;
           waitlist_enabled?: boolean;
           image_url?: string | null;

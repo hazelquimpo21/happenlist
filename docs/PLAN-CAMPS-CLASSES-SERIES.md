@@ -10,8 +10,8 @@ The series system already handles:
 - Series types: `class`, `camp`, `workshop`, `recurring`, `festival`, `season`
 - 1:N relationship: Series → Events (via `series_id`, `series_sequence`)
 - Basic recurrence rules (daily, weekly, biweekly, monthly, yearly)
-- Registration fields: `registration_required`, `registration_url`, `capacity`, `waitlist_enabled`
-- Pricing: `price_type`, `price_low`, `price_high`, `is_free` on both series and events
+- Registration fields: `registration_url`, `capacity`, `waitlist_enabled`, `attendance_mode`
+- Pricing: `price_type`, `price_low`, `price_high`, `is_free` (generated column) on both series and events
 
 What's missing for real-world camps/classes is covered below.
 

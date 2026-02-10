@@ -63,7 +63,7 @@ Every row is one event on one date.
 | **Who** | `organizer_id` (FK) | Links to organizers table |
 | **What kind** | `category_id` (FK) | Links to categories table |
 | **Series** | `series_id` (FK), `series_sequence`, `is_series_instance` | Links to series table |
-| **Pricing** | `price_type`, `price_low`, `price_high`, `is_free`, `ticket_url` | Cost info |
+| **Pricing** | `price_type`, `price_low`, `price_high`, `is_free` (generated), `ticket_url` | Cost info |
 | **Images** | `image_url`, `thumbnail_url`, `flyer_url` + hosted/storage variants | Visual assets |
 | **Links** | `website_url`, `instagram_url`, `facebook_url`, `registration_url` | External URLs |
 | **Age** | `age_low`, `age_high`, `age_restriction`, `is_family_friendly` | Audience restrictions |
@@ -111,7 +111,7 @@ A series groups multiple events together. Not every event is in a series — sta
 | **Camp/Class** | `attendance_mode`, `skill_level`, `age_low`, `age_high`, `days_of_week` | Camp/class-specific |
 | **Extended care** | `core_start_time`, `core_end_time`, `extended_start_time`, `extended_end_time`, `extended_care_details` | Before/after care for camps |
 | **Pricing** | `price_type`, `price_low`, `price_high`, `per_session_price`, `materials_fee`, `pricing_notes` | Cost details |
-| **Registration** | `registration_url`, `registration_required`, `capacity`, `waitlist_enabled`, `attendance_mode` | Sign-up info |
+| **Registration** | `registration_url`, `capacity`, `waitlist_enabled`, `attendance_mode` | Sign-up info |
 | **Grouping** | `term_name`, `parent_series_id` | Semester/program grouping |
 | **Relationships** | `organizer_id`, `category_id`, `location_id` | Who/what/where |
 
@@ -156,10 +156,10 @@ Where events happen. Called "venues" in the UI but `locations` in the database.
 | **Coordinates** | `latitude`, `longitude` | Map position |
 | **Type** | `venue_type` | Kind of location |
 | **Contact** | `website_url`, `phone` | Contact info |
-| **Google data** | `google_place_id`, `rating`, `review_count`, `working_hours`, `category` | Imported from Google Maps |
+| **Google data** | `google_place_id`, `rating`, `review_count`, `working_hours`, `google_category` | Imported from Google Maps |
 | **Import** | `source`, `import_batch_id` | Where this venue record came from |
 
-**Important note:** The `category` column on locations is a **Google category** (like "Music venue", "Restaurant") — it is NOT the same as the `categories` table which holds Happenlist's event categories.
+**Note:** The `google_category` column holds a Google Maps classification (e.g., "Music venue", "Restaurant"). This is NOT related to the `categories` table, which holds Happenlist's own event taxonomy.
 
 #### Venue Type Values
 
@@ -312,20 +312,28 @@ auth.users ──1:1──► profiles
 
 ---
 
-## Known Design Notes
+## Design Notes
 
-### `registration_required` vs `attendance_mode` (series table)
+### `is_free` is a generated column
 
-The series table has both `registration_required` (boolean) and `attendance_mode` (enum: `registered`/`drop_in`/`hybrid`). These overlap — `attendance_mode` is the richer, newer field. `registration_required` is kept for backward compatibility but `attendance_mode` should be the source of truth going forward.
+`is_free` on both `events` and `series` is a **PostgreSQL generated column**: it automatically equals `price_type = 'free'`. You cannot set it manually in INSERT or UPDATE statements — it's always computed from `price_type`. This guarantees the two fields can never drift out of sync.
 
-### `locations.category` vs `categories` table
+### `google_category` on locations
 
-The `category` column on the `locations` table is a **Google Maps category** (e.g., "Italian restaurant", "Music venue"). This is completely separate from the `categories` table, which holds Happenlist's own event taxonomy (e.g., "Music", "Art", "Classes"). When building CSV exports, use `google_category` or `venue_category` as the column header for the locations field to avoid confusion.
+The `google_category` column on the `locations` table holds a Google Maps classification (e.g., "Music venue", "Restaurant"). This is completely separate from the `categories` table, which holds Happenlist's own event taxonomy (e.g., "Music", "Art"). The column was renamed from `category` to `google_category` to avoid confusion.
+
+### CHECK constraints on enum columns
+
+All TEXT enum columns have database-level CHECK constraints that prevent invalid values:
+- `events.status`: draft, pending_review, changes_requested, published, rejected, cancelled, postponed
+- `events.price_type`: free, fixed, range, varies, donation, per_session
+- `series.series_type`: class, camp, workshop, recurring, festival, season
+- `series.status`: same as events
+- `series.price_type`: same as events
+- `series.attendance_mode`: registered, drop_in, hybrid
+- `series.skill_level`: beginner, intermediate, advanced, all_levels
+- `locations.venue_type`: venue, outdoor, online, various, tbd
 
 ### Denormalized counts
 
-`events.heart_count` and `series.heart_count` are denormalized — the `hearts` table is the source of truth. Similarly, `series.sessions_remaining` and `series.enrollment_count` need to be kept in sync with actual data. These exist for query performance.
-
-### `is_free` is derived
-
-`is_free` on both events and series should match `price_type = 'free'`. It exists as a separate boolean for faster filtering queries.
+`events.heart_count` and `series.heart_count` are denormalized — the `hearts` table is the source of truth. Similarly, `series.sessions_remaining` and `series.enrollment_count` need to be kept in sync with actual data. These exist for query performance and are maintained by app-level code.
