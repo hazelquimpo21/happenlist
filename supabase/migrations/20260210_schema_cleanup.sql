@@ -15,6 +15,19 @@
 
 
 -- ============================================================================
+-- STEP 0: DROP DEPENDENT VIEWS
+-- ============================================================================
+-- These views reference columns we're modifying (registration_required, is_free).
+-- We'll recreate them at the end of the migration.
+
+DROP VIEW IF EXISTS events_with_details;
+DROP VIEW IF EXISTS series_with_details;
+DROP VIEW IF EXISTS series_upcoming;
+-- admin_event_stats doesn't reference modified columns, but drop for safety
+DROP VIEW IF EXISTS admin_event_stats;
+
+
+-- ============================================================================
 -- 1. DROP registration_required FROM SERIES
 -- ============================================================================
 -- The attendance_mode column ('registered' | 'drop_in' | 'hybrid') fully
@@ -181,6 +194,84 @@ GRANT EXECUTE ON FUNCTION search_venues TO anon;
 
 
 -- ============================================================================
+-- 6. RECREATE VIEWS
+-- ============================================================================
+-- Views were dropped in Step 0 because they depended on columns we modified.
+-- Now recreate them with the updated column sets.
+
+-- 6a. events_with_details
+CREATE OR REPLACE VIEW events_with_details AS
+SELECT
+  e.*,
+  c.name AS category_name,
+  c.slug AS category_slug,
+  c.icon AS category_icon,
+  l.name AS location_name,
+  l.slug AS location_slug,
+  l.city AS location_city,
+  l.address_line AS location_address,
+  l.latitude AS location_lat,
+  l.longitude AS location_lng,
+  o.name AS organizer_name,
+  o.slug AS organizer_slug,
+  o.logo_url AS organizer_logo
+FROM events e
+LEFT JOIN categories c ON e.category_id = c.id
+LEFT JOIN locations l ON e.location_id = l.id
+LEFT JOIN organizers o ON e.organizer_id = o.id
+WHERE e.status = 'published';
+
+-- 6b. series_with_details
+CREATE OR REPLACE VIEW series_with_details AS
+SELECT
+  s.*,
+  c.name AS category_name,
+  c.slug AS category_slug,
+  c.icon AS category_icon,
+  l.name AS location_name,
+  l.slug AS location_slug,
+  l.city AS location_city,
+  o.name AS organizer_name,
+  o.slug AS organizer_slug,
+  o.logo_url AS organizer_logo,
+  COUNT(ev.id) FILTER (
+    WHERE ev.instance_date >= CURRENT_DATE AND ev.status = 'published'
+  ) AS upcoming_event_count,
+  MIN(ev.instance_date) FILTER (
+    WHERE ev.instance_date >= CURRENT_DATE AND ev.status = 'published'
+  ) AS next_event_date
+FROM series s
+LEFT JOIN categories c ON s.category_id = c.id
+LEFT JOIN locations l ON s.location_id = l.id
+LEFT JOIN organizers o ON s.organizer_id = o.id
+LEFT JOIN events ev ON ev.series_id = s.id
+GROUP BY s.id, c.name, c.slug, c.icon, l.name, l.slug, l.city,
+         o.name, o.slug, o.logo_url;
+
+-- 6c. series_upcoming (published series with future end dates)
+CREATE OR REPLACE VIEW series_upcoming AS
+SELECT s.*
+FROM series s
+WHERE s.status = 'published'
+  AND (s.end_date IS NULL OR s.end_date >= CURRENT_DATE);
+
+-- 6d. admin_event_stats (aggregated event counts for admin dashboard)
+CREATE OR REPLACE VIEW admin_event_stats AS
+SELECT
+  COUNT(*) FILTER (WHERE status = 'pending_review') AS pending_review_count,
+  COUNT(*) FILTER (WHERE status = 'published') AS published_count,
+  COUNT(*) FILTER (WHERE status = 'draft') AS draft_count,
+  COUNT(*) FILTER (WHERE status = 'rejected') AS rejected_count,
+  COUNT(*) FILTER (WHERE source = 'scraper') AS scraped_count,
+  COUNT(*) FILTER (WHERE source = 'scraper' AND status = 'pending_review') AS scraped_pending_count,
+  COUNT(*) FILTER (WHERE source = 'scraper' AND created_at >= NOW() - INTERVAL '24 hours') AS scraped_last_24h,
+  COUNT(*) FILTER (WHERE reviewed_at >= NOW() - INTERVAL '24 hours') AS reviewed_last_24h,
+  COUNT(*) AS total_count
+FROM events
+WHERE deleted_at IS NULL;
+
+
+-- ============================================================================
 -- DONE
 -- ============================================================================
 -- After running this migration, the following code changes are also needed:
@@ -188,4 +279,7 @@ GRANT EXECUTE ON FUNCTION search_venues TO anon;
 --   2. Replace locations.category with locations.google_category in queries
 --   3. Remove registration_required from series types and code
 --   4. Update TypeScript types in src/lib/supabase/types.ts
+--
+-- NOTE: The code changes above have already been made in this same commit.
+-- Run this migration BEFORE deploying the updated code.
 -- ============================================================================
