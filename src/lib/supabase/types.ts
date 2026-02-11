@@ -233,13 +233,8 @@ export interface Database {
           start_datetime: string;
           end_datetime: string | null;
           instance_date: string;
-          on_sale_date: string | null;
           is_all_day: boolean;
           timezone: string;
-          event_type: string;
-          recurrence_parent_id: string | null;
-          is_recurrence_template: boolean;
-          recurrence_pattern: Record<string, unknown> | null;
           series_id: string | null;
           series_sequence: number | null;
           is_series_instance: boolean;
@@ -322,13 +317,8 @@ export interface Database {
           start_datetime: string;
           end_datetime?: string | null;
           instance_date: string;
-          on_sale_date?: string | null;
           is_all_day?: boolean;
           timezone?: string;
-          event_type?: string;
-          recurrence_parent_id?: string | null;
-          is_recurrence_template?: boolean;
-          recurrence_pattern?: Record<string, unknown> | null;
           series_id?: string | null;
           series_sequence?: number | null;
           is_series_instance?: boolean;
@@ -411,13 +401,8 @@ export interface Database {
           start_datetime?: string;
           end_datetime?: string | null;
           instance_date?: string;
-          on_sale_date?: string | null;
           is_all_day?: boolean;
           timezone?: string;
-          event_type?: string;
-          recurrence_parent_id?: string | null;
-          is_recurrence_template?: boolean;
-          recurrence_pattern?: Record<string, unknown> | null;
           series_id?: string | null;
           series_sequence?: number | null;
           is_series_instance?: boolean;
@@ -1051,6 +1036,19 @@ export type AttendanceMode = 'registered' | 'drop_in' | 'hybrid';
  * CANONICAL DEFINITION: This is the single source of truth.
  */
 export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'all_levels';
+
+/**
+ * Event source — where the event came from.
+ *
+ * - 'manual': Created by an admin directly in the database
+ * - 'scraper': Imported via the Chrome extension or automated scraper
+ * - 'user_submission': Submitted through the website's event submission form
+ * - 'api': Created via external API
+ * - 'import': Bulk imported
+ *
+ * CANONICAL DEFINITION: This is the single source of truth.
+ */
+export type EventSource = 'manual' | 'scraper' | 'user_submission' | 'api' | 'import';
 
 /**
  * Venue type enum values.
