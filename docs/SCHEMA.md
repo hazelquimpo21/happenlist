@@ -170,6 +170,12 @@ Where events happen. Called "venues" in the UI but `locations` in the database.
 | `online` | Virtual/online events |
 | `various` | Multiple or varying locations |
 | `tbd` | Location to be announced |
+| `entertainment` | Entertainment venues (theaters, cinemas, bowling) |
+| `arts` | Arts & culture venues (galleries, museums) |
+| `sports` | Sports facilities (gyms, stadiums, fields) |
+| `restaurant` | Restaurants, bars, cafes |
+| `community` | Community centers, libraries, churches |
+| `education` | Schools, universities, training centers |
 
 ---
 
@@ -332,7 +338,7 @@ All TEXT enum columns have database-level CHECK constraints that prevent invalid
 - `series.price_type`: same as events
 - `series.attendance_mode`: registered, drop_in, hybrid
 - `series.skill_level`: beginner, intermediate, advanced, all_levels
-- `locations.venue_type`: venue, outdoor, online, various, tbd
+- `locations.venue_type`: venue, outdoor, online, various, tbd, entertainment, arts, sports, restaurant, community, education
 
 ### Denormalized counts
 
