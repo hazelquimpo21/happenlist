@@ -93,7 +93,7 @@ Every row is one event on one date.
 | **Soft delete** | `deleted_at`, `deleted_by`, `delete_reason` | Trash (not permanently deleted) | Filters queries (never shown) |
 | **Engagement** | `heart_count`, `view_count` | Popularity metrics | Heart button on cards + detail |
 | **SEO** | `meta_title`, `meta_description` | Page metadata | `<head>` tags only (never visible in UI) |
-| **Legacy** | `event_type`, `recurrence_parent_id`, `is_recurrence_template`, `on_sale_date` | See [Unused columns](#unusedlegacy-columns-on-events) | **Dead — not used anywhere** |
+| ~~**Legacy**~~ | ~~`event_type`, `recurrence_parent_id`, `is_recurrence_template`, `on_sale_date`~~ | Dropped in migration `20260211` | Removed |
 
 #### Event Status Values
 
@@ -395,15 +395,16 @@ The `source` field on events tracks where the event came from. Current values us
 
 **Note:** This field does not currently have a CHECK constraint. The `source_url` field stores the original URL the event was scraped/imported from.
 
-### Unused/legacy columns on events
+### Dropped legacy columns (migration `20260211`)
 
-These columns exist in the database but are **not used by the application**. They are candidates for removal in a future cleanup migration:
+These columns were removed from the database. Listed here for historical reference:
 
-| Column | Original purpose | Why unused |
-|--------|-----------------|------------|
-| `event_type` | Categorize event format | Never implemented; `series_type` on the series table serves this purpose for grouped events |
-| `recurrence_parent_id` | Link recurring instances to a template event | Replaced by the series system (`series_type = 'recurring'`) |
+| Column | Original purpose | Why removed |
+|--------|-----------------|-------------|
+| `event_type` | Categorize event format | Never implemented; `series_type` on series table serves this purpose |
+| `recurrence_parent_id` | Link recurring instances to a template | Replaced by the series system (`series_type = 'recurring'`) |
 | `is_recurrence_template` | Mark an event as a recurrence template | Replaced by the series system |
+| `recurrence_pattern` | JSON recurrence rules on events | Replaced by `series.recurrence_rule` |
 | `on_sale_date` | When tickets go on sale | Never implemented in the UI |
 
 ### Unused fields on events (exist but not displayed)
@@ -435,126 +436,231 @@ The `venue_type` values mix two concepts: **physical type** (`venue`, `outdoor`,
 
 ---
 
-## Chrome Extension / Scraper Field Reference
+## Chrome Extension / Scraper Integration
 
-The Chrome extension saves events from any website into the same database. Here's what it should populate:
+The Chrome extension (and any external scraper) uses two API endpoints to save events. It should **never** have the Supabase service role key — all database access goes through these authenticated endpoints.
 
-### Required fields
+### Architecture (Supabase best practice)
 
-| Field | Value | Notes |
-|-------|-------|-------|
-| `title` | Event name from page | Min 3 characters |
-| `start_datetime` | Scraped date/time | ISO 8601 format |
-| `instance_date` | Date portion only | `YYYY-MM-DD`, derived from `start_datetime` |
-| `status` | `'pending_review'` | Always — goes through admin approval |
-| `source` | `'scraper'` | Identifies this came from the extension |
-| `source_url` | The URL being scraped | For dedup and admin reference |
-
-### Recommended fields
-
-| Field | Value | Notes |
-|-------|-------|-------|
-| `organizer_description` | Verbatim text from the event page | Preserves original wording |
-| `short_description` | First 1-2 sentences | Max ~160 chars, used on cards |
-| `description` | Cleaned/formatted version | General purpose |
-| `price_type` | One of: `free`, `fixed`, `range`, `varies`, `donation` | Use `varies` if unclear |
-| `price_low` / `price_high` | Numbers | Required for `fixed` and `range` |
-| `price_details` | Full pricing text | "Early bird $20, door $30, VIP $50" |
-| `end_datetime` | Event end time | ISO 8601, null if unknown |
-| `category_id` | UUID of matching category | Needs lookup against `categories` table |
-
-### Images
-
-Images from external sites must be **re-hosted to Supabase Storage** (CDN URLs from Instagram, Facebook, etc. expire). Use the `/api/images/upload` endpoint:
-
-| Field | Value | Notes |
-|-------|-------|-------|
-| `image_url` | Supabase CDN URL | After re-hosting via the upload API |
-| `image_hosted` | `true` | Indicates the image is in our storage |
-| `image_storage_path` | Storage bucket path | Returned by the upload API |
-| `flyer_url` | Supabase CDN URL | For poster/flyer images (portrait aspect ratio) |
-| `thumbnail_url` | Supabase CDN URL | Smaller version for cards |
-
-### Location matching
-
-The extension should try to match an existing venue before creating a new one:
-
-1. Match by `google_place_id` (most reliable)
-2. Match by `name` + `city` (fuzzy)
-3. If no match, create a new `locations` row with: `name`, `address_line`, `city`, `state`, `postal_code`, `latitude`, `longitude`, `venue_type`
-
-### Organizer matching
-
-1. Match by `name` (case-insensitive, fuzzy)
-2. If no match, create a new `organizers` row with: `name`, `slug`, `website_url`
-
-### Full insert example
-
-```sql
-INSERT INTO events (
-  -- Required
-  title, start_datetime, instance_date, status, source, source_url,
-  -- Descriptions
-  organizer_description, short_description, description,
-  -- Pricing
-  price_type, price_low, price_high, price_details,
-  -- Relationships
-  category_id, location_id, organizer_id,
-  -- Images (after re-hosting)
-  image_url, image_hosted, image_storage_path,
-  flyer_url, flyer_hosted, flyer_storage_path
-) VALUES (
-  'Jazz Night at the Pabst', '2026-02-14T19:00:00-06:00', '2026-02-14',
-  'pending_review', 'scraper', 'https://example.com/jazz-night',
-  'Join us for an evening of jazz...', 'Live jazz at the Pabst Theater',
-  'An evening of jazz featuring local Milwaukee artists.',
-  'range', 15, 50, 'General $15-30, VIP $50',
-  '...category-uuid...', '...location-uuid...', '...organizer-uuid...',
-  'https://your-project.supabase.co/storage/v1/...', true, 'events/abc/hero_123.jpg',
-  'https://your-project.supabase.co/storage/v1/...', true, 'events/abc/flyer_123.jpg'
-)
 ```
+Chrome Extension                  Happenlist Server                 Supabase
+──────────────                  ──────────────────                 ────────
+                   HTTPS + Bearer token
+  ┌──────────┐   ──────────────────────►   ┌──────────────────┐
+  │ Scrapes  │                             │ /api/scraper/    │   service role key
+  │ event    │   POST /api/scraper/events  │ events           │ ──────────────────► DB
+  │ data     │   ◄─────────── eventId ──── │ (validates,      │
+  │          │                             │  deduplicates,   │
+  │ Captures │   POST /api/images/upload   │  resolves venue/ │
+  │ images   │   ──────────────────────►   │  organizer)      │ ──────────────────► Storage
+  └──────────┘   ◄── Supabase CDN URL ─── │                  │
+                                           └──────────────────┘
+```
+
+**Why not use the Supabase client directly?**
+- The Chrome extension runs in the user's browser. Embedding a service role key would expose full database access to anyone who inspects the extension.
+- The `SCRAPER_API_SECRET` is a simple shared secret. If compromised, you rotate one env var. If the service role key leaks, you must regenerate it and update every server.
+- The API layer validates inputs, deduplicates by `source_url`, and auto-resolves venues/organizers.
+
+### Setup
+
+```bash
+# 1. Generate a secret for the extension
+openssl rand -base64 32
+# → Set as SCRAPER_API_SECRET in your environment
+
+# 2. Ensure Supabase Storage bucket exists
+# Dashboard → Storage → New Bucket → "event-images" → Public
+
+# 3. Extension config
+HAPPENLIST_API_URL=https://your-domain.com
+HAPPENLIST_API_SECRET=<the secret from step 1>
+```
+
+### Step 1: Create the event
+
+```
+POST /api/scraper/events
+Authorization: Bearer <SCRAPER_API_SECRET>
+Content-Type: application/json
+```
+
+**Required fields:**
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `title` | string | Min 3, max 200 chars |
+| `start_datetime` | string | ISO 8601 (e.g. `2026-02-14T19:00:00-06:00`) |
+| `source_url` | string | The URL being scraped (used for dedup) |
+
+**Recommended fields:**
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `description` | string | Cleaned event description |
+| `short_description` | string | Max 160 chars, used on cards |
+| `organizer_description` | string | Verbatim from source page |
+| `end_datetime` | string | ISO 8601 |
+| `price_type` | string | `free`, `fixed`, `range`, `varies`, `donation` |
+| `price_low` / `price_high` | number | Required for `fixed` and `range` |
+| `price_details` | string | Complex pricing text |
+| `category_slug` | string | e.g. `"music"`, `"art"` — looked up automatically |
+| `website_url` | string | Event's external page |
+| `age_restriction` | string | e.g. `"21+"` |
+| `is_family_friendly` | boolean | Family-friendly flag |
+
+**Location — provide one of:**
+
+| Option | Fields |
+|--------|--------|
+| Existing venue | `location_id: "uuid"` |
+| New/auto-match | `location: { name, city, address_line?, state?, postal_code?, latitude?, longitude?, google_place_id?, venue_type? }` |
+
+The API auto-matches by `google_place_id` first, then fuzzy name match (score > 0.7), then creates a new venue.
+
+**Organizer — provide one of:**
+
+| Option | Fields |
+|--------|--------|
+| Existing organizer | `organizer_id: "uuid"` |
+| New/auto-match | `organizer: { name, website_url?, email? }` |
+
+The API auto-matches by name (case-insensitive), then creates a new organizer.
+
+**Example request:**
+
+```json
+{
+  "title": "Jazz Night at the Pabst",
+  "start_datetime": "2026-02-14T19:00:00-06:00",
+  "end_datetime": "2026-02-14T22:00:00-06:00",
+  "source_url": "https://pabsttheater.org/event/jazz-night",
+  "organizer_description": "Join us for an evening of jazz featuring the Milwaukee Trio...",
+  "short_description": "Live jazz at the Pabst Theater",
+  "description": "An evening of jazz featuring local Milwaukee artists.",
+  "price_type": "range",
+  "price_low": 15,
+  "price_high": 50,
+  "price_details": "General $15-30, VIP $50",
+  "category_slug": "music",
+  "location": {
+    "name": "Pabst Theater",
+    "address_line": "144 E Wells St",
+    "city": "Milwaukee",
+    "state": "WI",
+    "google_place_id": "ChIJ..."
+  },
+  "organizer": {
+    "name": "Milwaukee Jazz Collective",
+    "website_url": "https://mkejazz.org"
+  }
+}
+```
+
+**Response (201 Created):**
+
+```json
+{
+  "success": true,
+  "eventId": "abc-123-def",
+  "slug": "jazz-night-at-the-pabst",
+  "status": "pending_review",
+  "locationId": "loc-456",
+  "organizerId": "org-789",
+  "message": "Event created and queued for admin review."
+}
+```
+
+**Dedup (409 Conflict):** If `source_url` already exists:
+
+```json
+{
+  "success": false,
+  "error": "duplicate",
+  "message": "Event already exists: \"Jazz Night\" (published)",
+  "existingEventId": "abc-123-def"
+}
+```
+
+### Step 2: Upload images
+
+After creating the event, upload images using the returned `eventId`:
+
+```
+POST /api/images/upload
+Authorization: Bearer <SCRAPER_API_SECRET>
+Content-Type: application/json
+```
+
+```json
+{
+  "eventId": "abc-123-def",
+  "sourceUrl": "https://img.evbuc.com/actual-image.jpg",
+  "type": "hero"
+}
+```
+
+Or for base64 (captured directly by the extension):
+
+```json
+{
+  "eventId": "abc-123-def",
+  "base64": "data:image/jpeg;base64,/9j/4AAQ...",
+  "type": "hero"
+}
+```
+
+**Image types:** `hero` (main image), `thumbnail` (card image), `flyer` (poster/portrait).
+
+**Important:** The extension must extract the actual image URL (e.g. from `og:image`), not the page URL. See `AI_DEV_DOCS_ARCHIVE/11-IMAGE-SCRAPING.md` for extraction patterns per platform.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "url": "https://your-project.supabase.co/storage/v1/object/public/event-images/events/abc-123/hero_123_abc.jpg",
+  "path": "events/abc-123/hero_123_abc.jpg"
+}
+```
+
+**After uploading, the event's image fields are NOT automatically updated.** The extension should either:
+- Include the Supabase CDN URL in the initial POST to `/api/scraper/events` (if it uploads first), or
+- Accept that images will be linked later during admin review.
+
+### API reference
+
+| Endpoint | Method | Auth | Purpose |
+|----------|--------|------|---------|
+| `/api/scraper/events` | `POST` | Bearer token | Create event + auto-resolve venue/organizer |
+| `/api/scraper/events` | `GET` | None | Endpoint documentation |
+| `/api/images/upload` | `POST` | Bearer token | Upload/re-host images to Supabase Storage |
+| `/api/images/upload` | `GET` | None | Endpoint documentation |
+| `/api/images/test` | `GET` | None | Storage configuration health check |
 
 ---
 
 ## Cleanup Recommendations
 
-Prioritized list of schema issues to address. None are urgent — the app works fine — but cleaning these up will make the data model easier to understand for admins, the Chrome extension, and future development.
+### Done (migration: `20260211_drop_legacy_and_source_constraint.sql`)
 
-### Priority 1: Drop dead columns (migration)
+- **Dropped dead columns:** `event_type`, `recurrence_parent_id`, `is_recurrence_template`, `on_sale_date`, `recurrence_pattern` — removed from DB and `types.ts`.
+- **Added CHECK constraint** on `events.source` (`manual`, `scraper`, `user_submission`, `api`, `import`).
+- **Added CHECK constraint** on `locations.source` (`manual`, `scraper`, `csv_import`, `user_submitted`, `api`).
+- **Added `EventSource` type** to `types.ts` (was imported but never defined).
+- **Created `/api/scraper/events`** endpoint — Chrome extension no longer needs direct DB access.
 
-These columns are not read or written by any code. Dropping them removes noise for anyone looking at the schema.
-
-```sql
--- Cleanup migration: drop unused legacy columns
-ALTER TABLE events DROP COLUMN IF EXISTS event_type;
-ALTER TABLE events DROP COLUMN IF EXISTS recurrence_parent_id;
-ALTER TABLE events DROP COLUMN IF EXISTS is_recurrence_template;
-ALTER TABLE events DROP COLUMN IF EXISTS on_sale_date;
-```
-
-**Risk:** Very low. No code references these columns. Verify with `grep -r "event_type\|recurrence_parent_id\|is_recurrence_template\|on_sale_date" src/` first — only hits should be in the generated `types.ts` file (which gets updated after migration).
-
-### Priority 2: Add CHECK constraint on `events.source`
-
-Every other enum column has a CHECK constraint. `source` is the exception.
-
-```sql
-ALTER TABLE events ADD CONSTRAINT events_source_check
-  CHECK (source IN ('manual', 'scraper', 'user_submission', 'api', 'import'));
-```
-
-### Priority 3: Decide on age/family fields for events
+### Remaining: Decide on age/family fields for events
 
 Events have `age_low`, `age_high`, `age_restriction`, and `is_family_friendly` — but none are displayed on event cards or event detail pages. Only series pages show age info. Options:
 
-- **Option A: Display them.** Add age badges and a family-friendly indicator to event detail pages (and optionally cards). This is useful if single events (not just series) have age restrictions (like 21+ bar shows).
-- **Option B: Remove from events, keep on series.** If age restrictions only apply to series (camps/classes), drop the event-level columns to reduce confusion. Move `age_restriction` usage to a text note in `description`.
-- **Option C: Leave as-is.** Keep the columns for future use but document that they're not displayed yet.
+- **Option A: Display them.** Add age badges and a family-friendly indicator to event detail pages (and optionally cards). Useful for standalone events like 21+ bar shows or family festivals.
+- **Option B: Remove from events, keep on series.** If age restrictions only matter for camps/classes, drop the event-level columns.
+- **Option C: Leave as-is.** Keep for future use but note they're not displayed yet.
 
-**Recommendation:** Option A for `age_restriction` and `is_family_friendly` specifically — these are useful for standalone events (bar shows, family festivals). The `age_low`/`age_high` numeric fields make more sense on series (camps for ages 6-12) than on individual events.
+**Recommendation:** Option A for `age_restriction` and `is_family_friendly` — these are useful for standalone events. The `age_low`/`age_high` numeric fields make more sense on series (camps for ages 6-12) than on individual events.
 
-### Priority 4: Clean up `venue_type` taxonomy
+### Remaining: Clean up `venue_type` taxonomy
 
 The current enum mixes physical types and domain purposes. A cleaner approach (if worth the migration effort):
 
@@ -569,7 +675,7 @@ Two options:
 
 **Recommendation:** Low priority. The current approach works. Just document the usage guidance (already done above). Revisit when/if venue filtering becomes a major feature.
 
-### Priority 5: Consider a tags/labels system
+### Remaining: Consider a tags/labels system
 
 Events have exactly one `category_id`. For cross-cutting concerns (an event that's "Music" AND "Food", or a "Family-friendly Outdoor Concert"), the single-category model is limiting. A lightweight tags table would help:
 
