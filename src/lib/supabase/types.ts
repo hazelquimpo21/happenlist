@@ -1053,6 +1053,19 @@ export type AttendanceMode = 'registered' | 'drop_in' | 'hybrid';
 export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'all_levels';
 
 /**
+ * Event source — where the event came from.
+ *
+ * - 'manual': Created by an admin directly in the database
+ * - 'scraper': Imported via the Chrome extension or automated scraper
+ * - 'user_submission': Submitted through the website's event submission form
+ * - 'api': Created via external API
+ * - 'import': Bulk imported
+ *
+ * CANONICAL DEFINITION: This is the single source of truth.
+ */
+export type EventSource = 'manual' | 'scraper' | 'user_submission' | 'api' | 'import';
+
+/**
  * Venue type enum values.
  */
 export type VenueType =

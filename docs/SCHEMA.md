@@ -35,16 +35,35 @@ ORGANIZER (who)
 
 ### For CSV Exports
 
-When exporting events as a CSV, each row is one event. Related data is joined in:
+When exporting events as a CSV, each row is one event. Related data (category, venue, organizer, series) is joined in as flat columns. Here's a recommended CSV structure:
 
-| CSV Column | Source |
-|------------|--------|
-| `event_title` | `events.title` |
-| `event_date` | `events.instance_date` |
-| `category_name` | `categories.name` (via `events.category_id`) |
-| `venue_name` | `locations.name` (via `events.location_id`) |
-| `organizer_name` | `organizers.name` (via `events.organizer_id`) |
-| `series_title` | `series.title` (via `events.series_id`) |
+| CSV Column | Source | Example |
+|------------|--------|---------|
+| `event_title` | `events.title` | "Jazz Night" |
+| `event_date` | `events.instance_date` | "2026-02-14" |
+| `start_time` | `events.start_datetime` | "2026-02-14T19:00:00" |
+| `end_time` | `events.end_datetime` | "2026-02-14T22:00:00" |
+| `status` | `events.status` | "published" |
+| `short_description` | `events.short_description` | "Live jazz at the Pabst" |
+| `description` | `events.description` | Full description text |
+| `price_type` | `events.price_type` | "range" |
+| `price_low` | `events.price_low` | 15 |
+| `price_high` | `events.price_high` | 50 |
+| `price_details` | `events.price_details` | "GA $15-30, VIP $50" |
+| `is_free` | `events.is_free` | false |
+| `category_name` | `categories.name` (via `events.category_id`) | "Music" |
+| `venue_name` | `locations.name` (via `events.location_id`) | "Pabst Theater" |
+| `venue_address` | `locations.address_line` | "144 E Wells St" |
+| `venue_city` | `locations.city` | "Milwaukee" |
+| `organizer_name` | `organizers.name` (via `events.organizer_id`) | "MKE Jazz Collective" |
+| `series_title` | `series.title` (via `events.series_id`) | "Winter Jazz Series" |
+| `series_type` | `series.series_type` (via `events.series_id`) | "recurring" |
+| `image_url` | `events.image_url` | URL to event image |
+| `website_url` | `events.website_url` | External event page |
+| `source` | `events.source` | "manual", "scraper", etc. |
+| `age_restriction` | `events.age_restriction` | "21+" |
+| `is_family_friendly` | `events.is_family_friendly` | true |
+| `heart_count` | `events.heart_count` | 42 |
 
 ---
 
@@ -57,18 +76,18 @@ Every row is one event on one date.
 | Column Group | Fields | Purpose |
 |-------------|--------|---------|
 | **Identity** | `id`, `title`, `slug` | Unique ID and URL-friendly slug |
-| **Description** | `description`, `short_description`, `happenlist_summary` | Text content |
+| **Description** | `description`, `short_description`, `happenlist_summary`, `organizer_description` | Text content (see [Description Fields](#description-fields-on-events)) |
 | **When** | `start_datetime`, `end_datetime`, `instance_date`, `is_all_day`, `timezone` | Date/time info |
 | **Where** | `location_id` (FK) | Links to venues table |
 | **Who** | `organizer_id` (FK) | Links to organizers table |
 | **What kind** | `category_id` (FK) | Links to categories table |
 | **Series** | `series_id` (FK), `series_sequence`, `is_series_instance` | Links to series table |
-| **Pricing** | `price_type`, `price_low`, `price_high`, `is_free` (generated), `ticket_url` | Cost info |
+| **Pricing** | `price_type`, `price_low`, `price_high`, `price_details`, `is_free` (generated), `ticket_url` | Cost info |
 | **Images** | `image_url`, `thumbnail_url`, `flyer_url` + hosted/storage variants | Visual assets |
 | **Links** | `website_url`, `instagram_url`, `facebook_url`, `registration_url` | External URLs |
 | **Age** | `age_low`, `age_high`, `age_restriction`, `is_family_friendly` | Audience restrictions |
 | **Status** | `status`, `is_featured`, `featured_order` | Publication state |
-| **Submission** | `submitted_by_email`, `submitted_by_name`, `submitted_at`, `source` | Who submitted it |
+| **Submission** | `submitted_by_email`, `submitted_by_name`, `submitted_at`, `source`, `source_url` | Who submitted it (see [Source Values](#source-values)) |
 | **Review** | `reviewed_at`, `reviewed_by`, `review_notes`, `rejection_reason`, `change_request_message` | Admin review |
 | **Editing** | `last_edited_at`, `last_edited_by`, `edit_count` | Edit history |
 | **Soft delete** | `deleted_at`, `deleted_by`, `delete_reason` | Trash (not permanently deleted) |
@@ -343,3 +362,131 @@ All TEXT enum columns have database-level CHECK constraints that prevent invalid
 ### Denormalized counts
 
 `events.heart_count` and `series.heart_count` are denormalized — the `hearts` table is the source of truth. Similarly, `series.sessions_remaining` and `series.enrollment_count` need to be kept in sync with actual data. These exist for query performance and are maintained by app-level code.
+
+### Description fields on events
+
+Events have four separate text fields for descriptions. Each serves a different purpose:
+
+| Field | What it is | Who writes it | Example |
+|-------|-----------|---------------|---------|
+| `description` | General cleaned-up description | Admin/scraper | "Live jazz featuring the Milwaukee Trio..." |
+| `short_description` | One-line teaser for cards | Admin/scraper | "Live jazz at the Pabst Theater" (max ~160 chars) |
+| `happenlist_summary` | Editorial third-person summary | Happenlist staff/AI | "This intimate jazz show highlights three of Milwaukee's finest..." |
+| `organizer_description` | Verbatim copy from the source | Scraper/submitter | The exact text from the event page, preserving original formatting |
+
+For CSV exports, `description` and `short_description` are the most useful. `organizer_description` preserves the original source text for reference.
+
+### Source values
+
+The `source` field on events tracks where the event came from. Current values used:
+
+| Value | Meaning |
+|-------|---------|
+| `manual` | Created by an admin in the database (default) |
+| `scraper` | Imported by the Chrome extension or automated scraper |
+| `user_submission` | Submitted through the website's submission form |
+| `api` | Created via API |
+| `import` | Bulk imported |
+
+**Note:** This field does not currently have a CHECK constraint. The `source_url` field stores the original URL the event was scraped/imported from.
+
+### Unused/legacy columns on events
+
+These columns exist in the database but are **not used by the application**. They are candidates for removal in a future cleanup migration:
+
+| Column | Original purpose | Why unused |
+|--------|-----------------|------------|
+| `event_type` | Categorize event format | Never implemented; `series_type` on the series table serves this purpose for grouped events |
+| `recurrence_parent_id` | Link recurring instances to a template event | Replaced by the series system (`series_type = 'recurring'`) |
+| `is_recurrence_template` | Mark an event as a recurrence template | Replaced by the series system |
+| `on_sale_date` | When tickets go on sale | Never implemented in the UI |
+
+### Venue type ambiguity
+
+The `venue_type` values mix two concepts: **physical type** (`venue`, `outdoor`, `online`, `various`, `tbd`) and **domain/purpose** (`entertainment`, `arts`, `sports`, `restaurant`, `community`, `education`). In practice:
+
+- Use `outdoor`, `online`, `various`, or `tbd` when those clearly apply
+- Use a domain type (`restaurant`, `education`, etc.) when the venue is primarily known for that purpose
+- Use `venue` as the default/catch-all for general-purpose spaces (theaters, clubs, studios)
+
+---
+
+## Chrome Extension / Scraper Field Reference
+
+The Chrome extension saves events from any website into the same database. Here's what it should populate:
+
+### Required fields
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `title` | Event name from page | Min 3 characters |
+| `start_datetime` | Scraped date/time | ISO 8601 format |
+| `instance_date` | Date portion only | `YYYY-MM-DD`, derived from `start_datetime` |
+| `status` | `'pending_review'` | Always — goes through admin approval |
+| `source` | `'scraper'` | Identifies this came from the extension |
+| `source_url` | The URL being scraped | For dedup and admin reference |
+
+### Recommended fields
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `organizer_description` | Verbatim text from the event page | Preserves original wording |
+| `short_description` | First 1-2 sentences | Max ~160 chars, used on cards |
+| `description` | Cleaned/formatted version | General purpose |
+| `price_type` | One of: `free`, `fixed`, `range`, `varies`, `donation` | Use `varies` if unclear |
+| `price_low` / `price_high` | Numbers | Required for `fixed` and `range` |
+| `price_details` | Full pricing text | "Early bird $20, door $30, VIP $50" |
+| `end_datetime` | Event end time | ISO 8601, null if unknown |
+| `category_id` | UUID of matching category | Needs lookup against `categories` table |
+
+### Images
+
+Images from external sites must be **re-hosted to Supabase Storage** (CDN URLs from Instagram, Facebook, etc. expire). Use the `/api/images/upload` endpoint:
+
+| Field | Value | Notes |
+|-------|-------|-------|
+| `image_url` | Supabase CDN URL | After re-hosting via the upload API |
+| `image_hosted` | `true` | Indicates the image is in our storage |
+| `image_storage_path` | Storage bucket path | Returned by the upload API |
+| `flyer_url` | Supabase CDN URL | For poster/flyer images (portrait aspect ratio) |
+| `thumbnail_url` | Supabase CDN URL | Smaller version for cards |
+
+### Location matching
+
+The extension should try to match an existing venue before creating a new one:
+
+1. Match by `google_place_id` (most reliable)
+2. Match by `name` + `city` (fuzzy)
+3. If no match, create a new `locations` row with: `name`, `address_line`, `city`, `state`, `postal_code`, `latitude`, `longitude`, `venue_type`
+
+### Organizer matching
+
+1. Match by `name` (case-insensitive, fuzzy)
+2. If no match, create a new `organizers` row with: `name`, `slug`, `website_url`
+
+### Full insert example
+
+```sql
+INSERT INTO events (
+  -- Required
+  title, start_datetime, instance_date, status, source, source_url,
+  -- Descriptions
+  organizer_description, short_description, description,
+  -- Pricing
+  price_type, price_low, price_high, price_details,
+  -- Relationships
+  category_id, location_id, organizer_id,
+  -- Images (after re-hosting)
+  image_url, image_hosted, image_storage_path,
+  flyer_url, flyer_hosted, flyer_storage_path
+) VALUES (
+  'Jazz Night at the Pabst', '2026-02-14T19:00:00-06:00', '2026-02-14',
+  'pending_review', 'scraper', 'https://example.com/jazz-night',
+  'Join us for an evening of jazz...', 'Live jazz at the Pabst Theater',
+  'An evening of jazz featuring local Milwaukee artists.',
+  'range', 15, 50, 'General $15-30, VIP $50',
+  '...category-uuid...', '...location-uuid...', '...organizer-uuid...',
+  'https://your-project.supabase.co/storage/v1/...', true, 'events/abc/hero_123.jpg',
+  'https://your-project.supabase.co/storage/v1/...', true, 'events/abc/flyer_123.jpg'
+)
+```
