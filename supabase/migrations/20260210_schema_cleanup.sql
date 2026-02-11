@@ -20,11 +20,18 @@
 -- These views reference columns we're modifying (registration_required, is_free).
 -- We'll recreate them at the end of the migration.
 
+-- Views that use e.* or s.* (depend on registration_required / is_free)
 DROP VIEW IF EXISTS events_with_details;
 DROP VIEW IF EXISTS series_with_details;
 DROP VIEW IF EXISTS series_upcoming;
--- admin_event_stats doesn't reference modified columns, but drop for safety
 DROP VIEW IF EXISTS admin_event_stats;
+
+-- Views that explicitly reference events.is_free
+DROP VIEW IF EXISTS v_user_hearts;
+DROP VIEW IF EXISTS v_admin_submission_queue;
+DROP VIEW IF EXISTS v_my_submissions;
+DROP VIEW IF EXISTS v_superadmin_events;
+DROP VIEW IF EXISTS events_pending_review;
 
 
 -- ============================================================================
@@ -270,6 +277,321 @@ SELECT
   COUNT(*) AS total_count
 FROM events
 WHERE deleted_at IS NULL;
+
+-- 6e. v_user_hearts (user's saved events)
+CREATE OR REPLACE VIEW v_user_hearts AS
+SELECT
+  h.id AS heart_id,
+  h.user_id,
+  h.created_at AS hearted_at,
+  e.id AS event_id,
+  e.title,
+  e.slug,
+  e.instance_date,
+  e.start_datetime,
+  e.end_datetime,
+  e.image_url,
+  e.short_description,
+  e.is_free,
+  e.price_low,
+  e.price_high,
+  e.status,
+  c.name AS category_name,
+  c.slug AS category_slug,
+  l.name AS location_name,
+  l.city AS location_city
+FROM hearts h
+JOIN events e ON h.event_id = e.id
+LEFT JOIN categories c ON e.category_id = c.id
+LEFT JOIN locations l ON e.location_id = l.id
+WHERE e.status = 'published'
+  AND e.deleted_at IS NULL
+ORDER BY e.instance_date ASC;
+
+-- 6f. v_my_submissions (user's submitted events)
+CREATE OR REPLACE VIEW v_my_submissions AS
+SELECT
+  e.id,
+  e.title,
+  e.slug,
+  e.status,
+  e.instance_date,
+  e.start_datetime,
+  e.end_datetime,
+  e.image_url,
+  e.description,
+  e.short_description,
+  e.submitted_at,
+  e.submitted_by_email,
+  e.submitted_by_name,
+  e.reviewed_at,
+  e.reviewed_by,
+  e.review_notes,
+  e.rejection_reason,
+  e.change_request_message,
+  e.source,
+  e.created_at,
+  e.updated_at,
+  e.deleted_at,
+  e.price_type,
+  e.price_low,
+  e.price_high,
+  e.is_free,
+  e.category_id,
+  c.name AS category_name,
+  c.slug AS category_slug,
+  e.location_id,
+  l.name AS location_name,
+  l.city AS location_city,
+  l.address_line AS location_address,
+  e.series_id,
+  s.title AS series_title,
+  s.slug AS series_slug,
+  s.series_type
+FROM events e
+LEFT JOIN categories c ON e.category_id = c.id
+LEFT JOIN locations l ON e.location_id = l.id
+LEFT JOIN series s ON e.series_id = s.id
+WHERE e.submitted_by_email IS NOT NULL
+  AND e.deleted_at IS NULL
+ORDER BY e.created_at DESC;
+
+-- 6g. v_admin_submission_queue (admin approval queue)
+CREATE OR REPLACE VIEW v_admin_submission_queue AS
+SELECT
+  e.id,
+  e.title,
+  e.slug,
+  e.status,
+  e.instance_date,
+  e.start_datetime,
+  e.end_datetime,
+  e.image_url,
+  e.description,
+  e.short_description,
+  e.submitted_at,
+  e.submitted_by_email,
+  e.submitted_by_name,
+  e.source,
+  e.source_url,
+  e.created_at,
+  e.price_type,
+  e.price_low,
+  e.price_high,
+  e.is_free,
+  e.ticket_url,
+  e.change_request_message,
+  e.category_id,
+  c.name AS category_name,
+  c.slug AS category_slug,
+  e.location_id,
+  l.name AS location_name,
+  l.city AS location_city,
+  l.address_line AS location_address,
+  e.organizer_id,
+  o.name AS organizer_name,
+  e.series_id,
+  s.title AS series_title,
+  s.series_type,
+  (
+    SELECT COUNT(*) FROM events e2
+    WHERE e2.submitted_by_email = e.submitted_by_email
+    AND e2.status = 'published'
+  ) AS submitter_approved_count,
+  (
+    SELECT COUNT(*) FROM events e2
+    WHERE e2.submitted_by_email = e.submitted_by_email
+  ) AS submitter_total_count
+FROM events e
+LEFT JOIN categories c ON e.category_id = c.id
+LEFT JOIN locations l ON e.location_id = l.id
+LEFT JOIN organizers o ON e.organizer_id = o.id
+LEFT JOIN series s ON e.series_id = s.id
+WHERE e.status IN ('pending_review', 'changes_requested')
+  AND e.deleted_at IS NULL
+ORDER BY e.submitted_at ASC NULLS LAST;
+
+-- 6h. v_superadmin_events (superadmin event management — includes deleted)
+CREATE OR REPLACE VIEW v_superadmin_events AS
+SELECT
+  e.id,
+  e.title,
+  e.slug,
+  e.status,
+  e.source,
+  e.instance_date,
+  e.start_datetime,
+  e.end_datetime,
+  e.is_all_day,
+  e.description,
+  e.short_description,
+  e.image_url,
+  e.thumbnail_url,
+  e.price_type,
+  e.price_low,
+  e.price_high,
+  e.is_free,
+  e.ticket_url,
+  e.submitted_by_email,
+  e.submitted_by_name,
+  e.submitted_at,
+  e.reviewed_at,
+  e.reviewed_by,
+  e.review_notes,
+  e.rejection_reason,
+  e.change_request_message,
+  e.deleted_at,
+  e.deleted_by,
+  e.delete_reason,
+  e.last_edited_at,
+  e.last_edited_by,
+  e.edit_count,
+  e.created_at,
+  e.updated_at,
+  e.published_at,
+  e.heart_count,
+  e.view_count,
+  e.category_id,
+  c.name AS category_name,
+  c.slug AS category_slug,
+  c.icon AS category_icon,
+  e.location_id,
+  l.name AS location_name,
+  l.slug AS location_slug,
+  l.city AS location_city,
+  l.address_line AS location_address,
+  l.venue_type AS location_type,
+  e.organizer_id,
+  o.name AS organizer_name,
+  o.slug AS organizer_slug,
+  o.logo_url AS organizer_logo,
+  e.series_id,
+  s.title AS series_title,
+  s.slug AS series_slug,
+  s.series_type,
+  (
+    SELECT COUNT(*) FROM events e2
+    WHERE e2.submitted_by_email = e.submitted_by_email
+    AND e2.status = 'published'
+  ) AS submitter_approved_count,
+  (e.deleted_at IS NOT NULL) AS is_deleted
+FROM events e
+LEFT JOIN categories c ON e.category_id = c.id
+LEFT JOIN locations l ON e.location_id = l.id
+LEFT JOIN organizers o ON e.organizer_id = o.id
+LEFT JOIN series s ON e.series_id = s.id
+ORDER BY e.created_at DESC;
+
+-- 6i. events_pending_review (admin review queue with full event details)
+CREATE OR REPLACE VIEW events_pending_review AS
+SELECT
+  e.id,
+  e.title,
+  e.slug,
+  e.description,
+  e.short_description,
+  e.start_datetime,
+  e.end_datetime,
+  e.instance_date,
+  e.on_sale_date,
+  e.is_all_day,
+  e.timezone,
+  e.event_type,
+  e.recurrence_parent_id,
+  e.is_recurrence_template,
+  e.recurrence_pattern,
+  e.series_id,
+  e.location_id,
+  e.organizer_id,
+  e.category_id,
+  e.price_type,
+  e.price_low,
+  e.price_high,
+  e.price_details,
+  e.is_free,
+  e.ticket_url,
+  e.image_url,
+  e.flyer_url,
+  e.thumbnail_url,
+  e.meta_title,
+  e.meta_description,
+  e.heart_count,
+  e.view_count,
+  e.status,
+  e.is_featured,
+  e.featured_order,
+  e.created_at,
+  e.updated_at,
+  e.published_at,
+  e.source,
+  e.source_url,
+  e.source_id,
+  e.scraped_at,
+  e.scraped_data,
+  e.reviewed_at,
+  e.reviewed_by,
+  e.review_notes,
+  e.rejection_reason,
+  e.raw_image_url,
+  e.raw_thumbnail_url,
+  e.image_validated,
+  e.image_validated_at,
+  e.image_validation_notes,
+  e.image_hosted,
+  e.image_storage_path,
+  e.thumbnail_hosted,
+  e.thumbnail_storage_path,
+  e.flyer_hosted,
+  e.flyer_storage_path,
+  e.series_sequence,
+  e.is_series_instance,
+  e.submitted_by_email,
+  e.submitted_by_name,
+  e.submitted_at,
+  e.change_request_message,
+  e.deleted_at,
+  e.deleted_by,
+  e.delete_reason,
+  e.last_edited_at,
+  e.last_edited_by,
+  e.edit_count,
+  e.image_ai_generated,
+  e.image_generation_cost,
+  e.image_generation_prompt,
+  e.image_generation_model,
+  e.happenlist_summary,
+  e.organizer_description,
+  e.image_type,
+  e.image_text_density,
+  e.image_visual_score,
+  e.image_classifications,
+  e.thumbnail_source,
+  e.flyer_detected,
+  e.flyer_text_content,
+  e.needs_thumbnail,
+  c.name AS category_name,
+  c.slug AS category_slug,
+  c.icon AS category_icon,
+  l.name AS location_name,
+  l.slug AS location_slug,
+  l.city AS location_city,
+  l.address_line AS location_address,
+  o.name AS organizer_name,
+  o.slug AS organizer_slug,
+  o.logo_url AS organizer_logo
+FROM events e
+LEFT JOIN categories c ON e.category_id = c.id
+LEFT JOIN locations l ON e.location_id = l.id
+LEFT JOIN organizers o ON e.organizer_id = o.id
+WHERE e.status = 'pending_review' AND e.deleted_at IS NULL
+ORDER BY e.submitted_at DESC NULLS LAST, e.created_at DESC;
+
+-- Set security_invoker on views that need RLS enforcement
+ALTER VIEW events_pending_review SET (security_invoker = true);
+ALTER VIEW v_user_hearts SET (security_invoker = true);
+ALTER VIEW v_my_submissions SET (security_invoker = true);
+ALTER VIEW v_admin_submission_queue SET (security_invoker = true);
+ALTER VIEW v_superadmin_events SET (security_invoker = true);
 
 
 -- ============================================================================
