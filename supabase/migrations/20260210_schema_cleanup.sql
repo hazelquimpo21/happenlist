@@ -142,6 +142,9 @@ COMMENT ON COLUMN series.is_free IS 'Auto-computed: true when price_type = ''fre
 -- 5. UPDATE search_venues FUNCTION
 -- ============================================================================
 -- The function references locations.category which was renamed.
+-- Must DROP first because the return type changed (category → google_category).
+
+DROP FUNCTION IF EXISTS search_venues(TEXT, INTEGER);
 
 CREATE OR REPLACE FUNCTION search_venues(
   search_query TEXT,
