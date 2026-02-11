@@ -110,6 +110,9 @@ interface ScraperEventInput {
   age_restriction?: string | null;
   is_family_friendly?: boolean | null;
 
+  // -- Good For audience tags --
+  good_for?: string[] | null; // e.g., ['date_night', 'foodies']
+
   // -- Misc --
   is_all_day?: boolean;
   timezone?: string | null;
@@ -231,6 +234,7 @@ export async function POST(request: NextRequest) {
       age_high: body.age_high ?? null,
       age_restriction: body.age_restriction || null,
       is_family_friendly: body.is_family_friendly ?? null,
+      good_for: body.good_for || [],
       status: 'pending_review',
       source,
       source_url: body.source_url,
@@ -309,6 +313,7 @@ export async function GET() {
       age_high: 'number — maximum age (e.g. 65)',
       age_restriction: 'string — human-readable age note (e.g. "21+", "All ages")',
       is_family_friendly: 'boolean — whether suitable for families/children',
+      good_for: 'string[] — audience tags, e.g. ["date_night", "foodies"]. Valid: date_night, families_young_kids, families_older_kids, pet_friendly, foodies, girls_night, guys_night, solo_friendly, outdoorsy, creatives, music_lovers, active_seniors, college_crowd, first_timers',
     },
     location_options: [
       'location_id: UUID of existing venue',

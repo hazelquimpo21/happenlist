@@ -34,6 +34,8 @@ export interface EventFilters {
   organizerId?: string;
   locationId?: string;
   excludeEventId?: string;
+  /** Filter by "Good For" audience tag slug (e.g., "date_night"). */
+  goodFor?: string;
 }
 
 /**

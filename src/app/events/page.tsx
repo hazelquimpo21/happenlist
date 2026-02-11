@@ -11,6 +11,7 @@ import { Container, Breadcrumbs } from '@/components/layout';
 import { EventGrid, SectionHeader } from '@/components/events';
 import { getEvents } from '@/data/events';
 import { getCategories, getCategoryBySlug } from '@/data/categories';
+import { GOOD_FOR_TAGS, getGoodForTag } from '@/types';
 
 export const metadata: Metadata = {
   title: 'Events',
@@ -24,6 +25,7 @@ interface EventsPageProps {
     to?: string;
     free?: string;
     q?: string;
+    goodFor?: string;
     page?: string;
   }>;
 }
@@ -40,6 +42,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const page = parseInt(params.page || '1', 10);
   const isFree = params.free === 'true';
   const categorySlug = params.category;
+  const goodFor = params.goodFor;
 
   // Build date range if provided
   const dateRange =
@@ -54,6 +57,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       categorySlug,
       dateRange,
       isFree,
+      goodFor,
       page,
       limit: 24,
     }),
@@ -67,9 +71,13 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     categoryName = category?.name;
   }
 
+  // Get good_for tag if filtered
+  const goodForTag = goodFor ? getGoodForTag(goodFor) : undefined;
+
   // Build title
   let title = 'All Events';
   if (categoryName) title = `${categoryName} Events`;
+  if (goodForTag) title = `${goodForTag.label} Events`;
   if (isFree) title = 'Free Events';
   if (params.q) title = `Search: "${params.q}"`;
 
@@ -80,6 +88,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
         items={[
           { label: 'Events', href: '/events' },
           ...(categoryName ? [{ label: categoryName }] : []),
+          ...(goodForTag ? [{ label: goodForTag.label }] : []),
         ]}
         className="mb-6"
       />
@@ -119,6 +128,24 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
         ))}
       </div>
 
+      {/* Good For pills for audience filtering */}
+      <div className="flex flex-wrap gap-2 mb-8">
+        <span className="px-2 py-2 text-body-sm text-stone self-center">Good for:</span>
+        {GOOD_FOR_TAGS.slice(0, 8).map((tag) => (
+          <a
+            key={tag.slug}
+            href={goodFor === tag.slug ? '/events' : `/events?goodFor=${tag.slug}`}
+            className={`px-3 py-1.5 rounded-full text-body-sm font-medium transition-colors ${
+              goodFor === tag.slug
+                ? `${tag.color} ring-2 ring-offset-1 ring-current`
+                : 'bg-sand/60 text-charcoal hover:bg-sand'
+            }`}
+          >
+            {tag.label}
+          </a>
+        ))}
+      </div>
+
       {/* Events grid */}
       <EventGrid
         events={events}
@@ -136,7 +163,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
         <div className="mt-12 flex justify-center gap-2">
           {page > 1 && (
             <a
-              href={`/events?page=${page - 1}${categorySlug ? `&category=${categorySlug}` : ''}`}
+              href={`/events?page=${page - 1}${categorySlug ? `&category=${categorySlug}` : ''}${goodFor ? `&goodFor=${goodFor}` : ''}`}
               className="px-4 py-2 rounded-md bg-sand text-charcoal hover:bg-coral-light transition-colors"
             >
               Previous
@@ -147,7 +174,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
           </span>
           {page * 24 < total && (
             <a
-              href={`/events?page=${page + 1}${categorySlug ? `&category=${categorySlug}` : ''}`}
+              href={`/events?page=${page + 1}${categorySlug ? `&category=${categorySlug}` : ''}${goodFor ? `&goodFor=${goodFor}` : ''}`}
               className="px-4 py-2 rounded-md bg-sand text-charcoal hover:bg-coral-light transition-colors"
             >
               Next

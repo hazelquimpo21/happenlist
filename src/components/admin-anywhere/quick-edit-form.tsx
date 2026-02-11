@@ -30,6 +30,7 @@ import {
 import { StatusBadgeSelect } from './status-badge-select';
 import { useAdminEdit } from '@/hooks/use-admin-edit';
 import type { AdminToolbarEvent } from './admin-toolbar';
+import { GOOD_FOR_TAGS } from '@/types';
 import { createLogger } from '@/lib/utils/logger';
 
 // ============================================================================
@@ -71,6 +72,8 @@ interface FormState {
   instagram_url: string;
   facebook_url: string;
   registration_url: string;
+  // Good For audience tags
+  good_for: string[];
   status: string;
   notes: string;
 }
@@ -149,6 +152,8 @@ export function QuickEditForm({
     instagram_url: event.instagram_url || '',
     facebook_url: event.facebook_url || '',
     registration_url: event.registration_url || '',
+    // Good For audience tags
+    good_for: event.good_for || [],
     status: event.status || 'draft',
     notes: '',
   });
@@ -264,6 +269,13 @@ export function QuickEditForm({
     }
     if (formState.registration_url !== (event.registration_url || '')) {
       updates.registration_url = formState.registration_url || null;
+    }
+
+    // Handle good_for
+    const originalGoodFor = (event.good_for || []).slice().sort().join(',');
+    const newGoodFor = formState.good_for.slice().sort().join(',');
+    if (newGoodFor !== originalGoodFor) {
+      updates.good_for = formState.good_for;
     }
 
     // Handle status change separately
@@ -659,6 +671,46 @@ export function QuickEditForm({
             />
           </div>
         </div>
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Good For Tags */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="p-4 bg-cream/50 rounded-lg border border-sand/50">
+        <p className="text-sm font-medium text-charcoal mb-3">
+          Good For <span className="text-stone font-normal">(select all that apply)</span>
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {GOOD_FOR_TAGS.map((tag) => {
+            const isSelected = formState.good_for.includes(tag.slug);
+            return (
+              <button
+                key={tag.slug}
+                type="button"
+                onClick={() => {
+                  setFormState((prev) => ({
+                    ...prev,
+                    good_for: isSelected
+                      ? prev.good_for.filter((s) => s !== tag.slug)
+                      : [...prev.good_for, tag.slug],
+                  }));
+                }}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  isSelected
+                    ? `${tag.color} ring-2 ring-offset-1 ring-current`
+                    : 'bg-sand/50 text-stone hover:bg-sand'
+                }`}
+              >
+                {tag.label}
+              </button>
+            );
+          })}
+        </div>
+        {formState.good_for.length > 0 && (
+          <p className="text-xs text-stone mt-2">
+            {formState.good_for.length} selected
+          </p>
+        )}
       </div>
 
       {/* ------------------------------------------------------------------ */}

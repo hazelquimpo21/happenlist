@@ -203,6 +203,14 @@ Fields populated by the image analysis pipeline. Used for admin triage and thumb
 | `age_restriction` | text | no | Human-readable age note. Example: "21+", "All ages", "Parental guidance suggested". Shown as orange badge on event cards and in sidebar on detail page. |
 | `is_family_friendly` | boolean | no | Whether the event is suitable for families/children. Shown as green "Family Friendly" badge on event cards and in sidebar on detail page. |
 
+#### Good For (audience tags)
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `good_for` | text[] | no | Array of audience/vibe tags. Multiple values per event. Default: `{}` (empty array). Shown as colored pills on event detail page. Filterable on `/events` page. GIN-indexed for efficient `@>` (array contains) queries. |
+
+**Valid values:** `date_night`, `families_young_kids`, `families_older_kids`, `pet_friendly`, `foodies`, `girls_night`, `guys_night`, `solo_friendly`, `outdoorsy`, `creatives`, `music_lovers`, `active_seniors`, `college_crowd`, `first_timers`. See the [Good For tags plan](#planned-good-for-audience-tags) for full descriptions.
+
 #### Status & featuring
 
 | Field | Type | Required | Description |
@@ -822,6 +830,7 @@ Content-Type: application/json
 | `age_high` | number | Maximum age (e.g. `65`) |
 | `age_restriction` | string | Human-readable age note, e.g. `"21+"`, `"All ages"` |
 | `is_family_friendly` | boolean | Family-friendly flag |
+| `good_for` | string[] | Audience tags, e.g. `["date_night", "foodies"]`. Valid slugs: `date_night`, `families_young_kids`, `families_older_kids`, `pet_friendly`, `foodies`, `girls_night`, `guys_night`, `solo_friendly`, `outdoorsy`, `creatives`, `music_lovers`, `active_seniors`, `college_crowd`, `first_timers` |
 
 **Location — provide one of:**
 
@@ -858,6 +867,7 @@ The API auto-matches by name (case-insensitive), then creates a new organizer.
   "price_details": "General $15-30, VIP $50",
   "age_restriction": "21+",
   "is_family_friendly": false,
+  "good_for": ["date_night", "music_lovers"],
   "category_slug": "music",
   "location": {
     "name": "Pabst Theater",
@@ -990,7 +1000,7 @@ Two options:
 
 **Recommendation:** Low priority. The current approach works. Just document the usage guidance (already done above). Revisit when/if venue filtering becomes a major feature.
 
-### Planned: "Good For" audience tags
+### Done: "Good For" audience tags
 
 Events have exactly one `category_id` which answers "what kind of event is this?" (genre/format). We also need a way to answer "who would enjoy this?" — an audience/vibe layer. These are orthogonal: a **Music** event can be good for "Date Night" OR "Families with Young Kids" OR "Pet Owners."
 
@@ -1020,11 +1030,13 @@ CREATE INDEX idx_events_good_for ON events USING GIN (good_for) WHERE deleted_at
 | `college_crowd` | College Crowd | Student-priced, campus-adjacent, young-adult energy |
 | `first_timers` | First-Timers Welcome | Low barrier, beginner-friendly, newcomers encouraged |
 
-**Population strategy:** Set by admins during review. Submitters may suggest up to 3. AI-assisted suggestions based on description text in the future.
+**Population strategy:** Set by admins during review via the Quick Edit form. Scraper API also accepts `good_for` as an optional array. AI-assisted suggestions based on description text in the future.
 
-**Display locations:**
-- **Event detail page:** Row of colored pills below the title or in the sidebar.
-- **Event filter page:** Filterable on `/events` (e.g., "show me Date Night events this weekend").
+**Display locations (implemented):**
+- **Event detail page:** Row of colored pills below the short description, above the Happenlist Highlights box. Each pill links to `/events?goodFor=<slug>`.
+- **Event filter page:** "Good for" pills row on `/events` page. Selecting a tag filters events by that audience. Active tag shown with ring highlight.
+- **Admin Quick Edit:** Multi-select toggle buttons in the quick-edit form (below External Links, above Status).
+- **Scraper API:** Accepts `good_for` as `string[]` in POST body.
 - **Event cards:** Not shown (cards are already dense with category, price, age, series badges).
 
 **Relationship to existing fields:**

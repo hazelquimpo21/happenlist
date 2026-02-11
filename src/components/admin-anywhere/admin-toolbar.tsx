@@ -63,6 +63,8 @@ export interface AdminToolbarEvent {
   instagram_url: string | null;
   facebook_url: string | null;
   registration_url: string | null;
+  // Good For audience tags
+  good_for: string[];
   // Series info
   series_id: string | null;
   series_title?: string | null;

@@ -57,6 +57,7 @@ export async function getEvents(
     categorySlug,
     dateRange,
     isFree,
+    goodFor,
     locationId,
     organizerId,
     excludeEventId,
@@ -70,6 +71,7 @@ export async function getEvents(
     categorySlug,
     dateRange,
     isFree,
+    goodFor,
     page,
     limit,
   });
@@ -84,7 +86,7 @@ export async function getEvents(
       `
       id, title, slug, start_datetime, instance_date,
       image_url, thumbnail_url, price_type, price_low, price_high,
-      is_free, heart_count,
+      is_free, heart_count, good_for,
       category:categories(name, slug),
       location:locations(name, slug)
     `,
@@ -122,6 +124,10 @@ export async function getEvents(
 
   if (isFree) {
     query = query.eq('is_free', true);
+  }
+
+  if (goodFor) {
+    query = query.contains('good_for', [goodFor]);
   }
 
   if (locationId) {
