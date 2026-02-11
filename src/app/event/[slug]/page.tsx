@@ -26,6 +26,8 @@ import {
   Sparkles,
   Quote,
   Info,
+  Baby,
+  Users,
 } from 'lucide-react';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { Button, Badge } from '@/components/ui';
@@ -38,6 +40,7 @@ import { getEvent, getEvents } from '@/data/events';
 import { checkSingleHeart } from '@/data/user';
 import { getSession, isSuperAdmin } from '@/lib/auth';
 import { parseEventSlug, buildVenueUrl, buildOrganizerUrl, getBestImageUrl } from '@/lib/utils';
+import { formatAgeRange } from '@/types';
 import { formatEventDate } from '@/lib/utils/dates';
 
 interface EventPageProps {
@@ -418,10 +421,33 @@ export default async function EventPage({ params }: EventPageProps) {
               )}
 
               {/* Price */}
-              <div className="flex items-start gap-3 mb-6">
+              <div className="flex items-start gap-3 mb-4">
                 <Ticket className="w-5 h-5 text-coral mt-0.5" />
                 <EventPrice event={event} showDetails />
               </div>
+
+              {/* Age / audience info */}
+              {(event.age_restriction || event.is_family_friendly || event.age_low != null || event.age_high != null) && (
+                <div className="flex items-start gap-3 mb-6">
+                  <Baby className="w-5 h-5 text-coral mt-0.5" />
+                  <div>
+                    {(() => {
+                      const ageRange = formatAgeRange(event.age_low, event.age_high);
+                      return ageRange ? (
+                        <p className="font-medium text-charcoal">{ageRange}</p>
+                      ) : event.age_restriction ? (
+                        <p className="font-medium text-charcoal">{event.age_restriction}</p>
+                      ) : null;
+                    })()}
+                    {event.is_family_friendly && (
+                      <p className="text-body-sm text-sage flex items-center gap-1">
+                        <Users className="w-3.5 h-3.5" />
+                        Family Friendly
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Primary CTA Button */}
               {event.ticket_url ? (

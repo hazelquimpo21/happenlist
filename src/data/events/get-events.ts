@@ -31,6 +31,8 @@ function transformToEventCard(row: Record<string, unknown>): EventCard {
     category_slug: category?.slug as string | null ?? null,
     location_name: location?.name as string | null ?? null,
     location_slug: location?.slug as string | null ?? null,
+    age_restriction: row.age_restriction as string | null ?? null,
+    is_family_friendly: row.is_family_friendly as boolean | null ?? null,
   };
 }
 

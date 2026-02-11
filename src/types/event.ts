@@ -59,6 +59,9 @@ export interface EventCard {
   category_slug: string | null;
   location_name: string | null;
   location_slug: string | null;
+  // Audience / age
+  age_restriction?: string | null;
+  is_family_friendly?: boolean | null;
   // Series info (Phase 2)
   series_id?: string | null;
   series_slug?: string | null;
