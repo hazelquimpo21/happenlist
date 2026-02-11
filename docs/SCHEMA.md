@@ -73,50 +73,182 @@ When exporting events as a CSV, each row is one event. Related data (category, v
 
 Every row is one event on one date.
 
-| Column Group | Fields | Purpose | Frontend Status |
-|-------------|--------|---------|-----------------|
-| **Identity** | `id`, `title`, `slug` | Unique ID and URL-friendly slug | Cards + detail + admin |
-| **Description** | `description`, `short_description`, `happenlist_summary`, `organizer_description` | Text content (see [Description Fields](#description-fields-on-events)) | Detail page only (cards show none) |
-| **When** | `start_datetime`, `end_datetime`, `instance_date`, `is_all_day`, `timezone` | Date/time info | Cards + detail + admin |
-| **Where** | `location_id` (FK) | Links to venues table | Cards show name; detail shows full address + map |
-| **Who** | `organizer_id` (FK) | Links to organizers table | Detail page only |
-| **What kind** | `category_id` (FK) | Links to categories table | Cards (badge) + detail + filters |
-| **Series** | `series_id` (FK), `series_sequence`, `is_series_instance` | Links to series table | Cards (badge); detail (admin toolbar) |
-| **Pricing** | `price_type`, `price_low`, `price_high`, `price_details`, `is_free` (generated), `ticket_url` | Cost info | Cards show price; detail adds `price_details` + ticket button |
-| **Images** | `image_url`, `thumbnail_url`, `flyer_url` + hosted/storage variants | Visual assets | Cards use `image_url`→`thumbnail_url` fallback; detail shows hero + flyer |
-| **Links** | `website_url`, `instagram_url`, `facebook_url`, `registration_url` | External URLs | Detail page sidebar only |
-| **Age** | `age_low`, `age_high`, `age_restriction`, `is_family_friendly` | Audience restrictions | **Not displayed on events** (only on series cards/pages). See [Cleanup Recommendations](#cleanup-recommendations) |
-| **Status** | `status`, `is_featured`, `featured_order` | Publication state | Admin pages; filters queries |
-| **Submission** | `submitted_by_email`, `submitted_by_name`, `submitted_at`, `source`, `source_url` | Who submitted it (see [Source Values](#source-values)) | Admin pages only |
-| **Review** | `reviewed_at`, `reviewed_by`, `review_notes`, `rejection_reason`, `change_request_message` | Admin review | Admin pages only |
-| **Editing** | `last_edited_at`, `last_edited_by`, `edit_count` | Edit history | Admin pages only |
-| **Soft delete** | `deleted_at`, `deleted_by`, `delete_reason` | Trash (not permanently deleted) | Filters queries (never shown) |
-| **Engagement** | `heart_count`, `view_count` | Popularity metrics | Heart button on cards + detail |
-| **SEO** | `meta_title`, `meta_description` | Page metadata | `<head>` tags only (never visible in UI) |
-| ~~**Legacy**~~ | ~~`event_type`, `recurrence_parent_id`, `is_recurrence_template`, `on_sale_date`~~ | Dropped in migration `20260211` | Removed |
+#### Identity
 
-#### Event Status Values
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | UUID | auto | Primary key, auto-generated |
+| `title` | text | **yes** | Event name. Min 3, max 200 characters. Example: "Jazz Night at the Pabst" |
+| `slug` | text | **yes** | URL-friendly version of title, auto-generated. Must be unique. Example: `jazz-night-at-the-pabst` |
+| `created_at` | timestamp | auto | When the row was created |
+| `updated_at` | timestamp | auto | When the row was last modified |
+| `published_at` | timestamp | no | When the event was first set to `published` status |
 
-| Status | Meaning | Who sees it |
-|--------|---------|-------------|
+#### Description
+
+See [Description Fields](#description-fields-on-events) for how these map to the UI.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `description` | text | no | General cleaned-up description. Shown in "About This Event" section on detail page. |
+| `short_description` | text | no | One-line teaser for cards and SEO. Max ~160 characters. Example: "Live jazz at the Pabst Theater" |
+| `happenlist_summary` | text | no | Editorial third-person summary written by Happenlist staff or AI. Shown in a highlighted "Highlights" box on detail page. |
+| `organizer_description` | text | no | Verbatim description from the event source. Preserves original formatting/voice. Shown in a quoted "From the Organizer" section. |
+
+#### When
+
+| Field | Type | Required | Description | Example |
+|-------|------|----------|-------------|---------|
+| `start_datetime` | timestamp | **yes** | Event start date and time in ISO 8601. | `2026-02-14T19:00:00-06:00` |
+| `end_datetime` | timestamp | no | Event end date and time. Null if unknown. | `2026-02-14T22:00:00-06:00` |
+| `instance_date` | date | **yes** | Date portion only (YYYY-MM-DD). Used for date-based filtering and grouping. Derived from `start_datetime`. | `2026-02-14` |
+| `is_all_day` | boolean | no | True if the event runs all day (no specific start/end time). Default: `false` |
+| `timezone` | text | no | IANA timezone identifier. Default: `America/Chicago` | `America/Chicago` |
+
+#### Relationships (foreign keys)
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `category_id` | UUID FK | no | Links to `categories.id`. Determines the event type badge (Music, Art, etc.). One category per event. |
+| `location_id` | UUID FK | no | Links to `locations.id`. The venue where the event happens. Null for TBD or online events. |
+| `organizer_id` | UUID FK | no | Links to `organizers.id`. Who runs the event. |
+| `series_id` | UUID FK | no | Links to `series.id`. Null for standalone events. Set when the event is part of a class, camp, recurring series, etc. |
+| `series_sequence` | integer | no | Position within a series. Example: `3` means "Session 3" or "Day 3". Null for standalone events. |
+| `is_series_instance` | boolean | no | `true` if this event belongs to a series. Redundant with `series_id IS NOT NULL` but used for query convenience. Default: `false` |
+
+#### Pricing
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `price_type` | text | **yes** | How pricing works. **Values:** `free`, `fixed`, `range`, `varies`, `donation`, `per_session`. Default: `free`. CHECK constraint enforced. |
+| `price_low` | decimal | no | Lowest price in dollars. Required when `price_type` is `fixed` (the single price) or `range` (the minimum). Example: `15.00` |
+| `price_high` | decimal | no | Highest price in dollars. Required when `price_type` is `range`. Must be >= `price_low`. Example: `50.00` |
+| `price_details` | text | no | Human-readable pricing notes for complex tiers. Example: "Early bird $15 (ends Feb 1), General $20, Door $25, VIP $50" |
+| `is_free` | boolean | auto | **Generated column** — automatically `true` when `price_type = 'free'`. Cannot be set manually. |
+| `ticket_url` | text | no | URL to purchase tickets. Shown as "Get Tickets" button on detail page. |
+
+**Price type values:**
+
+| Value | Meaning | Display | `price_low` | `price_high` |
+|-------|---------|---------|-------------|--------------|
+| `free` | No cost | "Free" | — | — |
+| `fixed` | Single price | "$25" | required | — |
+| `range` | Min–max range | "$15 – $50" | required | required |
+| `varies` | Variable (tiers, etc.) | "Varies" | optional | optional |
+| `donation` | Pay what you want | "Pay What You Can" | optional | optional |
+| `per_session` | Price per session | "$10/session" | required | — |
+
+#### Images
+
+Events have three image slots. Each slot has a primary URL plus tracking fields for the hosting pipeline.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `image_url` | text | no | Main hero/landscape image URL. Displayed on cards and as the detail page hero. Should be a Supabase CDN URL after re-hosting. |
+| `thumbnail_url` | text | no | Smaller card image. Used as fallback if `image_url` is missing on cards. |
+| `flyer_url` | text | no | Poster/flyer image (portrait orientation). Shown separately on the detail page. |
+| `image_hosted` | boolean | no | `true` if `image_url` has been re-hosted to Supabase Storage. Default: `false` |
+| `image_storage_path` | text | no | Supabase Storage path for the hero image. Example: `events/abc-123/hero_1707900000_x4f2.jpg` |
+| `raw_image_url` | text | no | Original scraped URL before re-hosting. Kept for debugging if the re-hosted version has issues. |
+| `image_validated` | boolean | no | `true` if the image URL has been verified as a valid, loadable image (not a page URL). |
+| `image_validated_at` | timestamp | no | When image validation was last run. |
+| `image_validation_notes` | text | no | Notes from image validation (e.g., "Rejected: Instagram page URL, not image"). |
+| `flyer_hosted` | boolean | no | `true` if `flyer_url` has been re-hosted to Supabase Storage. |
+| `flyer_storage_path` | text | no | Supabase Storage path for the flyer image. |
+| `thumbnail_hosted` | boolean | no | `true` if `thumbnail_url` has been re-hosted to Supabase Storage. |
+| `thumbnail_storage_path` | text | no | Supabase Storage path for the thumbnail. |
+| `raw_thumbnail_url` | text | no | Original scraped thumbnail URL before re-hosting. |
+
+#### External links
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `website_url` | text | no | Event's own website or landing page. Shown in sidebar links. |
+| `instagram_url` | text | no | Instagram post or profile for the event. Shown in sidebar links. |
+| `facebook_url` | text | no | Facebook event page or post. Shown in sidebar links. |
+| `registration_url` | text | no | RSVP or registration page. Shown as "Register / RSVP" button. |
+
+#### Audience / age
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `age_low` | integer | no | Minimum age. Example: `21` for a bar show. **Not currently displayed on events** (only on series). |
+| `age_high` | integer | no | Maximum age. Must be >= `age_low` if both set. **Not currently displayed on events.** |
+| `age_restriction` | text | no | Human-readable age note. Example: "21+", "All ages", "Parental guidance suggested". **Not currently displayed.** |
+| `is_family_friendly` | boolean | no | Whether the event is suitable for families/children. **Not currently displayed.** |
+
+#### Status & featuring
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `status` | text | **yes** | Publication state. Default: `draft`. CHECK constraint enforced. See values below. |
+| `is_featured` | boolean | no | Whether the event appears in the "Featured" section on the homepage. Default: `false` |
+| `featured_order` | integer | no | Sort position within featured events. Lower = earlier. Null if not featured. |
+
+**Event status values:**
+
+| Value | Meaning | Visible to |
+|-------|---------|------------|
 | `draft` | User is still writing it | Submitter only |
-| `pending_review` | Waiting for admin approval | Submitter + Admin |
-| `changes_requested` | Admin wants edits | Submitter + Admin |
+| `pending_review` | Submitted, waiting for admin approval | Submitter + Admin |
+| `changes_requested` | Admin wants edits before approving | Submitter + Admin |
 | `published` | Live on the site | Everyone |
-| `rejected` | Not approved | Submitter + Admin |
-| `cancelled` | Was live, now cancelled | Everyone (with badge) |
-| `postponed` | Date TBD | Everyone (with badge) |
+| `rejected` | Admin rejected the submission | Submitter + Admin |
+| `cancelled` | Was live, now cancelled | Everyone (shown with badge) |
+| `postponed` | Was live, date now TBD | Everyone (shown with badge) |
 
-#### Price Type Values
+#### Submission tracking
 
-| Type | Meaning | Display |
-|------|---------|---------|
-| `free` | No cost | "Free" |
-| `fixed` | One price | "$25" |
-| `range` | Price range | "$15 - $50" |
-| `varies` | Variable pricing | "Varies" |
-| `donation` | Pay what you can | "Pay What You Can" |
-| `per_session` | Per-session pricing | "$10/session" |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `source` | text | **yes** | Where the event came from. Default: `manual`. CHECK constraint enforced. **Values:** `manual`, `scraper`, `user_submission`, `api`, `import`. |
+| `source_url` | text | no | Original URL the event was scraped/imported from. Used for dedup in the scraper API. |
+| `source_id` | text | no | External system's ID for this event (e.g., Eventbrite event ID). |
+| `scraped_at` | timestamp | no | When the scraper/extension captured this event. |
+| `scraped_data` | JSONB | no | Raw JSON blob from the scraper for debugging. Not displayed in the UI. |
+| `submitted_by_email` | text | no | Email of the user who submitted the event (for user submissions). |
+| `submitted_by_name` | text | no | Display name of the submitter. |
+| `submitted_at` | timestamp | no | When the event was submitted for review. |
+
+#### Admin review
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `reviewed_at` | timestamp | no | When an admin last reviewed this event. |
+| `reviewed_by` | text | no | Email of the admin who reviewed. |
+| `review_notes` | text | no | Internal admin notes (not shown to submitter). |
+| `rejection_reason` | text | no | Reason given when rejecting. Shown to the submitter. |
+| `change_request_message` | text | no | Message to submitter explaining what changes are needed. Shown on the "my submissions" page. |
+
+#### Edit tracking
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `last_edited_at` | timestamp | no | When the event was last edited (after initial creation). |
+| `last_edited_by` | text | no | Email of the person who last edited. |
+| `edit_count` | integer | no | How many times the event has been edited. Default: `0` |
+
+#### Soft delete
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `deleted_at` | timestamp | no | When the event was soft-deleted. Null means not deleted. All queries filter `WHERE deleted_at IS NULL`. |
+| `deleted_by` | text | no | Email of the person who deleted. |
+| `delete_reason` | text | no | Why it was deleted (e.g., "Duplicate", "Spam"). |
+
+#### Engagement
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `heart_count` | integer | no | Number of users who "hearted" (saved) this event. Denormalized — `hearts` table is the source of truth. Default: `0` |
+| `view_count` | integer | no | Number of page views. Not currently displayed to users. Default: `0` |
+
+#### SEO
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `meta_title` | text | no | Custom page title for SEO. Falls back to `title` if not set. Only appears in `<head>` tags, never in the visible UI. |
+| `meta_description` | text | no | Custom meta description for SEO. Falls back to `short_description` → `description` (truncated to 155 chars). |
 
 ---
 
@@ -126,46 +258,149 @@ A series groups multiple events together. Not every event is in a series — sta
 
 Series cards display significantly more information than event cards — badges for attendance mode, age range, skill level, and extended care are all visible at a glance.
 
-| Column Group | Fields | Purpose | Frontend Status |
-|-------------|--------|---------|-----------------|
-| **Identity** | `id`, `title`, `slug` | Unique ID and URL | Cards + detail |
-| **Type** | `series_type` | What kind of series | Cards (badge) + detail + filters |
-| **Schedule** | `start_date`, `end_date`, `total_sessions`, `sessions_remaining`, `recurrence_rule` | When it runs | Cards (date range, session count) + detail |
-| **Camp/Class** | `attendance_mode`, `skill_level`, `age_low`, `age_high`, `days_of_week` | Camp/class-specific | Cards (all shown as badges) + detail + filters |
-| **Extended care** | `core_start_time`, `core_end_time`, `extended_start_time`, `extended_end_time`, `extended_care_details` | Before/after care for camps | Cards (`has_extended_care` badge); detail (times + callout box) |
-| **Pricing** | `price_type`, `price_low`, `price_high`, `per_session_price`, `materials_fee`, `pricing_notes` | Cost details | Cards (price range); detail (all pricing fields shown) |
-| **Registration** | `registration_url`, `capacity`, `waitlist_enabled` | Sign-up info | Detail page CTA button; `capacity`/`waitlist_enabled` **not displayed** |
-| **Grouping** | `term_name`, `parent_series_id` | Semester/program grouping | Detail shows `term_name`; `parent_series_id` **not displayed** |
-| **Relationships** | `organizer_id`, `category_id`, `location_id` | Who/what/where | Cards (category + location name); detail (all) |
-| **SEO** | `meta_title`, `meta_description` | Page metadata | `<head>` tags only |
+#### Identity
 
-#### Series Type Values
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | UUID | auto | Primary key |
+| `title` | text | **yes** | Series name. Example: "Pottery 101 - 6 Week Class" |
+| `slug` | text | **yes** | URL-friendly version of title. Must be unique. |
+| `description` | text | no | Full description of the series. Shown in "About" section on detail page. |
+| `short_description` | text | no | One-line teaser. Used for SEO fallback. Max ~160 characters. |
+| `created_at` | timestamp | auto | When the row was created |
+| `updated_at` | timestamp | auto | When the row was last modified |
+| `published_at` | timestamp | no | When first published |
 
-| Type | Meaning | Example |
-|------|---------|---------|
-| `class` | Multi-session course | "Pottery 101 - 6 weeks" |
-| `camp` | Day camp or intensive | "Summer Art Camp" |
+#### Type
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `series_type` | text | **yes** | What kind of series. CHECK constraint enforced. See values below. |
+
+**Series type values:**
+
+| Value | Meaning | Example |
+|-------|---------|---------|
+| `class` | Multi-session educational course | "Pottery 101 - 6 weeks" |
+| `camp` | Day camp or intensive program | "Summer Art Camp" |
 | `workshop` | Workshop series | "Bread Baking - 3 sessions" |
 | `recurring` | Regular repeating event | "Weekly Jazz Jam" |
 | `festival` | Multi-day festival | "Summerfest" |
 | `season` | Performance season | "Symphony 2026 Season" |
 
-#### Attendance Mode Values
+#### Schedule
 
-| Mode | Meaning |
-|------|---------|
-| `registered` | Must sign up for the full series |
-| `drop_in` | Show up to any individual session |
-| `hybrid` | Register for full series or drop in |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `start_date` | date | no | First date of the series. Auto-set from generated events if not provided. |
+| `end_date` | date | no | Last date of the series. Auto-set from generated events. |
+| `total_sessions` | integer | no | Total number of sessions/events in the series. Auto-computed for camps/recurring. |
+| `sessions_remaining` | integer | no | How many sessions are still upcoming. Denormalized — maintained by app code. |
+| `recurrence_rule` | JSONB | no | Machine-readable recurrence pattern. See [Recurrence Rule](#recurrence-rule-format) below. |
 
-#### Skill Level Values
+**Recurrence rule format** (JSONB):
 
-| Level | Meaning |
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `frequency` | text | **yes** | `daily`, `weekly`, `biweekly`, `monthly`, `yearly` |
+| `interval` | integer | no | Every N frequency units. Default: `1`. Example: `2` with `weekly` = every 2 weeks. |
+| `days_of_week` | integer[] | no | Which days. `0`=Sunday, `1`=Monday, ..., `6`=Saturday. Example: `[1,3,5]` = Mon/Wed/Fri |
+| `day_of_month` | integer | no | For monthly: which day (1-31). |
+| `time` | text | no | Start time in `HH:MM` format. Example: `"19:00"` |
+| `duration_minutes` | integer | no | How long each session lasts. Example: `90` |
+| `end_type` | text | no | How the recurrence ends: `date`, `count`, or `never` |
+| `end_date` | text | no | Stop generating after this date (YYYY-MM-DD). Used when `end_type = 'date'`. |
+| `end_count` | integer | no | Stop after N occurrences. Used when `end_type = 'count'`. |
+
+#### Camp/class fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `attendance_mode` | text | no | How participants attend. Default: `registered`. CHECK constraint: `registered`, `drop_in`, `hybrid`. |
+| `skill_level` | text | no | Recommended experience level. CHECK constraint: `beginner`, `intermediate`, `advanced`, `all_levels`. Null if not applicable. |
+| `age_low` | integer | no | Minimum age for participants. Example: `6`. Null = no minimum. Shown as badge on cards. |
+| `age_high` | integer | no | Maximum age. Must be >= `age_low`. Example: `12`. Null = no maximum. |
+| `age_details` | text | no | Human-readable age notes. Example: "Must be potty-trained", "Ages 6-12, younger with parent" |
+| `days_of_week` | integer[] | no | Which days the series runs. `0`=Sun through `6`=Sat. Example: `{1,2,3,4,5}` = Mon-Fri. Shown on detail page. |
+
+**Attendance mode values:**
+
+| Value | Meaning | Card badge |
+|-------|---------|------------|
+| `registered` | Must sign up for the full series | (default, no badge) |
+| `drop_in` | Show up to any individual session | "Drop-in Welcome" |
+| `hybrid` | Register for series or drop in to sessions | "Register or Drop In" |
+
+**Skill level values:**
+
+| Value | Meaning |
 |-------|---------|
 | `beginner` | No experience needed |
 | `intermediate` | Some experience helpful |
 | `advanced` | Experienced practitioners |
 | `all_levels` | Open to everyone |
+
+#### Extended care (camps)
+
+For day camps that offer before-care and after-care.
+
+| Field | Type | Required | Description | Example |
+|-------|------|----------|-------------|---------|
+| `core_start_time` | time | no | Main program start time (HH:MM:SS). | `09:00:00` |
+| `core_end_time` | time | no | Main program end time. | `15:00:00` |
+| `extended_start_time` | time | no | Before-care/early drop-off start. Null = no before-care. If set, a "Extended Care" badge appears on cards. | `07:30:00` |
+| `extended_end_time` | time | no | After-care/late pickup end. Null = no after-care. | `17:30:00` |
+| `extended_care_details` | text | no | Human-readable care options and pricing. Example: "Before care 7:30-9am ($25/week). After care 3-5:30pm ($30/week)." |
+
+#### Pricing
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `price_type` | text | no | Same values as events: `free`, `fixed`, `range`, `varies`, `donation`, `per_session`. CHECK constraint. |
+| `price_low` | decimal | no | Lowest price. Same rules as events. |
+| `price_high` | decimal | no | Highest price. Same rules as events. |
+| `price_details` | text | no | Complex pricing text. Shown on detail page. |
+| `is_free` | boolean | auto | **Generated column** — `true` when `price_type = 'free'`. |
+| `per_session_price` | decimal | no | Drop-in / single-session price. Null = no drop-in option. Example: `15.00`. Shown on detail page as "Drop-in: $15/session". |
+| `materials_fee` | decimal | no | Separate materials/supply fee. Null = none. Example: `25.00`. Shown as "Materials fee: $25". |
+| `pricing_notes` | text | no | Discounts, early-bird rates, etc. Example: "10% sibling discount. Early bird ends May 1." |
+
+#### Registration
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `registration_url` | text | no | URL to register/sign up. Shown as the primary CTA button on the detail page. Button label adapts to attendance mode. |
+| `capacity` | integer | no | Maximum number of registrants. **Not currently displayed.** |
+| `waitlist_enabled` | boolean | no | Whether a waitlist is available when full. **Not currently displayed.** Default: `false` |
+
+#### Grouping
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `term_name` | text | no | Semester or session label for grouping. Example: "Fall 2026", "Summer Session A". Shown on detail page. |
+| `parent_series_id` | UUID FK | no | Links to another `series.id` for multi-week camp programs. Example: a 2-week camp has 2 child series (Week 1, Week 2) under one parent. **Not currently displayed.** |
+
+#### Relationships, status, engagement, SEO
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `organizer_id` | UUID FK | no | Links to `organizers.id` |
+| `category_id` | UUID FK | no | Links to `categories.id` |
+| `location_id` | UUID FK | no | Links to `locations.id` |
+| `status` | text | no | Same values and CHECK constraint as events. Default: `draft` |
+| `is_featured` | boolean | no | Featured on homepage. Default: `false` |
+| `featured_order` | integer | no | Sort position in featured section |
+| `heart_count` | integer | no | Denormalized save count. Default: `0` |
+| `view_count` | integer | no | Page view count. Default: `0` |
+| `enrollment_count` | integer | no | Number of registrants. Denormalized. Default: `0` |
+| `image_url` | text | no | Main series image |
+| `image_hosted` | boolean | no | Whether image is in Supabase Storage |
+| `image_storage_path` | text | no | Storage path for image |
+| `thumbnail_url` | text | no | Card thumbnail image |
+| `meta_title` | text | no | Custom SEO title. Falls back to `title`. |
+| `meta_description` | text | no | Custom SEO description. Falls back to `short_description`. |
+| `source` | text | no | Origin: `manual`, `scraper`, etc. Default: `manual` |
+| `source_url` | text | no | Original URL if imported |
 
 ---
 
@@ -173,146 +408,196 @@ Series cards display significantly more information than event cards — badges 
 
 Where events happen. Called "venues" in the UI but `locations` in the database.
 
-| Column Group | Fields | Purpose |
-|-------------|--------|---------|
-| **Identity** | `id`, `name`, `slug` | Unique ID and URL |
-| **Address** | `address_line`, `address_line_2`, `city`, `state`, `postal_code`, `country` | Physical address |
-| **Coordinates** | `latitude`, `longitude` | Map position |
-| **Type** | `venue_type` | Kind of location |
-| **Contact** | `website_url`, `phone` | Contact info |
-| **Google data** | `google_place_id`, `rating`, `review_count`, `working_hours`, `google_category` | Imported from Google Maps |
-| **Import** | `source`, `import_batch_id` | Where this venue record came from |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | UUID | auto | Primary key |
+| `name` | text | **yes** | Venue name. Example: "Pabst Theater" |
+| `slug` | text | **yes** | URL-friendly name. Must be unique. |
+| `description` | text | no | About the venue. |
+| `address_line` | text | no | Street address. Example: "144 E Wells St" |
+| `address_line_2` | text | no | Suite, floor, etc. |
+| `city` | text | **yes** | City name. Example: "Milwaukee" |
+| `state` | text | no | State abbreviation. Example: "WI" |
+| `postal_code` | text | no | ZIP code. Example: "53202" |
+| `country` | text | no | Country code. Default: `US` |
+| `latitude` | decimal | no | GPS latitude for map display. Example: `43.0389` |
+| `longitude` | decimal | no | GPS longitude. Example: `-87.9065` |
+| `venue_type` | text | no | Kind of location. Default: `venue`. CHECK constraint enforced. See values below. |
+| `website_url` | text | no | Venue's website. |
+| `phone` | text | no | Contact phone number. |
+| `image_url` | text | no | Venue hero image. |
+| `google_place_id` | text | no | Google Maps Place ID for dedup and data enrichment. Example: `ChIJ...` |
+| `rating` | decimal | no | Google Maps rating (1.0–5.0). Imported, not user-generated. |
+| `review_count` | integer | no | Number of Google reviews. |
+| `working_hours` | JSONB | no | Business hours from Google Maps. |
+| `google_category` | text | no | Google Maps classification (e.g., "Music venue"). **Not related to the `categories` table.** |
+| `source` | text | **yes** | Where this record came from. Default: `manual`. CHECK constraint: `manual`, `scraper`, `csv_import`, `user_submitted`, `api`. |
+| `import_batch_id` | text | no | Batch ID if imported via CSV or bulk load. |
+| `is_active` | boolean | no | Whether to show in the UI and venue search. Default: `true` |
+| `meta_title` | text | no | Custom SEO title. |
+| `meta_description` | text | no | Custom SEO description. |
+| `created_at` | timestamp | auto | Row creation time |
+| `updated_at` | timestamp | auto | Last modification time |
 
-**Note:** The `google_category` column holds a Google Maps classification (e.g., "Music venue", "Restaurant"). This is NOT related to the `categories` table, which holds Happenlist's own event taxonomy.
+**Venue type values:**
 
-#### Venue Type Values
-
-| Type | Meaning |
-|------|---------|
-| `venue` | Fixed location (theater, club, studio) |
-| `outdoor` | Parks, outdoor spaces |
-| `online` | Virtual/online events |
-| `various` | Multiple or varying locations |
-| `tbd` | Location to be announced |
-| `entertainment` | Entertainment venues (theaters, cinemas, bowling) |
-| `arts` | Arts & culture venues (galleries, museums) |
-| `sports` | Sports facilities (gyms, stadiums, fields) |
-| `restaurant` | Restaurants, bars, cafes |
-| `community` | Community centers, libraries, churches |
-| `education` | Schools, universities, training centers |
+| Value | Meaning | When to use |
+|-------|---------|-------------|
+| `venue` | General fixed location | Default catch-all for theaters, clubs, studios |
+| `outdoor` | Parks, outdoor spaces | Clearly outdoor-primary venues |
+| `online` | Virtual/online events | No physical location |
+| `various` | Multiple or varying locations | Roaming or pop-up events |
+| `tbd` | Location to be announced | Venue not yet confirmed |
+| `entertainment` | Theaters, cinemas, bowling | Entertainment-primary venues |
+| `arts` | Galleries, museums | Arts/culture-primary venues |
+| `sports` | Gyms, stadiums, fields | Sports-primary venues |
+| `restaurant` | Restaurants, bars, cafes | Food/drink-primary venues |
+| `community` | Community centers, libraries, churches | Community-use-primary |
+| `education` | Schools, universities | Education-primary venues |
 
 ---
 
 ### 4. organizers (who runs events)
 
-| Field | Purpose |
-|-------|---------|
-| `id`, `name`, `slug` | Unique ID and URL |
-| `description` | About the organizer |
-| `logo_url` | Organizer logo |
-| `website_url`, `email`, `phone` | Contact info |
-| `social_links` | JSON: `{facebook, instagram, twitter, ...}` |
-| `is_verified` | Admin-verified organizer |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | UUID | auto | Primary key |
+| `name` | text | **yes** | Organizer name. Example: "Milwaukee Jazz Collective" |
+| `slug` | text | **yes** | URL-friendly name. Must be unique. |
+| `description` | text | no | About the organizer. Shown on organizer detail page and in event detail "About the Organizer" section. |
+| `logo_url` | text | no | URL to organizer logo image. |
+| `website_url` | text | no | Organizer's website. |
+| `email` | text | no | Contact email. |
+| `phone` | text | no | Contact phone. |
+| `social_links` | JSONB | no | Social media URLs. Shape: `{ facebook?: string, instagram?: string, twitter?: string, youtube?: string, tiktok?: string }` |
+| `is_verified` | boolean | no | Whether an admin has verified this organizer profile. Default: `false` |
+| `is_active` | boolean | no | Whether to show in the UI. Default: `true` |
+| `meta_title` | text | no | Custom SEO title. |
+| `meta_description` | text | no | Custom SEO description. |
+| `created_at` | timestamp | auto | Row creation time |
+| `updated_at` | timestamp | auto | Last modification time |
 
 ---
 
 ### 5. categories (event types)
 
-Static lookup table. Rarely changes.
+Static lookup table. Rarely changes. Managed directly in Supabase.
 
-| Field | Purpose |
-|-------|---------|
-| `id`, `name`, `slug` | Unique ID and URL |
-| `icon` | Display icon name |
-| `sort_order` | Display order in filters |
-| `is_active` | Whether to show in UI |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | UUID | auto | Primary key |
+| `name` | text | **yes** | Display name. Example: "Music" |
+| `slug` | text | **yes** | URL-friendly name for filter params. Example: `music` |
+| `description` | text | no | What this category covers. |
+| `icon` | text | no | Lucide React icon name for display. Example: `Music`, `Palette`, `GraduationCap` |
+| `color` | text | no | Tailwind color class for badge styling. |
+| `sort_order` | integer | no | Display order in filter dropdowns and grids. Lower = first. Default: `0` |
+| `is_active` | boolean | no | Whether to show in the UI. Inactive categories are hidden from filters but existing events keep their category. Default: `true` |
+| `created_at` | timestamp | auto | Row creation time |
+| `updated_at` | timestamp | auto | Last modification time |
 
 ---
 
 ### 6. hearts (saved events)
 
-Users "heart" (save/like) events. One row per user-event pair.
+Users "heart" (save/favorite) events. One row per user-event pair.
 
-| Field | Purpose |
-|-------|---------|
-| `user_id` | Who hearted it |
-| `event_id` | Which event |
-| `created_at` | When they saved it |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | UUID | auto | Primary key |
+| `user_id` | UUID FK | **yes** | Links to `auth.users.id`. The user who saved it. |
+| `event_id` | UUID FK | **yes** | Links to `events.id`. The event that was saved. |
+| `created_at` | timestamp | auto | When the user hearted the event. |
 
-Constraint: unique on `(user_id, event_id)` — can't heart the same event twice.
+**Constraints:** Unique on `(user_id, event_id)` — a user can't heart the same event twice.
 
 ---
 
 ### 7. user_follows (following entities)
 
-Users follow organizers, venues, or categories to get updates.
+Users follow organizers, venues, or categories to get notified about new events. Polymorphic — `entity_type` determines which table `entity_id` references.
 
-| Field | Purpose |
-|-------|---------|
-| `user_id` | Who is following |
-| `entity_type` | What they're following: `organizer`, `venue`, or `category` |
-| `entity_id` | UUID of the followed entity |
-| `notify_new_events` | Get notified about new events? |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | UUID | auto | Primary key |
+| `user_id` | UUID FK | **yes** | Links to `auth.users.id`. |
+| `entity_type` | text | **yes** | What they're following. **Values:** `organizer`, `venue`, `category` |
+| `entity_id` | UUID | **yes** | UUID of the followed entity (from `organizers`, `locations`, or `categories`). |
+| `notify_new_events` | boolean | no | Whether to send notifications when the followed entity has new events. Default: `true` |
+| `created_at` | timestamp | auto | When the follow was created. |
 
-Constraint: unique on `(user_id, entity_type, entity_id)`.
+**Constraints:** Unique on `(user_id, entity_type, entity_id)` — can't follow the same thing twice.
 
 ---
 
 ### 8. profiles (user preferences)
 
-One profile per user, auto-created on sign-up.
+One profile per user, auto-created on sign-up via Supabase trigger.
 
-| Field | Purpose |
-|-------|---------|
-| `id` | Matches `auth.users.id` |
-| `display_name` | Shown in UI |
-| `email_notifications` | Receive email alerts |
-| `email_weekly_digest` | Receive weekly digest |
-| `timezone` | For displaying event times |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | UUID | **yes** | Primary key. Matches `auth.users.id` (1:1 relationship). |
+| `display_name` | text | no | User's display name. Shown in the UI (e.g., submission attribution). |
+| `email` | text | no | User's email address. Synced from auth. |
+| `avatar_url` | text | no | URL to profile avatar image. |
+| `email_notifications` | boolean | no | Whether to receive email alerts (follows, event updates). Default: `true` |
+| `email_weekly_digest` | boolean | no | Whether to receive the weekly events digest email. Default: `false` |
+| `timezone` | text | no | IANA timezone for displaying event times. Default: `America/Chicago` |
+| `created_at` | timestamp | auto | When the profile was created. |
+| `updated_at` | timestamp | auto | When last modified. |
 
 ---
 
 ### 9. event_drafts (in-progress submissions)
 
-Stores partially-completed event submissions. Auto-expires after 30 days.
+Stores partially-completed event submissions from the 7-step form. Auto-expires after 30 days.
 
-| Field | Purpose |
-|-------|---------|
-| `user_id`, `user_email` | Who is drafting |
-| `draft_data` | JSONB with partial event fields |
-| `series_draft_data` | JSONB with partial series fields (if creating a series) |
-| `current_step` | Which form step they're on (1-7) |
-| `completed_steps` | Array of completed step numbers |
-| `submitted_event_id` | Links to the created event (after submission) |
-| `expires_at` | Auto-cleanup date |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | UUID | auto | Primary key |
+| `user_id` | UUID FK | **yes** | Links to `auth.users.id`. Who is drafting. |
+| `user_email` | text | **yes** | Submitter's email (denormalized for quick display). |
+| `user_name` | text | no | Submitter's display name. |
+| `draft_data` | JSONB | no | Partial event fields saved at each form step. Shape matches `EventDraftData` in `types/submission.ts`. |
+| `series_draft_data` | JSONB | no | Partial series fields if the user is creating a new series alongside the event. Shape matches `SeriesDraftData`. |
+| `current_step` | integer | no | Which form step the user is currently on (1–7). |
+| `completed_steps` | integer[] | no | Array of step numbers the user has completed. Example: `{1, 2, 3}` |
+| `submitted_event_id` | UUID FK | no | Links to `events.id` after the draft is submitted. Null while still in draft. |
+| `expires_at` | timestamp | **yes** | Auto-cleanup date. Set to 30 days from creation. Expired drafts can be purged. |
+| `created_at` | timestamp | auto | When the draft was started. |
+| `updated_at` | timestamp | auto | When last saved. |
 
 ---
 
 ### 10. organizer_users (organizer claims)
 
-Junction table linking users to organizers they manage.
+Junction table linking users to the organizer profiles they manage. Supports team access.
 
-| Field | Purpose |
-|-------|---------|
-| `user_id` | The user |
-| `organizer_id` | The organizer profile |
-| `role` | `member` or `admin` |
-| `status` | `pending`, `verified`, or `rejected` |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | UUID | auto | Primary key |
+| `user_id` | UUID FK | **yes** | Links to `auth.users.id`. |
+| `organizer_id` | UUID FK | **yes** | Links to `organizers.id`. |
+| `role` | text | **yes** | User's role on the organizer team. **Values:** `member` (can view), `admin` (can edit events). |
+| `status` | text | **yes** | Claim verification status. **Values:** `pending` (awaiting admin approval), `verified` (approved), `rejected`. |
+| `created_at` | timestamp | auto | When the claim was made. |
 
 ---
 
 ### 11. admin_audit_log (activity tracking)
 
-Every admin action is logged here.
+Every admin action is logged here. Append-only — rows are never updated or deleted.
 
-| Field | Purpose |
-|-------|---------|
-| `action` | What happened: `event_approved`, `event_rejected`, etc. |
-| `entity_type` | What type: `event`, `series`, `organizer` |
-| `entity_id` | Which entity |
-| `admin_email` | Who did it |
-| `changes` | JSONB diff of what changed |
-| `notes` | Admin's notes |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | UUID | auto | Primary key |
+| `action` | text | **yes** | What happened. Examples: `event_approved`, `event_rejected`, `event_changes_requested`, `event_deleted`, `event_resubmitted`, `event_edited` |
+| `entity_type` | text | **yes** | What kind of thing was acted on. **Values:** `event`, `series`, `organizer` |
+| `entity_id` | UUID | **yes** | Which specific entity. Links to `events.id`, `series.id`, or `organizers.id`. |
+| `admin_email` | text | **yes** | Email of the admin who performed the action. |
+| `changes` | JSONB | no | Diff of what changed. Shape: `{ field: { old: value, new: value } }` |
+| `notes` | text | no | Free-text admin notes explaining the action. |
+| `created_at` | timestamp | auto | When the action happened. |
 
 ---
 
