@@ -22,6 +22,7 @@ import { MapPin } from 'lucide-react';
 import { buildEventUrl } from '@/lib/utils/url';
 import { cn } from '@/lib/utils';
 import { EventImage } from './event-image';
+import { HeartButtonCompact } from '@/components/hearts';
 import type { EventCard as EventCardType } from '@/types';
 
 // =============================================================================
@@ -185,6 +186,17 @@ function EventCardComponent({
               </span>
             </div>
           )}
+
+          {/* Heart button - overlaid on image */}
+          <div className={cn(
+            'absolute z-10',
+            showSeriesBadge && event.is_series_instance ? 'top-10 right-3' : 'top-3 right-3'
+          )}>
+            <HeartButtonCompact
+              eventId={event.id}
+              className="bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white/95"
+            />
+          </div>
         </div>
 
         {/* ---------------------------------------------------------------- */}
