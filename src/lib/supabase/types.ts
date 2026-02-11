@@ -1060,4 +1060,10 @@ export type VenueType =
   | 'outdoor'
   | 'online'
   | 'various'
-  | 'tbd';
+  | 'tbd'
+  | 'entertainment'
+  | 'arts'
+  | 'sports'
+  | 'restaurant'
+  | 'community'
+  | 'education';

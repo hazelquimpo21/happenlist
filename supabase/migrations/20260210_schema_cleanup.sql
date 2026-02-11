@@ -95,7 +95,8 @@ ALTER TABLE series ADD CONSTRAINT series_price_type_check
 -- locations.venue_type
 ALTER TABLE locations ADD CONSTRAINT locations_venue_type_check
   CHECK (venue_type IN (
-    'venue', 'outdoor', 'online', 'various', 'tbd'
+    'venue', 'outdoor', 'online', 'various', 'tbd',
+    'entertainment', 'arts', 'sports', 'restaurant', 'community', 'education'
   ));
 
 
