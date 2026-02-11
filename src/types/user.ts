@@ -235,10 +235,13 @@ export interface HeartedEvent {
   price_low: number | null;
   price_high: number | null;
   status: string;
+  heart_count: number;
   category_name: string | null;
   category_slug: string | null;
   location_name: string | null;
   location_city: string | null;
+  organizer_name: string | null;
+  organizer_slug: string | null;
 }
 
 // ============================================================================

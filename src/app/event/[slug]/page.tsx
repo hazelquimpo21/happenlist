@@ -30,10 +30,12 @@ import {
 import { Container, Breadcrumbs } from '@/components/layout';
 import { Button, Badge } from '@/components/ui';
 import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox } from '@/components/events';
+import { HeartButton } from '@/components/hearts';
 import { EventJsonLd } from '@/components/seo';
 import { AdminToolbar, type AdminToolbarEvent } from '@/components/admin-anywhere';
 import { VenueMap } from '@/components/maps';
 import { getEvent, getEvents } from '@/data/events';
+import { checkSingleHeart } from '@/data/user';
 import { getSession, isSuperAdmin } from '@/lib/auth';
 import { parseEventSlug, buildVenueUrl, buildOrganizerUrl, getBestImageUrl } from '@/lib/utils';
 import { formatEventDate } from '@/lib/utils/dates';
@@ -121,11 +123,14 @@ export default async function EventPage({ params }: EventPageProps) {
     console.log('🛡️ [EventPage] Superadmin detected, showing admin toolbar');
   }
 
-  // Fetch related events (same category)
-  const { events: relatedEvents } = await getEvents({
-    excludeEventId: event.id,
-    limit: 4,
-  });
+  // Fetch related events and heart status in parallel
+  const [{ events: relatedEvents }, isHearted] = await Promise.all([
+    getEvents({
+      excludeEventId: event.id,
+      limit: 4,
+    }),
+    session ? checkSingleHeart(session.id, event.id) : Promise.resolve(false),
+  ]);
 
   console.log('✅ [EventPage] Event loaded:', event.title);
 
@@ -473,10 +478,19 @@ export default async function EventPage({ params }: EventPageProps) {
               />
             )}
 
-            {/* Share button (placeholder) */}
-            <Button variant="ghost" fullWidth leftIcon={<Share2 className="w-4 h-4" />}>
-              Share Event
-            </Button>
+            {/* Save & Share buttons */}
+            <div className="flex gap-3">
+              <HeartButton
+                eventId={event.id}
+                initialHearted={isHearted}
+                initialCount={event.heart_count ?? 0}
+                size="lg"
+                className="flex-1 bg-warm-white border border-sand hover:border-coral/30"
+              />
+              <Button variant="ghost" className="flex-1" leftIcon={<Share2 className="w-4 h-4" />}>
+                Share
+              </Button>
+            </div>
           </div>
         </div>
       </div>
