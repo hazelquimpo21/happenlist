@@ -18,7 +18,7 @@
 
 import { memo } from 'react';
 import Link from 'next/link';
-import { MapPin } from 'lucide-react';
+import { MapPin, Baby, Users } from 'lucide-react';
 import { buildEventUrl } from '@/lib/utils/url';
 import { cn } from '@/lib/utils';
 import { EventImage } from './event-image';
@@ -224,6 +224,24 @@ function EventCardComponent({
               <MapPin className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
               <span className="truncate">{event.location_name}</span>
             </p>
+          )}
+
+          {/* Age / audience badges */}
+          {(event.age_restriction || event.is_family_friendly) && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {event.age_restriction && (
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                  <Baby className="w-3 h-3" aria-hidden="true" />
+                  {event.age_restriction}
+                </span>
+              )}
+              {event.is_family_friendly && (
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                  <Users className="w-3 h-3" aria-hidden="true" />
+                  Family Friendly
+                </span>
+              )}
+            </div>
           )}
 
           {/* Price */}

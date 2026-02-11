@@ -105,6 +105,8 @@ interface ScraperEventInput {
   } | null;
 
   // -- Age/audience (optional) --
+  age_low?: number | null;
+  age_high?: number | null;
   age_restriction?: string | null;
   is_family_friendly?: boolean | null;
 
@@ -225,6 +227,8 @@ export async function POST(request: NextRequest) {
       instagram_url: body.instagram_url || null,
       facebook_url: body.facebook_url || null,
       registration_url: body.registration_url || null,
+      age_low: body.age_low ?? null,
+      age_high: body.age_high ?? null,
       age_restriction: body.age_restriction || null,
       is_family_friendly: body.is_family_friendly ?? null,
       status: 'pending_review',
@@ -301,6 +305,10 @@ export async function GET() {
       category_slug: 'string — e.g. "music", "art"',
       end_datetime: 'string (ISO 8601)',
       image_url: 'string — Supabase CDN URL after uploading via /api/images/upload',
+      age_low: 'number — minimum age (e.g. 21)',
+      age_high: 'number — maximum age (e.g. 65)',
+      age_restriction: 'string — human-readable age note (e.g. "21+", "All ages")',
+      is_family_friendly: 'boolean — whether suitable for families/children',
     },
     location_options: [
       'location_id: UUID of existing venue',

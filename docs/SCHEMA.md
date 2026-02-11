@@ -172,10 +172,10 @@ Events have three image slots. Each slot has a primary URL plus tracking fields 
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `age_low` | integer | no | Minimum age. Example: `21` for a bar show. **Not currently displayed on events** (only on series). |
-| `age_high` | integer | no | Maximum age. Must be >= `age_low` if both set. **Not currently displayed on events.** |
-| `age_restriction` | text | no | Human-readable age note. Example: "21+", "All ages", "Parental guidance suggested". **Not currently displayed.** |
-| `is_family_friendly` | boolean | no | Whether the event is suitable for families/children. **Not currently displayed.** |
+| `age_low` | integer | no | Minimum age. Example: `21` for a bar show. Shown on event detail page sidebar (as "Ages 21+") and on cards if `age_restriction` is set. |
+| `age_high` | integer | no | Maximum age. Must be >= `age_low` if both set. Shown on event detail page sidebar (as "Ages 6-12"). |
+| `age_restriction` | text | no | Human-readable age note. Example: "21+", "All ages", "Parental guidance suggested". Shown as orange badge on event cards and in sidebar on detail page. |
+| `is_family_friendly` | boolean | no | Whether the event is suitable for families/children. Shown as green "Family Friendly" badge on event cards and in sidebar on detail page. |
 
 #### Status & featuring
 
@@ -678,7 +678,7 @@ The `source` field on events tracks where the event came from. Current values us
 | `api` | Created via API |
 | `import` | Bulk imported |
 
-**Note:** This field does not currently have a CHECK constraint. The `source_url` field stores the original URL the event was scraped/imported from.
+**Note:** A CHECK constraint was added in migration `20260211`. The `source_url` field stores the original URL the event was scraped/imported from.
 
 ### Dropped legacy columns (migration `20260211`)
 
@@ -694,13 +694,8 @@ These columns were removed from the database. Listed here for historical referen
 
 ### Unused fields on events (exist but not displayed)
 
-These fields have data in the database but are **never shown in the public frontend**. They may still be useful for future features:
-
 | Column | Status | Notes |
 |--------|--------|-------|
-| `age_restriction` | **Not displayed** | Only `age_low`/`age_high` on series are shown. This text field on events is never rendered. |
-| `is_family_friendly` | **Not displayed** | Exists in DB but no UI shows it. Could be a useful filter or badge but isn't implemented. |
-| `age_low`, `age_high` (on events) | **Not displayed** | Series cards/pages show age ranges, but event cards/pages do not. |
 | `view_count` | **Not displayed** | Tracked in DB but never shown to users (heart_count IS shown). |
 
 ### Unused fields on series
@@ -791,7 +786,9 @@ Content-Type: application/json
 | `price_details` | string | Complex pricing text |
 | `category_slug` | string | e.g. `"music"`, `"art"` — looked up automatically |
 | `website_url` | string | Event's external page |
-| `age_restriction` | string | e.g. `"21+"` |
+| `age_low` | number | Minimum age (e.g. `21`) |
+| `age_high` | number | Maximum age (e.g. `65`) |
+| `age_restriction` | string | Human-readable age note, e.g. `"21+"`, `"All ages"` |
 | `is_family_friendly` | boolean | Family-friendly flag |
 
 **Location — provide one of:**
@@ -827,6 +824,8 @@ The API auto-matches by name (case-insensitive), then creates a new organizer.
   "price_low": 15,
   "price_high": 50,
   "price_details": "General $15-30, VIP $50",
+  "age_restriction": "21+",
+  "is_family_friendly": false,
   "category_slug": "music",
   "location": {
     "name": "Pabst Theater",
@@ -935,15 +934,14 @@ Or for base64 (captured directly by the extension):
 - **Added `EventSource` type** to `types.ts` (was imported but never defined).
 - **Created `/api/scraper/events`** endpoint — Chrome extension no longer needs direct DB access.
 
-### Remaining: Decide on age/family fields for events
+### Done: Age/family fields on events
 
-Events have `age_low`, `age_high`, `age_restriction`, and `is_family_friendly` — but none are displayed on event cards or event detail pages. Only series pages show age info. Options:
+All four age/audience fields are now displayed:
 
-- **Option A: Display them.** Add age badges and a family-friendly indicator to event detail pages (and optionally cards). Useful for standalone events like 21+ bar shows or family festivals.
-- **Option B: Remove from events, keep on series.** If age restrictions only matter for camps/classes, drop the event-level columns.
-- **Option C: Leave as-is.** Keep for future use but note they're not displayed yet.
-
-**Recommendation:** Option A for `age_restriction` and `is_family_friendly` — these are useful for standalone events. The `age_low`/`age_high` numeric fields make more sense on series (camps for ages 6-12) than on individual events.
+- **Event detail page sidebar:** Shows `age_low`/`age_high` (via `formatAgeRange()`), `age_restriction` (as text), and `is_family_friendly` (green label with icon). Uses Baby and Users icons.
+- **Event cards:** `age_restriction` shown as orange badge, `is_family_friendly` shown as green "Family Friendly" badge.
+- **Scraper API:** Accepts `age_low`, `age_high`, `age_restriction`, and `is_family_friendly`.
+- **EventCard type:** Updated to include `age_restriction` and `is_family_friendly`.
 
 ### Remaining: Clean up `venue_type` taxonomy
 
