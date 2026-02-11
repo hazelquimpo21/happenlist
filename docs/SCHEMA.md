@@ -73,25 +73,27 @@ When exporting events as a CSV, each row is one event. Related data (category, v
 
 Every row is one event on one date.
 
-| Column Group | Fields | Purpose |
-|-------------|--------|---------|
-| **Identity** | `id`, `title`, `slug` | Unique ID and URL-friendly slug |
-| **Description** | `description`, `short_description`, `happenlist_summary`, `organizer_description` | Text content (see [Description Fields](#description-fields-on-events)) |
-| **When** | `start_datetime`, `end_datetime`, `instance_date`, `is_all_day`, `timezone` | Date/time info |
-| **Where** | `location_id` (FK) | Links to venues table |
-| **Who** | `organizer_id` (FK) | Links to organizers table |
-| **What kind** | `category_id` (FK) | Links to categories table |
-| **Series** | `series_id` (FK), `series_sequence`, `is_series_instance` | Links to series table |
-| **Pricing** | `price_type`, `price_low`, `price_high`, `price_details`, `is_free` (generated), `ticket_url` | Cost info |
-| **Images** | `image_url`, `thumbnail_url`, `flyer_url` + hosted/storage variants | Visual assets |
-| **Links** | `website_url`, `instagram_url`, `facebook_url`, `registration_url` | External URLs |
-| **Age** | `age_low`, `age_high`, `age_restriction`, `is_family_friendly` | Audience restrictions |
-| **Status** | `status`, `is_featured`, `featured_order` | Publication state |
-| **Submission** | `submitted_by_email`, `submitted_by_name`, `submitted_at`, `source`, `source_url` | Who submitted it (see [Source Values](#source-values)) |
-| **Review** | `reviewed_at`, `reviewed_by`, `review_notes`, `rejection_reason`, `change_request_message` | Admin review |
-| **Editing** | `last_edited_at`, `last_edited_by`, `edit_count` | Edit history |
-| **Soft delete** | `deleted_at`, `deleted_by`, `delete_reason` | Trash (not permanently deleted) |
-| **Engagement** | `heart_count`, `view_count` | Popularity metrics |
+| Column Group | Fields | Purpose | Frontend Status |
+|-------------|--------|---------|-----------------|
+| **Identity** | `id`, `title`, `slug` | Unique ID and URL-friendly slug | Cards + detail + admin |
+| **Description** | `description`, `short_description`, `happenlist_summary`, `organizer_description` | Text content (see [Description Fields](#description-fields-on-events)) | Detail page only (cards show none) |
+| **When** | `start_datetime`, `end_datetime`, `instance_date`, `is_all_day`, `timezone` | Date/time info | Cards + detail + admin |
+| **Where** | `location_id` (FK) | Links to venues table | Cards show name; detail shows full address + map |
+| **Who** | `organizer_id` (FK) | Links to organizers table | Detail page only |
+| **What kind** | `category_id` (FK) | Links to categories table | Cards (badge) + detail + filters |
+| **Series** | `series_id` (FK), `series_sequence`, `is_series_instance` | Links to series table | Cards (badge); detail (admin toolbar) |
+| **Pricing** | `price_type`, `price_low`, `price_high`, `price_details`, `is_free` (generated), `ticket_url` | Cost info | Cards show price; detail adds `price_details` + ticket button |
+| **Images** | `image_url`, `thumbnail_url`, `flyer_url` + hosted/storage variants | Visual assets | Cards use `image_url`→`thumbnail_url` fallback; detail shows hero + flyer |
+| **Links** | `website_url`, `instagram_url`, `facebook_url`, `registration_url` | External URLs | Detail page sidebar only |
+| **Age** | `age_low`, `age_high`, `age_restriction`, `is_family_friendly` | Audience restrictions | **Not displayed on events** (only on series cards/pages). See [Cleanup Recommendations](#cleanup-recommendations) |
+| **Status** | `status`, `is_featured`, `featured_order` | Publication state | Admin pages; filters queries |
+| **Submission** | `submitted_by_email`, `submitted_by_name`, `submitted_at`, `source`, `source_url` | Who submitted it (see [Source Values](#source-values)) | Admin pages only |
+| **Review** | `reviewed_at`, `reviewed_by`, `review_notes`, `rejection_reason`, `change_request_message` | Admin review | Admin pages only |
+| **Editing** | `last_edited_at`, `last_edited_by`, `edit_count` | Edit history | Admin pages only |
+| **Soft delete** | `deleted_at`, `deleted_by`, `delete_reason` | Trash (not permanently deleted) | Filters queries (never shown) |
+| **Engagement** | `heart_count`, `view_count` | Popularity metrics | Heart button on cards + detail |
+| **SEO** | `meta_title`, `meta_description` | Page metadata | `<head>` tags only (never visible in UI) |
+| **Legacy** | `event_type`, `recurrence_parent_id`, `is_recurrence_template`, `on_sale_date` | See [Unused columns](#unusedlegacy-columns-on-events) | **Dead — not used anywhere** |
 
 #### Event Status Values
 
@@ -122,17 +124,20 @@ Every row is one event on one date.
 
 A series groups multiple events together. Not every event is in a series — standalone events have `series_id = NULL`.
 
-| Column Group | Fields | Purpose |
-|-------------|--------|---------|
-| **Identity** | `id`, `title`, `slug` | Unique ID and URL |
-| **Type** | `series_type` | What kind of series |
-| **Schedule** | `start_date`, `end_date`, `total_sessions`, `sessions_remaining`, `recurrence_rule` | When it runs |
-| **Camp/Class** | `attendance_mode`, `skill_level`, `age_low`, `age_high`, `days_of_week` | Camp/class-specific |
-| **Extended care** | `core_start_time`, `core_end_time`, `extended_start_time`, `extended_end_time`, `extended_care_details` | Before/after care for camps |
-| **Pricing** | `price_type`, `price_low`, `price_high`, `per_session_price`, `materials_fee`, `pricing_notes` | Cost details |
-| **Registration** | `registration_url`, `capacity`, `waitlist_enabled`, `attendance_mode` | Sign-up info |
-| **Grouping** | `term_name`, `parent_series_id` | Semester/program grouping |
-| **Relationships** | `organizer_id`, `category_id`, `location_id` | Who/what/where |
+Series cards display significantly more information than event cards — badges for attendance mode, age range, skill level, and extended care are all visible at a glance.
+
+| Column Group | Fields | Purpose | Frontend Status |
+|-------------|--------|---------|-----------------|
+| **Identity** | `id`, `title`, `slug` | Unique ID and URL | Cards + detail |
+| **Type** | `series_type` | What kind of series | Cards (badge) + detail + filters |
+| **Schedule** | `start_date`, `end_date`, `total_sessions`, `sessions_remaining`, `recurrence_rule` | When it runs | Cards (date range, session count) + detail |
+| **Camp/Class** | `attendance_mode`, `skill_level`, `age_low`, `age_high`, `days_of_week` | Camp/class-specific | Cards (all shown as badges) + detail + filters |
+| **Extended care** | `core_start_time`, `core_end_time`, `extended_start_time`, `extended_end_time`, `extended_care_details` | Before/after care for camps | Cards (`has_extended_care` badge); detail (times + callout box) |
+| **Pricing** | `price_type`, `price_low`, `price_high`, `per_session_price`, `materials_fee`, `pricing_notes` | Cost details | Cards (price range); detail (all pricing fields shown) |
+| **Registration** | `registration_url`, `capacity`, `waitlist_enabled` | Sign-up info | Detail page CTA button; `capacity`/`waitlist_enabled` **not displayed** |
+| **Grouping** | `term_name`, `parent_series_id` | Semester/program grouping | Detail shows `term_name`; `parent_series_id` **not displayed** |
+| **Relationships** | `organizer_id`, `category_id`, `location_id` | Who/what/where | Cards (category + location name); detail (all) |
+| **SEO** | `meta_title`, `meta_description` | Page metadata | `<head>` tags only |
 
 #### Series Type Values
 
@@ -401,6 +406,25 @@ These columns exist in the database but are **not used by the application**. The
 | `is_recurrence_template` | Mark an event as a recurrence template | Replaced by the series system |
 | `on_sale_date` | When tickets go on sale | Never implemented in the UI |
 
+### Unused fields on events (exist but not displayed)
+
+These fields have data in the database but are **never shown in the public frontend**. They may still be useful for future features:
+
+| Column | Status | Notes |
+|--------|--------|-------|
+| `age_restriction` | **Not displayed** | Only `age_low`/`age_high` on series are shown. This text field on events is never rendered. |
+| `is_family_friendly` | **Not displayed** | Exists in DB but no UI shows it. Could be a useful filter or badge but isn't implemented. |
+| `age_low`, `age_high` (on events) | **Not displayed** | Series cards/pages show age ranges, but event cards/pages do not. |
+| `view_count` | **Not displayed** | Tracked in DB but never shown to users (heart_count IS shown). |
+
+### Unused fields on series
+
+| Column | Status | Notes |
+|--------|--------|-------|
+| `parent_series_id` | **Not displayed** | Self-referencing FK for grouping series into programs. Schema supports it but no UI renders it. |
+| `capacity` | **Not displayed** | Exists in DB, never shown in cards or detail pages. |
+| `waitlist_enabled` | **Not displayed** | Same — exists but not surfaced. |
+
 ### Venue type ambiguity
 
 The `venue_type` values mix two concepts: **physical type** (`venue`, `outdoor`, `online`, `various`, `tbd`) and **domain/purpose** (`entertainment`, `arts`, `sports`, `restaurant`, `community`, `education`). In practice:
@@ -490,3 +514,82 @@ INSERT INTO events (
   'https://your-project.supabase.co/storage/v1/...', true, 'events/abc/flyer_123.jpg'
 )
 ```
+
+---
+
+## Cleanup Recommendations
+
+Prioritized list of schema issues to address. None are urgent — the app works fine — but cleaning these up will make the data model easier to understand for admins, the Chrome extension, and future development.
+
+### Priority 1: Drop dead columns (migration)
+
+These columns are not read or written by any code. Dropping them removes noise for anyone looking at the schema.
+
+```sql
+-- Cleanup migration: drop unused legacy columns
+ALTER TABLE events DROP COLUMN IF EXISTS event_type;
+ALTER TABLE events DROP COLUMN IF EXISTS recurrence_parent_id;
+ALTER TABLE events DROP COLUMN IF EXISTS is_recurrence_template;
+ALTER TABLE events DROP COLUMN IF EXISTS on_sale_date;
+```
+
+**Risk:** Very low. No code references these columns. Verify with `grep -r "event_type\|recurrence_parent_id\|is_recurrence_template\|on_sale_date" src/` first — only hits should be in the generated `types.ts` file (which gets updated after migration).
+
+### Priority 2: Add CHECK constraint on `events.source`
+
+Every other enum column has a CHECK constraint. `source` is the exception.
+
+```sql
+ALTER TABLE events ADD CONSTRAINT events_source_check
+  CHECK (source IN ('manual', 'scraper', 'user_submission', 'api', 'import'));
+```
+
+### Priority 3: Decide on age/family fields for events
+
+Events have `age_low`, `age_high`, `age_restriction`, and `is_family_friendly` — but none are displayed on event cards or event detail pages. Only series pages show age info. Options:
+
+- **Option A: Display them.** Add age badges and a family-friendly indicator to event detail pages (and optionally cards). This is useful if single events (not just series) have age restrictions (like 21+ bar shows).
+- **Option B: Remove from events, keep on series.** If age restrictions only apply to series (camps/classes), drop the event-level columns to reduce confusion. Move `age_restriction` usage to a text note in `description`.
+- **Option C: Leave as-is.** Keep the columns for future use but document that they're not displayed yet.
+
+**Recommendation:** Option A for `age_restriction` and `is_family_friendly` specifically — these are useful for standalone events (bar shows, family festivals). The `age_low`/`age_high` numeric fields make more sense on series (camps for ages 6-12) than on individual events.
+
+### Priority 4: Clean up `venue_type` taxonomy
+
+The current enum mixes physical types and domain purposes. A cleaner approach (if worth the migration effort):
+
+```
+Physical: venue | outdoor | online | various | tbd
+Domain:   entertainment | arts | sports | restaurant | community | education
+```
+
+Two options:
+- **Split into two columns:** `venue_type` (physical) + `venue_domain` (purpose). More precise, more complex.
+- **Collapse to fewer values:** Keep `outdoor`, `online`, `various`, `tbd` for special cases. For everything else, just use the domain type. Drop `venue` as a catch-all in favor of requiring a domain classification.
+
+**Recommendation:** Low priority. The current approach works. Just document the usage guidance (already done above). Revisit when/if venue filtering becomes a major feature.
+
+### Priority 5: Consider a tags/labels system
+
+Events have exactly one `category_id`. For cross-cutting concerns (an event that's "Music" AND "Food", or a "Family-friendly Outdoor Concert"), the single-category model is limiting. A lightweight tags table would help:
+
+```sql
+CREATE TABLE event_tags (
+  event_id UUID REFERENCES events(id),
+  tag TEXT NOT NULL,
+  PRIMARY KEY (event_id, tag)
+);
+```
+
+**Recommendation:** Low priority. Only pursue if category limitations become a real pain point for data entry or filtering. The current single-category model is simple and works for most events.
+
+### Not recommended to remove
+
+These fields are useful even though they're not displayed yet:
+
+| Field | Why keep it |
+|-------|------------|
+| `parent_series_id` | Needed for multi-week camp programs (Phase 5 feature) |
+| `capacity`, `waitlist_enabled` | Needed for registration features (Phase 5/6) |
+| `view_count` | Analytics value even if not shown to users |
+| `meta_title`, `meta_description` | Used for SEO `<head>` tags, just not visible in UI |
