@@ -159,6 +159,32 @@ Events have three image slots. Each slot has a primary URL plus tracking fields 
 | `thumbnail_storage_path` | text | no | Supabase Storage path for the thumbnail. |
 | `raw_thumbnail_url` | text | no | Original scraped thumbnail URL before re-hosting. |
 
+##### Image AI generation
+
+Fields for tracking AI-generated hero images (when no scraped image is available or usable).
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `image_ai_generated` | boolean | no | `true` if the hero image was AI-generated. Default: `false` |
+| `image_generation_cost` | decimal | no | Cost in dollars for the AI image generation call. |
+| `image_generation_prompt` | text | no | The prompt used to generate the image. |
+| `image_generation_model` | varchar | no | Model used for generation (e.g., `dall-e-3`). |
+
+##### Image classification & analysis
+
+Fields populated by the image analysis pipeline. Used for admin triage and thumbnail selection.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `image_type` | text | no | Classification of the hero image. Default: `unknown`. Values: `photo`, `flyer`, `thumbnail`, `logo`, `unknown`. |
+| `image_text_density` | text | no | How much text is in the image. Default: `unknown`. Values: `none`, `low`, `medium`, `high`, `unknown`. |
+| `image_visual_score` | integer | no | Quality score (1–10) assigned by the analysis pipeline. Higher = better for hero display. |
+| `image_classifications` | JSONB | no | Full classification output from the analysis pipeline. Shape varies by model. |
+| `thumbnail_source` | text | no | Where the thumbnail came from (e.g., `cropped_hero`, `scraped`, `ai_generated`). |
+| `flyer_detected` | boolean | no | `true` if the image analysis identified the hero image as a flyer/poster. Default: `false` |
+| `flyer_text_content` | text | no | OCR-extracted text content from a detected flyer image. |
+| `needs_thumbnail` | boolean | no | `true` if the event needs a better thumbnail (e.g., hero is a flyer, not a photo). Default: `false` |
+
 #### External links
 
 | Field | Type | Required | Description |
@@ -176,6 +202,14 @@ Events have three image slots. Each slot has a primary URL plus tracking fields 
 | `age_high` | integer | no | Maximum age. Must be >= `age_low` if both set. Shown on event detail page sidebar (as "Ages 6-12"). |
 | `age_restriction` | text | no | Human-readable age note. Example: "21+", "All ages", "Parental guidance suggested". Shown as orange badge on event cards and in sidebar on detail page. |
 | `is_family_friendly` | boolean | no | Whether the event is suitable for families/children. Shown as green "Family Friendly" badge on event cards and in sidebar on detail page. |
+
+#### Good For (audience tags)
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `good_for` | text[] | no | Array of audience/vibe tags. Multiple values per event. Default: `{}` (empty array). Shown as colored pills on event detail page. Filterable on `/events` page. GIN-indexed for efficient `@>` (array contains) queries. |
+
+**Valid values:** `date_night`, `families_young_kids`, `families_older_kids`, `pet_friendly`, `foodies`, `girls_night`, `guys_night`, `solo_friendly`, `outdoorsy`, `creatives`, `music_lovers`, `active_seniors`, `college_crowd`, `first_timers`. See the [Good For tags plan](#planned-good-for-audience-tags) for full descriptions.
 
 #### Status & featuring
 
@@ -655,14 +689,20 @@ All TEXT enum columns have database-level CHECK constraints that prevent invalid
 
 ### Description fields on events
 
-Events have four separate text fields for descriptions. Each serves a different purpose:
+Events have four separate text fields for descriptions. Each serves a different purpose and appears in a distinct section on the event detail page:
 
-| Field | What it is | Who writes it | Example |
-|-------|-----------|---------------|---------|
-| `description` | General cleaned-up description | Admin/scraper | "Live jazz featuring the Milwaukee Trio..." |
-| `short_description` | One-line teaser for cards | Admin/scraper | "Live jazz at the Pabst Theater" (max ~160 chars) |
-| `happenlist_summary` | Editorial third-person summary | Happenlist staff/AI | "This intimate jazz show highlights three of Milwaukee's finest..." |
-| `organizer_description` | Verbatim copy from the source | Scraper/submitter | The exact text from the event page, preserving original formatting |
+| Field | What it is | Who writes it | UI location | Example |
+|-------|-----------|---------------|-------------|---------|
+| `short_description` | One-line teaser | Admin/scraper | Italic text directly below the event title | "Live jazz at the Pabst Theater" (max ~160 chars) |
+| `happenlist_summary` | Editorial third-person summary | Happenlist staff/AI | Highlighted "Happenlist Highlights" box (coral background, Sparkles icon) | "This intimate jazz show highlights three of Milwaukee's finest..." |
+| `organizer_description` | Verbatim copy from the source | Scraper/submitter | Quoted "From the Organizer" section (italic, Quote icon) | The exact text from the event page, preserving original formatting |
+| `description` | General cleaned-up description | Admin/scraper | "About This Event" section (Info icon) | "Live jazz featuring the Milwaukee Trio..." |
+
+**Display order on the detail page:** short_description (under title) → happenlist_summary → organizer_description → description. All are optional — sections only render when populated.
+
+**SEO fallback chain:** `meta_description` → `short_description` → `description` (truncated to 155 chars).
+
+**For the scraper:** The Chrome extension should always populate `organizer_description` (verbatim from source) and `short_description` (first sentence or a condensed version). `happenlist_summary` is written by staff/AI during review. `description` is a cleaned/combined version for general use.
 
 For CSV exports, `description` and `short_description` are the most useful. `organizer_description` preserves the original source text for reference.
 
@@ -790,6 +830,7 @@ Content-Type: application/json
 | `age_high` | number | Maximum age (e.g. `65`) |
 | `age_restriction` | string | Human-readable age note, e.g. `"21+"`, `"All ages"` |
 | `is_family_friendly` | boolean | Family-friendly flag |
+| `good_for` | string[] | Audience tags, e.g. `["date_night", "foodies"]`. Valid slugs: `date_night`, `families_young_kids`, `families_older_kids`, `pet_friendly`, `foodies`, `girls_night`, `guys_night`, `solo_friendly`, `outdoorsy`, `creatives`, `music_lovers`, `active_seniors`, `college_crowd`, `first_timers` |
 
 **Location — provide one of:**
 
@@ -826,6 +867,7 @@ The API auto-matches by name (case-insensitive), then creates a new organizer.
   "price_details": "General $15-30, VIP $50",
   "age_restriction": "21+",
   "is_family_friendly": false,
+  "good_for": ["date_night", "music_lovers"],
   "category_slug": "music",
   "location": {
     "name": "Pabst Theater",
@@ -958,19 +1000,82 @@ Two options:
 
 **Recommendation:** Low priority. The current approach works. Just document the usage guidance (already done above). Revisit when/if venue filtering becomes a major feature.
 
-### Remaining: Consider a tags/labels system
+### Done: "Good For" audience tags
 
-Events have exactly one `category_id`. For cross-cutting concerns (an event that's "Music" AND "Food", or a "Family-friendly Outdoor Concert"), the single-category model is limiting. A lightweight tags table would help:
+Events have exactly one `category_id` which answers "what kind of event is this?" (genre/format). We also need a way to answer "who would enjoy this?" — an audience/vibe layer. These are orthogonal: a **Music** event can be good for "Date Night" OR "Families with Young Kids" OR "Pet Owners."
+
+**Implementation:** `TEXT[]` column on events with a defined set of valid slugs. Multiple values per event. Values defined as a TypeScript constant with display labels and icons.
 
 ```sql
-CREATE TABLE event_tags (
-  event_id UUID REFERENCES events(id),
-  tag TEXT NOT NULL,
-  PRIMARY KEY (event_id, tag)
-);
+ALTER TABLE events ADD COLUMN good_for TEXT[] DEFAULT '{}';
+CREATE INDEX idx_events_good_for ON events USING GIN (good_for) WHERE deleted_at IS NULL;
 ```
 
-**Recommendation:** Low priority. Only pursue if category limitations become a real pain point for data entry or filtering. The current single-category model is simple and works for most events.
+**Valid values:**
+
+| Slug | Display Label | Description |
+|------|--------------|-------------|
+| `date_night` | Date Night | Romantic or couples-friendly |
+| `families_young_kids` | Families with Young Kids | Toddlers and under-6 will survive and have fun |
+| `families_older_kids` | Families with Older Kids | Tweens and teens (roughly 7–17) |
+| `pet_friendly` | Pet Owners | Dogs welcome, yappy hours, pet-centric |
+| `foodies` | Foodies | Tasting events, food tours, pop-ups, culinary experiences |
+| `girls_night` | Girls Night Out | Paint nights, drag brunches, group-friendly fun |
+| `guys_night` | Guys Night Out | Sports watch parties, cornhole leagues, etc. |
+| `solo_friendly` | Great Solo | Comfortable and fun to attend alone |
+| `outdoorsy` | Outdoor Lovers | Hikes, garden tours, outdoor markets |
+| `creatives` | Creatives | Art workshops, open mics, maker events |
+| `music_lovers` | Live Music Fans | Events with live music (even non-"Music" category) |
+| `active_seniors` | Active Seniors | Accessible, daytime, welcoming to older adults |
+| `college_crowd` | College Crowd | Student-priced, campus-adjacent, young-adult energy |
+| `first_timers` | First-Timers Welcome | Low barrier, beginner-friendly, newcomers encouraged |
+
+**Population strategy:** Set by admins during review via the Quick Edit form. Scraper API also accepts `good_for` as an optional array. AI-assisted suggestions based on description text in the future.
+
+**Display locations (implemented):**
+- **Event detail page:** Row of colored pills below the short description, above the Happenlist Highlights box. Each pill links to `/events?goodFor=<slug>`.
+- **Event filter page:** "Good for" pills row on `/events` page. Selecting a tag filters events by that audience. Active tag shown with ring highlight.
+- **Admin Quick Edit:** Multi-select toggle buttons in the quick-edit form (below External Links, above Status).
+- **Scraper API:** Accepts `good_for` as `string[]` in POST body.
+- **Event cards:** Not shown (cards are already dense with category, price, age, series badges).
+
+**Relationship to existing fields:**
+- `is_family_friendly` (boolean) stays as a quick filter. `families_young_kids` and `families_older_kids` in "Good For" provide more granularity.
+- `age_restriction` / `age_low` / `age_high` remain for hard age limits. "Good For" is about vibe/suitability, not restrictions.
+- The single `category_id` stays. "Good For" relieves some pressure from the one-category-per-event limitation without the complexity of multi-category support.
+
+---
+
+## Categories Reference
+
+Categories are stored in the `categories` table. Each event has exactly one category (via `category_id` FK). Categories are a static lookup table managed in Supabase — they rarely change.
+
+### Current categories
+
+| Name | Slug | Icon (Lucide) | Sort Order | Description |
+|------|------|---------------|------------|-------------|
+| Music | `music` | `Music` | 1 | Concerts, live performances, DJ sets, open mics |
+| Arts & Culture | `arts-culture` | `Palette` | 2 | Gallery openings, museum exhibits, cultural events |
+| Family | `family` | `Users` | 3 | Events designed for families and children |
+| Food & Drink | `food-drink` | `UtensilsCrossed` | 4 | Tastings, food festivals, pop-ups, culinary events |
+| Sports & Fitness | `sports-fitness` | `Dumbbell` | 5 | Games, races, fitness classes, outdoor recreation |
+| Nightlife | `nightlife` | `Moon` | 6 | Bar events, club nights, late-night entertainment |
+| Community | `community` | `Heart` | 7 | Fundraisers, meetups, volunteering, civic events |
+| Classes & Workshops | `classes-workshops` | `GraduationCap` | 8 | Educational courses, skill-building, hands-on learning |
+| Festivals | `festivals` | `PartyPopper` | 9 | Multi-day festivals, street fairs, seasonal celebrations |
+| Theater & Film | `theater-film` | `Clapperboard` | 10 | Plays, musicals, film screenings, comedy shows |
+| Markets & Shopping | `markets-shopping` | `ShoppingBag` | 11 | Farmers markets, craft fairs, pop-up shops, vintage sales |
+| Talks & Lectures | `talks-lectures` | `Mic` | 12 | Panels, speaker series, book readings, discussions |
+| Outdoors & Nature | `outdoors-nature` | `TreePine` | 13 | Hikes, nature walks, park events, garden tours |
+| Charity & Fundraising | `charity-fundraising` | `HandHeart` | 14 | Galas, benefit concerts, charity runs, auction events |
+| Holiday & Seasonal | `holiday-seasonal` | `Snowflake` | 15 | Holiday markets, 4th of July, Halloween, seasonal events |
+
+### Category design notes
+
+- **One category per event.** Keep it simple. If an event truly spans two categories (a "jazz brunch"), pick the primary draw. Use "Good For" tags for the secondary angle (tag it `foodies` + `music_lovers`).
+- **"Family" vs "Good For: Families with Young Kids."** The "Family" category is for events *designed for* families (kids' museum day, family storytime). "Good For: Families with Young Kids" is for events that *happen to be* family-suitable (an outdoor concert with a grassy area).
+- **"Classes & Workshops" vs series_type.** The category covers one-off workshops too. Multi-session courses use the series system (`series_type = 'class'`) in addition to the category.
+- **New categories require a migration** (INSERT into `categories` table). Icons come from [Lucide React](https://lucide.dev/icons/).
 
 ### Not recommended to remove
 

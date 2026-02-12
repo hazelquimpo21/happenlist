@@ -46,6 +46,15 @@ export {
   formatRecurrence,
 } from './series';
 
+// Good For audience tags
+export type { GoodForTag } from './good-for';
+export {
+  GOOD_FOR_TAGS,
+  GOOD_FOR_SLUGS,
+  getGoodForTag,
+  getGoodForTags,
+} from './good-for';
+
 // Filter types
 export type {
   DateRange,

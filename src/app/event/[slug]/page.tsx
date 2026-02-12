@@ -40,7 +40,7 @@ import { getEvent, getEvents } from '@/data/events';
 import { checkSingleHeart } from '@/data/user';
 import { getSession, isSuperAdmin } from '@/lib/auth';
 import { parseEventSlug, buildVenueUrl, buildOrganizerUrl, getBestImageUrl } from '@/lib/utils';
-import { formatAgeRange } from '@/types';
+import { formatAgeRange, getGoodForTags } from '@/types';
 import { formatEventDate } from '@/lib/utils/dates';
 
 interface EventPageProps {
@@ -160,6 +160,8 @@ export default async function EventPage({ params }: EventPageProps) {
         instagram_url: event.instagram_url,
         facebook_url: event.facebook_url,
         registration_url: event.registration_url,
+        // Good For audience tags
+        good_for: event.good_for || [],
         series_id: event.series_id,
         series_title: event.series?.title || null,
       }
@@ -282,6 +284,22 @@ export default async function EventPage({ params }: EventPageProps) {
               </p>
             )}
           </div>
+
+          {/* Good For audience tags */}
+          {event.good_for && event.good_for.length > 0 && (
+            <div className="mb-6 flex flex-wrap gap-2">
+              <span className="text-sm text-stone mr-1 self-center">Good for:</span>
+              {getGoodForTags(event.good_for).map((tag) => (
+                <a
+                  key={tag.slug}
+                  href={`/events?goodFor=${tag.slug}`}
+                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-opacity hover:opacity-80 ${tag.color}`}
+                >
+                  {tag.label}
+                </a>
+              ))}
+            </div>
+          )}
 
           {/* Happenlist Editorial Summary */}
           {event.happenlist_summary && (

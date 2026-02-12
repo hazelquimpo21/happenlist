@@ -302,6 +302,8 @@ export interface Database {
           age_high: number | null;
           age_restriction: string | null;
           is_family_friendly: boolean | null;
+          // Good For audience tags (migration 20260212)
+          good_for: string[];
           created_at: string;
           updated_at: string;
           published_at: string | null;
@@ -386,6 +388,8 @@ export interface Database {
           age_high?: number | null;
           age_restriction?: string | null;
           is_family_friendly?: boolean | null;
+          // Good For audience tags (migration 20260212)
+          good_for?: string[];
           created_at?: string;
           updated_at?: string;
           published_at?: string | null;
@@ -470,6 +474,8 @@ export interface Database {
           age_high?: number | null;
           age_restriction?: string | null;
           is_family_friendly?: boolean | null;
+          // Good For audience tags (migration 20260212)
+          good_for?: string[];
           created_at?: string;
           updated_at?: string;
           published_at?: string | null;
