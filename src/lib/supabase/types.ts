@@ -264,6 +264,20 @@ export interface Database {
           thumbnail_hosted: boolean;
           thumbnail_storage_path: string | null;
           raw_thumbnail_url: string | null;
+          // Image AI generation fields
+          image_ai_generated: boolean;
+          image_generation_cost: number | null;
+          image_generation_prompt: string | null;
+          image_generation_model: string | null;
+          // Image classification & analysis fields
+          image_type: string | null;
+          image_text_density: string | null;
+          image_visual_score: number | null;
+          image_classifications: Record<string, unknown> | null;
+          thumbnail_source: string | null;
+          flyer_detected: boolean;
+          flyer_text_content: string | null;
+          needs_thumbnail: boolean;
           // External link fields (added 2026-01-06)
           website_url: string | null;
           instagram_url: string | null;
@@ -350,6 +364,20 @@ export interface Database {
           thumbnail_hosted?: boolean;
           thumbnail_storage_path?: string | null;
           raw_thumbnail_url?: string | null;
+          // Image AI generation fields
+          image_ai_generated?: boolean;
+          image_generation_cost?: number | null;
+          image_generation_prompt?: string | null;
+          image_generation_model?: string | null;
+          // Image classification & analysis fields
+          image_type?: string | null;
+          image_text_density?: string | null;
+          image_visual_score?: number | null;
+          image_classifications?: Record<string, unknown> | null;
+          thumbnail_source?: string | null;
+          flyer_detected?: boolean;
+          flyer_text_content?: string | null;
+          needs_thumbnail?: boolean;
           // External link fields (added 2026-01-06)
           website_url?: string | null;
           instagram_url?: string | null;
@@ -436,6 +464,20 @@ export interface Database {
           thumbnail_hosted?: boolean;
           thumbnail_storage_path?: string | null;
           raw_thumbnail_url?: string | null;
+          // Image AI generation fields
+          image_ai_generated?: boolean;
+          image_generation_cost?: number | null;
+          image_generation_prompt?: string | null;
+          image_generation_model?: string | null;
+          // Image classification & analysis fields
+          image_type?: string | null;
+          image_text_density?: string | null;
+          image_visual_score?: number | null;
+          image_classifications?: Record<string, unknown> | null;
+          thumbnail_source?: string | null;
+          flyer_detected?: boolean;
+          flyer_text_content?: string | null;
+          needs_thumbnail?: boolean;
           // External link fields (added 2026-01-06)
           website_url?: string | null;
           instagram_url?: string | null;
@@ -961,14 +1003,16 @@ export interface Database {
  * which makes user-facing required fields non-optional.
  */
 export interface RecurrenceRule {
-  /** How often the event repeats */
+  /** How often the event repeats. Note: biweekly is equivalent to weekly with interval=2. */
   frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly';
-  /** Repeat every N frequency units (e.g., every 2 weeks). Default: 1 */
+  /** Repeat every N frequency units (e.g., every 2 weeks for biweekly). Default: 1 */
   interval?: number;
   /** Which days of the week (0=Sun, 1=Mon, ..., 6=Sat) */
   days_of_week?: number[];
-  /** Day of month for monthly recurrence (1-31) */
+  /** Day of month for monthly recurrence on a fixed date (1-31). Mutually exclusive with week_of_month. */
   day_of_month?: number;
+  /** Week of month for ordinal patterns: 1=first, 2=second, 3=third, 4=fourth, -1=last. Use with days_of_week. */
+  week_of_month?: number;
   /** Start time in HH:MM format */
   time?: string;
   /** Duration of each session in minutes */
@@ -979,6 +1023,8 @@ export interface RecurrenceRule {
   end_date?: string;
   /** Number of occurrences if end_type is 'count' */
   end_count?: number;
+  /** Dates to skip (YYYY-MM-DD). Events won't be generated on these dates. */
+  exclude_dates?: string[];
 }
 
 /**
