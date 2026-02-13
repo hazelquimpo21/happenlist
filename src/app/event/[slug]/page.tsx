@@ -32,6 +32,7 @@ import { Container, Breadcrumbs } from '@/components/layout';
 import { Button, Badge } from '@/components/ui';
 import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox } from '@/components/events';
 import { HeartButton } from '@/components/hearts';
+import { SeriesLinkBadge } from '@/components/series';
 import { EventJsonLd } from '@/components/seo';
 import { AdminToolbar, type AdminToolbarEvent } from '@/components/admin-anywhere';
 import { VenueMap } from '@/components/maps';
@@ -253,6 +254,19 @@ export default async function EventPage({ params }: EventPageProps) {
               </p>
             )}
           </div>
+
+          {/* Series indicator (if part of a series) */}
+          {event.series && (
+            <div className="mb-6">
+              <SeriesLinkBadge
+                seriesSlug={event.series.slug}
+                seriesTitle={event.series.title}
+                seriesType={event.series.series_type}
+                sequenceNumber={event.series_sequence}
+                size="md"
+              />
+            </div>
+          )}
 
           {/* Good For audience tags */}
           {event.good_for && event.good_for.length > 0 && (

@@ -36,6 +36,12 @@ export interface EventWithDetails extends EventRow {
     OrganizerRow,
     'id' | 'name' | 'slug' | 'logo_url' | 'description' | 'website_url'
   > | null;
+  series: {
+    id: string;
+    title: string;
+    slug: string;
+    series_type: string;
+  } | null;
 }
 
 /**
