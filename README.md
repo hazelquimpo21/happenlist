@@ -1,17 +1,40 @@
 # Happenlist
 
-**Discover Local Events** - A modern events directory for finding concerts, festivals, classes, workshops, and more in your area.
+A local events directory that helps people discover concerts, festivals, classes, workshops, and more in their area. Think of it as a curated, editorial-style events guide for your city (currently focused on Milwaukee, WI).
 
 ---
 
-## Documentation
+## What This App Does
 
-| Guide | Description |
-|-------|-------------|
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | Full system architecture, data flow, component taxonomy |
-| [docs/AUTH.md](./docs/AUTH.md) | Authentication, user roles, hearts, follows |
-| [docs/EVENTS.md](./docs/EVENTS.md) | Event submission, approval, series |
-| [docs/EVENT-DETAIL-COMPONENTS.md](./docs/EVENT-DETAIL-COMPONENTS.md) | Event page: time display, external links |
+Happenlist lets people:
+
+- **Browse events** by category, date, or keyword search
+- **Discover venues and organizers** in their area
+- **Save events** they're interested in (hearts)
+- **Submit their own events** through a guided form
+- **Follow organizers, venues, and categories** for updates
+
+Admins can review and approve submitted events, and superadmins can edit events directly from any page.
+
+Events are added in two ways:
+1. **Manual submission** through the website's 7-step form
+2. **Chrome extension scraper** that pulls events from other sites (the scraper's backend runs on Render)
+
+---
+
+## Tech Stack
+
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| Framework | Next.js (App Router) | Server-rendered React, routing, API routes |
+| Language | TypeScript | Type safety across the codebase |
+| Database | Supabase (PostgreSQL) | Data storage, auth, file storage, Row-Level Security |
+| Auth | Supabase Auth (Magic Links) | Passwordless email login |
+| Styling | Tailwind CSS | Utility-first CSS with custom design tokens |
+| Icons | Lucide React | Consistent icon set |
+| Dates | date-fns | Date formatting and manipulation |
+| Maps | Mapbox GL | Venue maps and address autocomplete |
+| Hosting | Vercel | Frontend + API deployment |
 
 ---
 
@@ -23,7 +46,7 @@ npm install
 
 # 2. Set up environment variables
 cp .env.example .env.local
-# Edit .env.local with your Supabase credentials
+# Edit .env.local with your credentials (see below)
 
 # 3. Run the development server
 npm run dev
@@ -31,50 +54,37 @@ npm run dev
 # 4. Open http://localhost:3000
 ```
 
----
+### Environment Variables
 
-## Architecture Overview
+Create `.env.local` with these values:
 
+```env
+# Supabase (required - get from your Supabase project settings)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+
+# Site URL (required - for auth redirects and sitemap)
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# Admin access (comma-separated email addresses)
+ADMIN_EMAILS=admin@example.com
+SUPERADMIN_EMAILS=superadmin@example.com
+
+# Chrome extension scraper (shared secret for API auth)
+SCRAPER_API_SECRET=your-secret-here
+
+# Mapbox (for venue maps and address autocomplete)
+NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your-token-here
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        HAPPENLIST                                │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐       │
-│  │   Next.js    │    │   Supabase   │    │  Tailwind    │       │
-│  │  App Router  │◄──►│  PostgreSQL  │    │     CSS      │       │
-│  └──────────────┘    └──────────────┘    └──────────────┘       │
-│                                                                  │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │                    PAGES (Server Components)             │    │
-│  │  /              Home page with featured events           │    │
-│  │  /events        Events listing with filters              │    │
-│  │  /events/today  Today's events                           │    │
-│  │  /events/this-weekend  Weekend events                    │    │
-│  │  /event/[slug]  Event detail page                        │    │
-│  │  /venues        Venues listing                           │    │
-│  │  /venue/[slug]  Venue detail page                        │    │
-│  │  /organizers    Organizers listing                       │    │
-│  │  /organizer/[slug]  Organizer detail page                │    │
-│  │  /search        Search results page                      │    │
-│  │  /auth/login    Magic link login                         │    │
-│  │  /submit/new    Multi-step event submission              │    │
-│  │  /my/submissions  User's submitted events                │    │
-│  │  /admin/events  Admin review queue                       │    │
-│  └─────────────────────────────────────────────────────────┘    │
-│                                                                  │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │                    DATA LAYER                            │    │
-│  │  src/data/events/     Event fetching functions           │    │
-│  │  src/data/venues/     Venue fetching functions           │    │
-│  │  src/data/organizers/ Organizer fetching functions       │    │
-│  │  src/data/categories/ Category fetching functions        │    │
-│  │  src/data/submit/     Event submission & drafts          │    │
-│  │  src/data/admin/      Admin review queue & actions       │    │
-│  │  src/data/user/       User hearts, follows, profile      │    │
-│  └─────────────────────────────────────────────────────────┘    │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+
+### Commands
+
+```bash
+npm run dev          # Start dev server (http://localhost:3000)
+npm run build        # Production build
+npm run start        # Start production server
+npm run lint         # Run ESLint
 ```
 
 ---
@@ -83,240 +93,71 @@ npm run dev
 
 ```
 happenlist/
-├── docs/                     # Documentation
-│   ├── AUTH.md               # Auth system guide
-│   └── EVENTS.md             # Event flows guide
-├── ARCHITECTURE.md           # System architecture
+├── src/
+│   ├── app/                    # Pages & Routes (Next.js App Router)
+│   │   ├── page.tsx            # Homepage
+│   │   ├── events/             # Event listings (all, today, this-weekend)
+│   │   ├── event/[slug]/       # Event detail page
+│   │   ├── venues/             # Venue listings
+│   │   ├── venue/[slug]/       # Venue detail page
+│   │   ├── organizers/         # Organizer listings
+│   │   ├── organizer/[slug]/   # Organizer detail page
+│   │   ├── series/             # Series listings (classes, camps, etc.)
+│   │   ├── series/[slug]/      # Series detail page
+│   │   ├── search/             # Search results
+│   │   ├── auth/               # Login, callback, logout
+│   │   ├── submit/             # Multi-step event submission form
+│   │   ├── my/                 # User pages (hearts, submissions, settings)
+│   │   ├── admin/              # Admin dashboard and review queue
+│   │   └── api/                # API routes (scraper, images, hearts, etc.)
+│   │
+│   ├── components/             # Reusable UI Components
+│   │   ├── ui/                 # Base components (Button, Card, Input, Badge)
+│   │   ├── layout/             # Header, Footer, Container
+│   │   ├── events/             # EventCard, EventGrid, EventImage
+│   │   ├── series/             # SeriesCard, SeriesGrid
+│   │   ├── auth/               # LoginForm, UserMenu
+│   │   ├── submit/             # Event submission form steps
+│   │   ├── admin-anywhere/     # Superadmin edit toolbar
+│   │   ├── hearts/             # Heart/save button
+│   │   ├── search/             # Search bar
+│   │   ├── maps/               # Mapbox map and address search
+│   │   └── seo/                # JSON-LD structured data
+│   │
+│   ├── data/                   # Data Fetching Layer (server-only)
+│   │   ├── events/             # getEvents, getEvent, getFeaturedEvents
+│   │   ├── venues/             # getVenues, getVenue
+│   │   ├── organizers/         # getOrganizers, getOrganizer
+│   │   ├── categories/         # getCategories
+│   │   ├── series/             # getSeries, getSeriesDetail
+│   │   ├── user/               # getHearts, toggleHeart, follows
+│   │   ├── admin/              # getAdminStats, event actions
+│   │   └── submit/             # Draft management, event submission
+│   │
+│   ├── lib/                    # Utilities & Configuration
+│   │   ├── supabase/           # Supabase clients (server, browser, admin)
+│   │   ├── utils/              # Date, price, URL, image, slug helpers
+│   │   ├── constants/          # Routes, config, series limits
+│   │   └── auth/               # Session helpers, admin checks
+│   │
+│   ├── types/                  # TypeScript Type Definitions
+│   ├── contexts/               # React Contexts (auth)
+│   └── hooks/                  # Custom React Hooks (auth, heart, debounce)
 │
 ├── supabase/
-│   └── migrations/           # SQL migration files
-│       └── 00001_initial_schema.sql
+│   └── migrations/             # SQL migration files
 │
-├── src/
-│   ├── app/                  # Next.js App Router pages
-│   │   ├── layout.tsx        # Root layout
-│   │   ├── page.tsx          # Home page
-│   │   ├── globals.css       # Global styles
-│   │   ├── sitemap.ts        # Dynamic sitemap
-│   │   ├── robots.ts         # Robots.txt
-│   │   │
-│   │   ├── events/           # Events pages
-│   │   │   ├── page.tsx      # Events index
-│   │   │   ├── today/page.tsx
-│   │   │   └── this-weekend/page.tsx
-│   │   │
-│   │   ├── event/
-│   │   │   └── [slug]/page.tsx  # Event detail
-│   │   │
-│   │   ├── venues/page.tsx      # Venues index
-│   │   ├── venue/[slug]/page.tsx
-│   │   │
-│   │   ├── organizers/page.tsx  # Organizers index
-│   │   ├── organizer/[slug]/page.tsx
-│   │   │
-│   │   └── search/page.tsx      # Search page
-│   │
-│   ├── components/           # React components
-│   │   ├── ui/               # Base UI components
-│   │   │   ├── button.tsx
-│   │   │   ├── badge.tsx
-│   │   │   ├── card.tsx
-│   │   │   ├── input.tsx
-│   │   │   ├── skeleton.tsx
-│   │   │   └── spinner.tsx
-│   │   │
-│   │   ├── layout/           # Layout components
-│   │   │   ├── header.tsx
-│   │   │   ├── footer.tsx
-│   │   │   ├── container.tsx
-│   │   │   └── breadcrumbs.tsx
-│   │   │
-│   │   ├── events/           # Event-specific components
-│   │   │   ├── event-card.tsx
-│   │   │   ├── event-grid.tsx
-│   │   │   ├── event-price.tsx
-│   │   │   ├── event-date.tsx
-│   │   │   └── section-header.tsx
-│   │   │
-│   │   ├── categories/       # Category components
-│   │   │   └── category-grid.tsx
-│   │   │
-│   │   ├── search/           # Search components
-│   │   │   └── search-bar.tsx
-│   │   │
-│   │   └── seo/              # SEO components
-│   │       └── json-ld.tsx
-│   │
-│   ├── data/                 # Data fetching functions
-│   │   ├── events/
-│   │   │   ├── get-events.ts
-│   │   │   ├── get-event.ts
-│   │   │   └── get-featured-events.ts
-│   │   ├── venues/
-│   │   │   └── get-venues.ts
-│   │   ├── organizers/
-│   │   │   └── get-organizers.ts
-│   │   └── categories/
-│   │       └── get-categories.ts
-│   │
-│   ├── lib/                  # Utility libraries
-│   │   ├── supabase/         # Supabase client
-│   │   │   ├── client.ts     # Browser client
-│   │   │   ├── server.ts     # Server client
-│   │   │   └── types.ts      # Database types
-│   │   │
-│   │   ├── constants/        # App constants
-│   │   │   ├── config.ts     # Site config
-│   │   │   └── routes.ts     # Route definitions
-│   │   │
-│   │   └── utils/            # Helper functions
-│   │       ├── cn.ts         # Class names
-│   │       ├── dates.ts      # Date formatting
-│   │       ├── price.ts      # Price formatting
-│   │       ├── url.ts        # URL builders
-│   │       └── slug.ts       # Slug utilities
-│   │
-│   ├── hooks/                # React hooks
-│   │   ├── use-debounce.ts
-│   │   └── use-media-query.ts
-│   │
-│   └── types/                # TypeScript types
-│       ├── event.ts
-│       ├── venue.ts
-│       ├── organizer.ts
-│       ├── category.ts
-│       └── filters.ts
+├── scripts/
+│   └── venue-import/           # Bulk venue import from CSV
 │
-├── package.json
-├── tailwind.config.ts
-├── tsconfig.json
-└── next.config.ts
-```
-
----
-
-## Database Schema
-
-```
-┌─────────────────┐       ┌─────────────────┐
-│   categories    │       │   locations     │
-├─────────────────┤       ├─────────────────┤
-│ id (PK)         │       │ id (PK)         │
-│ name            │       │ name            │
-│ slug (unique)   │       │ slug (unique)   │
-│ description     │       │ address_line    │
-│ icon            │       │ city            │
-│ display_order   │       │ state           │
-│ is_active       │       │ venue_type      │
-└────────┬────────┘       │ is_active       │
-         │                └────────┬────────┘
-         │                         │
-         ▼                         ▼
-┌─────────────────────────────────────────────────┐
-│                    events                        │
-├─────────────────────────────────────────────────┤
-│ id (PK)                                          │
-│ title                                            │
-│ slug (unique per instance_date)                  │
-│ description                                      │
-│ start_datetime                                   │
-│ end_datetime                                     │
-│ instance_date (for recurring events)             │
-│ price_type (free|fixed|range|varies)             │
-│ price_low / price_high                           │
-│ is_free                                          │
-│ status (draft|published|cancelled)               │
-│ category_id (FK)  ──────────────────────────────►│
-│ location_id (FK)  ──────────────────────────────►│
-│ organizer_id (FK) ──────────────────────────────►│
-└─────────────────────────────────────────────────┘
-                              │
-                              ▼
-                    ┌─────────────────┐
-                    │   organizers    │
-                    ├─────────────────┤
-                    │ id (PK)         │
-                    │ name            │
-                    │ slug (unique)   │
-                    │ description     │
-                    │ logo_url        │
-                    │ website_url     │
-                    │ is_active       │
-                    └─────────────────┘
-```
-
----
-
-## Entity States
-
-### Event Status
-| Status | Description |
-|--------|-------------|
-| `draft` | Event is being created, not visible to public |
-| `pending_review` | Submitted for admin review |
-| `published` | Event is live and visible to everyone |
-| `changes_requested` | Admin requested edits from submitter |
-| `rejected` | Rejected by admin |
-| `cancelled` | Event was cancelled, may still show with strikethrough |
-
-### Price Types
-| Type | Description | Example Display |
-|------|-------------|-----------------|
-| `free` | No cost to attend | "Free" |
-| `fixed` | Single price | "$25" |
-| `range` | Price range | "$15 - $50" |
-| `varies` | Variable pricing | "Varies" |
-
-### Venue Types
-| Type | Description |
-|------|-------------|
-| `venue` | Fixed location like theater, club |
-| `outdoor` | Parks, outdoor spaces |
-| `online` | Virtual/online events |
-| `various` | Multiple or varying locations |
-| `tbd` | Location to be announced |
-
----
-
-## Data Flow
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         USER REQUEST                             │
-│                    (e.g., /events?category=music)                │
-└──────────────────────────────┬──────────────────────────────────┘
-                               │
-                               ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      SERVER COMPONENT                            │
-│                      (EventsPage)                                │
-│                                                                  │
-│  1. Parse URL search params                                      │
-│  2. Call data fetching function                                  │
-│  3. Render component with data                                   │
-└──────────────────────────────┬──────────────────────────────────┘
-                               │
-                               ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     DATA FETCHING                                │
-│                   (getEvents)                                    │
-│                                                                  │
-│  1. Create Supabase server client                                │
-│  2. Build query with filters                                     │
-│  3. Execute query against database                               │
-│  4. Transform response to TypeScript types                       │
-│  5. Log results with emoji indicators                            │
-└──────────────────────────────┬──────────────────────────────────┘
-                               │
-                               ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                       SUPABASE                                   │
-│                    (PostgreSQL)                                  │
-│                                                                  │
-│  - Row Level Security (RLS) enabled                              │
-│  - Optimized indexes on common queries                           │
-│  - Automatic timestamps                                          │
-└─────────────────────────────────────────────────────────────────┘
+├── docs/                       # Documentation
+│   ├── SCHEMA.md               # Database schema reference
+│   ├── FEATURES.md             # Feature guide (auth, events, admin, etc.)
+│   ├── CHROME-EXTENSION.md     # Chrome extension scraper integration
+│   └── USER-STORIES.md         # User stories by persona
+│
+├── ARCHITECTURE.md             # Technical architecture deep dive
+└── AI_DEV_DOCS_ARCHIVE/        # Archived early development specs (historical)
 ```
 
 ---
@@ -324,188 +165,86 @@ happenlist/
 ## Design System
 
 ### Colors
+
 | Token | Hex | Usage |
 |-------|-----|-------|
 | `cream` | #F9F6F0 | Page backgrounds |
-| `warm-white` | #FFFDF9 | Cards, sections |
+| `warm-white` | #FFFDF9 | Cards, elevated sections |
 | `sand` | #E8E2D9 | Borders, dividers |
 | `stone` | #7A7670 | Secondary text |
 | `charcoal` | #2D2A26 | Primary text |
-| `coral` | #E86C5D | Primary accent, CTAs |
-| `sage` | #7B9E87 | Secondary accent, success |
+| `coral` | #E86C5D | Primary accent, CTAs, hearts |
+| `sage` | #7B9E87 | Secondary accent, "Free" badges, success |
 
 ### Typography
-| Token | Font | Size | Usage |
-|-------|------|------|-------|
-| `text-h1` | Fraunces | 2.5rem | Page titles |
-| `text-h2` | Fraunces | 2rem | Section headers |
-| `text-h3` | Fraunces | 1.5rem | Card titles |
-| `text-body` | Inter | 1rem | Body text |
-| `text-body-sm` | Inter | 0.875rem | Meta, captions |
 
-### Spacing Scale
-```
-4 → 8 → 12 → 16 → 24 → 32 → 48 → 64 → 96 → 128
-```
+- **Headlines**: Fraunces (serif) - warm, editorial feel
+- **Body text**: Inter (sans-serif) - clean, readable
+
+### Design Philosophy
+
+Warm and editorial, inspired by well-designed local magazines. Retro-modern aesthetic with generous whitespace, soft rounded cards, and a mobile-first responsive layout.
 
 ---
 
-## URL Patterns
+## Documentation
 
-### SEO-Friendly URLs
-| Pattern | Example | Description |
-|---------|---------|-------------|
-| `/events` | `/events` | All events |
-| `/events?category=music` | `/events?category=music` | Filtered by category |
-| `/events/today` | `/events/today` | Today's events |
-| `/events/this-weekend` | `/events/this-weekend` | Weekend events |
-| `/event/[slug]-[date]` | `/event/jazz-night-2025-02-14` | Event detail |
-| `/venue/[slug]` | `/venue/pabst-theater` | Venue detail |
-| `/organizer/[slug]` | `/organizer/jazz-collective` | Organizer detail |
-| `/search?q=[query]` | `/search?q=music` | Search results |
+| Doc | What's In It | When To Read It |
+|-----|-------------|-----------------|
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Data flow, component patterns, state management, performance | Building features or debugging |
+| [docs/SCHEMA.md](./docs/SCHEMA.md) | Every database table, field, and relationship | Working with data or queries |
+| [docs/FEATURES.md](./docs/FEATURES.md) | Auth, events, admin, series, maps, venue import | Understanding how features work |
+| [docs/CHROME-EXTENSION.md](./docs/CHROME-EXTENSION.md) | Scraper API, image upload, Render backend | Working on the Chrome extension |
+| [docs/USER-STORIES.md](./docs/USER-STORIES.md) | User stories organized by persona | Planning features or understanding user needs |
 
 ---
 
-## Console Logging
+## Features Overview
 
-All data operations include emoji-prefixed logging for easy debugging:
+### Complete (Phases 1-4)
 
-```
-📋 [getEvents] Fetching events with params: { categorySlug: 'music' }
-✅ [getEvents] Found 12 events (total: 45)
+- Browse events with filtering by category, date, price, audience tags
+- "Today's events" and "This weekend" quick views
+- Event, venue, and organizer detail pages with SEO
+- Full-text search across events
+- Series system (classes, camps, workshops, festivals, recurring events)
+- Recurring events with skip dates and auto-replenishment
+- Magic link authentication (passwordless)
+- 7-step event submission form with auto-save drafts
+- Admin review queue (approve / reject / request changes)
+- Superadmin edit-from-anywhere toolbar
+- Heart/save events, follow organizers/venues/categories
+- User profile and settings
+- Smart venue search with 3500+ pre-loaded Milwaukee venues
+- Mapbox maps and address autocomplete
+- Chrome extension scraper API with image re-hosting
+- Dynamic sitemap and Schema.org structured data
 
-🏛️ [getVenue] Fetching venue: pabst-theater
-✅ [getVenue] Found venue: Pabst Theater
+### Planned (Phases 5-6)
 
-👥 [getOrganizer] Fetching organizer: jazz-collective
-⚠️ [getOrganizer] Organizer not found
-
-❌ [getEvents] Error fetching events: { message: 'Connection failed' }
-```
-
-### Logging Legend
-| Emoji | Meaning |
-|-------|---------|
-| 📋 | Fetching list data |
-| 🎫 | Event-related operation |
-| 🏛️ | Venue-related operation |
-| 👥 | Organizer-related operation |
-| 🔍 | Search operation |
-| ✅ | Success |
-| ⚠️ | Warning (not found, etc.) |
-| ❌ | Error |
-
----
-
-## Commands Reference
-
-```bash
-# Development
-npm run dev          # Start dev server on port 3000
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
-
-# Database (Supabase)
-# Run migrations in Supabase Dashboard > SQL Editor
-# Or use Supabase CLI:
-supabase migration up
-```
-
----
-
-## Environment Variables
-
-Create a `.env.local` file with:
-
-```env
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-
-# Site URL (for sitemap generation)
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-
-# Admin Emails (comma-separated list for admin access)
-ADMIN_EMAILS=admin@example.com,admin2@example.com
-```
-
----
-
-## Phase 1 Features (MVP) ✅
-
-- [x] Browse all events
-- [x] Filter by category
-- [x] View today's events
-- [x] View weekend events
-- [x] Event detail pages
-- [x] Venue pages
-- [x] Organizer pages
-- [x] Full-text search
-- [x] SEO with Schema.org structured data
-- [x] Dynamic sitemap
-- [x] Responsive design
-
----
-
-## Phase 2 Features (Series & Recurring) ✅
-
-- [x] Series system (classes, camps, workshops, festivals)
-- [x] Recurring events with recurrence rules
-- [x] Series index page at `/series`
-- [x] Series detail pages with event listings
-- [x] Series filtering by type and category
-- [x] Series badges on event cards
-
----
-
-## Phase 3 Features (Event Management) ✅
-
-- [x] Magic link authentication (passwordless)
-- [x] 7-step event submission form with auto-save
-- [x] Event drafts for work-in-progress submissions
-- [x] User submissions dashboard at `/my/submissions`
-- [x] Admin review queue at `/admin/events`
-- [x] Admin approve/reject/request-changes workflow
-- [x] Status badges with color-coded indicators
-- [x] Admin audit logging
-
----
-
-## Phase 4 Features (User Features) ✅
-
-- [x] Heart/save events with optimistic UI
-- [x] My Hearts page at `/my/hearts`
-- [x] Follow organizers, venues, categories
-- [x] User profile settings at `/my/settings`
-- [x] Route protection middleware
-- [x] Mobile navigation drawer
-
----
-
-## Future Phases
-
-### Phase 5: Organizer Features
-- Organizer claiming (request to manage an organizer)
-- Organizer dashboard
-- Team management
-
-### Phase 6: Enhanced Features
-- Email notifications
-- Weekly digest emails
+- Organizer claiming and dashboards
+- Email notifications and weekly digest
 - Analytics dashboard
 - Ticket integration
 
 ---
 
-## Contributing
+## How Events Get Into the System
 
-1. Follow the file structure conventions
-2. Keep files under 400 lines
-3. Add console logging with emojis
-4. Write clear TypeScript types
-5. Use Tailwind CSS with design tokens
+```
+                                    ┌─────────────────────┐
+  Chrome Extension Scraper ────────>│                     │
+  (backend on Render)               │  /api/scraper/      │
+                                    │  events             │──> Admin Review Queue
+  Website Submission Form ─────────>│                     │        │
+  (7-step guided form)             │  Happenlist API     │        v
+                                    │  (Next.js on        │    Published Events
+  Manual Admin Entry ──────────────>│   Vercel)           │    (visible to all)
+                                    └─────────────────────┘
+```
+
+All submitted events land in the admin review queue as `pending_review`. Admins approve, reject, or request changes before events go live.
 
 ---
 
-Built with Next.js 16, Supabase, and Tailwind CSS.
+Built with Next.js, Supabase, and Tailwind CSS.
