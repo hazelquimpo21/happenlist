@@ -169,7 +169,7 @@ Step 7: Review          -> Summary & Submit
 | `class` | Multi-week course | 2-52 |
 | `camp` | Day camp, intensive | 2-14 |
 | `workshop` | Workshop series | 2-12 |
-| `recurring` | Weekly jam, monthly meetup | Rolling |
+| `recurring` | Weekly jam, monthly meetup | Rolling (auto-replenished) |
 | `festival` | Multi-day festival | 1-14 |
 | `season` | Theater/sports season | 2-100 |
 
@@ -181,8 +181,12 @@ Step 7: Review          -> Summary & Submit
     | id           |      1:N   | id               |
     | title        | ---------> | series_id (FK)   |
     | series_type  |            | series_sequence  |
-    | total_sessions|            | is_series_instance|
-    +--------------+            +------------------+
+    | recurrence   |            | is_series_instance|
+    | _rule (JSONB)|            | is_override      |
+    | total_sessions|            +------------------+
+    | generation_  |
+    | cursor_date  |
+    +--------------+
 ```
 
 ### Series Routes
@@ -198,9 +202,51 @@ Step 7: Review          -> Summary & Submit
 User selects in Step 2 of submit form:
 
 1. **Single Event** - One-time event
-2. **Part of Existing Series** - Link to existing
+2. **Part of Existing Series** - Link to existing (event is attached as override)
 3. **New Series** - Create new class/camp/workshop
 4. **Recurring Event** - Weekly/monthly pattern
+
+### Making an Existing Event Recurring
+
+Admins can convert any standalone event into a recurring series:
+
+1. View the event detail page (superadmin toolbar)
+2. Click **"Make Recurring"** action
+3. Configure: frequency, interval, day(s), time, end condition, skip dates
+4. Preview generated dates
+5. Confirm — system creates a series and generates future events
+
+The original event becomes instance #1. Future events are auto-generated from the `recurrence_rule`. See [RECURRING-EVENTS-DESIGN.md](./RECURRING-EVENTS-DESIGN.md) for full architecture.
+
+### Recurrence Options
+
+| Pattern | Configuration |
+|---------|--------------|
+| Every Wednesday | `frequency: weekly, days_of_week: [3]` |
+| Every other Thursday | `frequency: weekly, interval: 2, days_of_week: [4]` |
+| First Friday of every month | `frequency: monthly, week_of_month: 1, days_of_week: [5]` |
+| Mon/Wed/Fri | `frequency: weekly, days_of_week: [1, 3, 5]` |
+| Monthly on the 15th | `frequency: monthly, day_of_month: 15` |
+
+### Skip Dates (Exclusions)
+
+Recurring events can skip specific dates (holidays, breaks):
+- Stored as `exclude_dates` array in the `recurrence_rule` JSONB
+- When a single occurrence is cancelled, its date is auto-added to `exclude_dates`
+- Replenishment respects skip dates — won't regenerate skipped events
+- Admin can manage skip dates from the series detail page
+
+### Event Replenishment
+
+Recurring series auto-generate future events via:
+- **Nightly cron** (primary): tops up event buffer when upcoming count < 8
+- **On-read fallback**: if series has < 2 upcoming events when viewed, generates inline
+- Reads `recurrence_rule` and `generation_cursor_date` from the series
+
+### Attaching / Detaching Events
+
+- **Attach**: Link a standalone event to an existing series. Sets `is_override = true`, auto-assigns `series_sequence`. The event doesn't need to match the recurrence pattern (e.g., "Special Holiday Edition").
+- **Detach**: Remove an event from its series. Clears `series_id`, `is_series_instance`, etc.
 
 ---
 
@@ -317,6 +363,33 @@ Response: { series: SeriesCard[] }
 POST /api/submit/series
 Body: { series_data: SeriesDraftData, events: EventDraftData[] }
 Response: { series_id: string, event_ids: string[] }
+```
+
+### Recurring Events
+
+```typescript
+// Convert single event to recurring series
+POST /api/events/[id]/make-recurring
+Body: { recurrence_rule: RecurrenceRule }
+Response: { success: true, seriesId: string, eventCount: number }
+
+// Attach event to existing series
+POST /api/events/[id]/attach
+Body: { series_id: string }
+Response: { success: true }
+
+// Detach event from series
+POST /api/events/[id]/detach
+Response: { success: true }
+
+// Add or remove a skip date on a recurring series
+POST /api/series/[id]/skip-date
+Body: { date: "YYYY-MM-DD", action: "skip" | "unskip" }
+Response: { success: true, exclude_dates: string[] }
+
+// Manually trigger replenishment
+POST /api/series/[id]/replenish
+Response: { success: true, eventsCreated: number }
 ```
 
 ### Admin Actions

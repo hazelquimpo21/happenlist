@@ -564,13 +564,30 @@ Phases A-E are all complete. The camps/classes/series enhancement is fully imple
 
 2. **Program grouping (Option B from Decision 2)**: `parent_series_id` is in the migration but not wired up. This would let orgs group multiple camp weeks under one "Summer Art Camp" umbrella. Needs a UI for browsing programs.
 
-3. **Unused DB fields**: `recurrence_parent_id`, `is_recurrence_template`, `recurrence_pattern` on the events table overlap with the series system. Consider dropping them to reduce confusion.
+3. **Hardcoded timezone**: Step 3 says "Central Time (CT)" but should reference `DEFAULT_TIMEZONE` from config.
 
-4. **Hardcoded timezone**: Step 3 says "Central Time (CT)" but should reference `DEFAULT_TIMEZONE` from config.
+4. **Review/approval flow**: Multi-event submissions (camps, recurring) create many events at once. The admin review flow may need a way to approve/reject an entire series at once rather than individual events.
 
-5. **Recurring event regeneration**: Currently, recurring events are generated once at submission. A cron job or on-demand regeneration would keep the event list fresh as time passes (e.g., always have 12 weeks of upcoming events).
+### Phase F: Recurring Events Refinement — PLANNED
 
-6. **Review/approval flow**: Multi-event submissions (camps, recurring) create many events at once. The admin review flow may need a way to approve/reject an entire series at once rather than individual events.
+Full design and implementation plan: **[RECURRING-EVENTS-DESIGN.md](./RECURRING-EVENTS-DESIGN.md)**
+
+Key features planned:
+- **Make Event Recurring**: Convert any single event into a recurring series (admin action)
+- **Enhanced recurrence rules**: Skip dates (`exclude_dates`), monthly ordinal patterns (`week_of_month` for "First Friday"), simplified frequencies (removed `biweekly`/`yearly`, use `interval` instead)
+- **Event replenishment**: Hybrid cron + on-read system to keep recurring series alive beyond initial 12-week generation window
+- **Attach/detach events**: Link standalone events to existing series (as `is_override` instances), or detach from series
+- **Skip dates**: Cancel single occurrences + prevent replenishment from recreating them
+- **Core recurrence module**: `src/lib/recurrence/` — pure functions for date generation, validation, formatting. No DB dependencies, fully testable.
+
+Implementation phases:
+1. Core recurrence module (pure functions)
+2. Schema migration (new columns: `is_override`, `last_generated_at`, `generation_cursor_date`)
+3. Refactor existing generation (replace inline code with module)
+4. Convert single event to recurring
+5. Skip dates / exclusions
+6. Replenishment (cron + on-read)
+7. Attach/detach events
 
 ### Architecture Notes
 - All new fields flow: DB (migration) → types (supabase/types.ts) → data layer (get-series.ts) → display (series-card.tsx, series-header.tsx) → form (step-2, step-3, step-5) → submit (submit-event.ts)
