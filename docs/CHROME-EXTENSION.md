@@ -291,25 +291,25 @@ If the image is already hosted in Supabase Storage, the API short-circuits and r
 
 ## Description Fields Strategy
 
-The extension should populate up to four description fields, each serving a different purpose:
+The event detail page displays three description fields. Each serves a distinct purpose and appears in a specific section on the page. The extension should populate all three when possible.
 
-### organizer_description
+### organizer_description (Required -- always send this)
 
-The verbatim description text from the source page. Always send this field. Do not clean, summarize, or modify it. This preserves the original content exactly as the organizer wrote it.
+The verbatim description text from the source page. Always send this field. Do not clean, summarize, or modify it. This preserves the original content exactly as the organizer wrote it. Displayed in a quoted "From the Organizer" section on the detail page.
 
-### short_description
+### short_description (Strongly recommended)
 
-A brief tagline or first sentence, max 160 characters. Used on event cards and in meta descriptions. If the source has a subtitle or tagline, use that. Otherwise, extract the first meaningful sentence from the description.
+A brief tagline or first sentence, max 160 characters. Displayed as italic text directly below the event title on the detail page, and used on event cards and in meta descriptions. If the source has a subtitle or tagline, use that. Otherwise, extract the first meaningful sentence from the description.
 
-### description
+### happenlist_summary (Strongly recommended)
 
-A cleaned and formatted version of the event description. Remove excessive whitespace, fix encoding issues, strip HTML artifacts. Skip this field if it would be identical to `organizer_description` -- no need to duplicate data.
-
-### happenlist_summary
-
-An AI-generated editorial summary written in third person, 2-3 sentences. This should read like a recommendation: what the event is, why it is interesting, and who it is for. Example:
+An AI-generated editorial summary written in third person, 2-3 sentences. Displayed in a highlighted "Happenlist Highlights" box on the detail page. This should read like a recommendation: what the event is, why it is interesting, and who it is for. Example:
 
 > "The Austin Symphony Orchestra presents an evening of Beethoven's greatest works at The Paramount Theatre. This family-friendly concert features the iconic Fifth Symphony and is perfect for both classical music enthusiasts and first-time concertgoers."
+
+### description (Optional -- not displayed on detail page)
+
+A cleaned and formatted version of the event description. This field is **not shown on the event detail page** but is still used as an SEO fallback (when `meta_description` and `short_description` are both missing) and may be used in search indexing. Skip this field if it would be identical to `organizer_description` -- no need to duplicate data.
 
 ---
 

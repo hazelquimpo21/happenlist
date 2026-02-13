@@ -302,18 +302,34 @@ Displays audience tags as colored pills (e.g., "Date Night", "Families with Youn
 
 ### Description Sections
 
-Events have four distinct description fields, each with a different purpose:
+The event detail page displays three description fields:
 
 | Field | Purpose | Display Location |
 |-------|---------|-----------------|
-| `short_description` | Brief tagline | Directly under the event title |
-| `happenlist_summary` | Editorial highlights written by Happenlist | Prominent summary section |
-| `organizer_description` | Verbatim text from the event organizer | Attributed organizer section |
-| `description` | Cleaned general about section | Main body content |
+| `short_description` | Brief tagline | Italic text directly under the event title |
+| `happenlist_summary` | AI-generated editorial highlights | Highlighted "Happenlist Highlights" box (coral background) |
+| `organizer_description` | Verbatim text from the event organizer | Quoted "From the Organizer" section |
+
+The `description` field is not displayed on the detail page but is retained for SEO fallback purposes.
 
 ### FlyerLightbox
 
-Fullscreen viewer for event flyers and images. Opens when the user taps the event image on the detail page.
+Fullscreen viewer for event flyers. Displayed at the top of the sidebar on the event detail page. Opens a fullscreen modal when clicked.
+
+### Image Layout
+
+- **Flyer**: Shown at the top of the sidebar as a clickable lightbox thumbnail. This is the primary visual on the detail page.
+- **Hero image**: Only displayed when no flyer exists. Falls back to a letter placeholder if no images are available.
+- **Thumbnails**: Used primarily on event cards in listing grids, not prominently on the detail page.
+
+### CTA Button
+
+The primary call-to-action button in the sidebar follows this priority:
+
+1. **Get Tickets** -- if `ticket_url` exists
+2. **Register / RSVP** -- if `registration_url` exists
+3. **Learn More** -- links to `website_url` as a fallback
+4. No button shown if none of the above URLs exist
 
 ---
 

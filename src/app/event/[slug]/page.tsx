@@ -25,7 +25,6 @@ import {
   User,
   Sparkles,
   Quote,
-  Info,
   Baby,
   Users,
 } from 'lucide-react';
@@ -214,57 +213,27 @@ export default async function EventPage({ params }: EventPageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main content */}
         <div className="lg:col-span-2">
-          {/* Hero image with optional flyer */}
-          <div className="flex gap-4 mb-6">
-            {/* Main hero image */}
-            <div className="flex-1">
-              {(() => {
-                const heroImage = getBestImageUrl(event.image_url, null);
-                return heroImage ? (
-                  <div className="relative aspect-video rounded-lg overflow-hidden">
-                    <Image
-                      src={heroImage}
-                      alt={event.title}
-                      fill
-                      className="object-cover"
-                      priority
-                    />
-                  </div>
-                ) : (
-                  // Placeholder for events without valid images
-                  <div className="relative aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-sand to-stone/20 flex items-center justify-center">
-                    <span className="text-stone/30 text-6xl font-display">
-                      {event.title.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                );
-              })()}
-            </div>
-            
-            {/* Event flyer (if exists) */}
-            {event.flyer_url && (
-              <div className="hidden sm:block w-40 lg:w-48 flex-shrink-0">
-                <FlyerLightbox
-                  flyerUrl={event.flyer_url}
-                  alt={`${event.title} event flyer`}
-                  eventTitle={event.title}
-                  className="w-full"
+          {/* Hero image (only shown when no flyer exists) */}
+          {!event.flyer_url && (() => {
+            const heroImage = getBestImageUrl(event.image_url, null);
+            return heroImage ? (
+              <div className="relative aspect-video rounded-lg overflow-hidden mb-6">
+                <Image
+                  src={heroImage}
+                  alt={event.title}
+                  fill
+                  className="object-cover"
+                  priority
                 />
               </div>
-            )}
-          </div>
-          
-          {/* Mobile flyer (shown below hero on mobile) */}
-          {event.flyer_url && (
-            <div className="sm:hidden mb-6">
-              <FlyerLightbox
-                flyerUrl={event.flyer_url}
-                alt={`${event.title} event flyer`}
-                eventTitle={event.title}
-                className="w-full max-w-[200px] mx-auto"
-              />
-            </div>
-          )}
+            ) : (
+              <div className="relative aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-sand to-stone/20 flex items-center justify-center mb-6">
+                <span className="text-stone/30 text-6xl font-display">
+                  {event.title.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            );
+          })()}
 
           {/* Event title and category */}
           <div className="mb-6">
@@ -331,21 +300,6 @@ export default async function EventPage({ params }: EventPageProps) {
             </div>
           )}
 
-          {/* Main Description (fallback/additional info) */}
-          {event.description && (
-            <div className="mb-8">
-              <div className="flex items-center gap-2 mb-4">
-                <Info className="w-5 h-5 text-stone" />
-                <h2 className="font-display text-h3 text-charcoal">
-                  About This Event
-                </h2>
-              </div>
-              <div className="prose-event whitespace-pre-wrap">
-                {event.description}
-              </div>
-            </div>
-          )}
-
           {/* Price Details Section (if exists and has detailed info) */}
           {event.price_details && (
             <div className="mb-8 p-4 bg-sage/10 rounded-lg border border-sage/30">
@@ -396,6 +350,16 @@ export default async function EventPage({ params }: EventPageProps) {
         {/* Sidebar */}
         <div className="lg:col-span-1">
           <div className="sticky top-24 space-y-6">
+            {/* Event flyer (top of sidebar) */}
+            {event.flyer_url && (
+              <FlyerLightbox
+                flyerUrl={event.flyer_url}
+                alt={`${event.title} event flyer`}
+                eventTitle={event.title}
+                className="w-full"
+              />
+            )}
+
             {/* Event info card */}
             <div className="p-6 bg-warm-white rounded-lg border border-sand">
               {/* Date */}
@@ -486,11 +450,16 @@ export default async function EventPage({ params }: EventPageProps) {
                 >
                   Register / RSVP
                 </Button>
-              ) : (
-                <Button href="#" fullWidth disabled>
-                  More Info Coming Soon
+              ) : event.website_url ? (
+                <Button
+                  href={event.website_url}
+                  external
+                  fullWidth
+                  rightIcon={<ExternalLink className="w-4 h-4" />}
+                >
+                  Learn More
                 </Button>
-              )}
+              ) : null}
             </div>
 
             {/* External Links */}
