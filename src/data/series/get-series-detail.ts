@@ -77,6 +77,41 @@ export async function getSeriesBySlug(
 }
 
 // ============================================================================
+// GET SERIES BY ID (lightweight)
+// ============================================================================
+
+interface SeriesSummary {
+  id: string;
+  title: string;
+  slug: string;
+  series_type: string;
+}
+
+/**
+ * Fetches minimal series info by ID.
+ * Used by the event detail page to show a series badge without a join.
+ */
+export async function getSeriesById(
+  id: string
+): Promise<SeriesSummary | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('series')
+    .select('id, title, slug, series_type')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    console.error('❌ [getSeriesById] Error:', error);
+    return null;
+  }
+
+  return data;
+}
+
+// ============================================================================
 // GET SERIES EVENTS
 // ============================================================================
 

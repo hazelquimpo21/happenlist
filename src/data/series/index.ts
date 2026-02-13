@@ -19,6 +19,7 @@ export {
 // Detail functions
 export {
   getSeriesBySlug,
+  getSeriesById,
   getSeriesEvents,
   getRelatedSeries,
   getSeriesStats,

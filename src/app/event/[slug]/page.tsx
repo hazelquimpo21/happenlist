@@ -37,6 +37,7 @@ import { EventJsonLd } from '@/components/seo';
 import { AdminToolbar, type AdminToolbarEvent } from '@/components/admin-anywhere';
 import { VenueMap } from '@/components/maps';
 import { getEvent, getEvents } from '@/data/events';
+import { getSeriesById } from '@/data/series';
 import { checkSingleHeart } from '@/data/user';
 import { getSession, isSuperAdmin } from '@/lib/auth';
 import { parseEventSlug, buildVenueUrl, buildOrganizerUrl, getBestImageUrl } from '@/lib/utils';
@@ -126,13 +127,14 @@ export default async function EventPage({ params }: EventPageProps) {
     console.log('🛡️ [EventPage] Superadmin detected, showing admin toolbar');
   }
 
-  // Fetch related events and heart status in parallel
-  const [{ events: relatedEvents }, isHearted] = await Promise.all([
+  // Fetch related events, heart status, and series info in parallel
+  const [{ events: relatedEvents }, isHearted, seriesInfo] = await Promise.all([
     getEvents({
       excludeEventId: event.id,
       limit: 4,
     }),
     session ? checkSingleHeart(session.id, event.id) : Promise.resolve(false),
+    event.series_id ? getSeriesById(event.series_id) : Promise.resolve(null),
   ]);
 
   console.log('✅ [EventPage] Event loaded:', event.title);
@@ -163,7 +165,7 @@ export default async function EventPage({ params }: EventPageProps) {
         // Good For audience tags
         good_for: event.good_for || [],
         series_id: event.series_id,
-        series_title: event.series?.title || null,
+        series_title: seriesInfo?.title || null,
       }
     : null;
 
@@ -319,12 +321,12 @@ export default async function EventPage({ params }: EventPageProps) {
             )}
 
             {/* Series badge */}
-            {event.series && (
+            {seriesInfo && (
               <div className="pt-1">
                 <SeriesLinkBadge
-                  seriesSlug={event.series.slug}
-                  seriesTitle={event.series.title}
-                  seriesType={event.series.series_type}
+                  seriesSlug={seriesInfo.slug}
+                  seriesTitle={seriesInfo.title}
+                  seriesType={seriesInfo.series_type}
                   sequenceNumber={event.series_sequence}
                   size="sm"
                 />
