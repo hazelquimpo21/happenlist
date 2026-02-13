@@ -431,7 +431,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 </div>
               )}
 
-              {/* Primary CTA Button */}
+              {/* Primary CTA Button (tickets or registration) */}
               {event.ticket_url ? (
                 <Button
                   href={event.ticket_url}
@@ -450,16 +450,20 @@ export default async function EventPage({ params }: EventPageProps) {
                 >
                   Register / RSVP
                 </Button>
-              ) : event.website_url ? (
+              ) : null}
+
+              {/* Learn More button (always shown when website_url exists) */}
+              {event.website_url && (
                 <Button
                   href={event.website_url}
                   external
                   fullWidth
+                  variant={(event.ticket_url || event.registration_url) ? 'secondary' : 'primary'}
                   rightIcon={<ExternalLink className="w-4 h-4" />}
                 >
                   Learn More
                 </Button>
-              ) : null}
+              )}
             </div>
 
             {/* External Links */}
