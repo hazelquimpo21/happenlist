@@ -42,7 +42,8 @@ export async function getEvent(
         id, name, slug, city, state, address_line, address_line_2,
         postal_code, latitude, longitude, venue_type, website_url
       ),
-      organizer:organizers(id, name, slug, logo_url, description, website_url)
+      organizer:organizers(id, name, slug, logo_url, description, website_url),
+      series(id, title, slug, series_type)
     `
     )
     .eq('slug', slug)

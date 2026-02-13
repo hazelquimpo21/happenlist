@@ -322,14 +322,14 @@ Fullscreen viewer for event flyers. Displayed at the top of the sidebar on the e
 - **Hero image**: Only displayed when no flyer exists. Falls back to a letter placeholder if no images are available.
 - **Thumbnails**: Used primarily on event cards in listing grids, not prominently on the detail page.
 
-### CTA Button
+### CTA Buttons
 
-The primary call-to-action button in the sidebar follows this priority:
+The sidebar shows up to two call-to-action buttons:
 
-1. **Get Tickets** -- if `ticket_url` exists
-2. **Register / RSVP** -- if `registration_url` exists
-3. **Learn More** -- links to `website_url` as a fallback
-4. No button shown if none of the above URLs exist
+1. **Primary CTA** (ticket or registration, if applicable):
+   - **Get Tickets** -- if `ticket_url` exists
+   - **Register / RSVP** -- if `registration_url` exists (and no `ticket_url`)
+2. **Learn More** -- always shown when `website_url` exists; links to the original event page. Styled as secondary when a ticket/registration button is above it, or as primary when it's the only button.
 
 ---
 
