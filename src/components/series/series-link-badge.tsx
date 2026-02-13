@@ -3,7 +3,12 @@
  * =================
  * Badge shown on event cards when the event is part of a series.
  * Links to the parent series page.
+ *
+ * Client Component: uses onClick to stop event propagation when
+ * nested inside clickable parent cards.
  */
+
+'use client';
 
 import Link from 'next/link';
 import { Layers } from 'lucide-react';
