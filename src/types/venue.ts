@@ -28,3 +28,15 @@ export interface VenueCard {
 export interface VenueWithCount extends Venue {
   event_count: number;
 }
+
+/**
+ * Social links structure for venues.
+ * Matches the organizer SocialLinks pattern.
+ */
+export interface VenueSocialLinks {
+  instagram?: string;
+  tiktok?: string;
+  facebook?: string;
+  twitter?: string;
+  youtube?: string;
+}

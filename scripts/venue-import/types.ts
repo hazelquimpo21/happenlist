@@ -129,6 +129,9 @@ export interface VenueRecord {
   review_count: number;
   working_hours: Record<string, string> | null;
 
+  // Description
+  description: string | null;
+
   // Import metadata
   source: 'csv_import';
   import_batch_id: string;

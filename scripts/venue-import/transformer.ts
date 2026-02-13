@@ -299,6 +299,9 @@ export class VenueTransformer {
       review_count: parseInt(row.reviews),
       working_hours: parseWorkingHours(row.working_hours),
 
+      // Description (from Google Maps listing)
+      description: row.description?.trim() || null,
+
       // Import metadata
       source: 'csv_import',
       import_batch_id: this.batchId,

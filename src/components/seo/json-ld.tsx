@@ -145,8 +145,14 @@ interface VenueJsonLdProps {
 export function VenueJsonLd({ venue }: VenueJsonLdProps) {
   // Use validated image URL for structured data
   const validImage = getBestImageUrl(venue.image_url);
-  
-  const data = {
+
+  // Collect social profile URLs for sameAs
+  const socialLinks = venue.social_links as Record<string, string> | null;
+  const sameAs = socialLinks
+    ? Object.values(socialLinks).filter((url) => url && url.startsWith('http'))
+    : [];
+
+  const data: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Place',
     name: venue.name,
@@ -163,6 +169,10 @@ export function VenueJsonLd({ venue }: VenueJsonLdProps) {
       addressCountry: 'US',
     },
   };
+
+  if (sameAs.length > 0) {
+    data.sameAs = sameAs;
+  }
 
   return <JsonLdScript data={data} />;
 }

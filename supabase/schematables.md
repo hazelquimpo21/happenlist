@@ -591,6 +591,7 @@
 | public              | locations                          | is_active                    | boolean                     | YES         | true                                            |
 | public              | locations                          | created_at                   | timestamp with time zone    | YES         | now()                                           |
 | public              | locations                          | updated_at                   | timestamp with time zone    | YES         | now()                                           |
+| public              | locations                          | social_links                 | jsonb                       | YES         | null                                            |
 | public              | organizer_claim_log                | id                           | uuid                        | NO          | gen_random_uuid()                               |
 | public              | organizer_claim_log                | organizer_id                 | uuid                        | NO          | null                                            |
 | public              | organizer_claim_log                | user_id                      | uuid                        | NO          | null                                            |
