@@ -22,6 +22,7 @@ import { Button, Badge } from '@/components/ui';
 import { EventGrid, SectionHeader } from '@/components/events';
 import { VenueJsonLd } from '@/components/seo';
 import { VenueMap } from '@/components/maps';
+import { VenueSocialLinks } from '@/components/venues';
 import { getVenue } from '@/data/venues';
 import { getEvents } from '@/data/events';
 import { getBestImageUrl } from '@/lib/utils';
@@ -207,6 +208,12 @@ export default async function VenuePage({ params }: VenuePageProps) {
                   </div>
                 </div>
               )}
+
+              {/* Social media links */}
+              <VenueSocialLinks
+                socialLinks={venue.social_links as Record<string, string> | null}
+                className="mb-4"
+              />
 
               {/* Map link */}
               {mapsUrl && (

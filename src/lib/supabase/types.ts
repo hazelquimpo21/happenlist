@@ -94,6 +94,7 @@ export interface Database {
           google_category: string | null;
           source: string;
           import_batch_id: string | null;
+          social_links: Record<string, string> | null;
         };
         Insert: {
           id?: string;
@@ -126,6 +127,7 @@ export interface Database {
           google_category?: string | null;
           source?: string;
           import_batch_id?: string | null;
+          social_links?: Record<string, string> | null;
         };
         Update: {
           id?: string;
@@ -158,6 +160,7 @@ export interface Database {
           google_category?: string | null;
           source?: string;
           import_batch_id?: string | null;
+          social_links?: Record<string, string> | null;
         };
       };
 
