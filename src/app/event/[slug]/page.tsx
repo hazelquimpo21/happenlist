@@ -41,7 +41,7 @@ import { checkSingleHeart } from '@/data/user';
 import { getSession, isSuperAdmin } from '@/lib/auth';
 import { parseEventSlug, buildVenueUrl, buildOrganizerUrl, getBestImageUrl } from '@/lib/utils';
 import { formatAgeRange, getGoodForTags } from '@/types';
-import { formatEventDate } from '@/lib/utils/dates';
+import { formatEventDate, formatDate, formatTime } from '@/lib/utils/dates';
 
 interface EventPageProps {
   params: Promise<{ slug: string }>;
@@ -255,34 +255,82 @@ export default async function EventPage({ params }: EventPageProps) {
             )}
           </div>
 
-          {/* Series indicator (if part of a series) */}
-          {event.series && (
-            <div className="mb-6">
-              <SeriesLinkBadge
-                seriesSlug={event.series.slug}
-                seriesTitle={event.series.title}
-                seriesType={event.series.series_type}
-                sequenceNumber={event.series_sequence}
-                size="md"
-              />
+          {/* At a glance summary card */}
+          <div className="mb-8 p-4 bg-warm-white rounded-lg border border-sand space-y-3">
+            {/* Date & Time */}
+            <div className="flex items-center gap-2 text-sm text-charcoal">
+              <Calendar className="w-4 h-4 text-coral flex-shrink-0" />
+              <span className="font-medium">
+                {formatDate(event.start_datetime, 'EEE, MMM d')}
+                {!event.is_all_day && (
+                  <>
+                    {' · '}
+                    {formatTime(event.start_datetime)}
+                    {event.end_datetime && ` – ${formatTime(event.end_datetime)}`}
+                  </>
+                )}
+                {event.is_all_day && ' · All Day'}
+              </span>
             </div>
-          )}
 
-          {/* Good For audience tags */}
-          {event.good_for && event.good_for.length > 0 && (
-            <div className="mb-6 flex flex-wrap gap-2">
-              <span className="text-sm text-stone mr-1 self-center">Good for:</span>
-              {getGoodForTags(event.good_for).map((tag) => (
-                <a
-                  key={tag.slug}
-                  href={`/events?goodFor=${tag.slug}`}
-                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-opacity hover:opacity-80 ${tag.color}`}
+            {/* Venue */}
+            {event.location && (
+              <div className="flex items-center gap-2 text-sm">
+                <MapPin className="w-4 h-4 text-coral flex-shrink-0" />
+                <Link
+                  href={buildVenueUrl(event.location)}
+                  className="font-medium text-charcoal hover:text-coral transition-colors"
                 >
-                  {tag.label}
-                </a>
-              ))}
-            </div>
-          )}
+                  {event.location.name}
+                </Link>
+              </div>
+            )}
+
+            {/* Age / Audience */}
+            {(event.age_restriction || event.is_family_friendly || event.age_low != null || event.age_high != null) && (
+              <div className="flex items-center gap-2 text-sm text-charcoal">
+                <Baby className="w-4 h-4 text-coral flex-shrink-0" />
+                <span className="font-medium">
+                  {(() => {
+                    const parts: string[] = [];
+                    const ageRange = formatAgeRange(event.age_low, event.age_high);
+                    if (ageRange) parts.push(ageRange);
+                    else if (event.age_restriction) parts.push(event.age_restriction);
+                    if (event.is_family_friendly) parts.push('Family Friendly');
+                    return parts.join(' · ');
+                  })()}
+                </span>
+              </div>
+            )}
+
+            {/* Good For audience tags */}
+            {event.good_for && event.good_for.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {getGoodForTags(event.good_for).map((tag) => (
+                  <a
+                    key={tag.slug}
+                    href={`/events?goodFor=${tag.slug}`}
+                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-opacity hover:opacity-80 ${tag.color}`}
+                  >
+                    {tag.label}
+                  </a>
+                ))}
+              </div>
+            )}
+
+            {/* Series badge */}
+            {event.series && (
+              <div className="pt-1">
+                <SeriesLinkBadge
+                  seriesSlug={event.series.slug}
+                  seriesTitle={event.series.title}
+                  seriesType={event.series.series_type}
+                  sequenceNumber={event.series_sequence}
+                  size="sm"
+                />
+              </div>
+            )}
+          </div>
 
           {/* Happenlist Editorial Summary */}
           {event.happenlist_summary && (
