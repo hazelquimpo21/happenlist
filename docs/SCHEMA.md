@@ -115,6 +115,7 @@ See [Description Fields](#description-fields-on-events) for how these map to the
 | `series_id` | UUID FK | no | Links to `series.id`. Null for standalone events. Set when the event is part of a class, camp, recurring series, etc. |
 | `series_sequence` | integer | no | Position within a series. Example: `3` means "Session 3" or "Day 3". Null for standalone events. |
 | `is_series_instance` | boolean | no | `true` if this event belongs to a series. Redundant with `series_id IS NOT NULL` but used for query convenience. Default: `false` |
+| `is_override` | boolean | no | `true` if this event was manually attached to a series (not generated from the recurrence pattern). Override events are preserved during replenishment — they won't be deleted or recreated. Default: `false` |
 
 #### Pricing
 
@@ -330,21 +331,35 @@ Series cards display significantly more information than event cards — badges 
 | `end_date` | date | no | Last date of the series. Auto-set from generated events. |
 | `total_sessions` | integer | no | Total number of sessions/events in the series. Auto-computed for camps/recurring. |
 | `sessions_remaining` | integer | no | How many sessions are still upcoming. Denormalized — maintained by app code. |
-| `recurrence_rule` | JSONB | no | Machine-readable recurrence pattern. See [Recurrence Rule](#recurrence-rule-format) below. |
+| `recurrence_rule` | JSONB | no | Machine-readable recurrence pattern. See [Recurrence Rule](#recurrence-rule-format) below. Only used for `series_type = 'recurring'`. |
+| `last_generated_at` | timestamp | no | When events were last generated/replenished for this recurring series. Updated by the replenishment cron and inline generation. |
+| `generation_cursor_date` | date | no | Last date through which events have been generated. Replenishment starts from the day after this date. Used to avoid duplicate generation. |
 
-**Recurrence rule format** (JSONB):
+**Recurrence rule format** (JSONB stored on `series.recurrence_rule`):
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| `frequency` | text | **yes** | `daily`, `weekly`, `biweekly`, `monthly`, `yearly` |
-| `interval` | integer | no | Every N frequency units. Default: `1`. Example: `2` with `weekly` = every 2 weeks. |
-| `days_of_week` | integer[] | no | Which days. `0`=Sunday, `1`=Monday, ..., `6`=Saturday. Example: `[1,3,5]` = Mon/Wed/Fri |
-| `day_of_month` | integer | no | For monthly: which day (1-31). |
+| `frequency` | text | **yes** | `daily`, `weekly`, `monthly`. Note: `biweekly` is deprecated — use `{ frequency: 'weekly', interval: 2 }` instead. |
+| `interval` | integer | **yes** | Every N frequency units. Default: `1`. Example: `2` with `weekly` = every 2 weeks (biweekly). |
+| `days_of_week` | integer[] | no | Which days of the week. `0`=Sunday, `1`=Monday, ..., `6`=Saturday. Example: `[1,3,5]` = Mon/Wed/Fri. Used with `weekly` frequency. |
+| `day_of_month` | integer | no | For monthly recurrence on a fixed date (1-31). Mutually exclusive with `week_of_month`. |
+| `week_of_month` | integer | no | For monthly ordinal patterns: `1`=first, `2`=second, `3`=third, `4`=fourth, `-1`=last. Use with `days_of_week` to express patterns like "First Friday" (`week_of_month: 1, days_of_week: [5]`). Mutually exclusive with `day_of_month`. |
 | `time` | text | no | Start time in `HH:MM` format. Example: `"19:00"` |
-| `duration_minutes` | integer | no | How long each session lasts. Example: `90` |
-| `end_type` | text | no | How the recurrence ends: `date`, `count`, or `never` |
+| `duration_minutes` | integer | no | How long each session lasts in minutes. Example: `90` |
+| `end_type` | text | **yes** | How the recurrence ends: `date`, `count`, or `never` |
 | `end_date` | text | no | Stop generating after this date (YYYY-MM-DD). Used when `end_type = 'date'`. |
 | `end_count` | integer | no | Stop after N occurrences. Used when `end_type = 'count'`. |
+| `exclude_dates` | text[] | no | Array of YYYY-MM-DD dates to skip. Events won't be generated on these dates. Populated when an admin cancels a single occurrence or manually adds skip dates (e.g., holidays). |
+
+**Recurrence rule examples:**
+
+| Pattern | JSON |
+|---------|------|
+| Every Wednesday at 7pm | `{ "frequency": "weekly", "interval": 1, "days_of_week": [3], "time": "19:00", "end_type": "never" }` |
+| Every other Thursday, skip holidays | `{ "frequency": "weekly", "interval": 2, "days_of_week": [4], "time": "18:30", "end_type": "never", "exclude_dates": ["2026-11-26", "2026-12-24"] }` |
+| First Friday of every month | `{ "frequency": "monthly", "interval": 1, "week_of_month": 1, "days_of_week": [5], "time": "19:00", "end_type": "never" }` |
+| Daily for 10 sessions | `{ "frequency": "daily", "interval": 1, "time": "09:00", "duration_minutes": 60, "end_type": "count", "end_count": 10 }` |
+| Monthly on the 15th | `{ "frequency": "monthly", "interval": 1, "day_of_month": 15, "time": "12:00", "end_type": "date", "end_date": "2026-12-15" }` |
 
 #### Camp/class fields
 
@@ -990,6 +1005,11 @@ Or for base64 (captured directly by the extension):
 | `/api/images/upload` | `POST` | Bearer token | Upload/re-host images to Supabase Storage |
 | `/api/images/upload` | `GET` | None | Endpoint documentation |
 | `/api/images/test` | `GET` | None | Storage configuration health check |
+| `/api/events/[id]/make-recurring` | `POST` | Superadmin | Convert a single event into a recurring series. Body: `{ recurrence_rule }`. See [RECURRING-EVENTS-DESIGN.md](./RECURRING-EVENTS-DESIGN.md). |
+| `/api/events/[id]/attach` | `POST` | Superadmin | Attach a standalone event to an existing series. Body: `{ series_id }` |
+| `/api/events/[id]/detach` | `POST` | Superadmin | Detach an event from its series |
+| `/api/series/[id]/skip-date` | `POST` | Superadmin | Add or remove a skip date on a recurring series. Body: `{ date, action: 'skip' \| 'unskip' }` |
+| `/api/series/[id]/replenish` | `POST` | Superadmin | Manually trigger event replenishment for a recurring series |
 
 ### Chrome extension gotchas & field rules
 
@@ -1038,6 +1058,18 @@ The API tries to match existing venues before creating new ones. To get the best
 2. The fuzzy name match (score > 0.7) works well but can create duplicates for venues with common names. "The Grand" will match a lot of things.
 3. `city` is required. `state` and `address_line` are strongly recommended. Without them, there's no way to distinguish "The Riverside" in Milwaukee from "The Riverside" in Chicago.
 4. `venue_type` helps but isn't used for matching — it's just metadata. Values: `venue`, `restaurant`, `bar`, `park`, `museum`, `theater`, `other`.
+
+#### Recurring events from scraper
+
+The scraper creates single events. If a scraped event is actually recurring (e.g., "Jazz Jam" happens every Wednesday), an admin can convert it to a recurring series using the "Make Recurring" action from the event detail page. This:
+1. Creates a `series` record (type: `recurring`) with a `recurrence_rule`
+2. Attaches the original event as instance #1
+3. Auto-generates future events from the recurrence pattern
+4. Supports skip dates (holidays, breaks) via `exclude_dates` in the recurrence rule
+
+The scraper does NOT need to detect or create recurring events — that's handled by admin review. Just create each occurrence as a standalone event.
+
+See [RECURRING-EVENTS-DESIGN.md](./RECURRING-EVENTS-DESIGN.md) for full architecture.
 
 #### Deduplication
 
