@@ -117,7 +117,6 @@ See [Description Fields](#description-fields-on-events) for how these map to the
 | `series_id` | UUID FK | no | Links to `series.id`. Null for standalone events. Set when the event is part of a class, camp, recurring series, etc. |
 | `series_sequence` | integer | no | Position within a series. Example: `3` means "Session 3" or "Day 3". Null for standalone events. |
 | `is_series_instance` | boolean | no | `true` if this event belongs to a series. Redundant with `series_id IS NOT NULL` but used for query convenience. Default: `false` |
-| `is_override` | boolean | no | `true` if this event was manually attached to a series (not generated from the recurrence pattern). Override events are preserved during replenishment — they won't be deleted or recreated. Default: `false` |
 
 #### Pricing
 
@@ -334,14 +333,12 @@ Series cards display significantly more information than event cards — badges 
 | `total_sessions` | integer | no | Total number of sessions/events in the series. Auto-computed for camps/recurring. |
 | `sessions_remaining` | integer | no | How many sessions are still upcoming. Denormalized — maintained by app code. |
 | `recurrence_rule` | JSONB | no | Machine-readable recurrence pattern. See [Recurrence Rule](#recurrence-rule-format) below. Only used for `series_type = 'recurring'`. |
-| `last_generated_at` | timestamp | no | When events were last generated/replenished for this recurring series. Updated by the replenishment cron and inline generation. |
-| `generation_cursor_date` | date | no | Last date through which events have been generated. Replenishment starts from the day after this date. Used to avoid duplicate generation. |
 
 **Recurrence rule format** (JSONB stored on `series.recurrence_rule`):
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| `frequency` | text | **yes** | `daily`, `weekly`, `monthly`. Note: `biweekly` is deprecated — use `{ frequency: 'weekly', interval: 2 }` instead. |
+| `frequency` | text | **yes** | `daily`, `weekly`, `biweekly`, `monthly`, `yearly`. `biweekly` is equivalent to `{ frequency: 'weekly', interval: 2 }` but is supported for convenience. |
 | `interval` | integer | **yes** | Every N frequency units. Default: `1`. Example: `2` with `weekly` = every 2 weeks (biweekly). |
 | `days_of_week` | integer[] | no | Which days of the week. `0`=Sunday, `1`=Monday, ..., `6`=Saturday. Example: `[1,3,5]` = Mon/Wed/Fri. Used with `weekly` frequency. |
 | `day_of_month` | integer | no | For monthly recurrence on a fixed date (1-31). Mutually exclusive with `week_of_month`. |
@@ -483,6 +480,8 @@ Where events happen. Called "venues" in the UI but `locations` in the database.
 | `working_hours` | JSONB | no | Business hours from Google Maps. |
 | `google_category` | text | no | Google Maps classification (e.g., "Music venue"). **Not related to the `categories` table.** |
 | `source` | text | **yes** | Where this record came from. Default: `manual`. CHECK constraint: `manual`, `scraper`, `csv_import`, `user_submitted`, `api`. |
+| `external_image_url` | text | no | External image URL (e.g., Google Photos) that hasn't been re-hosted to Supabase Storage. |
+| `social_links` | JSONB | no | Social media URLs. Shape: `{ instagram?: string, tiktok?: string, facebook?: string, twitter?: string, youtube?: string }`. Default: `null` |
 | `import_batch_id` | text | no | Batch ID if imported via CSV or bulk load. |
 | `is_active` | boolean | no | Whether to show in the UI and venue search. Default: `true` |
 | `meta_title` | text | no | Custom SEO title. |
@@ -645,9 +644,12 @@ Every admin action is logged here. Append-only — rows are never updated or del
 | `action` | text | **yes** | What happened. Examples: `event_approved`, `event_rejected`, `event_changes_requested`, `event_deleted`, `event_resubmitted`, `event_edited` |
 | `entity_type` | text | **yes** | What kind of thing was acted on. **Values:** `event`, `series`, `organizer` |
 | `entity_id` | UUID | **yes** | Which specific entity. Links to `events.id`, `series.id`, or `organizers.id`. |
-| `admin_email` | text | **yes** | Email of the admin who performed the action. |
+| `admin_id` | text | no | User ID of the admin who performed the action. |
+| `admin_email` | text | no | Email of the admin who performed the action. |
 | `changes` | JSONB | no | Diff of what changed. Shape: `{ field: { old: value, new: value } }` |
 | `notes` | text | no | Free-text admin notes explaining the action. |
+| `ip_address` | text | no | IP address of the request. |
+| `user_agent` | text | no | Browser user agent string. |
 | `created_at` | timestamp | auto | When the action happened. |
 
 ---
