@@ -163,6 +163,33 @@ export default async function EventPage({ params }: EventPageProps) {
         registration_url: event.registration_url,
         // Good For audience tags
         good_for: event.good_for || [],
+        // Cross-linked entities
+        location: event.location ? {
+          id: event.location.id,
+          name: event.location.name,
+          slug: event.location.slug,
+          address_line: event.location.address_line,
+          city: event.location.city,
+          state: event.location.state,
+          venue_type: event.location.venue_type,
+        } : null,
+        organizer: event.organizer ? {
+          id: event.organizer.id,
+          name: event.organizer.name,
+          slug: event.organizer.slug,
+          logo_url: event.organizer.logo_url,
+          website_url: event.organizer.website_url,
+        } : null,
+        category: event.category ? {
+          id: event.category.id,
+          name: event.category.name,
+          slug: event.category.slug,
+          icon: event.category.icon,
+        } : null,
+        category_id: event.category?.id || null,
+        location_id: event.location?.id || null,
+        organizer_id: event.organizer?.id || null,
+        // Series info
         series_id: event.series_id,
         series_title: seriesInfo?.title || null,
       }

@@ -83,7 +83,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const { updates, notes } = body;
+    const { updates, notes, applyToSeries, occurrenceScope } = body;
 
     // Validate updates
     if (!updates || typeof updates !== 'object' || Object.keys(updates).length === 0) {
@@ -114,6 +114,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       adminEmail: session.email,
       updates,
       notes,
+      applyToSeries: !!applyToSeries,
+      occurrenceScope: occurrenceScope || undefined,
     });
 
     if (!result.success) {

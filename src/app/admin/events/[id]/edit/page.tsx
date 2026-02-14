@@ -27,6 +27,7 @@ import { SuperadminEventEditForm } from '@/components/superadmin';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getAdminEvent, getEventAuditHistory } from '@/data/admin';
+import { getCategories } from '@/data/categories';
 import { getSession, isSuperAdmin } from '@/lib/auth';
 import { superadminLogger } from '@/lib/utils/logger';
 
@@ -70,10 +71,11 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
     adminEmail: session.email,
   });
 
-  // Fetch event and audit history
-  const [event, auditHistory] = await Promise.all([
+  // Fetch event, audit history, and categories
+  const [event, auditHistory, categories] = await Promise.all([
     getAdminEvent(eventId),
     getEventAuditHistory(eventId),
+    getCategories(),
   ]);
 
   if (!event) {
@@ -131,7 +133,7 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main content - Edit form */}
           <div className="lg:col-span-2">
-            <SuperadminEventEditForm event={event} />
+            <SuperadminEventEditForm event={event} categories={categories} />
           </div>
 
           {/* Sidebar - Event info and history */}

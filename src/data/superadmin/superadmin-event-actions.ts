@@ -49,6 +49,10 @@ export interface EditEventParams {
   adminEmail: string;
   updates: Partial<EventUpdate>;
   notes?: string;
+  /** Apply changes to sibling events in the same series */
+  applyToSeries?: boolean;
+  /** Scope: 'all' = all occurrences, 'future' = this + future occurrences */
+  occurrenceScope?: 'all' | 'future';
 }
 
 /**
@@ -103,7 +107,7 @@ interface EventRow {
 export async function superadminEditEvent(
   params: EditEventParams
 ): Promise<SuperadminActionResult> {
-  const { eventId, adminEmail, updates, notes } = params;
+  const { eventId, adminEmail, updates, notes, applyToSeries, occurrenceScope } = params;
   const timestamp = new Date().toISOString();
 
   // 🔐 Verify superadmin status
@@ -212,13 +216,82 @@ export async function superadminEditEvent(
       superadminLogger.warn('⚠️ Failed to log audit entry', { metadata: { error: auditError } });
     }
 
-    timer.success(`✅ Event updated: ${currentEvent.title}`, {
-      metadata: { changedFields: Object.keys(changes) },
+    // 🔄 Apply to series siblings if requested
+    let seriesUpdateCount = 0;
+    if (applyToSeries && currentEvent.series_id && occurrenceScope) {
+      // Build sibling updates - exclude per-instance fields (dates)
+      const seriesUpdates = { ...updates };
+      delete seriesUpdates.start_datetime;
+      delete seriesUpdates.end_datetime;
+      delete seriesUpdates.instance_date;
+      delete seriesUpdates.is_all_day;
+
+      if (Object.keys(seriesUpdates).length > 0) {
+        try {
+          const seriesUpdateData = {
+            ...seriesUpdates,
+            last_edited_at: timestamp,
+            last_edited_by: adminEmail,
+            updated_at: timestamp,
+          };
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          let siblingQuery = (supabase as any)
+            .from('events')
+            .update(seriesUpdateData)
+            .eq('series_id', currentEvent.series_id)
+            .neq('id', eventId); // Don't double-update the primary event
+
+          // For 'future' scope, only update events on or after the current event's date
+          if (occurrenceScope === 'future') {
+            siblingQuery = siblingQuery.gte('instance_date', currentEvent.instance_date);
+          }
+
+          const { error: siblingError, count } = await siblingQuery;
+
+          if (siblingError) {
+            superadminLogger.warn('Failed to update series siblings', { metadata: { error: siblingError } });
+          } else {
+            seriesUpdateCount = count || 0;
+            superadminLogger.info(`Updated ${seriesUpdateCount} series siblings`, {
+              entityType: 'event',
+              entityId: eventId,
+              metadata: { scope: occurrenceScope, count: seriesUpdateCount },
+            });
+          }
+
+          // Log series bulk edit to audit
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase as any).from('admin_audit_log').insert({
+            action: 'superadmin_series_bulk_edit',
+            entity_type: 'event',
+            entity_id: eventId,
+            admin_email: adminEmail,
+            changes: {
+              fields_changed: Object.keys(seriesUpdates),
+              scope: occurrenceScope,
+              series_id: currentEvent.series_id,
+              siblings_updated: seriesUpdateCount,
+            },
+            notes: notes || `Series bulk edit (${occurrenceScope}): ${Object.keys(seriesUpdates).join(', ')}`,
+          });
+        } catch (seriesError) {
+          superadminLogger.warn('Series bulk edit failed', { metadata: { error: seriesError } });
+        }
+      }
+    }
+
+    timer.success(`Event updated: ${currentEvent.title}`, {
+      metadata: { changedFields: Object.keys(changes), seriesUpdateCount },
     });
+
+    const seriesMsg = seriesUpdateCount > 0
+      ? ` + ${seriesUpdateCount} series occurrence${seriesUpdateCount === 1 ? '' : 's'}`
+      : '';
 
     return {
       success: true,
-      message: `✅ Event "${currentEvent.title}" updated successfully`,
+      message: `Event "${currentEvent.title}" updated successfully${seriesMsg}`,
       eventId,
       timestamp,
     };
@@ -226,7 +299,7 @@ export async function superadminEditEvent(
     timer.error('Unexpected error editing event', error);
     return {
       success: false,
-      message: '❌ An unexpected error occurred',
+      message: 'An unexpected error occurred',
       error: error instanceof Error ? error.message : 'Unknown error',
       timestamp,
     };

@@ -155,18 +155,13 @@ export function QuickEditDrawer({
                 </button>
               </div>
 
-              {/* Series warning */}
+              {/* Series indicator (scope selection is now inside the form) */}
               {event.series_id && (
-                <div className="mt-3 flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="mt-3 flex items-start gap-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
                   <AlertTriangle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm">
-                    <p className="font-medium text-blue-800">
-                      Part of a series
-                    </p>
-                    <p className="text-blue-700 mt-0.5">
-                      Changes only affect this event, not the whole series.
-                    </p>
-                  </div>
+                  <p className="text-xs text-blue-700">
+                    Part of a series {event.series_title ? `(${event.series_title})` : ''} — choose occurrence scope below.
+                  </p>
                 </div>
               )}
             </div>
@@ -189,7 +184,7 @@ export function QuickEditDrawer({
             {/* -------------------------------------------------------------- */}
             <div className="border-t border-sand px-4 py-3 sm:px-6 bg-cream/50">
               <p className="text-xs text-stone text-center">
-                For location, category, or image changes,{' '}
+                For category or image changes,{' '}
                 <a
                   href={`/admin/events/${event.id}/edit`}
                   className="text-coral hover:underline font-medium"

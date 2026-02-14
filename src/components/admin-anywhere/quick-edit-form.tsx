@@ -26,6 +26,10 @@ import {
   Loader2,
   CheckCircle,
   AlertCircle,
+  MapPin,
+  User,
+  Search,
+  Layers,
 } from 'lucide-react';
 import { StatusBadgeSelect } from './status-badge-select';
 import { useAdminEdit } from '@/hooks/use-admin-edit';
@@ -158,6 +162,24 @@ export function QuickEditForm({
     notes: '',
   });
 
+  // Venue state
+  const [selectedVenue, setSelectedVenue] = useState(event.location);
+  const [venueQuery, setVenueQuery] = useState('');
+  const [venueResults, setVenueResults] = useState<{ id: string; name: string; address_line: string | null; city: string; state: string | null; venue_type: string }[]>([]);
+  const [isSearchingVenue, setIsSearchingVenue] = useState(false);
+  const [showVenueSearch, setShowVenueSearch] = useState(false);
+
+  // Organizer state
+  const [selectedOrganizer, setSelectedOrganizer] = useState(event.organizer);
+  const [organizerQuery, setOrganizerQuery] = useState('');
+  const [organizerResults, setOrganizerResults] = useState<{ id: string; name: string; slug: string; website_url: string | null }[]>([]);
+  const [isSearchingOrganizer, setIsSearchingOrganizer] = useState(false);
+  const [showOrganizerSearch, setShowOrganizerSearch] = useState(false);
+
+  // Series occurrence scope
+  type OccurrenceScope = 'single' | 'all' | 'future';
+  const [occurrenceScope, setOccurrenceScope] = useState<OccurrenceScope>('single');
+
   // -------------------------------------------------------------------------
   // API HOOK
   // -------------------------------------------------------------------------
@@ -194,6 +216,38 @@ export function QuickEditForm({
    */
   const handleStatusChange = useCallback((newStatus: string) => {
     setFormState((prev) => ({ ...prev, status: newStatus }));
+  }, []);
+
+  /**
+   * Handle venue search
+   */
+  const handleVenueSearch = useCallback(async (query: string) => {
+    setVenueQuery(query);
+    if (query.length < 2) { setVenueResults([]); return; }
+    setIsSearchingVenue(true);
+    try {
+      const res = await fetch(`/api/submit/venues/search?q=${encodeURIComponent(query)}&limit=8`);
+      const data = await res.json();
+      if (data.success) setVenueResults(data.venues);
+      else setVenueResults([]);
+    } catch { setVenueResults([]); }
+    finally { setIsSearchingVenue(false); }
+  }, []);
+
+  /**
+   * Handle organizer search
+   */
+  const handleOrganizerSearch = useCallback(async (query: string) => {
+    setOrganizerQuery(query);
+    if (query.length < 2) { setOrganizerResults([]); return; }
+    setIsSearchingOrganizer(true);
+    try {
+      const res = await fetch(`/api/submit/organizers/search?q=${encodeURIComponent(query)}&limit=8`);
+      const data = await res.json();
+      if (data.success) setOrganizerResults(data.organizers);
+      else setOrganizerResults([]);
+    } catch { setOrganizerResults([]); }
+    finally { setIsSearchingOrganizer(false); }
   }, []);
 
   /**
@@ -278,6 +332,20 @@ export function QuickEditForm({
       updates.good_for = formState.good_for;
     }
 
+    // Handle venue change
+    const currentLocationId = event.location_id || null;
+    const newLocationId = selectedVenue?.id || null;
+    if (newLocationId !== currentLocationId) {
+      updates.location_id = newLocationId;
+    }
+
+    // Handle organizer change
+    const currentOrganizerId = event.organizer_id || null;
+    const newOrganizerId = selectedOrganizer?.id || null;
+    if (newOrganizerId !== currentOrganizerId) {
+      updates.organizer_id = newOrganizerId;
+    }
+
     // Handle status change separately
     const statusChanged = formState.status !== event.status;
     const fieldsChanged = Object.keys(updates).length > 0;
@@ -304,7 +372,8 @@ export function QuickEditForm({
     if (fieldsChanged && success) {
       const updateResult = await updateEvent(
         updates,
-        formState.notes || 'Quick edit update'
+        formState.notes || 'Quick edit update',
+        event.series_id && occurrenceScope !== 'single' ? occurrenceScope : undefined
       );
       if (!updateResult) {
         success = false;
@@ -712,6 +781,181 @@ export function QuickEditForm({
           </p>
         )}
       </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Venue / Location */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="p-3 bg-cream/50 rounded-lg border border-sand/50">
+        <p className="text-sm font-medium text-charcoal mb-2">
+          Venue / Location
+        </p>
+
+        {selectedVenue && !showVenueSearch && (
+          <div className="flex items-start justify-between gap-2 p-2 bg-sage/10 border border-sage/30 rounded-lg">
+            <div className="flex items-start gap-2 min-w-0">
+              <MapPin className="w-4 h-4 text-sage mt-0.5 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-charcoal truncate">{selectedVenue.name}</p>
+                <p className="text-xs text-stone truncate">
+                  {selectedVenue.address_line && `${selectedVenue.address_line}, `}
+                  {selectedVenue.city}
+                  {selectedVenue.state && `, ${selectedVenue.state}`}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button type="button" onClick={() => setShowVenueSearch(true)} className="text-xs text-coral hover:text-coral/80">Change</button>
+              <button type="button" onClick={() => setSelectedVenue(null)} className="text-xs text-stone hover:text-charcoal">Clear</button>
+            </div>
+          </div>
+        )}
+
+        {!selectedVenue && !showVenueSearch && (
+          <button type="button" onClick={() => setShowVenueSearch(true)}
+            className="w-full p-2 border border-dashed border-sand rounded-lg hover:border-coral hover:bg-coral/5 transition-colors text-left text-sm text-stone">
+            No venue selected - click to search
+          </button>
+        )}
+
+        {showVenueSearch && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-stone">Search venues</span>
+              <button type="button" onClick={() => { setShowVenueSearch(false); setVenueQuery(''); setVenueResults([]); }} className="text-xs text-stone hover:text-charcoal">Cancel</button>
+            </div>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone" />
+              <input type="text" value={venueQuery} onChange={(e) => handleVenueSearch(e.target.value)} placeholder="Type venue name..."
+                className="w-full pl-8 pr-8 py-1.5 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm" autoFocus />
+              {isSearchingVenue && <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone animate-spin" />}
+            </div>
+            {venueResults.length > 0 && (
+              <div className="max-h-40 overflow-y-auto space-y-1">
+                {venueResults.map((v) => (
+                  <button key={v.id} type="button" onClick={() => { setSelectedVenue(v as typeof selectedVenue); setShowVenueSearch(false); setVenueQuery(''); setVenueResults([]); }}
+                    className="w-full p-2 rounded-lg border border-sand bg-warm-white hover:border-coral text-left text-sm">
+                    <p className="font-medium text-charcoal truncate">{v.name}</p>
+                    <p className="text-xs text-stone truncate">{v.address_line && `${v.address_line}, `}{v.city}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+            {venueQuery.length >= 2 && !isSearchingVenue && venueResults.length === 0 && (
+              <p className="text-xs text-stone text-center py-2">No venues found</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Organizer */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="p-3 bg-cream/50 rounded-lg border border-sand/50">
+        <p className="text-sm font-medium text-charcoal mb-2">
+          Organizer
+        </p>
+
+        {selectedOrganizer && !showOrganizerSearch && (
+          <div className="flex items-start justify-between gap-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start gap-2 min-w-0">
+              <User className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-charcoal truncate">{selectedOrganizer.name}</p>
+                {selectedOrganizer.website_url && (
+                  <p className="text-xs text-stone truncate">{selectedOrganizer.website_url}</p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button type="button" onClick={() => setShowOrganizerSearch(true)} className="text-xs text-coral hover:text-coral/80">Change</button>
+              <button type="button" onClick={() => setSelectedOrganizer(null)} className="text-xs text-stone hover:text-charcoal">Clear</button>
+            </div>
+          </div>
+        )}
+
+        {!selectedOrganizer && !showOrganizerSearch && (
+          <button type="button" onClick={() => setShowOrganizerSearch(true)}
+            className="w-full p-2 border border-dashed border-sand rounded-lg hover:border-coral hover:bg-coral/5 transition-colors text-left text-sm text-stone">
+            No organizer selected - click to search
+          </button>
+        )}
+
+        {showOrganizerSearch && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-stone">Search organizers</span>
+              <button type="button" onClick={() => { setShowOrganizerSearch(false); setOrganizerQuery(''); setOrganizerResults([]); }} className="text-xs text-stone hover:text-charcoal">Cancel</button>
+            </div>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone" />
+              <input type="text" value={organizerQuery} onChange={(e) => handleOrganizerSearch(e.target.value)} placeholder="Type organizer name..."
+                className="w-full pl-8 pr-8 py-1.5 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm" autoFocus />
+              {isSearchingOrganizer && <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone animate-spin" />}
+            </div>
+            {organizerResults.length > 0 && (
+              <div className="max-h-40 overflow-y-auto space-y-1">
+                {organizerResults.map((o) => (
+                  <button key={o.id} type="button" onClick={() => { setSelectedOrganizer(o as typeof selectedOrganizer); setShowOrganizerSearch(false); setOrganizerQuery(''); setOrganizerResults([]); }}
+                    className="w-full flex items-start gap-2 p-2 rounded-lg border border-sand bg-warm-white hover:border-coral text-left text-sm">
+                    <User className="w-3.5 h-3.5 text-stone mt-0.5 flex-shrink-0" />
+                    <p className="font-medium text-charcoal truncate">{o.name}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+            {organizerQuery.length >= 2 && !isSearchingOrganizer && organizerResults.length === 0 && (
+              <p className="text-xs text-stone text-center py-2">No organizers found</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Category (read-only in quick edit, shows current) */}
+      {/* ------------------------------------------------------------------ */}
+      {event.category && (
+        <div className="p-3 bg-cream/50 rounded-lg border border-sand/50">
+          <p className="text-sm font-medium text-charcoal mb-1">Category</p>
+          <p className="text-sm text-stone">{event.category.name} <span className="text-xs">(use Full Edit to change)</span></p>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Series Occurrence Scope */}
+      {/* ------------------------------------------------------------------ */}
+      {event.series_id && (
+        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-start gap-2">
+            <Layers className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-blue-800">Part of a Series</p>
+              {event.series_title && (
+                <p className="text-xs text-blue-600">{event.series_title}</p>
+              )}
+              <div className="mt-2 space-y-1.5">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="scope" value="single" checked={occurrenceScope === 'single'} onChange={() => setOccurrenceScope('single')}
+                    className="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500" />
+                  <span className="text-xs text-blue-800">This occurrence only</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="scope" value="all" checked={occurrenceScope === 'all'} onChange={() => setOccurrenceScope('all')}
+                    className="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500" />
+                  <span className="text-xs text-blue-800">All occurrences in series</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="scope" value="future" checked={occurrenceScope === 'future'} onChange={() => setOccurrenceScope('future')}
+                    className="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500" />
+                  <span className="text-xs text-blue-800">This and future occurrences</span>
+                </label>
+              </div>
+              {occurrenceScope !== 'single' && (
+                <p className="text-xs text-blue-600 mt-1.5">Date/time changes only apply to this occurrence.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ------------------------------------------------------------------ */}
       {/* Status */}
