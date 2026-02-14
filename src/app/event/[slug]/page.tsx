@@ -21,7 +21,6 @@ import {
   MapPin,
   Ticket,
   ExternalLink,
-  Share2,
   User,
   Sparkles,
   Quote,
@@ -30,7 +29,7 @@ import {
 } from 'lucide-react';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { Button, Badge } from '@/components/ui';
-import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox } from '@/components/events';
+import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox, ShareButton } from '@/components/events';
 import { HeartButton } from '@/components/hearts';
 import { SeriesLinkBadge } from '@/components/series';
 import { EventJsonLd } from '@/components/seo';
@@ -582,9 +581,11 @@ export default async function EventPage({ params }: EventPageProps) {
                 size="lg"
                 className="flex-1 bg-warm-white border border-sand hover:border-coral/30"
               />
-              <Button variant="ghost" className="flex-1" leftIcon={<Share2 className="w-4 h-4" />}>
-                Share
-              </Button>
+              <ShareButton
+                title={event.title}
+                text={event.short_description || undefined}
+                className="flex-1"
+              />
             </div>
           </div>
         </div>
