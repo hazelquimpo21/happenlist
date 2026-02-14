@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSuperadminAuth } from '@/lib/auth';
-import { superadminEditEntity } from '@/data/superadmin';
+import { superadminEditEntity, superadminDeleteEntity } from '@/data/superadmin';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -67,6 +67,57 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     });
   } catch (error) {
     console.error('Unexpected error editing venue:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const { id: entityId } = await context.params;
+
+  try {
+    let session;
+    try {
+      session = await requireSuperadminAuth();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Superadmin access required' },
+        { status: 403 }
+      );
+    }
+
+    let body = { reason: 'No reason provided' };
+    try {
+      const parsed = await request.json();
+      body = { ...body, ...parsed };
+    } catch {
+      // Body is optional for DELETE
+    }
+
+    const result = await superadminDeleteEntity({
+      entityId,
+      entityType: 'venue',
+      adminEmail: session.email,
+      reason: body.reason,
+    });
+
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.error, message: result.message },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: result.message,
+      entityId: result.eventId,
+      timestamp: result.timestamp,
+    });
+  } catch (error) {
+    console.error('Unexpected error deleting venue:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

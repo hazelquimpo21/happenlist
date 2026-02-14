@@ -10,10 +10,12 @@ import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Save,
+  Trash2,
   CheckCircle,
   Clock,
   AlertTriangle,
   ChevronDown,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -88,6 +90,8 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
   const [status, setStatus] = useState<FormStatus>('idle');
   const [statusMessage, setStatusMessage] = useState('');
   const [notes, setNotes] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('');
 
   const handleInputChange = useCallback((
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -429,8 +433,18 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
         </div>
       </div>
 
-      {/* Save button */}
-      <div className="flex justify-end">
+      {/* Action buttons */}
+      <div className="flex items-center justify-between">
+        <Button
+          variant="secondary"
+          onClick={() => setShowDeleteConfirm(true)}
+          disabled={status === 'saving'}
+          className="flex items-center gap-2 text-red-600 hover:bg-red-50"
+        >
+          <Trash2 className="w-4 h-4" />
+          Cancel Series
+        </Button>
+
         <Button
           onClick={handleSave}
           disabled={status === 'saving'}
@@ -440,6 +454,80 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
           {status === 'saving' ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-charcoal/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-warm-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display text-xl text-charcoal flex items-center gap-2">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+                Cancel Series
+              </h3>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="p-1 hover:bg-sand/50 rounded-lg"
+              >
+                <X className="w-5 h-5 text-stone" />
+              </button>
+            </div>
+
+            <p className="text-stone mb-4">
+              This will mark <strong>{series.title}</strong> as cancelled.
+              The series can be republished later by changing the status.
+            </p>
+
+            <div className="mb-4">
+              <label htmlFor="deleteReason" className="block text-sm font-medium text-charcoal mb-2">
+                Reason <span className="text-red-600">*</span>
+              </label>
+              <textarea
+                id="deleteReason"
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                rows={2}
+                className="w-full px-4 py-2 border border-sand rounded-lg focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none resize-none"
+                placeholder="Why are you cancelling this series?"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3">
+              <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  if (!deleteReason.trim()) return;
+                  setStatus('saving');
+                  setStatusMessage('Cancelling series...');
+                  try {
+                    const response = await fetch(`/api/superadmin/series/${series.id}`, {
+                      method: 'DELETE',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ reason: deleteReason }),
+                    });
+                    if (!response.ok) {
+                      const errorData = await response.json();
+                      throw new Error(errorData.error || 'Failed to cancel series');
+                    }
+                    setStatus('saved');
+                    setStatusMessage('Series cancelled successfully');
+                    setShowDeleteConfirm(false);
+                    router.refresh();
+                  } catch (error) {
+                    setStatus('error');
+                    setStatusMessage(error instanceof Error ? error.message : 'Failed to cancel series');
+                  }
+                }}
+                disabled={!deleteReason.trim() || status === 'saving'}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {status === 'saving' ? 'Cancelling...' : 'Cancel Series'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

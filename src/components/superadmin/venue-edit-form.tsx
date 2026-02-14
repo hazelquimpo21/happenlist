@@ -10,9 +10,11 @@ import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Save,
+  Trash2,
   CheckCircle,
   Clock,
   AlertTriangle,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -64,6 +66,8 @@ export function SuperadminVenueEditForm({ venue }: VenueEditFormProps) {
   const [status, setStatus] = useState<FormStatus>('idle');
   const [statusMessage, setStatusMessage] = useState('');
   const [notes, setNotes] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('');
 
   const handleInputChange = useCallback((
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -381,8 +385,18 @@ export function SuperadminVenueEditForm({ venue }: VenueEditFormProps) {
         </div>
       </div>
 
-      {/* Save button */}
-      <div className="flex justify-end">
+      {/* Action buttons */}
+      <div className="flex items-center justify-between">
+        <Button
+          variant="secondary"
+          onClick={() => setShowDeleteConfirm(true)}
+          disabled={status === 'saving'}
+          className="flex items-center gap-2 text-red-600 hover:bg-red-50"
+        >
+          <Trash2 className="w-4 h-4" />
+          Deactivate Venue
+        </Button>
+
         <Button
           onClick={handleSave}
           disabled={status === 'saving'}
@@ -392,6 +406,80 @@ export function SuperadminVenueEditForm({ venue }: VenueEditFormProps) {
           {status === 'saving' ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-charcoal/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-warm-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display text-xl text-charcoal flex items-center gap-2">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+                Deactivate Venue
+              </h3>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="p-1 hover:bg-sand/50 rounded-lg"
+              >
+                <X className="w-5 h-5 text-stone" />
+              </button>
+            </div>
+
+            <p className="text-stone mb-4">
+              This will hide <strong>{venue.name}</strong> from the site.
+              The venue can be reactivated later.
+            </p>
+
+            <div className="mb-4">
+              <label htmlFor="deleteReason" className="block text-sm font-medium text-charcoal mb-2">
+                Reason <span className="text-red-600">*</span>
+              </label>
+              <textarea
+                id="deleteReason"
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                rows={2}
+                className="w-full px-4 py-2 border border-sand rounded-lg focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none resize-none"
+                placeholder="Why are you deactivating this venue?"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3">
+              <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  if (!deleteReason.trim()) return;
+                  setStatus('saving');
+                  setStatusMessage('Deactivating...');
+                  try {
+                    const response = await fetch(`/api/superadmin/venues/${venue.id}`, {
+                      method: 'DELETE',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ reason: deleteReason }),
+                    });
+                    if (!response.ok) {
+                      const errorData = await response.json();
+                      throw new Error(errorData.error || 'Failed to deactivate');
+                    }
+                    setStatus('saved');
+                    setStatusMessage('Venue deactivated successfully');
+                    setShowDeleteConfirm(false);
+                    router.refresh();
+                  } catch (error) {
+                    setStatus('error');
+                    setStatusMessage(error instanceof Error ? error.message : 'Failed to deactivate');
+                  }
+                }}
+                disabled={!deleteReason.trim() || status === 'saving'}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {status === 'saving' ? 'Deactivating...' : 'Deactivate'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
