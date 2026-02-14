@@ -377,38 +377,6 @@ export default async function EventPage({ params }: EventPageProps) {
             </div>
           )}
 
-          {/* Organizer */}
-          {event.organizer && (
-            <div className="p-6 bg-warm-white rounded-lg border border-sand">
-              <h2 className="font-display text-h4 text-charcoal mb-4">
-                Presented By
-              </h2>
-              <Link
-                href={buildOrganizerUrl(event.organizer)}
-                className="flex items-center gap-4 group"
-              >
-                <div className="w-16 h-16 rounded-full bg-sand flex items-center justify-center overflow-hidden">
-                  {event.organizer.logo_url ? (
-                    <Image
-                      src={event.organizer.logo_url}
-                      alt={event.organizer.name}
-                      width={64}
-                      height={64}
-                      className="object-cover"
-                    />
-                  ) : (
-                    <User className="w-8 h-8 text-stone" />
-                  )}
-                </div>
-                <div>
-                  <p className="font-medium text-charcoal group-hover:text-coral transition-colors">
-                    {event.organizer.name}
-                  </p>
-                  <p className="text-body-sm text-stone">View all events</p>
-                </div>
-              </Link>
-            </div>
-          )}
         </div>
 
         {/* Sidebar */}
@@ -528,7 +496,53 @@ export default async function EventPage({ params }: EventPageProps) {
                   Learn More
                 </Button>
               )}
+
+              {/* Original event listing link */}
+              {event.source_url && (
+                <Button
+                  href={event.source_url}
+                  external
+                  fullWidth
+                  variant="secondary"
+                  rightIcon={<ExternalLink className="w-4 h-4" />}
+                >
+                  View Original Listing
+                </Button>
+              )}
             </div>
+
+            {/* Organizer card */}
+            {event.organizer && (
+              <div className="p-4 bg-warm-white rounded-lg border border-sand">
+                <h3 className="text-body-sm font-medium text-charcoal mb-3">
+                  Presented By
+                </h3>
+                <Link
+                  href={buildOrganizerUrl(event.organizer)}
+                  className="flex items-center gap-3 group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-sand flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {event.organizer.logo_url ? (
+                      <Image
+                        src={event.organizer.logo_url}
+                        alt={event.organizer.name}
+                        width={40}
+                        height={40}
+                        className="object-cover"
+                      />
+                    ) : (
+                      <User className="w-5 h-5 text-stone" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium text-charcoal group-hover:text-coral transition-colors truncate">
+                      {event.organizer.name}
+                    </p>
+                    <p className="text-xs text-stone">View all events</p>
+                  </div>
+                </Link>
+              </div>
+            )}
 
             {/* External Links */}
             {(event.website_url || event.instagram_url || event.facebook_url || event.registration_url) && (
