@@ -24,3 +24,4 @@ export { EventDateTime, formatTimeRange } from './event-date-time';
 export { EventLinks, EventLink } from './event-links';
 export { SectionHeader } from './section-header';
 export { FlyerLightbox } from './flyer-lightbox';
+export { ShareButton } from './share-button';
