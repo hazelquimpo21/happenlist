@@ -19,7 +19,9 @@ import {
   SeriesDetailSkeleton,
 } from '@/components/series';
 import { SeriesGrid } from '@/components/series';
+import { SuperadminBar } from '@/components/admin-anywhere';
 import { getSeriesBySlug, getSeriesEvents, getRelatedSeries } from '@/data/series';
+import { getSession, isSuperAdmin } from '@/lib/auth';
 import { SeriesJsonLd } from './series-json-ld';
 
 // ============================================================================
@@ -77,14 +79,20 @@ export default async function SeriesDetailPage({ params }: SeriesDetailPageProps
 
   console.log(`📖 [SeriesDetailPage] Rendering series: ${slug}`);
 
-  // Fetch series data
-  const series = await getSeriesBySlug(slug);
+  // Fetch series data and session in parallel
+  const [series, { session }] = await Promise.all([
+    getSeriesBySlug(slug),
+    getSession(),
+  ]);
 
   // 404 if not found
   if (!series) {
     console.log(`⚠️ [SeriesDetailPage] Series not found: ${slug}`);
     notFound();
   }
+
+  // Check if current user is superadmin
+  const userIsSuperAdmin = session ? isSuperAdmin(session.email) : false;
 
   // Fetch events and related series in parallel
   const [events, relatedSeries] = await Promise.all([
@@ -117,6 +125,15 @@ export default async function SeriesDetailPage({ params }: SeriesDetailPageProps
     <>
       {/* Structured data for SEO */}
       <SeriesJsonLd series={series} events={events} />
+
+      {/* Superadmin bar */}
+      {userIsSuperAdmin && (
+        <SuperadminBar
+          entityType="series"
+          entityName={series.title}
+          entityId={series.id}
+        />
+      )}
 
       <Container className="py-8">
         {/* Breadcrumbs */}

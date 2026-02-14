@@ -20,8 +20,10 @@ import { Container, Breadcrumbs } from '@/components/layout';
 import { Button, Badge } from '@/components/ui';
 import { EventGrid, SectionHeader } from '@/components/events';
 import { OrganizerJsonLd } from '@/components/seo';
+import { SuperadminBar } from '@/components/admin-anywhere';
 import { getOrganizer } from '@/data/organizers';
 import { getEvents } from '@/data/events';
+import { getSession, isSuperAdmin } from '@/lib/auth';
 
 interface OrganizerPageProps {
   params: Promise<{ slug: string }>;
@@ -62,13 +64,19 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
 
   console.log('👥 [OrganizerPage] Rendering organizer:', slug);
 
-  // Fetch organizer
-  const organizer = await getOrganizer({ slug });
+  // Fetch organizer and session in parallel
+  const [organizer, { session }] = await Promise.all([
+    getOrganizer({ slug }),
+    getSession(),
+  ]);
 
   if (!organizer) {
     console.log('⚠️ [OrganizerPage] Organizer not found');
     notFound();
   }
+
+  // Check if current user is superadmin
+  const userIsSuperAdmin = session ? isSuperAdmin(session.email) : false;
 
   // Fetch events by this organizer
   const { events, total } = await getEvents({
@@ -82,6 +90,15 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
     <>
       {/* Structured data for SEO */}
       <OrganizerJsonLd organizer={organizer} />
+
+      {/* Superadmin bar */}
+      {userIsSuperAdmin && (
+        <SuperadminBar
+          entityType="organizer"
+          entityName={organizer.name}
+          entityId={organizer.id}
+        />
+      )}
 
       <Container className="py-8">
         {/* Breadcrumbs */}

@@ -23,8 +23,10 @@ import { EventGrid, SectionHeader } from '@/components/events';
 import { VenueJsonLd } from '@/components/seo';
 import { VenueMap } from '@/components/maps';
 import { VenueSocialLinks } from '@/components/venues';
+import { SuperadminBar } from '@/components/admin-anywhere';
 import { getVenue } from '@/data/venues';
 import { getEvents } from '@/data/events';
+import { getSession, isSuperAdmin } from '@/lib/auth';
 import { getBestImageUrl } from '@/lib/utils';
 
 interface VenuePageProps {
@@ -69,13 +71,19 @@ export default async function VenuePage({ params }: VenuePageProps) {
 
   console.log('🏛️ [VenuePage] Rendering venue:', slug);
 
-  // Fetch venue
-  const venue = await getVenue({ slug });
+  // Fetch venue and session in parallel
+  const [venue, { session }] = await Promise.all([
+    getVenue({ slug }),
+    getSession(),
+  ]);
 
   if (!venue) {
     console.log('⚠️ [VenuePage] Venue not found');
     notFound();
   }
+
+  // Check if current user is superadmin
+  const userIsSuperAdmin = session ? isSuperAdmin(session.email) : false;
 
   // Fetch upcoming events at this venue
   const { events } = await getEvents({
@@ -105,6 +113,15 @@ export default async function VenuePage({ params }: VenuePageProps) {
     <>
       {/* Structured data for SEO */}
       <VenueJsonLd venue={venue} />
+
+      {/* Superadmin bar */}
+      {userIsSuperAdmin && (
+        <SuperadminBar
+          entityType="venue"
+          entityName={venue.name}
+          entityId={venue.id}
+        />
+      )}
 
       <Container className="py-8">
         {/* Breadcrumbs */}
