@@ -28,8 +28,6 @@ interface SuperadminBarProps {
   entityName: string;
   /** The entity ID (for admin links) */
   entityId: string;
-  /** Optional admin edit URL */
-  adminUrl?: string;
 }
 
 // ============================================================================
@@ -40,6 +38,12 @@ const ENTITY_LABELS: Record<SuperadminBarProps['entityType'], string> = {
   organizer: 'Organizer',
   venue: 'Venue',
   series: 'Series',
+};
+
+const ADMIN_URL_PREFIX: Record<SuperadminBarProps['entityType'], string> = {
+  organizer: '/admin/organizers',
+  venue: '/admin/venues',
+  series: '/admin/series',
 };
 
 // ============================================================================
@@ -56,8 +60,9 @@ export function SuperadminBar({
   entityType,
   entityName,
   entityId,
-  adminUrl,
 }: SuperadminBarProps) {
+  const adminUrl = `${ADMIN_URL_PREFIX[entityType]}/${entityId}/edit`;
+
   return (
     <div className="sticky top-0 z-50 bg-purple-50 border-b border-purple-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -83,18 +88,16 @@ export function SuperadminBar({
             </span>
           </div>
 
-          {/* Right: Admin link (if available) */}
+          {/* Right: Edit link */}
           <div className="flex items-center gap-2">
-            {adminUrl && (
-              <Link
-                href={adminUrl}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-purple-50 border border-purple-200 text-purple-700 rounded-md text-sm font-medium transition-colors"
-              >
-                <ExternalLink className="w-4 h-4" />
-                <span className="hidden sm:inline">Edit in Admin</span>
-                <ChevronRight className="w-3 h-3 hidden sm:block" />
-              </Link>
-            )}
+            <Link
+              href={adminUrl}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-purple-50 border border-purple-200 text-purple-700 rounded-md text-sm font-medium transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" />
+              <span className="hidden sm:inline">Full Edit</span>
+              <ChevronRight className="w-3 h-3 hidden sm:block" />
+            </Link>
           </div>
         </div>
       </div>
