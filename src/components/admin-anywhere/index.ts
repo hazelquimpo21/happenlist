@@ -29,6 +29,7 @@
 
 // Main components
 export { AdminToolbar } from './admin-toolbar';
+export { SuperadminBar } from './superadmin-bar';
 export { QuickEditDrawer } from './quick-edit-drawer';
 export { QuickEditForm } from './quick-edit-form';
 export { StatusBadgeSelect, STATUS_OPTIONS } from './status-badge-select';
