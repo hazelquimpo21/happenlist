@@ -32,6 +32,15 @@ export interface AdminEventDetails {
   is_free: boolean;
   ticket_url: string | null;
 
+  // External links
+  website_url: string | null;
+  instagram_url: string | null;
+  facebook_url: string | null;
+  registration_url: string | null;
+
+  // Audience
+  good_for: string[];
+
   // Media
   image_url: string | null;
   flyer_url: string | null;
@@ -59,7 +68,13 @@ export interface AdminEventDetails {
   updated_at: string;
   published_at: string | null;
 
-  // Related entities
+  // Foreign key IDs (for change tracking)
+  category_id: string | null;
+  location_id: string | null;
+  organizer_id: string | null;
+  series_id: string | null;
+
+  // Related entities (joined)
   category: {
     id: string;
     name: string;
@@ -142,6 +157,11 @@ export async function getAdminEvent(eventId: string): Promise<AdminEventDetails 
       price_details: rawData.price_details,
       is_free: rawData.is_free,
       ticket_url: rawData.ticket_url,
+      website_url: rawData.website_url,
+      instagram_url: rawData.instagram_url,
+      facebook_url: rawData.facebook_url,
+      registration_url: rawData.registration_url,
+      good_for: rawData.good_for || [],
       image_url: rawData.image_url,
       flyer_url: rawData.flyer_url,
       thumbnail_url: rawData.thumbnail_url,
@@ -159,6 +179,10 @@ export async function getAdminEvent(eventId: string): Promise<AdminEventDetails 
       created_at: rawData.created_at,
       updated_at: rawData.updated_at,
       published_at: rawData.published_at,
+      category_id: rawData.category_id,
+      location_id: rawData.location_id,
+      organizer_id: rawData.organizer_id,
+      series_id: rawData.series_id,
       category: rawData.category as AdminEventDetails['category'],
       location: rawData.location as AdminEventDetails['location'],
       organizer: rawData.organizer as AdminEventDetails['organizer'],

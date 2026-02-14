@@ -36,7 +36,8 @@ interface UseAdminEditReturn {
   /** Update event fields */
   updateEvent: (
     updates: Record<string, unknown>,
-    notes?: string
+    notes?: string,
+    occurrenceScope?: string
   ) => Promise<boolean>;
 
   /** Change event status */
@@ -133,7 +134,8 @@ export function useAdminEdit(eventId: string): UseAdminEditReturn {
   const updateEvent = useCallback(
     async (
       updates: Record<string, unknown>,
-      notes?: string
+      notes?: string,
+      occurrenceScope?: string
     ): Promise<boolean> => {
       logger.info('Updating event', { eventId, fields: Object.keys(updates) });
 
@@ -148,6 +150,7 @@ export function useAdminEdit(eventId: string): UseAdminEditReturn {
           body: JSON.stringify({
             updates,
             notes: notes || 'Superadmin edit',
+            ...(occurrenceScope ? { applyToSeries: true, occurrenceScope } : {}),
           }),
         });
 

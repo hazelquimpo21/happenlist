@@ -65,6 +65,32 @@ export interface AdminToolbarEvent {
   registration_url: string | null;
   // Good For audience tags
   good_for: string[];
+  // Cross-linked entities
+  location: {
+    id: string;
+    name: string;
+    slug: string;
+    address_line: string | null;
+    city: string;
+    state: string | null;
+    venue_type: string;
+  } | null;
+  organizer: {
+    id: string;
+    name: string;
+    slug: string;
+    logo_url: string | null;
+    website_url: string | null;
+  } | null;
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+    icon: string | null;
+  } | null;
+  category_id: string | null;
+  location_id: string | null;
+  organizer_id: string | null;
   // Series info
   series_id: string | null;
   series_title?: string | null;

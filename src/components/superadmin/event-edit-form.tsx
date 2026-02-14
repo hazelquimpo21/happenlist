@@ -1,15 +1,20 @@
 'use client';
 
 /**
- * 🦸 SUPERADMIN EVENT EDIT FORM
+ * SUPERADMIN EVENT EDIT FORM
  * =============================
  * A comprehensive form for superadmins to edit any event.
  *
  * Features:
- * - Edit all event fields (title, description, dates, pricing, etc.)
+ * - Edit all event fields (title, description, dates, pricing, links, etc.)
+ * - Change venue via search (cross-links to locations DB)
+ * - Change organizer via search (cross-links to organizers DB)
+ * - Change category via dropdown (cross-links to categories DB)
+ * - External links (website, Instagram, Facebook, registration)
+ * - Good For audience tags
+ * - Apply changes to all series occurrences
  * - Change event status directly
  * - Delete/restore events
- * - Auto-save indicator
  * - Audit trail display
  *
  * @module components/superadmin/event-edit-form
@@ -31,24 +36,25 @@ import {
   Search,
   Star,
   Loader2,
+  User,
+  Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { GOOD_FOR_TAGS } from '@/types';
 import type { AdminEventDetails } from '@/data/admin/get-admin-event';
 
 // ============================================================================
-// 🏷️ TYPES
+// TYPES
 // ============================================================================
 
 interface EventEditFormProps {
   event: AdminEventDetails;
+  categories?: { id: string; name: string; slug: string; icon: string | null }[];
   onSuccess?: () => void;
 }
 
 type FormStatus = 'idle' | 'saving' | 'saved' | 'error';
 
-/**
- * Venue search result from the API.
- */
 interface VenueSearchResult {
   id: string;
   name: string;
@@ -64,6 +70,15 @@ interface VenueSearchResult {
   similarity_score?: number;
 }
 
+interface OrganizerSearchResult {
+  id: string;
+  name: string;
+  slug: string;
+  logo_url: string | null;
+  website_url: string | null;
+  description: string | null;
+}
+
 interface FormState {
   title: string;
   description: string;
@@ -76,20 +91,30 @@ interface FormState {
   price_high: string;
   is_free: boolean;
   ticket_url: string;
+  // External links
+  website_url: string;
+  instagram_url: string;
+  facebook_url: string;
+  registration_url: string;
+  // Audience
+  good_for: string[];
+  // Category
+  category_id: string;
+  // Status
   status: string;
 }
 
 // ============================================================================
-// 📋 STATUS OPTIONS
+// CONSTANTS
 // ============================================================================
 
 const STATUS_OPTIONS = [
-  { value: 'draft', label: '📝 Draft', color: 'bg-stone/20 text-stone' },
-  { value: 'pending_review', label: '⏳ Pending Review', color: 'bg-amber-100 text-amber-800' },
-  { value: 'changes_requested', label: '✏️ Changes Requested', color: 'bg-orange-100 text-orange-800' },
-  { value: 'published', label: '✅ Published', color: 'bg-sage/20 text-sage' },
-  { value: 'rejected', label: '❌ Rejected', color: 'bg-red-100 text-red-800' },
-  { value: 'cancelled', label: '🚫 Cancelled', color: 'bg-stone/30 text-stone' },
+  { value: 'draft', label: 'Draft', color: 'bg-stone/20 text-stone' },
+  { value: 'pending_review', label: 'Pending Review', color: 'bg-amber-100 text-amber-800' },
+  { value: 'changes_requested', label: 'Changes Requested', color: 'bg-orange-100 text-orange-800' },
+  { value: 'published', label: 'Published', color: 'bg-sage/20 text-sage' },
+  { value: 'rejected', label: 'Rejected', color: 'bg-red-100 text-red-800' },
+  { value: 'cancelled', label: 'Cancelled', color: 'bg-stone/30 text-stone' },
 ];
 
 const PRICE_TYPES = [
@@ -102,10 +127,10 @@ const PRICE_TYPES = [
 ];
 
 // ============================================================================
-// 🎨 COMPONENT
+// COMPONENT
 // ============================================================================
 
-export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps) {
+export function SuperadminEventEditForm({ event, categories = [], onSuccess }: EventEditFormProps) {
   const router = useRouter();
 
   // Form state
@@ -121,6 +146,12 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
     price_high: event.price_high?.toString() || '',
     is_free: event.is_free || false,
     ticket_url: event.ticket_url || '',
+    website_url: event.website_url || '',
+    instagram_url: event.instagram_url || '',
+    facebook_url: event.facebook_url || '',
+    registration_url: event.registration_url || '',
+    good_for: event.good_for || [],
+    category_id: event.category_id || '',
     status: event.status || 'draft',
   });
 
@@ -130,6 +161,8 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteReason, setDeleteReason] = useState('');
   const [notes, setNotes] = useState('');
+  type OccurrenceScope = 'single' | 'all' | 'future';
+  const [occurrenceScope, setOccurrenceScope] = useState<OccurrenceScope>('single');
 
   // Venue state
   const [selectedVenue, setSelectedVenue] = useState<VenueSearchResult | null>(
@@ -154,8 +187,26 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
   const [isSearchingVenue, setIsSearchingVenue] = useState(false);
   const [showVenueSearch, setShowVenueSearch] = useState(false);
 
+  // Organizer state
+  const [selectedOrganizer, setSelectedOrganizer] = useState<OrganizerSearchResult | null>(
+    event.organizer
+      ? {
+          id: event.organizer.id,
+          name: event.organizer.name,
+          slug: event.organizer.slug,
+          logo_url: event.organizer.logo_url,
+          website_url: event.organizer.website_url,
+          description: null,
+        }
+      : null
+  );
+  const [organizerQuery, setOrganizerQuery] = useState('');
+  const [organizerResults, setOrganizerResults] = useState<OrganizerSearchResult[]>([]);
+  const [isSearchingOrganizer, setIsSearchingOrganizer] = useState(false);
+  const [showOrganizerSearch, setShowOrganizerSearch] = useState(false);
+
   // ============================================================================
-  // 📝 FORM HANDLERS
+  // FORM HANDLERS
   // ============================================================================
 
   const handleInputChange = useCallback((
@@ -169,14 +220,19 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
       [name]: type === 'checkbox' ? checked : value,
     }));
 
-    // Reset status when user makes changes
+    if (status === 'saved' || status === 'error') {
+      setStatus('idle');
+    }
+  }, [status]);
+
+  const resetStatus = useCallback(() => {
     if (status === 'saved' || status === 'error') {
       setStatus('idle');
     }
   }, [status]);
 
   // ============================================================================
-  // 🏛️ VENUE SEARCH
+  // VENUE SEARCH
   // ============================================================================
 
   const handleVenueSearch = useCallback(async (query: string) => {
@@ -197,12 +253,10 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
 
       if (result.success) {
         setVenueResults(result.venues);
-        console.log(`🏛️ [SuperadminForm] Found ${result.venues.length} venues for "${query}"`);
       } else {
         setVenueResults([]);
       }
-    } catch (error) {
-      console.error('🏛️ [SuperadminForm] Venue search failed:', error);
+    } catch {
       setVenueResults([]);
     } finally {
       setIsSearchingVenue(false);
@@ -214,22 +268,61 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
     setShowVenueSearch(false);
     setVenueQuery('');
     setVenueResults([]);
-    // Reset status to allow saving
-    if (status === 'saved' || status === 'error') {
-      setStatus('idle');
-    }
-    console.log(`🏛️ [SuperadminForm] Selected venue: ${venue.name}`);
-  }, [status]);
+    resetStatus();
+  }, [resetStatus]);
 
   const clearVenue = useCallback(() => {
     setSelectedVenue(null);
-    if (status === 'saved' || status === 'error') {
-      setStatus('idle');
-    }
-  }, [status]);
+    resetStatus();
+  }, [resetStatus]);
 
   // ============================================================================
-  // 💾 SAVE CHANGES
+  // ORGANIZER SEARCH
+  // ============================================================================
+
+  const handleOrganizerSearch = useCallback(async (query: string) => {
+    setOrganizerQuery(query);
+
+    if (query.length < 2) {
+      setOrganizerResults([]);
+      return;
+    }
+
+    setIsSearchingOrganizer(true);
+
+    try {
+      const response = await fetch(
+        `/api/submit/organizers/search?q=${encodeURIComponent(query)}&limit=10`
+      );
+      const result = await response.json();
+
+      if (result.success) {
+        setOrganizerResults(result.organizers);
+      } else {
+        setOrganizerResults([]);
+      }
+    } catch {
+      setOrganizerResults([]);
+    } finally {
+      setIsSearchingOrganizer(false);
+    }
+  }, []);
+
+  const selectOrganizer = useCallback((organizer: OrganizerSearchResult) => {
+    setSelectedOrganizer(organizer);
+    setShowOrganizerSearch(false);
+    setOrganizerQuery('');
+    setOrganizerResults([]);
+    resetStatus();
+  }, [resetStatus]);
+
+  const clearOrganizer = useCallback(() => {
+    setSelectedOrganizer(null);
+    resetStatus();
+  }, [resetStatus]);
+
+  // ============================================================================
+  // SAVE CHANGES
   // ============================================================================
 
   const handleSave = async () => {
@@ -237,18 +330,19 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
     setStatusMessage('Saving changes...');
 
     try {
-      // Build updates object with only changed fields
       const updates: Record<string, unknown> = {};
 
       if (formState.title !== event.title) updates.title = formState.title;
       if (formState.description !== (event.description || '')) updates.description = formState.description;
       if (formState.short_description !== (event.short_description || '')) updates.short_description = formState.short_description;
 
-      // Handle datetime
-      const newStartDatetime = new Date(formState.start_datetime).toISOString();
-      if (newStartDatetime !== event.start_datetime) {
-        updates.start_datetime = newStartDatetime;
-        updates.instance_date = formState.start_datetime.split('T')[0];
+      // Datetime
+      if (formState.start_datetime) {
+        const newStartDatetime = new Date(formState.start_datetime).toISOString();
+        if (newStartDatetime !== event.start_datetime) {
+          updates.start_datetime = newStartDatetime;
+          updates.instance_date = formState.start_datetime.split('T')[0];
+        }
       }
 
       if (formState.end_datetime) {
@@ -258,35 +352,56 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
 
       if (formState.is_all_day !== event.is_all_day) updates.is_all_day = formState.is_all_day;
       if (formState.price_type !== event.price_type) updates.price_type = formState.price_type;
-      // is_free is auto-computed from price_type (generated column)
       if (formState.ticket_url !== (event.ticket_url || '')) updates.ticket_url = formState.ticket_url;
 
-      // Handle price - only if not free
+      // Price
       if (formState.price_type !== 'free') {
         const priceLow = formState.price_low ? parseFloat(formState.price_low) : null;
         const priceHigh = formState.price_high ? parseFloat(formState.price_high) : null;
-
         if (priceLow !== event.price_low) updates.price_low = priceLow;
         if (priceHigh !== event.price_high) updates.price_high = priceHigh;
       }
 
-      // Handle venue/location change
-      const currentLocationId = event.location?.id || null;
+      // External links
+      if (formState.website_url !== (event.website_url || '')) updates.website_url = formState.website_url || null;
+      if (formState.instagram_url !== (event.instagram_url || '')) updates.instagram_url = formState.instagram_url || null;
+      if (formState.facebook_url !== (event.facebook_url || '')) updates.facebook_url = formState.facebook_url || null;
+      if (formState.registration_url !== (event.registration_url || '')) updates.registration_url = formState.registration_url || null;
+
+      // Good For tags
+      const originalGoodFor = (event.good_for || []).slice().sort().join(',');
+      const newGoodFor = formState.good_for.slice().sort().join(',');
+      if (newGoodFor !== originalGoodFor) {
+        updates.good_for = formState.good_for;
+      }
+
+      // Category
+      if (formState.category_id !== (event.category_id || '')) {
+        updates.category_id = formState.category_id || null;
+      }
+
+      // Venue/location
+      const currentLocationId = event.location_id || null;
       const newLocationId = selectedVenue?.id || null;
       if (newLocationId !== currentLocationId) {
         updates.location_id = newLocationId;
-        console.log(`🏛️ [SuperadminForm] Venue changed: ${currentLocationId} → ${newLocationId}`);
       }
 
-      // Check if there are any changes
-      const venueChanged = newLocationId !== currentLocationId;
-      if (Object.keys(updates).length === 0 && formState.status === event.status && !venueChanged) {
+      // Organizer
+      const currentOrganizerId = event.organizer_id || null;
+      const newOrganizerId = selectedOrganizer?.id || null;
+      if (newOrganizerId !== currentOrganizerId) {
+        updates.organizer_id = newOrganizerId;
+      }
+
+      // Check if anything changed
+      if (Object.keys(updates).length === 0 && formState.status === event.status) {
         setStatus('idle');
         setStatusMessage('No changes to save');
         return;
       }
 
-      // If status changed, update it via status endpoint
+      // Status change
       if (formState.status !== event.status) {
         const statusResponse = await fetch(`/api/superadmin/events/${event.id}/status`, {
           method: 'POST',
@@ -303,7 +418,7 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
         }
       }
 
-      // If other fields changed, update via edit endpoint
+      // Field updates
       if (Object.keys(updates).length > 0) {
         const editResponse = await fetch(`/api/superadmin/events/${event.id}`, {
           method: 'PATCH',
@@ -311,6 +426,9 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
           body: JSON.stringify({
             updates,
             notes: notes || 'Superadmin edit',
+            ...(event.series_id && occurrenceScope !== 'single'
+              ? { applyToSeries: true, occurrenceScope }
+              : {}),
           }),
         });
 
@@ -321,24 +439,25 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
       }
 
       setStatus('saved');
-      setStatusMessage('✅ Changes saved successfully!');
+      setStatusMessage(event.series_id && occurrenceScope !== 'single'
+        ? `Changes saved and applied to ${occurrenceScope === 'all' ? 'all' : 'this and future'} occurrences!`
+        : 'Changes saved successfully!');
       setNotes('');
 
-      // Refresh the page data
       router.refresh();
 
       if (onSuccess) {
         onSuccess();
       }
     } catch (error) {
-      console.error('🦸 Save error:', error);
+      console.error('Save error:', error);
       setStatus('error');
       setStatusMessage(error instanceof Error ? error.message : 'Failed to save changes');
     }
   };
 
   // ============================================================================
-  // 🗑️ DELETE EVENT
+  // DELETE / RESTORE
   // ============================================================================
 
   const handleDelete = async () => {
@@ -356,7 +475,7 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           reason: deleteReason,
-          hardDelete: false, // Always soft delete from UI
+          hardDelete: false,
         }),
       });
 
@@ -366,23 +485,18 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
       }
 
       setStatus('saved');
-      setStatusMessage('🗑️ Event deleted successfully!');
+      setStatusMessage('Event deleted successfully!');
       setShowDeleteConfirm(false);
 
-      // Redirect back to events list
       setTimeout(() => {
         router.push('/admin/events');
       }, 1500);
     } catch (error) {
-      console.error('🦸 Delete error:', error);
+      console.error('Delete error:', error);
       setStatus('error');
       setStatusMessage(error instanceof Error ? error.message : 'Failed to delete event');
     }
   };
-
-  // ============================================================================
-  // ♻️ RESTORE EVENT
-  // ============================================================================
 
   const handleRestore = async () => {
     setStatus('saving');
@@ -399,28 +513,24 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
       }
 
       setStatus('saved');
-      setStatusMessage('♻️ Event restored successfully!');
-
-      // Refresh the page
+      setStatusMessage('Event restored successfully!');
       router.refresh();
     } catch (error) {
-      console.error('🦸 Restore error:', error);
+      console.error('Restore error:', error);
       setStatus('error');
       setStatusMessage(error instanceof Error ? error.message : 'Failed to restore event');
     }
   };
 
   // ============================================================================
-  // 🎨 RENDER
+  // RENDER
   // ============================================================================
 
-  const isDeleted = !!event.reviewed_at && event.status === 'rejected'; // Approximation
+  const isDeleted = !!event.reviewed_at && event.status === 'rejected';
 
   return (
     <div className="space-y-6">
-      {/* ------------------------------------------------------------------ */}
-      {/* STATUS BAR */}
-      {/* ------------------------------------------------------------------ */}
+      {/* Status bar */}
       {status !== 'idle' && (
         <div
           className={`p-4 rounded-lg flex items-center gap-3 ${
@@ -444,14 +554,12 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
         </div>
       )}
 
-      {/* ------------------------------------------------------------------ */}
-      {/* FORM */}
-      {/* ------------------------------------------------------------------ */}
+      {/* Form */}
       <div className="bg-warm-white border border-sand rounded-lg p-6 space-y-6">
         {/* Title */}
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-charcoal mb-2">
-            📝 Event Title
+            Event Title
           </label>
           <input
             type="text"
@@ -467,7 +575,7 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
         {/* Short Description */}
         <div>
           <label htmlFor="short_description" className="block text-sm font-medium text-charcoal mb-2">
-            📄 Short Description
+            Short Description
             <span className="text-stone font-normal ml-2">(for cards, max 160 chars)</span>
           </label>
           <textarea
@@ -488,7 +596,7 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
         {/* Full Description */}
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-charcoal mb-2">
-            📜 Full Description
+            Full Description
           </label>
           <textarea
             id="description"
@@ -505,7 +613,7 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="start_datetime" className="block text-sm font-medium text-charcoal mb-2">
-              🗓️ Start Date & Time
+              Start Date & Time
             </label>
             <input
               type="datetime-local"
@@ -519,7 +627,7 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
 
           <div>
             <label htmlFor="end_datetime" className="block text-sm font-medium text-charcoal mb-2">
-              ⏰ End Date & Time
+              End Date & Time
               <span className="text-stone font-normal ml-2">(optional)</span>
             </label>
             <input
@@ -542,14 +650,14 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
             onChange={handleInputChange}
             className="w-5 h-5 rounded border-sand text-coral focus:ring-coral"
           />
-          <span className="text-sm text-charcoal">🌞 This is an all-day event</span>
+          <span className="text-sm text-charcoal">This is an all-day event</span>
         </label>
 
         {/* Pricing */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label htmlFor="price_type" className="block text-sm font-medium text-charcoal mb-2">
-              💰 Price Type
+              Price Type
             </label>
             <select
               id="price_type"
@@ -610,7 +718,7 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
         {/* Ticket URL */}
         <div>
           <label htmlFor="ticket_url" className="block text-sm font-medium text-charcoal mb-2">
-            🎟️ Ticket URL
+            Ticket URL
             <span className="text-stone font-normal ml-2">(optional)</span>
           </label>
           <input
@@ -625,14 +733,149 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
         </div>
 
         {/* ------------------------------------------------------------------ */}
+        {/* EXTERNAL LINKS */}
+        {/* ------------------------------------------------------------------ */}
+        <div className="p-4 bg-cream/50 rounded-lg border border-sand/50">
+          <p className="text-sm font-medium text-charcoal mb-3">
+            External Links <span className="text-stone font-normal">(optional)</span>
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="website_url" className="block text-xs text-stone mb-1">
+                Event Website
+              </label>
+              <input
+                type="url"
+                id="website_url"
+                name="website_url"
+                value={formState.website_url}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+                placeholder="https://myevent.com"
+              />
+            </div>
+            <div>
+              <label htmlFor="registration_url" className="block text-xs text-stone mb-1">
+                Registration / RSVP URL
+              </label>
+              <input
+                type="url"
+                id="registration_url"
+                name="registration_url"
+                value={formState.registration_url}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+                placeholder="https://rsvp.example.com"
+              />
+            </div>
+            <div>
+              <label htmlFor="instagram_url" className="block text-xs text-stone mb-1">
+                Instagram
+              </label>
+              <input
+                type="url"
+                id="instagram_url"
+                name="instagram_url"
+                value={formState.instagram_url}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+                placeholder="https://instagram.com/event"
+              />
+            </div>
+            <div>
+              <label htmlFor="facebook_url" className="block text-xs text-stone mb-1">
+                Facebook Event
+              </label>
+              <input
+                type="url"
+                id="facebook_url"
+                name="facebook_url"
+                value={formState.facebook_url}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+                placeholder="https://facebook.com/events/123"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* GOOD FOR AUDIENCE TAGS */}
+        {/* ------------------------------------------------------------------ */}
+        <div className="p-4 bg-cream/50 rounded-lg border border-sand/50">
+          <p className="text-sm font-medium text-charcoal mb-3">
+            Good For <span className="text-stone font-normal">(select all that apply)</span>
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {GOOD_FOR_TAGS.map((tag) => {
+              const isSelected = formState.good_for.includes(tag.slug);
+              return (
+                <button
+                  key={tag.slug}
+                  type="button"
+                  onClick={() => {
+                    setFormState((prev) => ({
+                      ...prev,
+                      good_for: isSelected
+                        ? prev.good_for.filter((s) => s !== tag.slug)
+                        : [...prev.good_for, tag.slug],
+                    }));
+                    resetStatus();
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    isSelected
+                      ? `${tag.color} ring-2 ring-offset-1 ring-current`
+                      : 'bg-sand/50 text-stone hover:bg-sand'
+                  }`}
+                >
+                  {tag.label}
+                </button>
+              );
+            })}
+          </div>
+          {formState.good_for.length > 0 && (
+            <p className="text-xs text-stone mt-2">
+              {formState.good_for.length} selected
+            </p>
+          )}
+        </div>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* CATEGORY */}
+        {/* ------------------------------------------------------------------ */}
+        {categories.length > 0 && (
+          <div>
+            <label htmlFor="category_id" className="block text-sm font-medium text-charcoal mb-2">
+              Category
+            </label>
+            <div className="relative">
+              <select
+                id="category_id"
+                name="category_id"
+                value={formState.category_id}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none appearance-none pr-10"
+              >
+                <option value="">No category</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone pointer-events-none" />
+            </div>
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------------ */}
         {/* VENUE / LOCATION */}
         {/* ------------------------------------------------------------------ */}
         <div>
           <label className="block text-sm font-medium text-charcoal mb-2">
-            🏛️ Venue / Location
+            Venue / Location
           </label>
 
-          {/* Selected Venue Display */}
           {selectedVenue && !showVenueSearch && (
             <div className="p-4 bg-sage/10 border border-sage/30 rounded-lg">
               <div className="flex items-start justify-between">
@@ -676,7 +919,6 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
             </div>
           )}
 
-          {/* No Venue Selected */}
           {!selectedVenue && !showVenueSearch && (
             <button
               type="button"
@@ -695,7 +937,6 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
             </button>
           )}
 
-          {/* Venue Search */}
           {showVenueSearch && (
             <div className="p-4 bg-cream rounded-lg border border-sand space-y-3">
               <div className="flex items-center justify-between">
@@ -713,7 +954,6 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
                 </button>
               </div>
 
-              {/* Search Input */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
                 <input
@@ -729,7 +969,6 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
                 )}
               </div>
 
-              {/* Search Results */}
               {venueResults.length > 0 && (
                 <div className="max-h-64 overflow-y-auto space-y-1">
                   {venueResults.map((venue) => (
@@ -764,7 +1003,6 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
                 </div>
               )}
 
-              {/* No Results */}
               {venueQuery.length >= 2 && !isSearchingVenue && venueResults.length === 0 && (
                 <div className="p-3 bg-sand/30 rounded-lg text-center">
                   <p className="text-sm text-stone">No venues found for &quot;{venueQuery}&quot;</p>
@@ -774,10 +1012,175 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
           )}
         </div>
 
+        {/* ------------------------------------------------------------------ */}
+        {/* ORGANIZER */}
+        {/* ------------------------------------------------------------------ */}
+        <div>
+          <label className="block text-sm font-medium text-charcoal mb-2">
+            Organizer
+          </label>
+
+          {selectedOrganizer && !showOrganizerSearch && (
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  <User className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-charcoal">{selectedOrganizer.name}</p>
+                    {selectedOrganizer.website_url && (
+                      <p className="text-sm text-stone truncate max-w-[250px]">
+                        {selectedOrganizer.website_url}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowOrganizerSearch(true)}
+                    className="text-sm text-coral hover:text-coral/80"
+                  >
+                    Change
+                  </button>
+                  <button
+                    type="button"
+                    onClick={clearOrganizer}
+                    className="text-sm text-stone hover:text-charcoal"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!selectedOrganizer && !showOrganizerSearch && (
+            <button
+              type="button"
+              onClick={() => setShowOrganizerSearch(true)}
+              className="w-full p-4 border border-dashed border-sand rounded-lg hover:border-coral hover:bg-coral/5 transition-colors text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-sand rounded-lg">
+                  <User className="w-5 h-5 text-stone" />
+                </div>
+                <div>
+                  <p className="font-medium text-charcoal">No organizer selected</p>
+                  <p className="text-sm text-stone">Click to search and select an organizer</p>
+                </div>
+              </div>
+            </button>
+          )}
+
+          {showOrganizerSearch && (
+            <div className="p-4 bg-cream rounded-lg border border-sand space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-charcoal">Search Organizers</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowOrganizerSearch(false);
+                    setOrganizerQuery('');
+                    setOrganizerResults([]);
+                  }}
+                  className="text-sm text-stone hover:text-charcoal"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
+                <input
+                  type="text"
+                  value={organizerQuery}
+                  onChange={(e) => handleOrganizerSearch(e.target.value)}
+                  placeholder="Type organizer name..."
+                  className="w-full pl-10 pr-10 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+                  autoFocus
+                />
+                {isSearchingOrganizer && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone animate-spin" />
+                )}
+              </div>
+
+              {organizerResults.length > 0 && (
+                <div className="max-h-64 overflow-y-auto space-y-1">
+                  {organizerResults.map((org) => (
+                    <button
+                      key={org.id}
+                      type="button"
+                      onClick={() => selectOrganizer(org)}
+                      className="w-full flex items-start gap-3 p-3 rounded-lg border border-sand bg-warm-white hover:border-coral hover:bg-coral/5 transition-all text-left"
+                    >
+                      <User className="w-4 h-4 text-stone mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-medium text-charcoal truncate">{org.name}</p>
+                        {org.website_url && (
+                          <p className="text-xs text-stone truncate">{org.website_url}</p>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {organizerQuery.length >= 2 && !isSearchingOrganizer && organizerResults.length === 0 && (
+                <div className="p-3 bg-sand/30 rounded-lg text-center">
+                  <p className="text-sm text-stone">No organizers found for &quot;{organizerQuery}&quot;</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* SERIES OCCURRENCES */}
+        {/* ------------------------------------------------------------------ */}
+        {event.series_id && (
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <Layers className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-blue-800">Part of a Series</p>
+                <p className="text-sm text-blue-700 mt-0.5">
+                  Choose which occurrences to apply shared field changes to
+                  (title, description, pricing, venue, organizer, category, links, tags).
+                </p>
+                <div className="mt-3 space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="occurrenceScope" value="single"
+                      checked={occurrenceScope === 'single'} onChange={() => setOccurrenceScope('single')}
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
+                    <span className="text-sm text-blue-800">This occurrence only</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="occurrenceScope" value="all"
+                      checked={occurrenceScope === 'all'} onChange={() => setOccurrenceScope('all')}
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
+                    <span className="text-sm text-blue-800">All occurrences in this series</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="occurrenceScope" value="future"
+                      checked={occurrenceScope === 'future'} onChange={() => setOccurrenceScope('future')}
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
+                    <span className="text-sm text-blue-800">This and future occurrences</span>
+                  </label>
+                </div>
+                {occurrenceScope !== 'single' && (
+                  <p className="text-xs text-blue-600 mt-2">
+                    Date/time changes will NOT be applied to other occurrences.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Status */}
         <div>
           <label htmlFor="status" className="block text-sm font-medium text-charcoal mb-2">
-            🏷️ Event Status
+            Event Status
           </label>
           <div className="relative">
             <select
@@ -800,7 +1203,7 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
         {/* Notes for audit log */}
         <div>
           <label htmlFor="notes" className="block text-sm font-medium text-charcoal mb-2">
-            📋 Edit Notes
+            Edit Notes
             <span className="text-stone font-normal ml-2">(for audit log)</span>
           </label>
           <textarea
@@ -815,12 +1218,9 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
         </div>
       </div>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* ACTION BUTTONS */}
-      {/* ------------------------------------------------------------------ */}
+      {/* Action buttons */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {/* Delete/Restore Button */}
           {isDeleted ? (
             <Button
               variant="secondary"
@@ -844,7 +1244,6 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
           )}
         </div>
 
-        {/* Save Button */}
         <Button
           onClick={handleSave}
           disabled={status === 'saving'}
@@ -855,9 +1254,7 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
         </Button>
       </div>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* DELETE CONFIRMATION MODAL */}
-      {/* ------------------------------------------------------------------ */}
+      {/* Delete confirmation modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-charcoal/50 flex items-center justify-center z-50 p-4">
           <div className="bg-warm-white rounded-xl shadow-xl max-w-md w-full p-6">
@@ -916,12 +1313,9 @@ export function SuperadminEventEditForm({ event, onSuccess }: EventEditFormProps
 }
 
 // ============================================================================
-// 🔧 HELPERS
+// HELPERS
 // ============================================================================
 
-/**
- * Format a date string to datetime-local input format
- */
 function formatDateTimeLocal(dateString: string): string {
   const date = new Date(dateString);
   return format(date, "yyyy-MM-dd'T'HH:mm");
