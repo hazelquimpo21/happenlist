@@ -20,6 +20,9 @@ import {
   Search,
   Repeat,
   Plus,
+  Lightbulb,
+  PlusCircle,
+  Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { AdminEventCard } from '@/data/admin';
@@ -42,6 +45,19 @@ const SERIES_TYPE_OPTIONS = [
 ];
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+interface SuggestedEvent {
+  id: string;
+  title: string;
+  start_datetime: string | null;
+  instance_date: string | null;
+  location_name: string | null;
+  organizer_name: string | null;
+  status: string;
+  series_id: string | null;
+  match_reasons: string[];
+  score: number;
+}
 
 interface DetectedPattern {
   recurrence_rule: {
@@ -77,6 +93,12 @@ export function BulkSeriesModal({ events, onClose }: BulkSeriesModalProps) {
   const [searchLoading, setSearchLoading] = useState(false);
   const [createMode, setCreateMode] = useState<'new' | 'existing'>('new');
 
+  // Suggestions state
+  const [suggestions, setSuggestions] = useState<SuggestedEvent[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [suggestionsLoaded, setSuggestionsLoaded] = useState(false);
+  const [addedSuggestionIds, setAddedSuggestionIds] = useState<Set<string>>(new Set());
+
   const formatDate = (dt: string | null) => {
     if (!dt) return '—';
     try {
@@ -105,6 +127,46 @@ export function BulkSeriesModal({ events, onClose }: BulkSeriesModalProps) {
     return `${interval}${freq}${time ? ` at ${time}` : ''}`;
   };
 
+  // ===== SUGGESTIONS: find similar events in DB =====
+  const loadSuggestions = useCallback(async () => {
+    if (suggestionsLoaded) return;
+    setSuggestionsLoading(true);
+    try {
+      const res = await fetch('/api/superadmin/events/suggest-similar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventIds: events.map(e => e.id) }),
+      });
+      const data = await res.json();
+      if (res.ok && data.suggestions) {
+        setSuggestions(data.suggestions);
+      }
+    } catch {
+      // Non-critical — just don't show suggestions
+    } finally {
+      setSuggestionsLoading(false);
+      setSuggestionsLoaded(true);
+    }
+  }, [events, suggestionsLoaded]);
+
+  const toggleSuggestion = useCallback((id: string) => {
+    setAddedSuggestionIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  // All event IDs to include = selected + added suggestions
+  const allEventIds = [
+    ...events.map(e => e.id),
+    ...Array.from(addedSuggestionIds),
+  ];
+
   // ===== AUTO DETECT =====
   const runDetection = useCallback(async () => {
     setPhase('loading');
@@ -115,7 +177,7 @@ export function BulkSeriesModal({ events, onClose }: BulkSeriesModalProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode: 'auto_detect',
-          eventIds: events.map(e => e.id),
+          eventIds: allEventIds,
         }),
       });
       const data = await res.json();
@@ -134,7 +196,7 @@ export function BulkSeriesModal({ events, onClose }: BulkSeriesModalProps) {
       setErrorMessage(err instanceof Error ? err.message : 'Detection failed');
       setPhase('error');
     }
-  }, [events]);
+  }, [allEventIds, events]);
 
   const createFromPattern = useCallback(async () => {
     if (!pattern) return;
@@ -145,7 +207,7 @@ export function BulkSeriesModal({ events, onClose }: BulkSeriesModalProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode: 'create_and_attach',
-          eventIds: events.map(e => e.id),
+          eventIds: allEventIds,
           seriesData: {
             title: seriesTitle || pattern.suggested_series_title,
             series_type: seriesType || pattern.suggested_series_type,
@@ -166,7 +228,7 @@ export function BulkSeriesModal({ events, onClose }: BulkSeriesModalProps) {
       setErrorMessage(err instanceof Error ? err.message : 'Failed');
       setPhase('error');
     }
-  }, [events, pattern, seriesTitle, seriesType, onClose, router]);
+  }, [allEventIds, pattern, seriesTitle, seriesType, onClose, router]);
 
   // ===== MANUAL CREATE / ATTACH =====
   const searchSeries = useCallback(async () => {
@@ -189,7 +251,7 @@ export function BulkSeriesModal({ events, onClose }: BulkSeriesModalProps) {
     try {
       const payload: Record<string, unknown> = {
         mode: 'create_and_attach',
-        eventIds: events.map(e => e.id),
+        eventIds: allEventIds,
       };
 
       if (createMode === 'existing' && selectedExistingId) {
@@ -224,7 +286,7 @@ export function BulkSeriesModal({ events, onClose }: BulkSeriesModalProps) {
       setErrorMessage(err instanceof Error ? err.message : 'Failed');
       setPhase('error');
     }
-  }, [events, createMode, selectedExistingId, seriesTitle, seriesType, onClose, router]);
+  }, [allEventIds, createMode, selectedExistingId, seriesTitle, seriesType, onClose, router]);
 
   const confidenceColor = {
     high: 'text-sage',
@@ -240,7 +302,7 @@ export function BulkSeriesModal({ events, onClose }: BulkSeriesModalProps) {
           <div className="flex items-center gap-2">
             <Repeat className="w-5 h-5 text-coral" />
             <h2 className="font-display text-xl text-charcoal">
-              Make Series from {events.length} Events
+              Make Series from {allEventIds.length} Event{allEventIds.length !== 1 ? 's' : ''}
             </h2>
           </div>
           <button onClick={onClose} className="text-stone hover:text-charcoal">
@@ -309,6 +371,78 @@ export function BulkSeriesModal({ events, onClose }: BulkSeriesModalProps) {
                   </div>
                 ))}
               </div>
+
+              {/* AI suggestions: similar events that might belong here */}
+              {!suggestionsLoaded && !suggestionsLoading && (
+                <button
+                  onClick={loadSuggestions}
+                  className="w-full mb-4 p-3 border border-dashed border-sand rounded-lg text-sm text-stone hover:text-charcoal hover:border-coral/50 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Lightbulb className="w-4 h-4" />
+                  Find similar events in the database
+                </button>
+              )}
+
+              {suggestionsLoading && (
+                <div className="flex items-center gap-2 mb-4 p-3 bg-cream rounded-lg text-sm text-stone">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  Searching for similar events...
+                </div>
+              )}
+
+              {suggestionsLoaded && suggestions.length > 0 && (
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Lightbulb className="w-4 h-4 text-amber-500" />
+                    <span className="text-sm font-medium text-charcoal">
+                      {suggestions.length} similar event{suggestions.length !== 1 ? 's' : ''} found
+                    </span>
+                    {addedSuggestionIds.size > 0 && (
+                      <span className="text-xs text-coral font-medium">
+                        +{addedSuggestionIds.size} added
+                      </span>
+                    )}
+                  </div>
+                  <div className="max-h-40 overflow-y-auto space-y-1">
+                    {suggestions.map((s) => {
+                      const isAdded = addedSuggestionIds.has(s.id);
+                      return (
+                        <button
+                          key={s.id}
+                          onClick={() => toggleSuggestion(s.id)}
+                          className={`w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded transition-colors text-left ${
+                            isAdded
+                              ? 'bg-coral/10 border border-coral/30'
+                              : 'bg-cream border border-transparent hover:border-sand'
+                          }`}
+                        >
+                          {isAdded ? (
+                            <Check className="w-3.5 h-3.5 text-coral shrink-0" />
+                          ) : (
+                            <PlusCircle className="w-3.5 h-3.5 text-stone shrink-0" />
+                          )}
+                          <span className="text-stone w-24 shrink-0">
+                            {formatDate(s.start_datetime)}
+                          </span>
+                          <span className="text-charcoal truncate flex-1">{s.title}</span>
+                          <span className="text-[10px] text-stone shrink-0 max-w-[140px] truncate" title={s.match_reasons.join(', ')}>
+                            {s.match_reasons.slice(0, 2).join(', ')}
+                          </span>
+                          {s.series_id && (
+                            <span className="text-[10px] px-1 py-0.5 bg-amber-50 text-amber-600 rounded shrink-0">
+                              in series
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {suggestionsLoaded && suggestions.length === 0 && (
+                <p className="text-xs text-stone mb-4">No similar events found in the database.</p>
+              )}
 
               {/* Error banner */}
               {phase === 'error' && errorMessage && (

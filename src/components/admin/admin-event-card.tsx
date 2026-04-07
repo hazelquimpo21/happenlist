@@ -20,7 +20,7 @@ import {
   Clock,
   Tag,
   DollarSign,
-  MoreVertical,
+  Repeat,
 } from 'lucide-react';
 import { cn, getBestImageUrl } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -155,6 +155,13 @@ export function AdminEventCard({
                   <Badge variant="category" size="sm">
                     <Tag className="w-3 h-3 mr-1" />
                     {event.category_name}
+                  </Badge>
+                )}
+
+                {event.series_id && (
+                  <Badge size="sm" className="bg-indigo-100 text-indigo-800">
+                    <Repeat className="w-3 h-3 mr-1" />
+                    {event.series_title || 'Series'}
                   </Badge>
                 )}
 

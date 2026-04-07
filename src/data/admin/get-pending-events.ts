@@ -24,6 +24,7 @@ export interface AdminEventCard {
   scraped_at: string | null;
   created_at: string;
   series_id: string | null;
+  series_title: string | null;
   category_name: string | null;
   category_slug: string | null;
   location_name: string | null;
@@ -104,6 +105,7 @@ export async function getPendingEvents(
         scraped_at,
         created_at,
         series_id,
+        series:series(title),
         price_type,
         price_low,
         price_high,
@@ -171,6 +173,7 @@ export async function getPendingEvents(
       scraped_at: event.scraped_at,
       created_at: event.created_at,
       series_id: event.series_id || null,
+      series_title: (event.series as { title: string } | null)?.title || null,
       price_type: event.price_type,
       price_low: event.price_low,
       price_high: event.price_high,
