@@ -35,6 +35,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
   const search = typeof resolvedSearchParams.q === 'string' ? resolvedSearchParams.q : undefined;
   const orderBy = (typeof resolvedSearchParams.orderBy === 'string' ? resolvedSearchParams.orderBy : 'created_at') as 'scraped_at' | 'created_at' | 'start_datetime' | 'title';
   const orderDir = (typeof resolvedSearchParams.orderDir === 'string' ? resolvedSearchParams.orderDir : 'desc') as 'asc' | 'desc';
+  const seriesFilter = typeof resolvedSearchParams.series === 'string' ? resolvedSearchParams.series as 'in_series' | 'no_series' : undefined;
   const showDeleted = status === 'deleted';
 
   // Fetch all events
@@ -47,6 +48,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
     orderBy,
     orderDir,
     showDeleted,
+    seriesFilter,
   });
 
   timer.success('Loaded all events', {
@@ -56,7 +58,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
   // Build filter URL helper
   const buildFilterUrl = (params: Record<string, string | undefined>) => {
     const newParams = new URLSearchParams();
-    Object.entries({ status, source, orderBy, orderDir, ...params }).forEach(([key, value]) => {
+    Object.entries({ status, source, series: seriesFilter, orderBy, orderDir, ...params }).forEach(([key, value]) => {
       if (value) newParams.set(key, value);
     });
     return `/admin/events?${newParams.toString()}`;
@@ -101,6 +103,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
           currentOrderBy={orderBy}
           currentOrderDir={orderDir}
           currentStatus={status}
+          currentSeriesFilter={seriesFilter}
         />
       </AdminHeader>
 

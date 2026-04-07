@@ -15,6 +15,7 @@ import {
   CheckCircle,
   XCircle,
   FileText,
+  Repeat,
   Settings,
   LogOut,
   ChevronRight,
@@ -74,6 +75,16 @@ export function AdminSidebar({ pendingCount = 0 }: AdminSidebarProps) {
           label: 'Rejected',
           href: '/admin/events?status=rejected',
           icon: <XCircle className="w-5 h-5" />,
+        },
+      ],
+    },
+    {
+      title: 'Series',
+      items: [
+        {
+          label: 'All Series',
+          href: '/admin/series',
+          icon: <Repeat className="w-5 h-5" />,
         },
       ],
     },

@@ -16,6 +16,10 @@ export type {
   PendingEventsResult,
 } from './get-pending-events';
 
+// Series
+export { getAdminSeries } from './get-admin-series';
+export type { AdminSeriesCard, AdminSeriesFilters, AdminSeriesResult } from './get-admin-series';
+
 // Single event
 export { getAdminEvent, getEventAuditHistory } from './get-admin-event';
 export type { AdminEventDetails } from './get-admin-event';

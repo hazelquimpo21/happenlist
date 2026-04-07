@@ -8,13 +8,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Filter, ArrowUpDown, Upload, Loader2 } from 'lucide-react';
+import { Filter, ArrowUpDown, Upload, Loader2, Repeat } from 'lucide-react';
 
 interface AdminEventFiltersProps {
   currentSource?: string;
   currentOrderBy: string;
   currentOrderDir: string;
   currentStatus?: string;
+  currentSeriesFilter?: string;
 }
 
 export function AdminEventFilters({
@@ -22,6 +23,7 @@ export function AdminEventFilters({
   currentOrderBy,
   currentOrderDir,
   currentStatus,
+  currentSeriesFilter,
 }: AdminEventFiltersProps) {
   const router = useRouter();
   const [isMigrating, setIsMigrating] = useState(false);
@@ -96,6 +98,7 @@ export function AdminEventFilters({
     const baseParams = {
       status: currentStatus,
       source: currentSource,
+      series: currentSeriesFilter,
       orderBy: currentOrderBy,
       orderDir: currentOrderDir,
       ...params,
@@ -125,8 +128,31 @@ export function AdminEventFilters({
     router.push(newUrl);
   };
 
+  const handleSeriesFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    const newUrl = buildFilterUrl({
+      series: value === 'all' ? undefined : value,
+      page: undefined,
+    });
+    router.push(newUrl);
+  };
+
   return (
     <div className="flex items-center gap-3">
+      {/* Series filter */}
+      <div className="relative">
+        <select
+          className="appearance-none bg-warm-white border border-sand rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none cursor-pointer"
+          defaultValue={currentSeriesFilter || 'all'}
+          onChange={handleSeriesFilterChange}
+        >
+          <option value="all">All Events</option>
+          <option value="in_series">In a Series</option>
+          <option value="no_series">Not in Series</option>
+        </select>
+        <Repeat className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone pointer-events-none" />
+      </div>
+
       {/* Source filter */}
       <div className="relative">
         <select

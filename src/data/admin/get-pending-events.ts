@@ -46,6 +46,8 @@ export interface PendingEventsFilters {
   orderDir?: 'asc' | 'desc';
   /** When true, show only soft-deleted events (overrides status filter) */
   showDeleted?: boolean;
+  /** Filter by series membership: 'in_series' | 'no_series' | undefined (all) */
+  seriesFilter?: 'in_series' | 'no_series';
 }
 
 export interface PendingEventsResult {
@@ -139,6 +141,13 @@ export async function getPendingEvents(
     // Apply search filter
     if (search) {
       query = query.ilike('title', `%${search}%`);
+    }
+
+    // Apply series filter
+    if (filters.seriesFilter === 'in_series') {
+      query = query.not('series_id', 'is', null);
+    } else if (filters.seriesFilter === 'no_series') {
+      query = query.is('series_id', null);
     }
 
     // Apply ordering
