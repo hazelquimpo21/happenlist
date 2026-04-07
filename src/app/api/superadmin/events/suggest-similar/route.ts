@@ -118,8 +118,22 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Query candidates: same location/organizer/category, not deleted, not in selected set
-    let query = supabase
+    // Query candidates: same location/organizer/category OR title match, not deleted, not in selected set
+    // Include title keyword ilike conditions so title-only matches aren't missed
+    const allOrConditions = [...conditions];
+    for (const word of commonWords.slice(0, 3)) {
+      allOrConditions.push(`title.ilike.%${word}%`);
+    }
+
+    if (allOrConditions.length === 0) {
+      return NextResponse.json({
+        success: true,
+        suggestions: [],
+        message: 'Not enough data to find similar events',
+      });
+    }
+
+    const query = supabase
       .from('events')
       .select(`
         id, title, start_datetime, instance_date, status,
@@ -130,12 +144,8 @@ export async function POST(request: NextRequest) {
       `)
       .is('deleted_at', null)
       .not('id', 'in', `(${eventIds.join(',')})`)
+      .or(allOrConditions.join(','))
       .limit(200);
-
-    // Use OR filter for location/organizer/category match
-    if (conditions.length > 0) {
-      query = query.or(conditions.join(','));
-    }
 
     const { data: candidates, error: candidateError } = await query;
 

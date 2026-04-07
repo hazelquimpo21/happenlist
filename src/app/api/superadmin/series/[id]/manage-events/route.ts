@@ -85,7 +85,19 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }[] = [];
 
     if (conditions.length > 0 || titleWords.length > 0) {
-      let query = supabase
+      // Use or() to include: events matching org/location/category OR events with null series_id (orphans)
+      // Also include title-based ilike conditions so title-only matches aren't missed
+      const allOrConditions = [
+        ...conditions,
+        'series_id.is.null', // Always include orphan events
+      ];
+
+      // Add title keyword ilike conditions to broaden the candidate pool
+      for (const word of titleWords.slice(0, 3)) {
+        allOrConditions.push(`title.ilike.%${word}%`);
+      }
+
+      const { data: candidates } = await supabase
         .from('events')
         .select(`
           id, title, start_datetime, instance_date, status,
@@ -96,16 +108,16 @@ export async function GET(request: NextRequest, context: RouteContext) {
           series ( title )
         `)
         .is('deleted_at', null)
-        .neq('series_id', seriesId)
+        .or(allOrConditions.join(','))
         .limit(300);
 
-      if (conditions.length > 0) {
-        query = query.or(conditions.join(','));
-      }
+      // Filter out events already in this series (done in-memory since we broadened the query)
+      const filteredCandidates = (candidates || []).filter(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (c: any) => c.series_id !== seriesId
+      );
 
-      const { data: candidates } = await query;
-
-      if (candidates && candidates.length > 0) {
+      if (filteredCandidates.length > 0) {
         // Also get day-of-week pattern from current events
         const seriesDays = (currentEvents || [])
           .filter(e => e.start_datetime)
@@ -114,7 +126,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
         // Score each candidate
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        suggestions = candidates.map((c: any) => {
+        suggestions = filteredCandidates.map((c: any) => {
           let score = 0;
           const reasons: string[] = [];
 
