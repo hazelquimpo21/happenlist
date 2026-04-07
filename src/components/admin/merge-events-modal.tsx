@@ -29,6 +29,8 @@ import type { AdminEventCard } from '@/data/admin';
 interface MergeEventsModalProps {
   events: AdminEventCard[];
   onClose: () => void;
+  /** Called after a successful merge with the IDs of soft-deleted events */
+  onMergeComplete?: (deletedEventIds: string[]) => void;
 }
 
 type Step = 'review' | 'edit' | 'confirm' | 'executing' | 'done' | 'error';
@@ -54,7 +56,7 @@ interface MergedFields {
   reasoning: string;
 }
 
-export function MergeEventsModal({ events, onClose }: MergeEventsModalProps) {
+export function MergeEventsModal({ events, onClose, onMergeComplete }: MergeEventsModalProps) {
   const router = useRouter();
   const [step, setStep] = useState<Step>('review');
   const [useAi, setUseAi] = useState(true);
@@ -160,15 +162,22 @@ export function MergeEventsModal({ events, onClose }: MergeEventsModalProps) {
 
       setResultMessage(data.message);
       setStep('done');
+
+      const deletedIds: string[] = data.deletedIds || events.filter(e => e.id !== primaryId).map(e => e.id);
+
       setTimeout(() => {
-        onClose();
-        router.refresh();
-      }, 2000);
+        if (onMergeComplete) {
+          onMergeComplete(deletedIds);
+        } else {
+          onClose();
+          router.refresh();
+        }
+      }, 1500);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Merge failed');
       setStep('error');
     }
-  }, [events, primaryId, editTitle, editDescription, merged, onClose, router]);
+  }, [events, primaryId, editTitle, editDescription, merged, onClose, onMergeComplete, router]);
 
   return (
     <div className="fixed inset-0 bg-charcoal/50 flex items-center justify-center z-[60] p-4">

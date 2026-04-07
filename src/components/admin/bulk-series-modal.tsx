@@ -30,6 +30,8 @@ import type { AdminEventCard } from '@/data/admin';
 interface BulkSeriesModalProps {
   events: AdminEventCard[];
   onClose: () => void;
+  /** Called after events are successfully attached to a series */
+  onSeriesComplete?: () => void;
 }
 
 type Tab = 'detect' | 'manual';
@@ -74,7 +76,7 @@ interface DetectedPattern {
   reasoning: string;
 }
 
-export function BulkSeriesModal({ events, onClose }: BulkSeriesModalProps) {
+export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSeriesModalProps) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('detect');
   const [phase, setPhase] = useState<Phase>('idle');
@@ -221,14 +223,18 @@ export function BulkSeriesModal({ events, onClose }: BulkSeriesModalProps) {
       setResultMessage(data.message);
       setPhase('done');
       setTimeout(() => {
-        onClose();
-        router.refresh();
-      }, 2000);
+        if (onSeriesComplete) {
+          onSeriesComplete();
+        } else {
+          onClose();
+          router.refresh();
+        }
+      }, 1500);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Failed');
       setPhase('error');
     }
-  }, [allEventIds, pattern, seriesTitle, seriesType, onClose, router]);
+  }, [allEventIds, pattern, seriesTitle, seriesType, onClose, onSeriesComplete, router]);
 
   // ===== MANUAL CREATE / ATTACH =====
   const searchSeries = useCallback(async () => {
@@ -279,14 +285,18 @@ export function BulkSeriesModal({ events, onClose }: BulkSeriesModalProps) {
       setResultMessage(data.message);
       setPhase('done');
       setTimeout(() => {
-        onClose();
-        router.refresh();
-      }, 2000);
+        if (onSeriesComplete) {
+          onSeriesComplete();
+        } else {
+          onClose();
+          router.refresh();
+        }
+      }, 1500);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Failed');
       setPhase('error');
     }
-  }, [allEventIds, createMode, selectedExistingId, seriesTitle, seriesType, onClose, router]);
+  }, [allEventIds, createMode, selectedExistingId, seriesTitle, seriesType, onClose, onSeriesComplete, router]);
 
   const confidenceColor = {
     high: 'text-sage',

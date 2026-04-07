@@ -309,6 +309,17 @@ export function AdminEventList({
             setShowMergeModal(false);
             clearSelection();
           }}
+          onMergeComplete={(deletedEventIds) => {
+            // Optimistically hide soft-deleted events immediately
+            setDeletedIds(prev => {
+              const next = new Set(prev);
+              for (const id of deletedEventIds) next.add(id);
+              return next;
+            });
+            setShowMergeModal(false);
+            clearSelection();
+            router.refresh();
+          }}
         />
       )}
 
@@ -319,6 +330,11 @@ export function AdminEventList({
           onClose={() => {
             setShowSeriesModal(false);
             clearSelection();
+          }}
+          onSeriesComplete={() => {
+            setShowSeriesModal(false);
+            clearSelection();
+            router.refresh();
           }}
         />
       )}
