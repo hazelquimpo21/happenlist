@@ -97,13 +97,10 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Soft-delete the source series
+      // Hard-delete the source series (events already moved, audit log has the trail)
       await supabase
         .from('series')
-        .update({
-          status: 'cancelled',
-          // Store merge info in description for audit trail
-        })
+        .delete()
         .eq('id', sourceId);
     }
 

@@ -46,10 +46,16 @@ export async function POST(request: NextRequest) {
 
       if (events && events.length > 0) {
         if (deleteEvents) {
-          // Soft-delete the events too
+          // Soft-delete the events and detach from series (so FK doesn't block series delete)
           const { error: softDeleteError } = await supabase
             .from('events')
-            .update({ deleted_at: new Date().toISOString(), status: 'rejected' })
+            .update({
+              deleted_at: new Date().toISOString(),
+              status: 'rejected',
+              series_id: null,
+              is_series_instance: false,
+              series_sequence: null,
+            })
             .eq('series_id', seriesId);
 
           if (softDeleteError) {
@@ -75,10 +81,10 @@ export async function POST(request: NextRequest) {
         totalAffected += events.length;
       }
 
-      // Soft-delete the series by setting status to cancelled
+      // Hard-delete the series row (it's just a grouping record)
       const { error: deleteError } = await supabase
         .from('series')
-        .update({ status: 'cancelled' })
+        .delete()
         .eq('id', seriesId);
 
       if (deleteError) {
