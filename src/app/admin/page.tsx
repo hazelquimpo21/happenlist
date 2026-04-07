@@ -29,19 +29,46 @@ export const metadata = {
 export default async function AdminDashboardPage() {
   const timer = adminDataLogger.time('AdminDashboardPage render');
 
-  // Fetch all data in parallel
-  const [stats, recentActivity, pendingEvents] = await Promise.all([
+  // Fetch all data in parallel with error handling
+  // RLS policies require superadmin auth — queries fail without it
+  const [statsResult, activityResult, pendingResult] = await Promise.allSettled([
     getAdminStats(),
     getRecentActivity(5),
     getPendingEvents({ limit: 5 }),
   ]);
 
-  timer.success('Dashboard data loaded', {
-    metadata: {
-      pendingCount: stats.pendingReviewCount,
-      recentActivityCount: recentActivity.length,
-    },
-  });
+  const stats = statsResult.status === 'fulfilled'
+    ? statsResult.value
+    : {
+        pendingReviewCount: 0,
+        publishedCount: 0,
+        draftCount: 0,
+        rejectedCount: 0,
+        scrapedCount: 0,
+        scrapedPendingCount: 0,
+        scrapedLast24h: 0,
+        reviewedLast24h: 0,
+        totalCount: 0,
+      };
+  const recentActivity = activityResult.status === 'fulfilled' ? activityResult.value : [];
+  const pendingEvents = pendingResult.status === 'fulfilled'
+    ? pendingResult.value
+    : { events: [], total: 0, page: 1, limit: 5, totalPages: 0 };
+
+  const hasErrors = [statsResult, activityResult, pendingResult].some(r => r.status === 'rejected');
+  if (hasErrors) {
+    const errors = [statsResult, activityResult, pendingResult]
+      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      .map(r => r.reason);
+    timer.error('Some dashboard queries failed (likely RLS/auth)', errors[0]);
+  } else {
+    timer.success('Dashboard data loaded', {
+      metadata: {
+        pendingCount: stats.pendingReviewCount,
+        recentActivityCount: recentActivity.length,
+      },
+    });
+  }
 
   return (
     <div className="min-h-screen">
@@ -49,6 +76,16 @@ export default async function AdminDashboardPage() {
         title="Dashboard"
         description="Overview of events and activity"
       />
+
+      {hasErrors && (
+        <div className="mx-8 mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm">
+          <strong>Warning:</strong> Some data failed to load. You may need to{' '}
+          <a href="/auth/login?redirect=/admin" className="underline font-medium">
+            log in
+          </a>{' '}
+          as a superadmin to see full dashboard data.
+        </div>
+      )}
 
       <div className="p-8 space-y-8">
         {/* Stats Grid */}
