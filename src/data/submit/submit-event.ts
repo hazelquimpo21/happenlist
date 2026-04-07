@@ -794,7 +794,7 @@ function calculateRecurringDates(
       const weekStart = new Date(current);
       weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Go to Sunday
 
-      let iterWeek = new Date(weekStart);
+      const iterWeek = new Date(weekStart);
       const safetyLimit = maxCount * 4; // Prevent infinite loops
       let iterations = 0;
 

@@ -7,6 +7,7 @@
 export const dynamic = 'force-dynamic';
 
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { EventGrid, SectionHeader } from '@/components/events';
 import { getEvents } from '@/data/events';
@@ -103,7 +104,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
 
       {/* Category pills for quick filtering */}
       <div className="flex flex-wrap gap-2 mb-8">
-        <a
+        <Link
           href="/events"
           className={`px-4 py-2 rounded-full text-body-sm font-medium transition-colors ${
             !categorySlug
@@ -112,7 +113,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
           }`}
         >
           All
-        </a>
+        </Link>
         {categories.slice(0, 6).map((cat) => (
           <a
             key={cat.id}

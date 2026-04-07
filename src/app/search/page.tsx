@@ -109,12 +109,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <p className="text-stone mb-6">
             Try a different search term or browse our events.
           </p>
-          <a
+          <Link
             href="/events"
             className="inline-block px-6 py-3 rounded-md bg-coral text-warm-white font-medium hover:bg-coral-dark transition-colors"
           >
             Browse Events
-          </a>
+          </Link>
         </div>
       )}
 

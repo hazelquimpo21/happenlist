@@ -263,7 +263,7 @@ export class VenueTransformer {
 
     // Generate unique slug with city and neighborhood
     // Format: venue-name-neighborhood-city
-    const slug = this.slugGenerator.generate(row.name, row.city, neighborhood);
+    const slug = this.slugGenerator.generate(row.name, row.city, neighborhood ?? undefined);
 
     // Build the venue record
     const record: VenueRecord = {

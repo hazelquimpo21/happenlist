@@ -26,12 +26,12 @@ export const metadata = {
 // PAGE
 // ============================================================================
 
-export default function SubmitSuccessPage({
+export default async function SubmitSuccessPage({
   searchParams,
 }: {
-  searchParams: { id?: string };
+  searchParams: Promise<{ id?: string }>;
 }) {
-  const eventId = searchParams.id;
+  const { id: eventId } = await searchParams;
 
   return (
     <Container>
