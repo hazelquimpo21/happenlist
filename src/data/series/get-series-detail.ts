@@ -148,6 +148,7 @@ export async function getSeriesEvents(
     )
     .eq('series_id', seriesId)
     .eq('status', 'published')
+    .is('deleted_at', null)
     .order('series_sequence', { ascending: true, nullsFirst: false })
     .order('instance_date', { ascending: true })
     .limit(limit);
@@ -284,7 +285,8 @@ export async function getSeriesStats(seriesId: string): Promise<{
     .from('events')
     .select('*', { count: 'exact', head: true })
     .eq('series_id', seriesId)
-    .eq('status', 'published');
+    .eq('status', 'published')
+    .is('deleted_at', null);
 
   // Get upcoming count
   const { count: upcomingEvents } = await supabase
@@ -292,6 +294,7 @@ export async function getSeriesStats(seriesId: string): Promise<{
     .select('*', { count: 'exact', head: true })
     .eq('series_id', seriesId)
     .eq('status', 'published')
+    .is('deleted_at', null)
     .gte('instance_date', today);
 
   // Get next event date
@@ -300,6 +303,7 @@ export async function getSeriesStats(seriesId: string): Promise<{
     .select('instance_date')
     .eq('series_id', seriesId)
     .eq('status', 'published')
+    .is('deleted_at', null)
     .gte('instance_date', today)
     .order('instance_date', { ascending: true })
     .limit(1)

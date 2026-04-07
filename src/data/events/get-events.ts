@@ -93,6 +93,7 @@ export async function getEvents(
       { count: 'exact' }
     )
     .eq('status', 'published')
+    .is('deleted_at', null)
     .gte('instance_date', new Date().toISOString().split('T')[0]);
 
   // Apply filters

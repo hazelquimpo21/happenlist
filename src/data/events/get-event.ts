@@ -48,6 +48,7 @@ export async function getEvent(
     .eq('slug', slug)
     .eq('instance_date', instanceDate)
     .eq('status', 'published')
+    .is('deleted_at', null)
     .single();
 
   if (error) {

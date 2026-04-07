@@ -143,7 +143,7 @@ export function AdminEventFilters({
       <div className="relative">
         <select
           className="appearance-none bg-warm-white border border-sand rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none cursor-pointer"
-          defaultValue={currentSeriesFilter || 'all'}
+          value={currentSeriesFilter || 'all'}
           onChange={handleSeriesFilterChange}
         >
           <option value="all">All Events</option>
@@ -157,7 +157,7 @@ export function AdminEventFilters({
       <div className="relative">
         <select
           className="appearance-none bg-warm-white border border-sand rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none cursor-pointer"
-          defaultValue={currentSource || 'all'}
+          value={currentSource || 'all'}
           onChange={handleSourceChange}
         >
           <option value="all">All Sources</option>
@@ -173,7 +173,7 @@ export function AdminEventFilters({
       <div className="relative">
         <select
           className="appearance-none bg-warm-white border border-sand rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none cursor-pointer"
-          defaultValue={currentOrderBy}
+          value={currentOrderBy}
           onChange={handleOrderChange}
         >
           <option value="created_at">Created Date</option>
