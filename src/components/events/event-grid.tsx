@@ -2,6 +2,7 @@
  * EVENT GRID COMPONENT
  * ====================
  * Responsive grid layout for event cards.
+ * Supports a "bento" variant for homepage featured sections.
  */
 
 import { EventCard } from './event-card';
@@ -14,6 +15,8 @@ interface EventGridProps {
   events: EventCardType[];
   /** Number of columns (auto-adjusts for responsive) */
   columns?: 2 | 3 | 4;
+  /** Grid layout variant */
+  variant?: 'default' | 'bento';
   /** Show loading skeletons */
   loading?: boolean;
   /** Number of skeleton cards to show */
@@ -33,15 +36,12 @@ interface EventGridProps {
  * <EventGrid events={events} />
  *
  * @example
- * <EventGrid
- *   events={events}
- *   columns={3}
- *   emptyMessage="No events found for this category."
- * />
+ * <EventGrid events={events} variant="bento" />
  */
 export function EventGrid({
   events,
   columns = 4,
+  variant = 'default',
   loading = false,
   skeletonCount = 8,
   emptyMessage = 'No events found',
@@ -81,7 +81,43 @@ export function EventGrid({
     );
   }
 
-  // Event grid
+  // Bento grid: first card spans 2 cols + 2 rows, rest fill in
+  if (variant === 'bento') {
+    const heroEvent = events[0];
+    const restEvents = events.slice(1, 5);
+
+    return (
+      <div
+        className={cn(
+          'grid gap-6',
+          'grid-cols-1 md:grid-cols-3',
+          'md:grid-rows-[auto_auto]',
+          className
+        )}
+      >
+        {/* Hero card: spans 2 cols and 2 rows on md+ */}
+        <div className="md:col-span-2 md:row-span-2">
+          <EventCard
+            event={heroEvent}
+            variant="featured"
+            priority={true}
+            className="h-full"
+          />
+        </div>
+
+        {/* Supporting cards fill remaining cells */}
+        {restEvents.map((event, index) => (
+          <EventCard
+            key={event.id}
+            event={event}
+            priority={index < 2}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  // Default grid
   return (
     <div className={cn('grid gap-6', columnClasses[columns], className)}>
       {events.map((event) => (

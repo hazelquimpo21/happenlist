@@ -1,7 +1,8 @@
 /**
  * CATEGORY GRID COMPONENT
  * =======================
- * Grid of category links for homepage.
+ * Color-blocked category cards for the homepage.
+ * Each card uses the category's identity color for background and accent.
  */
 
 import Link from 'next/link';
@@ -20,6 +21,7 @@ import {
 } from 'lucide-react';
 import { buildCategoryUrl } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { getCategoryColor } from '@/lib/constants/category-colors';
 import type { Category } from '@/types';
 
 // Map category icon names to Lucide components
@@ -44,10 +46,9 @@ interface CategoryGridProps {
 }
 
 /**
- * Grid of category links.
- *
- * @example
- * <CategoryGrid categories={categories} />
+ * Color-blocked category cards grid.
+ * Each card has a full tinted background and bold left border
+ * in the category's identity color.
  */
 export function CategoryGrid({ categories, className }: CategoryGridProps) {
   return (
@@ -59,32 +60,32 @@ export function CategoryGrid({ categories, className }: CategoryGridProps) {
     >
       {categories.map((category) => {
         const IconComponent = ICON_MAP[category.icon || ''] || Music;
+        const colors = getCategoryColor(category.slug);
 
         return (
           <Link
             key={category.id}
             href={buildCategoryUrl(category)}
             className={cn(
-              'flex flex-col items-center justify-center',
+              'flex items-center gap-3',
               'p-4 rounded-lg',
-              'bg-warm-white border border-sand',
-              'hover:border-coral hover:shadow-card',
+              'border-l-4',
+              'hover:shadow-card-lifted hover:-translate-y-1',
               'transition-all duration-base',
               'group'
             )}
+            style={{
+              backgroundColor: colors.light,
+              borderLeftColor: colors.accent,
+            }}
           >
             <div
-              className={cn(
-                'w-12 h-12 rounded-full',
-                'flex items-center justify-center',
-                'bg-sand/50 text-stone',
-                'group-hover:bg-coral-light group-hover:text-coral',
-                'transition-all duration-base'
-              )}
+              className="flex-shrink-0"
+              style={{ color: colors.accent }}
             >
-              <IconComponent className="w-6 h-6" />
+              <IconComponent className="w-8 h-8" />
             </div>
-            <span className="mt-3 text-body-sm font-medium text-charcoal text-center">
+            <span className="font-semibold text-charcoal text-body-sm">
               {category.name}
             </span>
           </Link>
