@@ -375,7 +375,23 @@ export async function createSeries(
   locationId: string | null
 ): Promise<{ success: boolean; seriesId?: string; error?: string }> {
   try {
-    const slug = generateSlug(seriesData.title);
+    const baseSlug = generateSlug(seriesData.title);
+
+    // Ensure slug uniqueness
+    let slug = baseSlug;
+    const { data: existingSlugs } = await supabase
+      .from('series')
+      .select('slug')
+      .like('slug', `${baseSlug}%`);
+
+    if (existingSlugs && existingSlugs.some((s: { slug: string }) => s.slug === baseSlug)) {
+      const usedSlugs = new Set(existingSlugs.map((s: { slug: string }) => s.slug));
+      let counter = 2;
+      while (usedSlugs.has(`${baseSlug}-${counter}`)) {
+        counter++;
+      }
+      slug = `${baseSlug}-${counter}`;
+    }
 
     console.log(`📝 [createSeries] Creating series: "${seriesData.title}" (type: ${seriesData.series_type})`, {
       attendance_mode: seriesData.attendance_mode,

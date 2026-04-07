@@ -162,7 +162,23 @@ export async function POST(request: NextRequest) {
     } else if (seriesData?.title) {
       // Create new series
       const firstEvent = activeEvents[0];
-      const slug = generateSlug(seriesData.title);
+      const baseSlug = generateSlug(seriesData.title);
+
+      // Ensure slug uniqueness — check for existing slugs with the same base
+      let slug = baseSlug;
+      const { data: existingSlugs } = await supabase
+        .from('series')
+        .select('slug')
+        .like('slug', `${baseSlug}%`);
+
+      if (existingSlugs && existingSlugs.some(s => s.slug === baseSlug)) {
+        const usedSlugs = new Set(existingSlugs.map(s => s.slug));
+        let counter = 2;
+        while (usedSlugs.has(`${baseSlug}-${counter}`)) {
+          counter++;
+        }
+        slug = `${baseSlug}-${counter}`;
+      }
 
       const { data: newSeries, error: createError } = await supabase
         .from('series')

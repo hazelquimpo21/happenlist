@@ -9,8 +9,9 @@
  * Tab 2: Create & Attach — manually create/search a series and attach events
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   X,
   Sparkles,
@@ -23,6 +24,7 @@ import {
   Lightbulb,
   PlusCircle,
   Check,
+  ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { AdminEventCard } from '@/data/admin';
@@ -168,6 +170,31 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
     ...events.map(e => e.id),
     ...Array.from(addedSuggestionIds),
   ];
+
+  // Track how many selected events are already in a series, grouped by series
+  const eventsInSeries = events.filter(e => e.series_id);
+  const allInSeries = eventsInSeries.length === events.length;
+  const seriesGroups = useMemo(() => {
+    const groups = new Map<string, { id: string; title: string; count: number }>();
+    for (const e of eventsInSeries) {
+      if (!e.series_id) continue;
+      const existing = groups.get(e.series_id);
+      if (existing) {
+        existing.count++;
+      } else {
+        groups.set(e.series_id, { id: e.series_id, title: e.series_title || 'Untitled Series', count: 1 });
+      }
+    }
+    return Array.from(groups.values());
+  }, [eventsInSeries]);
+
+  const selectAllSuggestions = useCallback(() => {
+    setAddedSuggestionIds(new Set(suggestions.map(s => s.id)));
+  }, [suggestions]);
+
+  const selectNoneSuggestions = useCallback(() => {
+    setAddedSuggestionIds(new Set());
+  }, []);
 
   // ===== AUTO DETECT =====
   const runDetection = useCallback(async () => {
@@ -365,6 +392,60 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
             </div>
 
             <div className="p-5">
+              {/* Warning: events already in a series */}
+              {eventsInSeries.length > 0 && (
+                <div className={`flex items-start gap-2 p-3 mb-4 rounded-lg text-sm ${
+                  allInSeries
+                    ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                    : 'bg-amber-50/60 text-amber-700'
+                }`}>
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    {allInSeries ? (
+                      <span className="font-medium">All {eventsInSeries.length} selected events are already in a series.</span>
+                    ) : (
+                      <span>
+                        <span className="font-medium">{eventsInSeries.length} of {events.length}</span> selected events are already in a series.
+                      </span>
+                    )}
+                    {/* List the distinct series with links */}
+                    <div className="mt-1.5 space-y-1">
+                      {seriesGroups.map(sg => (
+                        <div key={sg.id} className="flex items-center gap-1.5">
+                          <Repeat className="w-3 h-3 shrink-0 opacity-60" />
+                          <Link
+                            href={`/admin/series/${sg.id}/edit`}
+                            target="_blank"
+                            className="text-xs font-medium underline underline-offset-2 hover:text-coral transition-colors"
+                          >
+                            {sg.title}
+                          </Link>
+                          <span className="text-[10px] opacity-60">({sg.count} event{sg.count !== 1 ? 's' : ''})</span>
+                          <ExternalLink className="w-2.5 h-2.5 opacity-40" />
+                        </div>
+                      ))}
+                    </div>
+                    {seriesGroups.length === 1 && allInSeries ? (
+                      <span className="block text-xs mt-1.5 opacity-80">
+                        These are already grouped. You can{' '}
+                        <Link
+                          href={`/admin/series/${seriesGroups[0].id}/edit`}
+                          target="_blank"
+                          className="underline font-medium hover:text-coral"
+                        >
+                          edit the existing series
+                        </Link>{' '}
+                        or proceed to create a new one (events will be moved).
+                      </span>
+                    ) : (
+                      <span className="block text-xs mt-1.5 opacity-80">
+                        Creating a new series will move them out of their current one.
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Event preview list */}
               <div className="mb-4 max-h-40 overflow-y-auto space-y-1">
                 {[...events]
@@ -374,9 +455,17 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
                     <span className="text-stone w-28 shrink-0">{formatDate(event.start_datetime)}</span>
                     <span className="text-charcoal truncate">{event.title}</span>
                     {event.series_id && (
-                      <span className="text-amber-600 text-[10px] px-1.5 py-0.5 bg-amber-50 rounded shrink-0">
-                        in series
-                      </span>
+                      <Link
+                        href={`/admin/series/${event.series_id}/edit`}
+                        target="_blank"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-amber-600 text-[10px] px-1.5 py-0.5 bg-amber-50 rounded shrink-0 hover:bg-amber-100 hover:text-amber-700 transition-colors flex items-center gap-1"
+                        title={`Edit series: ${event.series_title || 'Series'}`}
+                      >
+                        <Repeat className="w-2.5 h-2.5" />
+                        {event.series_title || 'Series'}
+                        <ExternalLink className="w-2 h-2 opacity-50" />
+                      </Link>
                     )}
                   </div>
                 ))}
@@ -412,6 +501,21 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
                         +{addedSuggestionIds.size} added
                       </span>
                     )}
+                    <span className="ml-auto flex items-center gap-1.5">
+                      <button
+                        onClick={selectAllSuggestions}
+                        className="text-[11px] text-stone hover:text-coral transition-colors underline underline-offset-2"
+                      >
+                        Select all
+                      </button>
+                      <span className="text-stone text-[10px]">·</span>
+                      <button
+                        onClick={selectNoneSuggestions}
+                        className="text-[11px] text-stone hover:text-coral transition-colors underline underline-offset-2"
+                      >
+                        Select none
+                      </button>
+                    </span>
                   </div>
                   <div className="max-h-40 overflow-y-auto space-y-1">
                     {suggestions.map((s) => {
