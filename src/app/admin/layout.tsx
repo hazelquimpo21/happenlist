@@ -5,6 +5,7 @@
  * Includes sidebar navigation and main content area.
  */
 
+import { Suspense } from 'react';
 import { AdminSidebar } from '@/components/admin';
 import { getAdminStats } from '@/data/admin';
 
@@ -20,25 +21,28 @@ export const metadata = {
   },
 };
 
-export default async function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  // Fetch stats for sidebar badge
+async function SidebarWithStats() {
   let pendingCount = 0;
   try {
     const stats = await getAdminStats();
     pendingCount = stats.pendingReviewCount;
   } catch (error) {
-    // Silently fail - sidebar will just show 0
     console.error('Failed to fetch admin stats for sidebar:', error);
   }
+  return <AdminSidebar pendingCount={pendingCount} />;
+}
 
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex min-h-screen bg-cream">
-      {/* Sidebar */}
-      <AdminSidebar pendingCount={pendingCount} />
+      {/* Sidebar — loads async, doesn't block page content */}
+      <Suspense fallback={<AdminSidebar pendingCount={0} />}>
+        <SidebarWithStats />
+      </Suspense>
 
       {/* Main content */}
       <main className="flex-1 min-w-0">

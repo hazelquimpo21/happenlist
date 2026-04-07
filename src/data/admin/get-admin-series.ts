@@ -111,22 +111,24 @@ export async function getAdminSeries(
 
   const total = count || 0;
 
-  // For each series, get the actual event count
+  // For each series, get the actual event count using lightweight queries
   const seriesIds = (data || []).map((s: { id: string }) => s.id);
   const eventCounts: Record<string, number> = {};
 
   if (seriesIds.length > 0) {
-    const { data: countData } = await supabase
-      .from('events')
-      .select('series_id')
-      .in('series_id', seriesIds)
-      .is('deleted_at', null);
+    // Use parallel count queries — much faster than fetching all rows
+    const countPromises = seriesIds.map(async (id: string) => {
+      const { count } = await supabase
+        .from('events')
+        .select('id', { count: 'exact', head: true })
+        .eq('series_id', id)
+        .is('deleted_at', null);
+      return { id, count: count || 0 };
+    });
 
-    if (countData) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      for (const row of countData as any[]) {
-        eventCounts[row.series_id] = (eventCounts[row.series_id] || 0) + 1;
-      }
+    const counts = await Promise.all(countPromises);
+    for (const { id, count } of counts) {
+      eventCounts[id] = count;
     }
   }
 
