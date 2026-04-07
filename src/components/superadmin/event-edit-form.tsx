@@ -163,6 +163,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
   const [statusMessage, setStatusMessage] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteReason, setDeleteReason] = useState('');
+  const [justDeleted, setJustDeleted] = useState(false);
   const [notes, setNotes] = useState('');
   type OccurrenceScope = 'single' | 'all' | 'future';
   const [occurrenceScope, setOccurrenceScope] = useState<OccurrenceScope>('single');
@@ -496,10 +497,11 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
       setStatus('saved');
       setStatusMessage('Event deleted successfully!');
       setShowDeleteConfirm(false);
+      setJustDeleted(true);
 
       setTimeout(() => {
         router.push('/admin/events');
-      }, 1500);
+      }, 2000);
     } catch (error) {
       console.error('Delete error:', error);
       setStatus('error');
@@ -600,12 +602,36 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
   // RENDER
   // ============================================================================
 
-  const isDeleted = !!event.reviewed_at && event.status === 'rejected';
+  const isDeleted = !!event.deleted_at;
 
   return (
     <div className="space-y-6">
+      {/* Deletion success overlay */}
+      {justDeleted && (
+        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center animate-in fade-in duration-300">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <Trash2 className="w-6 h-6 text-red-600" />
+            <h3 className="font-display text-xl text-red-800 font-bold">Event Deleted</h3>
+          </div>
+          <p className="text-red-700 text-sm">
+            &quot;{event.title}&quot; has been removed. Redirecting to events list...
+          </p>
+        </div>
+      )}
+
+      {/* Existing soft-deleted banner */}
+      {isDeleted && !justDeleted && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
+          <Trash2 className="w-5 h-5 text-red-500 shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-red-800">This event has been deleted</p>
+            <p className="text-xs text-red-600 mt-0.5">You can restore it using the button below.</p>
+          </div>
+        </div>
+      )}
+
       {/* Status bar */}
-      {status !== 'idle' && (
+      {status !== 'idle' && !justDeleted && (
         <div
           className={`p-4 rounded-lg flex items-center gap-3 ${
             status === 'saving'

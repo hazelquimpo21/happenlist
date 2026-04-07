@@ -53,9 +53,12 @@ export function AdminEventList({
   const [targetStatus, setTargetStatus] = useState('published');
   const [resultMessage, setResultMessage] = useState('');
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
 
+  // Filter out optimistically deleted events
+  const visibleEvents = events.filter(e => !deletedIds.has(e.id));
   const selectedCount = selectedIds.size;
-  const allSelected = events.length > 0 && selectedIds.size === events.length;
+  const allSelected = visibleEvents.length > 0 && selectedIds.size === visibleEvents.length;
 
   const handleSelect = useCallback((eventId: string, selected: boolean) => {
     setSelectedIds(prev => {
@@ -73,9 +76,9 @@ export function AdminEventList({
     if (allSelected) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(events.map(e => e.id)));
+      setSelectedIds(new Set(visibleEvents.map(e => e.id)));
     }
-  }, [allSelected, events]);
+  }, [allSelected, visibleEvents]);
 
   const clearSelection = useCallback(() => {
     setSelectedIds(new Set());
@@ -125,6 +128,15 @@ export function AdminEventList({
       setActionState('done');
       setResultMessage(data.message);
 
+      // Optimistically hide deleted events from the list immediately
+      if (pendingAction === 'delete' && data.succeeded) {
+        setDeletedIds(prev => {
+          const next = new Set(prev);
+          for (const id of data.succeeded) next.add(id);
+          return next;
+        });
+      }
+
       // Clear selection and refresh after short delay
       setTimeout(() => {
         clearSelection();
@@ -148,7 +160,7 @@ export function AdminEventList({
   return (
     <div>
       {/* Select all header */}
-      {events.length > 0 && (
+      {visibleEvents.length > 0 && (
         <div className="flex items-center gap-3 mb-3 px-1">
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -171,7 +183,7 @@ export function AdminEventList({
 
       {/* Event cards */}
       <div className="space-y-3">
-        {events.map((event) => (
+        {visibleEvents.map((event) => (
           <AdminEventCard
             key={event.id}
             event={event}
@@ -318,8 +330,14 @@ export function AdminEventList({
 
             {actionState === 'done' && (
               <div className="flex items-center gap-3 py-4">
-                <CheckCircle className="w-5 h-5 text-sage" />
-                <span className="text-charcoal">{resultMessage}</span>
+                {pendingAction === 'delete' ? (
+                  <Trash2 className="w-5 h-5 text-red-500" />
+                ) : (
+                  <CheckCircle className="w-5 h-5 text-sage" />
+                )}
+                <span className={pendingAction === 'delete' ? 'text-red-800 font-medium' : 'text-charcoal'}>
+                  {resultMessage}
+                </span>
               </div>
             )}
 

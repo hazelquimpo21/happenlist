@@ -40,6 +40,8 @@ export interface PendingEventsFilters {
   limit?: number;
   orderBy?: 'scraped_at' | 'created_at' | 'start_datetime' | 'title';
   orderDir?: 'asc' | 'desc';
+  /** When true, show only soft-deleted events (overrides status filter) */
+  showDeleted?: boolean;
 }
 
 export interface PendingEventsResult {
@@ -106,6 +108,15 @@ export async function getPendingEvents(
       `,
         { count: 'exact' }
       );
+
+    // Soft-delete filtering
+    if (filters.showDeleted) {
+      // Show ONLY soft-deleted events
+      query = query.not('deleted_at', 'is', null);
+    } else {
+      // Hide soft-deleted events from normal views
+      query = query.is('deleted_at', null);
+    }
 
     // Apply status filter
     if (status) {

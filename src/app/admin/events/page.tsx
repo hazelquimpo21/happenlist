@@ -35,16 +35,18 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
   const search = typeof resolvedSearchParams.q === 'string' ? resolvedSearchParams.q : undefined;
   const orderBy = (typeof resolvedSearchParams.orderBy === 'string' ? resolvedSearchParams.orderBy : 'created_at') as 'scraped_at' | 'created_at' | 'start_datetime' | 'title';
   const orderDir = (typeof resolvedSearchParams.orderDir === 'string' ? resolvedSearchParams.orderDir : 'desc') as 'asc' | 'desc';
+  const showDeleted = status === 'deleted';
 
   // Fetch all events
   const result = await getAllAdminEvents({
-    status: status as EventStatus | undefined,
+    status: showDeleted ? undefined : status as EventStatus | undefined,
     source: source as EventSource | undefined,
     search,
     page,
     limit: 20,
     orderBy,
     orderDir,
+    showDeleted,
   });
 
   timer.success('Loaded all events', {
@@ -67,6 +69,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
     { label: 'Published', value: 'published' },
     { label: 'Draft', value: 'draft' },
     { label: 'Rejected', value: 'rejected' },
+    { label: 'Deleted', value: 'deleted' },
   ];
 
   return (
