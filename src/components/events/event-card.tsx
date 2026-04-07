@@ -1,14 +1,18 @@
 /**
  * EVENT CARD COMPONENT
  * ====================
- * 🎴 Primary event display card for grids and lists.
+ * Primary event display card with category-colored identity.
+ *
+ * Design: vibrant city magazine aesthetic — each category has a distinct
+ * color accent (3px top border + opaque badge pill). Date format uses
+ * day-of-week + time ("Sat · 7pm") for natural schedule planning.
  *
  * FEATURES:
+ *   - Per-category color treatment (border + badge)
+ *   - Smart date formatting (Today/Tomorrow/day+time)
+ *   - Layered depth with lifted hover state
  *   - Responsive image with smart fallbacks
- *   - Optimized with Next.js Image (lazy loading, WebP)
  *   - Memoized for performance in large grids
- *   - Beautiful hover effects and animations
- *   - Accessible with proper semantic markup
  *
  * USAGE:
  *   <EventCard event={eventData} />
@@ -19,8 +23,17 @@
 import { memo } from 'react';
 import Link from 'next/link';
 import { MapPin, Baby, Users } from 'lucide-react';
+import {
+  isToday,
+  isTomorrow,
+  differenceInCalendarDays,
+  format,
+  getHours,
+  getMinutes,
+} from 'date-fns';
 import { buildEventUrl } from '@/lib/utils/url';
 import { cn } from '@/lib/utils';
+import { getCategoryColor } from '@/lib/constants/category-colors';
 import { EventImage } from './event-image';
 import { HeartButtonCompact } from '@/components/hearts';
 import type { EventCard as EventCardType } from '@/types';
@@ -49,18 +62,58 @@ interface EventCardProps {
 // =============================================================================
 
 /**
- * Format event date for display.
- *
- * @example
- *   formatDate('2026-02-14T19:00:00Z') → 'Feb 14'
+ * Format time portion: "7pm", "12pm", "7:30pm".
+ * Drops minutes when they're :00.
  */
-function formatDate(dateString: string): string {
+function formatTime(date: Date): string {
+  const minutes = getMinutes(date);
+  if (minutes === 0) {
+    return format(date, 'haaa'); // "7pm"
+  }
+  return format(date, 'h:mmaaa'); // "7:30pm"
+}
+
+/**
+ * Check whether the event time is midnight (all-day proxy).
+ */
+function isMidnightOrAllDay(date: Date): boolean {
+  return getHours(date) === 0 && getMinutes(date) === 0;
+}
+
+/**
+ * Format event date for card display.
+ *
+ * Rules:
+ *   Today → "Today · 7pm"
+ *   Tomorrow → "Tomorrow · 7pm"
+ *   Within this week (next 6 days) → "Wed · 7pm"
+ *   Further out → "Apr 12 · 7pm"
+ *   All-day / midnight → day portion only (no time)
+ */
+function formatEventDate(dateString: string): string {
   try {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    });
+    const now = new Date();
+    const allDay = isMidnightOrAllDay(date);
+    const timePart = allDay ? '' : ` · ${formatTime(date)}`;
+
+    if (isToday(date)) {
+      return allDay ? 'Today' : `Today${timePart}`;
+    }
+
+    if (isTomorrow(date)) {
+      return allDay ? 'Tomorrow' : `Tomorrow${timePart}`;
+    }
+
+    const daysOut = differenceInCalendarDays(date, now);
+
+    if (daysOut >= 2 && daysOut <= 6) {
+      // Within this week — abbreviated day name
+      return `${format(date, 'EEE')}${timePart}`;
+    }
+
+    // Further out — "Apr 12" format
+    return `${format(date, 'MMM d')}${timePart}`;
   } catch {
     console.warn(`⚠️ [EventCard] Invalid date: ${dateString}`);
     return '';
@@ -69,24 +122,16 @@ function formatDate(dateString: string): string {
 
 /**
  * Format price for display.
- *
- * @example
- *   formatPrice({ is_free: true }) → 'Free'
- *   formatPrice({ price_low: 15, price_high: 25 }) → '$15 - $25'
- *   formatPrice({ price_low: 20 }) → '$20'
  */
 function formatPrice(event: EventCardType): string {
   if (event.is_free) return 'Free';
 
-  // Range price
   if (event.price_low && event.price_high && event.price_low !== event.price_high) {
     return `$${event.price_low} - $${event.price_high}`;
   }
 
-  // Fixed price
   if (event.price_low) return `$${event.price_low}`;
 
-  // Unknown price
   return 'See details';
 }
 
@@ -94,25 +139,16 @@ function formatPrice(event: EventCardType): string {
 // 🎨 STYLE CONFIGURATIONS
 // =============================================================================
 
-/**
- * Aspect ratio classes for different variants.
- * - default: 16:9 (standard video ratio, works well for landscape images)
- * - compact: 4:3 (slightly taller, good for smaller cards)
- * - featured: 3:2 (classic photo ratio, great for hero images)
- */
 const ASPECT_RATIOS: Record<string, string> = {
-  default: 'aspect-video',       // 16:9
-  compact: 'aspect-[4/3]',       // 4:3
-  featured: 'aspect-[3/2]',      // 3:2
+  default: 'aspect-video',
+  compact: 'aspect-[4/3]',
+  featured: 'aspect-[3/2]',
 };
 
-/**
- * Title size classes for different variants.
- */
 const TITLE_SIZES: Record<string, string> = {
-  default: 'text-lg',
-  compact: 'text-base font-medium',
-  featured: 'text-xl',
+  default: 'text-lg leading-snug',
+  compact: 'text-base font-medium leading-snug',
+  featured: 'text-xl leading-snug',
 };
 
 // =============================================================================
@@ -127,27 +163,30 @@ function EventCardComponent({
   className,
   priority = false,
 }: EventCardProps) {
-  // Build the URL for this event
   const eventUrl = buildEventUrl(event);
+  const categoryColor = getCategoryColor(event.category_slug);
 
   return (
     <article
       className={cn(
         // Base styles
-        'bg-warm-white rounded-lg shadow-card overflow-hidden',
-        // Hover effects: lift up and enhance shadow
+        'bg-warm-white rounded-lg overflow-hidden',
+        // Border for edge definition
+        'border border-sand/50',
+        // Shadows
+        'shadow-card',
+        // Hover: deeper shadow + lift
         'transition-all duration-200',
-        'hover:shadow-card-hover hover:-translate-y-1',
-        // Additional classes
+        'hover:shadow-card-lifted hover:-translate-y-1.5',
         className
       )}
+      style={{ borderTopWidth: '3px', borderTopColor: categoryColor.accent }}
     >
       <Link href={eventUrl} className="block">
         {/* ---------------------------------------------------------------- */}
         {/* 🖼️ IMAGE SECTION */}
         {/* ---------------------------------------------------------------- */}
         <div className="relative">
-          {/* Event Image with smart fallback */}
           <EventImage
             src={event.image_url}
             fallbackSrc={event.thumbnail_url}
@@ -157,22 +196,22 @@ function EventCardComponent({
             priority={priority}
           />
 
-          {/* Category badge - overlaid on image */}
+          {/* Category badge — opaque pill, top-left */}
           {showCategory && event.category_name && (
-            <div className="absolute bottom-3 left-3 z-10">
+            <div className="absolute top-3 left-3 z-10">
               <span
-                className={cn(
-                  'px-2 py-1 text-xs font-medium rounded-full',
-                  'bg-warm-white/90 backdrop-blur-sm text-charcoal',
-                  'shadow-sm'
-                )}
+                className="px-2.5 py-1 text-xs font-semibold rounded-full shadow-sm"
+                style={{
+                  backgroundColor: categoryColor.bg,
+                  color: categoryColor.text,
+                }}
               >
                 {event.category_name}
               </span>
             </div>
           )}
 
-          {/* Series badge - overlaid on image top-right */}
+          {/* Series badge — top-right */}
           {showSeriesBadge && event.is_series_instance && event.series_title && (
             <div className="absolute top-3 right-3 z-10">
               <span
@@ -187,7 +226,7 @@ function EventCardComponent({
             </div>
           )}
 
-          {/* Heart button - overlaid on image */}
+          {/* Heart button — top-right (shifts down if series badge present) */}
           <div className={cn(
             'absolute z-10',
             showSeriesBadge && event.is_series_instance ? 'top-10 right-3' : 'top-3 right-3'
@@ -203,9 +242,9 @@ function EventCardComponent({
         {/* 📝 CONTENT SECTION */}
         {/* ---------------------------------------------------------------- */}
         <div className="p-4">
-          {/* Date */}
-          <p className="text-sm text-stone mb-1">
-            {formatDate(event.start_datetime)}
+          {/* Date — promoted to prominent */}
+          <p className="text-sm font-semibold text-charcoal mb-1">
+            {formatEventDate(event.start_datetime)}
           </p>
 
           {/* Title */}
@@ -245,14 +284,15 @@ function EventCardComponent({
           )}
 
           {/* Price */}
-          <p
-            className={cn(
-              'text-sm font-medium',
-              event.is_free ? 'text-sage' : 'text-charcoal'
-            )}
-          >
-            {formatPrice(event)}
-          </p>
+          {event.is_free ? (
+            <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-sage/10 text-sage">
+              Free
+            </span>
+          ) : (
+            <p className="text-sm font-semibold text-charcoal">
+              {formatPrice(event)}
+            </p>
+          )}
         </div>
       </Link>
     </article>
