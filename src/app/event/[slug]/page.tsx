@@ -28,7 +28,7 @@ import {
   Users,
 } from 'lucide-react';
 import { Container, Breadcrumbs } from '@/components/layout';
-import { Button, Badge } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox, ShareButton } from '@/components/events';
 import { HeartButton } from '@/components/hearts';
 import { SeriesLinkBadge } from '@/components/series';
@@ -42,6 +42,7 @@ import { getSession, isSuperAdmin } from '@/lib/auth';
 import { parseEventSlug, buildVenueUrl, buildOrganizerUrl, getBestImageUrl } from '@/lib/utils';
 import { formatAgeRange, getGoodForTags } from '@/types';
 import { formatEventDate, formatDate, formatTime } from '@/lib/utils/dates';
+import { getCategoryColor } from '@/lib/constants/category-colors';
 
 interface EventPageProps {
   params: Promise<{ slug: string }>;
@@ -208,6 +209,9 @@ export default async function EventPage({ params }: EventPageProps) {
         .join(', ')
     : null;
 
+  // Get category color for accent theming
+  const categoryColor = getCategoryColor(event.category?.slug ?? null);
+
   return (
     <>
       {/* Structured data for SEO */}
@@ -221,104 +225,161 @@ export default async function EventPage({ params }: EventPageProps) {
         />
       )}
 
-      <Container className="py-8">
-        {/* Breadcrumbs */}
-      <Breadcrumbs
-        items={[
-          { label: 'Events', href: '/events' },
-          ...(event.category
-            ? [
-                {
-                  label: event.category.name,
-                  href: `/events?category=${event.category.slug}`,
-                },
-              ]
-            : []),
-          { label: event.title },
-        ]}
-        className="mb-6"
+      {/* Category accent bar — full-width colored stripe */}
+      <div
+        className="w-full h-1"
+        style={{ backgroundColor: categoryColor.accent }}
+        aria-hidden="true"
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main content */}
-        <div className="lg:col-span-2">
-          {/* Hero image (only shown when no flyer exists) */}
-          {!event.flyer_url && (() => {
-            const heroImage = getBestImageUrl(event.image_url, null);
-            return heroImage ? (
-              <div className="relative aspect-video rounded-lg overflow-hidden mb-6">
-                <Image
-                  src={heroImage}
-                  alt={event.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              </div>
-            ) : (
-              <div className="relative aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-sand to-stone/20 flex items-center justify-center mb-6">
-                <span className="text-stone/30 text-6xl font-display">
-                  {event.title.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            );
-          })()}
+      <Container className="py-8">
+        {/* Breadcrumbs */}
+        <Breadcrumbs
+          items={[
+            { label: 'Events', href: '/events' },
+            ...(event.category
+              ? [
+                  {
+                    label: event.category.name,
+                    href: `/events?category=${event.category.slug}`,
+                  },
+                ]
+              : []),
+            { label: event.title },
+          ]}
+          className="mb-6"
+        />
 
-          {/* Event title and category */}
-          <div className="mb-6">
-            {event.category && (
-              <Badge variant="category" className="mb-3">
-                {event.category.name}
-              </Badge>
-            )}
-            <h1 className="font-display text-h1 text-charcoal">
-              {event.title}
-            </h1>
-            
-            {/* One-line summary */}
-            {event.short_description && (
-              <p className="mt-3 text-lg text-stone italic">
-                {event.short_description}
-              </p>
-            )}
-          </div>
+        {/* ── Hero Section ────────────────────────────────── */}
 
-          {/* At a glance summary card */}
-          <div className="mb-8 p-4 bg-warm-white rounded-lg border border-sand space-y-3">
-            {/* Date & Time */}
-            <div className="flex items-center gap-2 text-sm text-charcoal">
-              <Calendar className="w-4 h-4 text-coral flex-shrink-0" />
-              <span className="font-medium">
-                {formatDate(event.start_datetime, 'EEE, MMM d')}
-                {!event.is_all_day && (
-                  <>
-                    {' · '}
-                    {formatTime(event.start_datetime)}
-                    {event.end_datetime && ` – ${formatTime(event.end_datetime)}`}
-                  </>
-                )}
-                {event.is_all_day && ' · All Day'}
+        {/* Hero image — wide banner when no flyer */}
+        {!event.flyer_url && (() => {
+          const heroImage = getBestImageUrl(event.image_url, null);
+          return heroImage ? (
+            <div className="relative aspect-[21/9] md:aspect-[3/1] rounded-xl overflow-hidden mb-8">
+              <Image
+                src={heroImage}
+                alt={event.title}
+                fill
+                className="object-cover"
+                priority
+              />
+              {/* Bottom gradient overlay for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-transparent to-transparent" />
+            </div>
+          ) : (
+            <div
+              className="relative aspect-[21/9] md:aspect-[3/1] rounded-xl overflow-hidden mb-8 flex items-center justify-center"
+              style={{ backgroundColor: categoryColor.light }}
+            >
+              <span
+                className="text-6xl md:text-8xl font-display font-bold opacity-20"
+                style={{ color: categoryColor.accent }}
+              >
+                {event.title.charAt(0).toUpperCase()}
               </span>
             </div>
+          );
+        })()}
 
-            {/* Venue */}
+        {/* Title + meta header */}
+        <div className="mb-8">
+          {/* Category badge with dynamic color */}
+          {event.category && (
+            <span
+              className="inline-flex items-center px-3 py-1 rounded-full text-caption font-body font-medium mb-4"
+              style={{
+                backgroundColor: categoryColor.bg,
+                color: categoryColor.text,
+              }}
+            >
+              {event.category.name}
+            </span>
+          )}
+
+          <h1 className="font-display text-h1 md:text-display text-charcoal leading-tight">
+            {event.title}
+          </h1>
+
+          {/* One-line summary */}
+          {event.short_description && (
+            <p className="mt-3 text-lg md:text-xl text-stone leading-relaxed">
+              {event.short_description}
+            </p>
+          )}
+
+          {/* Prominent date / time / venue line */}
+          <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-base md:text-lg font-medium text-charcoal">
+            <Calendar className="w-5 h-5 flex-shrink-0" style={{ color: categoryColor.accent }} />
+            <span>
+              {formatDate(event.start_datetime, 'EEEE, MMMM d')}
+              {!event.is_all_day && (
+                <>
+                  {' · '}
+                  {formatTime(event.start_datetime)}
+                  {event.end_datetime && ` – ${formatTime(event.end_datetime)}`}
+                </>
+              )}
+              {event.is_all_day && ' · All Day'}
+            </span>
             {event.location && (
-              <div className="flex items-center gap-2 text-sm">
-                <MapPin className="w-4 h-4 text-coral flex-shrink-0" />
+              <>
+                <span className="text-stone">at</span>
                 <Link
                   href={buildVenueUrl(event.location)}
-                  className="font-medium text-charcoal hover:text-coral transition-colors"
+                  className="underline decoration-1 underline-offset-2 hover:text-coral transition-colors"
                 >
                   {event.location.name}
                 </Link>
-              </div>
+              </>
             )}
+          </div>
 
-            {/* Age / Audience */}
-            {(event.age_restriction || event.is_family_friendly || event.age_low != null || event.age_high != null) && (
-              <div className="flex items-center gap-2 text-sm text-charcoal">
-                <Baby className="w-4 h-4 text-coral flex-shrink-0" />
-                <span className="font-medium">
+          {/* Series badge */}
+          {seriesInfo && (
+            <div className="mt-4">
+              <SeriesLinkBadge
+                seriesSlug={seriesInfo.slug}
+                seriesTitle={seriesInfo.title}
+                seriesType={seriesInfo.series_type}
+                sequenceNumber={event.series_sequence}
+                size="sm"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* ── Two-Column Layout ───────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+
+          {/* Main content column */}
+          <div className="lg:col-span-2 space-y-8">
+
+            {/* Price & audience quick-info bar */}
+            <div
+              className="flex flex-wrap items-center gap-3 p-4 rounded-xl border"
+              style={{
+                backgroundColor: categoryColor.light,
+                borderColor: `${categoryColor.accent}33`,
+              }}
+            >
+              {/* Price badge */}
+              {event.is_free ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-sage text-white">
+                  <Ticket className="w-4 h-4" />
+                  Free
+                </span>
+              ) : (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-charcoal text-warm-white">
+                  <Ticket className="w-4 h-4" />
+                  <EventPrice event={event} showDetails />
+                </div>
+              )}
+
+              {/* Age / audience */}
+              {(event.age_restriction || event.is_family_friendly || event.age_low != null || event.age_high != null) && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-warm-white text-charcoal border border-sand">
+                  <Baby className="w-4 h-4 text-stone" />
                   {(() => {
                     const parts: string[] = [];
                     const ageRange = formatAgeRange(event.age_low, event.age_high);
@@ -328,303 +389,326 @@ export default async function EventPage({ params }: EventPageProps) {
                     return parts.join(' · ');
                   })()}
                 </span>
-              </div>
-            )}
+              )}
 
-            {/* Good For audience tags */}
-            {event.good_for && event.good_for.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {getGoodForTags(event.good_for).map((tag) => (
-                  <a
-                    key={tag.slug}
-                    href={`/events?goodFor=${tag.slug}`}
-                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-opacity hover:opacity-80 ${tag.color}`}
-                  >
-                    {tag.label}
-                  </a>
-                ))}
-              </div>
-            )}
-
-            {/* Series badge */}
-            {seriesInfo && (
-              <div className="pt-1">
-                <SeriesLinkBadge
-                  seriesSlug={seriesInfo.slug}
-                  seriesTitle={seriesInfo.title}
-                  seriesType={seriesInfo.series_type}
-                  sequenceNumber={event.series_sequence}
-                  size="sm"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Happenlist Editorial Summary */}
-          {event.happenlist_summary && (
-            <div className="mb-8 p-6 bg-coral/5 rounded-lg border border-coral/20">
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-5 h-5 text-coral" />
-                <h2 className="font-display text-h4 text-charcoal">
-                  Happenlist Highlights
-                </h2>
-              </div>
-              <div className="prose-event text-charcoal/90">
-                {event.happenlist_summary}
-              </div>
-            </div>
-          )}
-
-          {/* Organizer Description (Verbatim) */}
-          {event.organizer_description && (
-            <div className="mb-8 p-6 bg-warm-white rounded-lg border border-sand">
-              <div className="flex items-center gap-2 mb-3">
-                <Quote className="w-5 h-5 text-stone" />
-                <h2 className="font-display text-h4 text-charcoal">
-                  From the Organizer
-                </h2>
-              </div>
-              <div className="prose-event whitespace-pre-wrap text-charcoal/80 italic">
-                {event.organizer_description}
-              </div>
-            </div>
-          )}
-
-          {/* Price Details Section (if exists and has detailed info) */}
-          {event.price_details && (
-            <div className="mb-8 p-4 bg-sage/10 rounded-lg border border-sage/30">
-              <h3 className="font-display text-h4 text-charcoal mb-2 flex items-center gap-2">
-                <Ticket className="w-5 h-5 text-sage" />
-                Pricing Details
-              </h3>
-              <p className="text-charcoal/80">
-                {event.price_details}
-              </p>
-            </div>
-          )}
-
-        </div>
-
-        {/* Sidebar */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-24 space-y-6">
-            {/* Event flyer (top of sidebar) */}
-            {event.flyer_url && (
-              <FlyerLightbox
-                flyerUrl={event.flyer_url}
-                alt={`${event.title} event flyer`}
-                eventTitle={event.title}
-                className="w-full"
-              />
-            )}
-
-            {/* Event info card */}
-            <div className="p-6 bg-warm-white rounded-lg border border-sand">
-              {/* Date */}
-              <div className="flex items-start gap-3 mb-4">
-                <Calendar className="w-5 h-5 text-coral mt-0.5" />
-                <div>
-                  <p className="font-medium text-charcoal">
-                    {formatEventDate(event.start_datetime, { format: 'long', includeTime: false })}
-                  </p>
-                </div>
-              </div>
-
-              {/* Time (Start & End) */}
-              <div className="mb-4">
-                <EventDateTime
-                  startDatetime={event.start_datetime}
-                  endDatetime={event.end_datetime}
-                  isAllDay={event.is_all_day}
-                  timezone={event.timezone}
-                  variant="full"
-                  showIcon
-                />
-              </div>
-
-              {/* Location */}
-              {event.location && (
-                <div className="flex items-start gap-3 mb-4">
-                  <MapPin className="w-5 h-5 text-coral mt-0.5" />
-                  <div>
-                    <Link
-                      href={buildVenueUrl(event.location)}
-                      className="font-medium text-charcoal hover:text-coral transition-colors"
+              {/* Good For tags */}
+              {event.good_for && event.good_for.length > 0 && (
+                <>
+                  {getGoodForTags(event.good_for).map((tag) => (
+                    <a
+                      key={tag.slug}
+                      href={`/events?goodFor=${tag.slug}`}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-opacity hover:opacity-80 ${tag.color}`}
                     >
-                      {event.location.name}
-                    </Link>
-                    {fullAddress && (
-                      <p className="text-body-sm text-stone">{fullAddress}</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Price */}
-              <div className="flex items-start gap-3 mb-4">
-                <Ticket className="w-5 h-5 text-coral mt-0.5" />
-                <EventPrice event={event} showDetails />
-              </div>
-
-              {/* Age / audience info */}
-              {(event.age_restriction || event.is_family_friendly || event.age_low != null || event.age_high != null) && (
-                <div className="flex items-start gap-3 mb-6">
-                  <Baby className="w-5 h-5 text-coral mt-0.5" />
-                  <div>
-                    {(() => {
-                      const ageRange = formatAgeRange(event.age_low, event.age_high);
-                      return ageRange ? (
-                        <p className="font-medium text-charcoal">{ageRange}</p>
-                      ) : event.age_restriction ? (
-                        <p className="font-medium text-charcoal">{event.age_restriction}</p>
-                      ) : null;
-                    })()}
-                    {event.is_family_friendly && (
-                      <p className="text-body-sm text-sage flex items-center gap-1">
-                        <Users className="w-3.5 h-3.5" />
-                        Family Friendly
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Primary CTA Button (tickets or registration) */}
-              {event.ticket_url ? (
-                <Button
-                  href={event.ticket_url}
-                  external
-                  fullWidth
-                  rightIcon={<ExternalLink className="w-4 h-4" />}
-                >
-                  Get Tickets
-                </Button>
-              ) : event.registration_url ? (
-                <Button
-                  href={event.registration_url}
-                  external
-                  fullWidth
-                  rightIcon={<ExternalLink className="w-4 h-4" />}
-                >
-                  Register / RSVP
-                </Button>
-              ) : null}
-
-              {/* Learn More button (always shown when website_url exists) */}
-              {event.website_url && (
-                <Button
-                  href={event.website_url}
-                  external
-                  fullWidth
-                  variant={(event.ticket_url || event.registration_url) ? 'secondary' : 'primary'}
-                  rightIcon={<ExternalLink className="w-4 h-4" />}
-                >
-                  Learn More
-                </Button>
-              )}
-
-              {/* Original event listing link */}
-              {event.source_url && (
-                <Button
-                  href={event.source_url}
-                  external
-                  fullWidth
-                  variant="secondary"
-                  rightIcon={<ExternalLink className="w-4 h-4" />}
-                >
-                  View Original Listing
-                </Button>
+                      {tag.label}
+                    </a>
+                  ))}
+                </>
               )}
             </div>
 
-            {/* Organizer card */}
-            {event.organizer && (
-              <div className="p-4 bg-warm-white rounded-lg border border-sand">
-                <h3 className="text-body-sm font-medium text-charcoal mb-3">
-                  Presented By
-                </h3>
-                <Link
-                  href={buildOrganizerUrl(event.organizer)}
-                  className="flex items-center gap-3 group"
-                >
-                  <div className="w-10 h-10 rounded-full bg-sand flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {event.organizer.logo_url ? (
-                      <Image
-                        src={event.organizer.logo_url}
-                        alt={event.organizer.name}
-                        width={40}
-                        height={40}
-                        className="object-cover"
-                      />
-                    ) : (
-                      <User className="w-5 h-5 text-stone" />
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-medium text-charcoal group-hover:text-coral transition-colors truncate">
-                      {event.organizer.name}
-                    </p>
-                    <p className="text-xs text-stone">View all events</p>
-                  </div>
-                </Link>
+            {/* Happenlist Editorial Summary */}
+            {event.happenlist_summary && (
+              <div
+                className="p-6 rounded-xl border"
+                style={{
+                  borderColor: `${categoryColor.accent}30`,
+                  backgroundColor: `${categoryColor.accent}08`,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-5 h-5" style={{ color: categoryColor.accent }} />
+                  <h2 className="font-display text-h4 text-charcoal">
+                    Happenlist Highlights
+                  </h2>
+                </div>
+                <div className="prose-event text-charcoal/90 leading-relaxed">
+                  {event.happenlist_summary}
+                </div>
               </div>
             )}
 
-            {/* External Links */}
-            {(event.website_url || event.instagram_url || event.facebook_url || event.registration_url) && (
-              <div className="p-4 bg-warm-white rounded-lg border border-sand">
-                <h3 className="text-body-sm font-medium text-charcoal mb-3">
-                  Links & More
+            {/* Organizer Description (Verbatim) */}
+            {event.organizer_description && (
+              <div className="p-6 bg-warm-white rounded-xl border border-sand">
+                <div className="flex items-center gap-2 mb-3">
+                  <Quote className="w-5 h-5 text-stone" />
+                  <h2 className="font-display text-h4 text-charcoal">
+                    From the Organizer
+                  </h2>
+                </div>
+                <div className="prose-event whitespace-pre-wrap text-charcoal/80 italic leading-relaxed">
+                  {event.organizer_description}
+                </div>
+              </div>
+            )}
+
+            {/* Price Details Section */}
+            {event.price_details && (
+              <div className="p-5 bg-sage/10 rounded-xl border border-sage/30">
+                <h3 className="font-display text-h4 text-charcoal mb-2 flex items-center gap-2">
+                  <Ticket className="w-5 h-5 text-sage" />
+                  Pricing Details
                 </h3>
-                <EventLinks
-                  websiteUrl={event.website_url}
-                  instagramUrl={event.instagram_url}
-                  facebookUrl={event.facebook_url}
-                  registrationUrl={event.registration_url}
-                  variant="full"
+                <p className="text-charcoal/80 leading-relaxed">
+                  {event.price_details}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* ── Sidebar ─────────────────────────────────────── */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-24 space-y-6">
+
+              {/* Event flyer (top of sidebar) */}
+              {event.flyer_url && (
+                <FlyerLightbox
+                  flyerUrl={event.flyer_url}
+                  alt={`${event.title} event flyer`}
+                  eventTitle={event.title}
+                  className="w-full"
+                />
+              )}
+
+              {/* Primary CTA Button — big, rounded-full, coral */}
+              <div className="space-y-3">
+                {event.ticket_url ? (
+                  <Button
+                    href={event.ticket_url}
+                    external
+                    fullWidth
+                    size="lg"
+                    rightIcon={<ExternalLink className="w-4 h-4" />}
+                    className="!rounded-full"
+                  >
+                    Get Tickets
+                  </Button>
+                ) : event.registration_url ? (
+                  <Button
+                    href={event.registration_url}
+                    external
+                    fullWidth
+                    size="lg"
+                    rightIcon={<ExternalLink className="w-4 h-4" />}
+                    className="!rounded-full"
+                  >
+                    Register / RSVP
+                  </Button>
+                ) : event.website_url ? (
+                  <Button
+                    href={event.website_url}
+                    external
+                    fullWidth
+                    size="lg"
+                    rightIcon={<ExternalLink className="w-4 h-4" />}
+                    className="!rounded-full"
+                  >
+                    Learn More
+                  </Button>
+                ) : null}
+
+                {/* Secondary Learn More (when there's already a primary CTA) */}
+                {event.website_url && (event.ticket_url || event.registration_url) && (
+                  <Button
+                    href={event.website_url}
+                    external
+                    fullWidth
+                    variant="secondary"
+                    rightIcon={<ExternalLink className="w-4 h-4" />}
+                    className="!rounded-full"
+                  >
+                    Learn More
+                  </Button>
+                )}
+
+                {/* Original event listing link */}
+                {event.source_url && (
+                  <Button
+                    href={event.source_url}
+                    external
+                    fullWidth
+                    variant="ghost"
+                    rightIcon={<ExternalLink className="w-4 h-4" />}
+                    className="!rounded-full"
+                  >
+                    View Original Listing
+                  </Button>
+                )}
+              </div>
+
+              {/* Heart + Share side by side */}
+              <div className="flex gap-3">
+                <HeartButton
+                  eventId={event.id}
+                  initialHearted={isHearted}
+                  initialCount={event.heart_count ?? 0}
+                  size="lg"
+                  className="flex-1 bg-warm-white border border-sand hover:border-coral/30 !rounded-full"
+                />
+                <ShareButton
+                  title={event.title}
+                  text={event.short_description || undefined}
+                  className="flex-1 !rounded-full"
                 />
               </div>
-            )}
 
-            {/* Interactive Map (if venue has coordinates) */}
-            {event.location?.latitude && event.location?.longitude && (
-              <VenueMap
-                latitude={Number(event.location.latitude)}
-                longitude={Number(event.location.longitude)}
-                venueName={event.location.name}
-                address={fullAddress || undefined}
-                venueType={event.location.venue_type}
-                height="180px"
-                zoom={15}
-              />
-            )}
+              {/* Event details card */}
+              <div
+                className="p-5 rounded-xl border overflow-hidden"
+                style={{ borderColor: `${categoryColor.accent}30` }}
+              >
+                {/* Colored top stripe */}
+                <div
+                  className="h-0.5 -mx-5 -mt-5 mb-5"
+                  style={{ backgroundColor: categoryColor.accent }}
+                  aria-hidden="true"
+                />
 
-            {/* Save & Share buttons */}
-            <div className="flex gap-3">
-              <HeartButton
-                eventId={event.id}
-                initialHearted={isHearted}
-                initialCount={event.heart_count ?? 0}
-                size="lg"
-                className="flex-1 bg-warm-white border border-sand hover:border-coral/30"
-              />
-              <ShareButton
-                title={event.title}
-                text={event.short_description || undefined}
-                className="flex-1"
-              />
+                {/* Date */}
+                <div className="flex items-start gap-3 mb-4">
+                  <Calendar className="w-5 h-5 mt-0.5" style={{ color: categoryColor.accent }} />
+                  <div>
+                    <p className="font-semibold text-charcoal">
+                      {formatEventDate(event.start_datetime, { format: 'long', includeTime: false })}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Time */}
+                <div className="mb-4">
+                  <EventDateTime
+                    startDatetime={event.start_datetime}
+                    endDatetime={event.end_datetime}
+                    isAllDay={event.is_all_day}
+                    timezone={event.timezone}
+                    variant="full"
+                    showIcon
+                  />
+                </div>
+
+                {/* Location */}
+                {event.location && (
+                  <div className="flex items-start gap-3 mb-4">
+                    <MapPin className="w-5 h-5 mt-0.5" style={{ color: categoryColor.accent }} />
+                    <div>
+                      <Link
+                        href={buildVenueUrl(event.location)}
+                        className="font-medium text-charcoal hover:text-coral transition-colors"
+                      >
+                        {event.location.name}
+                      </Link>
+                      {fullAddress && (
+                        <p className="text-body-sm text-stone mt-0.5">{fullAddress}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Price */}
+                <div className="flex items-start gap-3 mb-4">
+                  <Ticket className="w-5 h-5 mt-0.5" style={{ color: categoryColor.accent }} />
+                  <EventPrice event={event} showDetails />
+                </div>
+
+                {/* Age / audience info */}
+                {(event.age_restriction || event.is_family_friendly || event.age_low != null || event.age_high != null) && (
+                  <div className="flex items-start gap-3">
+                    <Baby className="w-5 h-5 mt-0.5" style={{ color: categoryColor.accent }} />
+                    <div>
+                      {(() => {
+                        const ageRange = formatAgeRange(event.age_low, event.age_high);
+                        return ageRange ? (
+                          <p className="font-medium text-charcoal">{ageRange}</p>
+                        ) : event.age_restriction ? (
+                          <p className="font-medium text-charcoal">{event.age_restriction}</p>
+                        ) : null;
+                      })()}
+                      {event.is_family_friendly && (
+                        <p className="text-body-sm text-sage flex items-center gap-1 mt-0.5">
+                          <Users className="w-3.5 h-3.5" />
+                          Family Friendly
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Organizer card */}
+              {event.organizer && (
+                <div className="p-4 bg-warm-white rounded-xl border border-sand">
+                  <h3 className="text-body-sm font-medium text-stone uppercase tracking-wide mb-3">
+                    Presented By
+                  </h3>
+                  <Link
+                    href={buildOrganizerUrl(event.organizer)}
+                    className="flex items-center gap-3 group"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-sand flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {event.organizer.logo_url ? (
+                        <Image
+                          src={event.organizer.logo_url}
+                          alt={event.organizer.name}
+                          width={40}
+                          height={40}
+                          className="object-cover"
+                        />
+                      ) : (
+                        <User className="w-5 h-5 text-stone" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-charcoal group-hover:text-coral transition-colors truncate">
+                        {event.organizer.name}
+                      </p>
+                      <p className="text-xs text-stone">View all events</p>
+                    </div>
+                  </Link>
+                </div>
+              )}
+
+              {/* External Links */}
+              {(event.website_url || event.instagram_url || event.facebook_url || event.registration_url) && (
+                <div className="p-4 bg-warm-white rounded-xl border border-sand">
+                  <h3 className="text-body-sm font-medium text-stone uppercase tracking-wide mb-3">
+                    Links & More
+                  </h3>
+                  <EventLinks
+                    websiteUrl={event.website_url}
+                    instagramUrl={event.instagram_url}
+                    facebookUrl={event.facebook_url}
+                    registrationUrl={event.registration_url}
+                    variant="full"
+                  />
+                </div>
+              )}
+
+              {/* Interactive Map */}
+              {event.location?.latitude && event.location?.longitude && (
+                <div className="rounded-xl overflow-hidden">
+                  <VenueMap
+                    latitude={Number(event.location.latitude)}
+                    longitude={Number(event.location.longitude)}
+                    venueName={event.location.name}
+                    address={fullAddress || undefined}
+                    venueType={event.location.venue_type}
+                    height="180px"
+                    zoom={15}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Related events */}
-      {relatedEvents.length > 0 && (
-        <section className="mt-16">
-          <SectionHeader title="You Might Also Like" />
-          <EventGrid events={relatedEvents} columns={4} />
-        </section>
-      )}
+        {/* Related events */}
+        {relatedEvents.length > 0 && (
+          <section className="mt-16">
+            <SectionHeader title="You Might Also Like" />
+            <EventGrid events={relatedEvents} columns={4} />
+          </section>
+        )}
       </Container>
     </>
   );
