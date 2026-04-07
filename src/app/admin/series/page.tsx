@@ -2,18 +2,16 @@
  * ADMIN SERIES LISTING PAGE
  * ==========================
  * Browsable list of all series with type/status filters and search.
+ * Supports bulk select, delete, and merge via client component.
  */
 
 import Link from 'next/link';
 import {
   Repeat,
   Filter,
-  Calendar,
-  MapPin,
-  Users,
 } from 'lucide-react';
 import { AdminHeader, AdminBreadcrumbs } from '@/components/admin';
-import { Badge } from '@/components/ui/badge';
+import { AdminSeriesGrid } from '@/components/admin/admin-series-grid';
 import { Button } from '@/components/ui/button';
 import { getAdminSeries } from '@/data/admin/get-admin-series';
 
@@ -43,15 +41,6 @@ const STATUS_TABS = [
   { value: 'cancelled', label: 'Cancelled' },
 ];
 
-const TYPE_COLORS: Record<string, string> = {
-  recurring: 'bg-indigo-100 text-indigo-700',
-  class: 'bg-emerald-100 text-emerald-700',
-  camp: 'bg-amber-100 text-amber-700',
-  workshop: 'bg-violet-100 text-violet-700',
-  festival: 'bg-pink-100 text-pink-700',
-  season: 'bg-blue-100 text-blue-700',
-};
-
 export default async function AdminSeriesPage({ searchParams }: PageProps) {
   const sp = await searchParams;
 
@@ -71,15 +60,6 @@ export default async function AdminSeriesPage({ searchParams }: PageProps) {
     });
     const qs = newParams.toString();
     return `/admin/series${qs ? `?${qs}` : ''}`;
-  };
-
-  const formatDate = (d: string | null) => {
-    if (!d) return null;
-    try {
-      return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    } catch {
-      return d;
-    }
   };
 
   return (
@@ -139,13 +119,12 @@ export default async function AdminSeriesPage({ searchParams }: PageProps) {
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            {/* Hidden fields to preserve filters */}
             {status && <input type="hidden" name="status" value={status} />}
             {seriesType && <input type="hidden" name="type" value={seriesType} />}
           </form>
         </div>
 
-        {/* Type filter links (more visible than dropdown) */}
+        {/* Type filter pills */}
         <div className="flex flex-wrap items-center gap-2 mb-6">
           <span className="text-xs text-stone uppercase tracking-wider font-medium mr-1">Type:</span>
           {SERIES_TYPES.map(t => (
@@ -180,83 +159,8 @@ export default async function AdminSeriesPage({ searchParams }: PageProps) {
           </div>
         ) : (
           <>
-            {/* Series grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
-              {result.series.map(s => (
-                <Link
-                  key={s.id}
-                  href={`/admin/series/${s.id}/edit`}
-                  className="group bg-warm-white border border-sand rounded-xl p-4 hover:shadow-card-lifted hover:-translate-y-0.5 transition-all"
-                >
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-medium text-charcoal group-hover:text-coral transition-colors line-clamp-2 flex-1 mr-2">
-                      {s.title}
-                    </h3>
-                    <Badge className={TYPE_COLORS[s.series_type] || 'bg-stone/10 text-stone'}>
-                      {s.series_type}
-                    </Badge>
-                  </div>
-
-                  {/* Meta row */}
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-stone mb-3">
-                    {s.organizer_name && (
-                      <span className="flex items-center gap-1">
-                        <Users className="w-3 h-3" />
-                        {s.organizer_name}
-                      </span>
-                    )}
-                    {s.location_name && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {s.location_name}
-                      </span>
-                    )}
-                    {s.category_name && (
-                      <span>{s.category_name}</span>
-                    )}
-                  </div>
-
-                  {/* Date range */}
-                  {(s.start_date || s.end_date) && (
-                    <div className="flex items-center gap-1.5 text-xs text-stone mb-3">
-                      <Calendar className="w-3 h-3" />
-                      {formatDate(s.start_date)}
-                      {s.end_date && s.start_date !== s.end_date && (
-                        <> &ndash; {formatDate(s.end_date)}</>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Stats row */}
-                  <div className="flex items-center gap-3 pt-2 border-t border-sand/50">
-                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
-                      s.status === 'published'
-                        ? 'bg-sage/10 text-sage'
-                        : s.status === 'pending_review'
-                        ? 'bg-amber-50 text-amber-600'
-                        : s.status === 'cancelled'
-                        ? 'bg-red-50 text-red-600'
-                        : 'bg-stone/10 text-stone'
-                    }`}>
-                      {s.status}
-                    </span>
-                    <span className="text-[11px] text-stone">
-                      {s.event_count} event{s.event_count !== 1 ? 's' : ''}
-                    </span>
-                    {s.total_sessions && (
-                      <span className="text-[11px] text-stone">
-                        {s.total_sessions} sessions
-                      </span>
-                    )}
-                    {(s.age_low != null || s.age_high != null) && (
-                      <span className="text-[11px] text-stone ml-auto">
-                        Ages {s.age_low ?? '?'}&ndash;{s.age_high ?? '?'}
-                      </span>
-                    )}
-                  </div>
-                </Link>
-              ))}
+            <div className="mb-8">
+              <AdminSeriesGrid series={result.series} />
             </div>
 
             {/* Pagination */}
