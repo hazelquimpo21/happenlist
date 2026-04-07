@@ -16,7 +16,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-midnight bg-topo mt-auto">
+    <footer className="bg-midnight bg-topo-light mt-auto">
       <Container className="py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo and tagline */}
