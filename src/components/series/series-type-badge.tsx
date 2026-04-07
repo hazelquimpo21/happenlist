@@ -20,6 +20,24 @@ import { getSeriesTypeInfo } from '@/types';
 import type { SeriesType } from '@/lib/supabase/types';
 
 // ============================================================================
+// SERIES TYPE → BOLD BADGE COLORS
+// ============================================================================
+
+/**
+ * Bold, saturated badge colors per series type.
+ * Camp = amber, Class = emerald, Workshop = purple, Recurring = blue,
+ * Festival = pink, Season = indigo.
+ */
+const SERIES_TYPE_BADGE_COLORS: Record<SeriesType, { bg: string; text: string }> = {
+  camp: { bg: 'bg-amber-500', text: 'text-amber-950' },
+  class: { bg: 'bg-emerald-600', text: 'text-white' },
+  workshop: { bg: 'bg-purple-600', text: 'text-white' },
+  recurring: { bg: 'bg-blue-600', text: 'text-white' },
+  festival: { bg: 'bg-pink-600', text: 'text-white' },
+  season: { bg: 'bg-indigo-600', text: 'text-white' },
+};
+
+// ============================================================================
 // ICON MAP
 // ============================================================================
 
@@ -85,11 +103,17 @@ export function SeriesTypeBadge({
   const typeInfo = getSeriesTypeInfo(type);
   const Icon = SERIES_TYPE_ICONS[type as SeriesType] || GraduationCap;
 
+  // Bold badge colors (saturated pills per design spec)
+  const badgeColors = SERIES_TYPE_BADGE_COLORS[type as SeriesType] || {
+    bg: 'bg-coral',
+    text: 'text-white',
+  };
+
   // Size classes
   const sizeClasses = {
-    sm: 'px-2 py-0.5 text-xs gap-1',
-    md: 'px-2.5 py-1 text-sm gap-1.5',
-    lg: 'px-3 py-1.5 text-base gap-2',
+    sm: 'px-2.5 py-0.5 text-xs gap-1',
+    md: 'px-3 py-1 text-sm gap-1.5',
+    lg: 'px-3.5 py-1.5 text-base gap-2',
   };
 
   const iconSizes = {
@@ -101,9 +125,9 @@ export function SeriesTypeBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full font-medium',
-        'bg-warm-white/90 backdrop-blur-sm',
-        typeInfo.badgeColor,
+        'inline-flex items-center rounded-full font-semibold shadow-sm',
+        badgeColors.bg,
+        badgeColors.text,
         sizeClasses[size],
         className
       )}

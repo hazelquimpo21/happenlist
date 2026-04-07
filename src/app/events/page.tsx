@@ -13,6 +13,7 @@ import { EventGrid, SectionHeader } from '@/components/events';
 import { getEvents } from '@/data/events';
 import { getCategories, getCategoryBySlug } from '@/data/categories';
 import { GOOD_FOR_TAGS, getGoodForTag } from '@/types';
+import { getCategoryColor } from '@/lib/constants/category-colors';
 
 export const metadata: Metadata = {
   title: 'Events',
@@ -82,6 +83,31 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   if (isFree) title = 'Free Events';
   if (params.q) title = `Search: "${params.q}"`;
 
+  // Count active filters
+  const activeFilterCount =
+    (categorySlug ? 1 : 0) + (goodFor ? 1 : 0) + (isFree ? 1 : 0);
+
+  /**
+   * Build a filter URL that preserves other active params.
+   * Pass null for a key to remove it from the URL.
+   */
+  function filterUrl(overrides: Record<string, string | null>): string {
+    const base: Record<string, string> = {};
+    if (categorySlug) base.category = categorySlug;
+    if (goodFor) base.goodFor = goodFor;
+    if (isFree) base.free = 'true';
+    // Apply overrides
+    for (const [k, v] of Object.entries(overrides)) {
+      if (v === null) {
+        delete base[k];
+      } else {
+        base[k] = v;
+      }
+    }
+    const qs = new URLSearchParams(base).toString();
+    return qs ? `/events?${qs}` : '/events';
+  }
+
   return (
     <Container className="py-8">
       {/* Breadcrumbs */}
@@ -96,55 +122,92 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
 
       {/* Page header */}
       <div className="mb-8">
-        <h1 className="font-display text-h1 text-charcoal">{title}</h1>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="font-display text-h1 text-charcoal">{title}</h1>
+          {activeFilterCount > 1 && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-coral text-white">
+              {activeFilterCount} filters
+            </span>
+          )}
+        </div>
         <p className="text-stone text-body mt-2">
           {total} {total === 1 ? 'event' : 'events'} found
         </p>
       </div>
 
-      {/* Category pills for quick filtering */}
-      <div className="flex flex-wrap gap-2 mb-8">
+      {/* Category pills — colored per category identity */}
+      <div className="flex flex-wrap gap-2 mb-4">
         <Link
-          href="/events"
-          className={`px-4 py-2 rounded-full text-body-sm font-medium transition-colors ${
+          href={filterUrl({ category: null })}
+          className={`px-4 py-2 rounded-full text-body-sm font-medium transition-all ${
             !categorySlug
-              ? 'bg-coral text-warm-white'
-              : 'bg-sand text-charcoal hover:bg-coral-light'
+              ? 'bg-charcoal text-warm-white shadow-sm'
+              : 'bg-sand/50 text-charcoal hover:bg-sand border border-sand'
           }`}
         >
           All
         </Link>
-        {categories.slice(0, 6).map((cat) => (
-          <a
-            key={cat.id}
-            href={`/events?category=${cat.slug}`}
-            className={`px-4 py-2 rounded-full text-body-sm font-medium transition-colors ${
-              categorySlug === cat.slug
-                ? 'bg-coral text-warm-white'
-                : 'bg-sand text-charcoal hover:bg-coral-light'
-            }`}
-          >
-            {cat.name}
-          </a>
-        ))}
+        {categories.slice(0, 6).map((cat) => {
+          const color = getCategoryColor(cat.slug);
+          const isActive = categorySlug === cat.slug;
+          return (
+            <a
+              key={cat.id}
+              href={isActive ? filterUrl({ category: null }) : filterUrl({ category: cat.slug })}
+              className="px-4 py-2 rounded-full text-body-sm font-medium transition-all border"
+              style={
+                isActive
+                  ? {
+                      backgroundColor: color.bg,
+                      color: color.text,
+                      borderColor: color.bg,
+                    }
+                  : {
+                      backgroundColor: 'transparent',
+                      color: color.bg,
+                      borderColor: color.accent,
+                    }
+              }
+            >
+              {cat.name}
+            </a>
+          );
+        })}
       </div>
 
-      {/* Good For pills for audience filtering */}
+      {/* Free toggle pill */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <a
+          href={isFree ? filterUrl({ free: null }) : filterUrl({ free: 'true' })}
+          className={`px-4 py-2 rounded-full text-body-sm font-semibold transition-all ${
+            isFree
+              ? 'bg-sage text-white shadow-sm'
+              : 'bg-sage/10 text-sage border border-sage/30 hover:bg-sage/20'
+          }`}
+        >
+          {isFree ? 'Free Only' : 'Free'}
+        </a>
+      </div>
+
+      {/* Good For pills — warm colored per tag */}
       <div className="flex flex-wrap gap-2 mb-8">
-        <span className="px-2 py-2 text-body-sm text-stone self-center">Good for:</span>
-        {GOOD_FOR_TAGS.slice(0, 8).map((tag) => (
-          <a
-            key={tag.slug}
-            href={goodFor === tag.slug ? '/events' : `/events?goodFor=${tag.slug}`}
-            className={`px-3 py-1.5 rounded-full text-body-sm font-medium transition-colors ${
-              goodFor === tag.slug
-                ? `${tag.color} ring-2 ring-offset-1 ring-current`
-                : 'bg-sand/60 text-charcoal hover:bg-sand'
-            }`}
-          >
-            {tag.label}
-          </a>
-        ))}
+        <span className="px-2 py-2 text-body-sm text-stone self-center font-medium">Good for:</span>
+        {GOOD_FOR_TAGS.slice(0, 8).map((tag) => {
+          const isActive = goodFor === tag.slug;
+          return (
+            <a
+              key={tag.slug}
+              href={isActive ? filterUrl({ goodFor: null }) : filterUrl({ goodFor: tag.slug })}
+              className={`px-3 py-1.5 rounded-full text-body-sm font-medium transition-all ${
+                isActive
+                  ? `${tag.color} ring-2 ring-offset-1 ring-current shadow-sm`
+                  : `border border-sand text-stone hover:text-charcoal hover:border-charcoal/20`
+              }`}
+            >
+              {tag.label}
+            </a>
+          );
+        })}
       </div>
 
       {/* Events grid */}

@@ -19,6 +19,7 @@ import {
   SKILL_LEVEL_INFO,
 } from '@/types';
 import { cn, getBestImageUrl } from '@/lib/utils';
+import { getCategoryColor } from '@/lib/constants/category-colors';
 import type { SeriesCard as SeriesCardType } from '@/types';
 import type { AttendanceMode, SkillLevel } from '@/lib/supabase/types';
 
@@ -99,8 +100,16 @@ export function SeriesCard({
     ? `${series.upcoming_event_count} upcoming`
     : null;
 
+  // Category color for top border accent
+  const categoryColor = getCategoryColor(series.category_slug ?? null);
+
   return (
     <Card hover className={cn('overflow-hidden group', className)}>
+      {/* Category accent border */}
+      <div
+        className="h-[3px] w-full"
+        style={{ backgroundColor: categoryColor.accent }}
+      />
       <Link href={seriesUrl} className="block">
         {/* Image container */}
         <div className={cn('relative', aspectRatio[variant])}>
@@ -121,18 +130,22 @@ export function SeriesCard({
             </div>
           )}
 
-          {/* Badge stack (top-right) */}
-          <div className="absolute top-3 right-3 flex flex-col gap-1.5">
+          {/* Badge stack (top-left for type, matching EventCard pattern) */}
+          <div className="absolute top-3 left-3 flex flex-col gap-1.5">
             <SeriesTypeBadge type={series.series_type} size="sm" />
-            {showCategory && series.category_name && (
+          </div>
+
+          {/* Category badge top-right if enabled */}
+          {showCategory && series.category_name && (
+            <div className="absolute top-3 right-3">
               <Badge
                 variant="category"
                 className="bg-warm-white/90 backdrop-blur-sm"
               >
                 {series.category_name}
               </Badge>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -188,62 +201,63 @@ export function SeriesCard({
 
 /**
  * Renders contextual badges for camps/classes enhancements.
- * Shows attendance mode (drop-in/hybrid), age range, skill level,
+ * Shows age range (prominent!), attendance mode, skill level,
  * and extended care availability. Only renders when data exists.
  */
 function SeriesInfoBadges({ series }: { series: SeriesCardType }) {
-  const badges: React.ReactNode[] = [];
-
-  // Attendance mode badge -- only show for non-default (drop_in or hybrid)
-  // "registered" is the default and doesn't need a badge
-  if (series.attendance_mode && series.attendance_mode !== 'registered') {
-    const info = ATTENDANCE_MODE_INFO[series.attendance_mode as AttendanceMode];
-    if (info) {
-      badges.push(
-        <span key="attendance" className={cn('inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium', info.badgeColor)}>
-          {info.label}
-        </span>
-      );
-    }
-  }
-
-  // Age range badge
   const ageText = formatAgeRange(series.age_low, series.age_high);
-  if (ageText) {
-    badges.push(
-      <span key="age" className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-        {ageText}
-      </span>
-    );
-  }
+  const hasAnyBadge =
+    ageText ||
+    series.attendance_mode ||
+    series.skill_level ||
+    series.has_extended_care;
 
-  // Skill level badge
-  if (series.skill_level) {
-    const info = SKILL_LEVEL_INFO[series.skill_level as SkillLevel];
-    if (info) {
-      badges.push(
-        <span key="skill" className={cn('inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium', info.badgeColor)}>
-          {info.label}
-        </span>
-      );
-    }
-  }
-
-  // Extended care badge (for camps)
-  if (series.has_extended_care) {
-    badges.push(
-      <span key="care" className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-sky-100 text-sky-800">
-        Extended Care
-      </span>
-    );
-  }
-
-  // Don't render anything if no badges
-  if (badges.length === 0) return null;
+  if (!hasAnyBadge) return null;
 
   return (
-    <div className="flex flex-wrap gap-1 mb-2">
-      {badges}
+    <div className="space-y-1.5 mb-2">
+      {/* Age range — THE critical field for parents, gets its own row */}
+      {ageText && (
+        <div className="flex items-center gap-1.5">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 ring-1 ring-amber-200/60">
+            {ageText}
+          </span>
+        </div>
+      )}
+
+      {/* Secondary badges row — only render if there are secondary badges */}
+      {(series.attendance_mode || series.skill_level || series.has_extended_care) && (
+        <div className="flex flex-wrap gap-1">
+          {/* Attendance mode badge — show for all modes */}
+          {series.attendance_mode && (() => {
+            const info = ATTENDANCE_MODE_INFO[series.attendance_mode as AttendanceMode];
+            if (!info) return null;
+            return (
+              <span key="attendance" className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium', info.badgeColor)}>
+                {info.label}
+              </span>
+            );
+          })()}
+
+          {/* Skill level badge */}
+          {series.skill_level && (() => {
+            const info = SKILL_LEVEL_INFO[series.skill_level as SkillLevel];
+            if (!info) return null;
+            return (
+              <span key="skill" className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium', info.badgeColor)}>
+                {info.label}
+              </span>
+            );
+          })()}
+
+          {/* Extended care badge (for camps) */}
+          {series.has_extended_care && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-sky-100 text-sky-800">
+              Extended Care
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
