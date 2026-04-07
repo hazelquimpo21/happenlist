@@ -5,6 +5,7 @@
  */
 
 import { cn } from '@/lib/utils';
+import { CATEGORY_COLORS } from '@/lib/constants/category-colors';
 
 interface SkeletonProps {
   /** Shape variant */
@@ -64,24 +65,64 @@ export function Skeleton({
 }
 
 /**
- * Preset skeleton for event cards.
+ * Category accent colors for skeleton top borders.
+ * Cycles through them for visual variety.
  */
-export function EventCardSkeleton() {
-  return (
-    <div className="bg-warm-white rounded-lg overflow-hidden shadow-card">
-      {/* Image placeholder */}
-      <Skeleton variant="rectangular" height={180} className="w-full" />
+const SKELETON_ACCENT_COLORS = [
+  CATEGORY_COLORS.music.accent,
+  CATEGORY_COLORS.arts.accent,
+  CATEGORY_COLORS.food.accent,
+  CATEGORY_COLORS.sports.accent,
+  CATEGORY_COLORS.nightlife.accent,
+  CATEGORY_COLORS.festivals.accent,
+];
 
-      {/* Content */}
-      <div className="p-4 space-y-3">
-        {/* Date */}
-        <Skeleton variant="text" width="40%" />
+/**
+ * Preset skeleton for event cards.
+ * Matches the real EventCard layout: 3px colored top border,
+ * image area, date line, title, venue, and price.
+ */
+export function EventCardSkeleton({ index = 0 }: { index?: number }) {
+  const accentColor =
+    SKELETON_ACCENT_COLORS[index % SKELETON_ACCENT_COLORS.length];
+
+  return (
+    <div
+      className="bg-warm-white rounded-lg overflow-hidden shadow-card border border-sand/50"
+      style={{ borderTopWidth: '3px', borderTopColor: accentColor }}
+    >
+      {/* Image placeholder with badge skeleton */}
+      <div className="relative">
+        <Skeleton variant="rectangular" className="w-full aspect-video" />
+        {/* Category badge skeleton */}
+        <div className="absolute top-3 left-3">
+          <Skeleton
+            variant="rectangular"
+            width={72}
+            height={24}
+            className="rounded-full"
+          />
+        </div>
+      </div>
+
+      {/* Content — matches EventCard padding and spacing */}
+      <div className="p-4">
+        {/* Date line */}
+        <Skeleton variant="text" width="35%" height={14} className="mb-1" />
         {/* Title */}
-        <Skeleton variant="text" width="90%" height={24} />
-        {/* Location */}
-        <Skeleton variant="text" width="60%" />
-        {/* Price */}
-        <Skeleton variant="text" width="30%" />
+        <Skeleton variant="text" width="85%" height={22} className="mb-1" />
+        {/* Venue with icon */}
+        <div className="flex items-center gap-1 mb-2">
+          <Skeleton variant="circular" width={12} height={12} />
+          <Skeleton variant="text" width="55%" height={14} />
+        </div>
+        {/* Price pill */}
+        <Skeleton
+          variant="rectangular"
+          width={48}
+          height={22}
+          className="rounded-full"
+        />
       </div>
     </div>
   );

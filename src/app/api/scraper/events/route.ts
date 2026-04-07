@@ -14,7 +14,7 @@
  *   2. POST to /api/scraper/events with the scraped data
  *   3. API validates, deduplicates, and inserts
  *   4. Extension uses returned eventId to upload images via /api/images/upload
- *   5. Event lands in admin queue as pending_review
+ *   5. Event is auto-published immediately
  *
  * @module api/scraper/events
  */
@@ -235,7 +235,8 @@ export async function POST(request: NextRequest) {
       age_restriction: body.age_restriction || null,
       is_family_friendly: body.is_family_friendly ?? null,
       good_for: body.good_for || [],
-      status: 'pending_review',
+      status: 'published',
+      published_at: new Date().toISOString(),
       source,
       source_url: body.source_url,
       scraped_at: new Date().toISOString(),
@@ -290,7 +291,7 @@ export async function GET() {
     workflow: [
       '1. POST event data here → get eventId back',
       '2. Upload images to /api/images/upload using that eventId',
-      '3. Event appears in admin review queue as pending_review',
+      '3. Event is auto-published and visible immediately',
     ],
     required_fields: {
       title: 'string (min 3 chars)',

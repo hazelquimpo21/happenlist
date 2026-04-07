@@ -5,9 +5,12 @@
  * Supports a "bento" variant for homepage featured sections.
  */
 
+import Link from 'next/link';
+import { Compass, CalendarDays } from 'lucide-react';
 import { EventCard } from './event-card';
 import { EventCardSkeleton } from '@/components/ui';
 import { cn } from '@/lib/utils';
+import { ROUTES } from '@/lib/constants';
 import type { EventCard as EventCardType } from '@/types';
 
 interface EventGridProps {
@@ -44,8 +47,8 @@ export function EventGrid({
   variant = 'default',
   loading = false,
   skeletonCount = 8,
-  emptyMessage = 'No events found',
-  emptyTitle = 'Nothing happening yet',
+  emptyMessage,
+  emptyTitle = 'Nothing here yet',
   className,
 }: EventGridProps) {
   // Column classes based on column count
@@ -60,7 +63,7 @@ export function EventGrid({
     return (
       <div className={cn('grid gap-6', columnClasses[columns], className)}>
         {Array.from({ length: skeletonCount }).map((_, index) => (
-          <EventCardSkeleton key={index} />
+          <EventCardSkeleton key={index} index={index} />
         ))}
       </div>
     );
@@ -69,14 +72,41 @@ export function EventGrid({
   // Empty state
   if (events.length === 0) {
     return (
-      <div className="text-center py-16">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-sand mb-4">
-          <span className="text-2xl">📅</span>
+      <div className="text-center py-20 px-4">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-coral/10 mb-6">
+          <Compass className="w-10 h-10 text-coral" />
         </div>
-        <h3 className="font-display text-h3 text-charcoal mb-2">
+        <h3 className="font-display text-h3 text-charcoal mb-3">
           {emptyTitle}
         </h3>
-        <p className="text-stone text-body max-w-md mx-auto">{emptyMessage}</p>
+        <p className="text-stone text-body max-w-md mx-auto mb-8">
+          {emptyMessage ||
+            "Try browsing by category or checking out what's happening this weekend."}
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Link
+            href={ROUTES.events}
+            className={cn(
+              'inline-flex items-center gap-2 px-5 py-2.5 rounded-full',
+              'bg-coral text-white font-medium text-sm',
+              'hover:bg-coral/90 transition-colors'
+            )}
+          >
+            <Compass className="w-4 h-4" />
+            Browse categories
+          </Link>
+          <Link
+            href={ROUTES.eventsWeekend}
+            className={cn(
+              'inline-flex items-center gap-2 px-5 py-2.5 rounded-full',
+              'bg-sand/60 text-charcoal font-medium text-sm',
+              'hover:bg-sand transition-colors'
+            )}
+          >
+            <CalendarDays className="w-4 h-4" />
+            This weekend
+          </Link>
+        </div>
       </div>
     );
   }

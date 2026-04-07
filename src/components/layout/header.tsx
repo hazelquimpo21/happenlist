@@ -61,10 +61,10 @@ export function Header({ transparent = false }: HeaderProps) {
           {/* ---------------------------------------------------------------- */}
           <Link
             href={ROUTES.home}
-            className="flex items-center gap-2 font-display text-h3 text-charcoal hover:text-coral transition-colors"
+            className="flex items-center gap-1 font-display text-h3 text-charcoal hover:text-coral transition-colors"
           >
             <span className="text-coral">H</span>
-            <span className="hidden sm:inline">Happenlist</span>
+            <span className="hidden sm:inline -ml-0.5">appenlist</span>
           </Link>
 
           {/* ---------------------------------------------------------------- */}

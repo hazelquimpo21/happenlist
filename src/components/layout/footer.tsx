@@ -1,7 +1,8 @@
 /**
  * FOOTER COMPONENT
  * ================
- * Site footer with navigation links and branding.
+ * Dark-grounded site footer with warm typography,
+ * coral accent links, and topographic texture.
  */
 
 import Link from 'next/link';
@@ -15,14 +16,14 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-warm-white border-t border-sand mt-auto">
+    <footer className="bg-midnight bg-topo mt-auto">
       <Container className="py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo and tagline */}
           <div className="md:col-span-2">
             <Link
               href={ROUTES.home}
-              className="inline-block font-display text-h2 text-charcoal hover:text-coral transition-colors"
+              className="inline-block font-display text-h2 text-warm-white hover:text-coral transition-colors"
             >
               <span className="text-coral">H</span>appenlist
             </Link>
@@ -34,7 +35,7 @@ export function Footer() {
 
           {/* Discover links */}
           <div>
-            <h3 className="font-display text-h4 text-charcoal mb-4">
+            <h3 className="font-display text-h4 text-warm-white mb-4">
               Discover
             </h3>
             <ul className="space-y-2">
@@ -53,7 +54,9 @@ export function Footer() {
 
           {/* About links */}
           <div>
-            <h3 className="font-display text-h4 text-charcoal mb-4">About</h3>
+            <h3 className="font-display text-h4 text-warm-white mb-4">
+              About
+            </h3>
             <ul className="space-y-2">
               {FOOTER_NAV.about.map((item) => (
                 <li key={item.href}>
@@ -70,8 +73,8 @@ export function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="mt-12 pt-6 border-t border-sand">
-          <p className="text-stone text-body-sm text-center">
+        <div className="mt-12 pt-6 border-t border-warm-white/10">
+          <p className="text-stone/60 text-body-sm text-center">
             &copy; {currentYear} Happenlist. All rights reserved.
           </p>
         </div>
