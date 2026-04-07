@@ -45,6 +45,13 @@ export {
   logAdminAction,
 } from './logger';
 
+// Recurrence utilities
+export {
+  calculateDatesInRange,
+  calculateRecurringDates,
+  addMinutesToTime,
+} from './recurrence';
+
 // Image utilities
 export {
   isValidImageUrl,

@@ -8,7 +8,7 @@ import Link from 'next/link';
 import {
   Filter,
 } from 'lucide-react';
-import { AdminHeader, AdminBreadcrumbs, AdminEventCard, AdminEventFilters } from '@/components/admin';
+import { AdminHeader, AdminBreadcrumbs, AdminEventFilters, AdminEventList } from '@/components/admin';
 import { Button } from '@/components/ui/button';
 import { getAllAdminEvents } from '@/data/admin';
 import { adminDataLogger } from '@/lib/utils/logger';
@@ -156,11 +156,9 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
           </div>
         ) : (
           <>
-            {/* Events list */}
-            <div className="space-y-3 mb-8">
-              {result.events.map((event) => (
-                <AdminEventCard key={event.id} event={event} />
-              ))}
+            {/* Events list with bulk selection */}
+            <div className="mb-8">
+              <AdminEventList events={result.events} showApproveReject showSuperadminActions />
             </div>
 
             {/* Pagination */}

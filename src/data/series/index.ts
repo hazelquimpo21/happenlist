@@ -24,3 +24,17 @@ export {
   getRelatedSeries,
   getSeriesStats,
 } from './get-series-detail';
+
+// Event generation functions
+export {
+  createSingleEvent,
+  generateCampEvents,
+  generateRecurringEvents,
+  createSeries,
+  updateSeriesDates,
+} from './generate-events';
+
+export type {
+  CreateEventResult,
+  GenerateEventsResult,
+} from './generate-events';

@@ -5,15 +5,12 @@
  */
 
 import Link from 'next/link';
-import { Suspense } from 'react';
 import {
   CheckCircle,
-  XCircle,
   Filter,
-  RefreshCw,
   ArrowUpDown,
 } from 'lucide-react';
-import { AdminHeader, AdminBreadcrumbs, AdminEventCard, AdminEventCardSkeleton } from '@/components/admin';
+import { AdminHeader, AdminBreadcrumbs, AdminEventList } from '@/components/admin';
 import { Button } from '@/components/ui/button';
 import { getPendingEvents } from '@/data/admin';
 import { adminDataLogger } from '@/lib/utils/logger';
@@ -88,15 +85,6 @@ export default async function PendingEventsPage({ searchParams }: PageProps) {
             <ArrowUpDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone pointer-events-none" />
           </div>
 
-          {/* Bulk actions */}
-          <div className="ml-auto flex items-center gap-2">
-            <Button variant="secondary" size="sm" leftIcon={<CheckCircle className="w-4 h-4" />}>
-              Approve Selected
-            </Button>
-            <Button variant="ghost" size="sm" leftIcon={<XCircle className="w-4 h-4" />}>
-              Reject Selected
-            </Button>
-          </div>
         </div>
       </AdminHeader>
 
@@ -125,11 +113,9 @@ export default async function PendingEventsPage({ searchParams }: PageProps) {
           </div>
         ) : (
           <>
-            {/* Events list */}
-            <div className="space-y-3 mb-8">
-              {result.events.map((event) => (
-                <AdminEventCard key={event.id} event={event} />
-              ))}
+            {/* Events list with bulk selection */}
+            <div className="mb-8">
+              <AdminEventList events={result.events} showApproveReject />
             </div>
 
             {/* Pagination */}

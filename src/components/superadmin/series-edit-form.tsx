@@ -18,28 +18,10 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-interface SeriesData {
-  id: string;
-  title: string;
-  slug: string;
-  description: string | null;
-  short_description: string | null;
-  series_type: string;
-  status: string;
-  price_type: string;
-  price_low: number | null;
-  price_high: number | null;
-  is_free: boolean;
-  registration_url: string | null;
-  image_url: string | null;
-  meta_title: string | null;
-  meta_description: string | null;
-  is_featured: boolean;
-}
+import type { SeriesRow } from '@/types/series';
 
 interface SeriesEditFormProps {
-  series: SeriesData;
+  series: SeriesRow;
 }
 
 type FormStatus = 'idle' | 'saving' | 'saved' | 'error';
@@ -122,7 +104,7 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
       if (formState.series_type !== series.series_type) updates.series_type = formState.series_type;
       if (formState.status !== series.status) updates.status = formState.status;
       if (formState.price_type !== series.price_type) updates.price_type = formState.price_type;
-      if (formState.is_free !== series.is_free) updates.is_free = formState.is_free;
+      // Note: is_free is a generated column (computed from price_type) — do not include in updates
       if (formState.registration_url !== (series.registration_url || '')) updates.registration_url = formState.registration_url || null;
       if (formState.image_url !== (series.image_url || '')) updates.image_url = formState.image_url || null;
       if (formState.meta_title !== (series.meta_title || '')) updates.meta_title = formState.meta_title || null;

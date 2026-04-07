@@ -40,8 +40,11 @@ import {
   Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { RecurrenceBuilder } from './recurrence-builder';
+import { SeriesSearch } from './series-search';
 import { GOOD_FOR_TAGS } from '@/types';
 import type { AdminEventDetails } from '@/data/admin/get-admin-event';
+import type { RecurrenceRule } from '@/lib/supabase/types';
 
 // ============================================================================
 // TYPES
@@ -163,6 +166,12 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
   const [notes, setNotes] = useState('');
   type OccurrenceScope = 'single' | 'all' | 'future';
   const [occurrenceScope, setOccurrenceScope] = useState<OccurrenceScope>('single');
+
+  // Series management state
+  type SeriesPanel = 'idle' | 'make-recurring' | 'attach-series';
+  const [seriesPanel, setSeriesPanel] = useState<SeriesPanel>('idle');
+  const [seriesActionLoading, setSeriesActionLoading] = useState(false);
+  const [seriesMessage, setSeriesMessage] = useState('');
 
   // Venue state
   const [selectedVenue, setSelectedVenue] = useState<VenueSearchResult | null>(
@@ -519,6 +528,71 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
       console.error('Restore error:', error);
       setStatus('error');
       setStatusMessage(error instanceof Error ? error.message : 'Failed to restore event');
+    }
+  };
+
+  // ============================================================================
+  // SERIES MANAGEMENT HANDLERS
+  // ============================================================================
+
+  const handleMakeRecurring = async (recurrenceRule: RecurrenceRule) => {
+    setSeriesActionLoading(true);
+    setSeriesMessage('');
+    try {
+      const response = await fetch(`/api/superadmin/events/${event.id}/make-recurring`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recurrenceRule }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to make recurring');
+      setSeriesMessage(`Created recurring series with ${data.eventCount} events`);
+      setSeriesPanel('idle');
+      setTimeout(() => router.refresh(), 1500);
+    } catch (error) {
+      setSeriesMessage(error instanceof Error ? error.message : 'Failed');
+    } finally {
+      setSeriesActionLoading(false);
+    }
+  };
+
+  const handleAttachSeries = async (seriesId: string, seriesTitle: string) => {
+    setSeriesActionLoading(true);
+    setSeriesMessage('');
+    try {
+      const response = await fetch(`/api/superadmin/events/${event.id}/attach-series`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seriesId }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to attach');
+      setSeriesMessage(`Attached to "${seriesTitle}"`);
+      setSeriesPanel('idle');
+      setTimeout(() => router.refresh(), 1500);
+    } catch (error) {
+      setSeriesMessage(error instanceof Error ? error.message : 'Failed');
+    } finally {
+      setSeriesActionLoading(false);
+    }
+  };
+
+  const handleDetachSeries = async () => {
+    setSeriesActionLoading(true);
+    setSeriesMessage('');
+    try {
+      const response = await fetch(`/api/superadmin/events/${event.id}/detach-series`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to detach');
+      setSeriesMessage('Event detached from series');
+      setTimeout(() => router.refresh(), 1500);
+    } catch (error) {
+      setSeriesMessage(error instanceof Error ? error.message : 'Failed');
+    } finally {
+      setSeriesActionLoading(false);
     }
   };
 
@@ -1135,7 +1209,105 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
         </div>
 
         {/* ------------------------------------------------------------------ */}
-        {/* SERIES OCCURRENCES */}
+        {/* SERIES MANAGEMENT */}
+        {/* ------------------------------------------------------------------ */}
+
+        {/* Series status message */}
+        {seriesMessage && (
+          <div className={`p-3 rounded-lg text-sm ${
+            seriesMessage.includes('Failed') || seriesMessage.includes('Error')
+              ? 'bg-red-50 text-red-800 border border-red-200'
+              : 'bg-sage/10 text-sage border border-sage/20'
+          }`}>
+            {seriesMessage}
+          </div>
+        )}
+
+        {/* Standalone event — offer to make recurring or attach to series */}
+        {!event.series_id && (
+          <div className="p-4 bg-stone/5 border border-sand rounded-lg">
+            <div className="flex items-start gap-3">
+              <Layers className="w-5 h-5 text-stone mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-charcoal">Standalone Event</p>
+                <p className="text-sm text-stone mt-0.5">
+                  This event is not part of a series.
+                </p>
+
+                {seriesPanel === 'idle' && (
+                  <div className="flex gap-2 mt-3">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => { setSeriesPanel('make-recurring'); setSeriesMessage(''); }}
+                    >
+                      Make Recurring
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => { setSeriesPanel('attach-series'); setSeriesMessage(''); }}
+                    >
+                      Add to Existing Series
+                    </Button>
+                  </div>
+                )}
+
+                {seriesPanel === 'make-recurring' && (
+                  <div className="mt-3">
+                    <RecurrenceBuilder
+                      firstDate={event.start_datetime?.split('T')[0] || new Date().toISOString().split('T')[0]}
+                      defaultTime={event.start_datetime?.split('T')[1]?.substring(0, 5) || '19:00'}
+                      onSubmit={handleMakeRecurring}
+                      onCancel={() => setSeriesPanel('idle')}
+                      isSubmitting={seriesActionLoading}
+                    />
+                  </div>
+                )}
+
+                {seriesPanel === 'attach-series' && (
+                  <div className="mt-3">
+                    <SeriesSearch
+                      onSelect={handleAttachSeries}
+                      onCancel={() => setSeriesPanel('idle')}
+                      isSubmitting={seriesActionLoading}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Event in a series — show series info + detach option */}
+        {event.series_id && (
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <Layers className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-blue-800">Part of a Series</p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleDetachSeries}
+                    disabled={seriesActionLoading}
+                    className="text-red-600 hover:text-red-800 hover:bg-red-50 text-xs"
+                  >
+                    {seriesActionLoading ? 'Detaching...' : 'Remove from Series'}
+                  </Button>
+                </div>
+                <p className="text-sm text-blue-700 mt-0.5">
+                  Series ID: {event.series_id}
+                  {event.series_sequence != null && ` · Instance #${event.series_sequence}`}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------------ */}
+        {/* SERIES OCCURRENCES (scope selector for edits) */}
         {/* ------------------------------------------------------------------ */}
         {event.series_id && (
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
