@@ -113,7 +113,7 @@ export async function getAdminSeries(
 
   // For each series, get the actual event count
   const seriesIds = (data || []).map((s: { id: string }) => s.id);
-  let eventCounts: Record<string, number> = {};
+  const eventCounts: Record<string, number> = {};
 
   if (seriesIds.length > 0) {
     const { data: countData } = await supabase
