@@ -17,8 +17,12 @@ import {
   ChevronDown,
   X,
   AlertTriangle,
+  GitMerge,
+  Repeat,
 } from 'lucide-react';
 import { AdminEventCard } from './admin-event-card';
+import { MergeEventsModal } from './merge-events-modal';
+import { BulkSeriesModal } from './bulk-series-modal';
 import { Button } from '@/components/ui/button';
 import type { AdminEventCard as AdminEventCardType } from '@/data/admin';
 
@@ -54,6 +58,8 @@ export function AdminEventList({
   const [resultMessage, setResultMessage] = useState('');
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+  const [showMergeModal, setShowMergeModal] = useState(false);
+  const [showSeriesModal, setShowSeriesModal] = useState(false);
 
   // Filter out optimistically deleted events
   const visibleEvents = events.filter(e => !deletedIds.has(e.id));
@@ -259,6 +265,27 @@ export function AdminEventList({
                     </div>
                   )}
                 </div>
+
+                {/* Merge & Series buttons (need 2+ selected) */}
+                {selectedCount >= 2 && (
+                  <>
+                    <div className="w-px h-6 bg-white/20" />
+                    <button
+                      onClick={() => setShowMergeModal(true)}
+                      className="flex items-center gap-1.5 text-sm text-purple-400 hover:text-white transition-colors"
+                    >
+                      <GitMerge className="w-4 h-4" />
+                      Merge
+                    </button>
+                    <button
+                      onClick={() => setShowSeriesModal(true)}
+                      className="flex items-center gap-1.5 text-sm text-emerald-400 hover:text-white transition-colors"
+                    >
+                      <Repeat className="w-4 h-4" />
+                      Make Series
+                    </button>
+                  </>
+                )}
               </>
             )}
 
@@ -272,6 +299,28 @@ export function AdminEventList({
             </button>
           </div>
         </div>
+      )}
+
+      {/* Merge modal */}
+      {showMergeModal && selectedCount >= 2 && (
+        <MergeEventsModal
+          events={visibleEvents.filter(e => selectedIds.has(e.id))}
+          onClose={() => {
+            setShowMergeModal(false);
+            clearSelection();
+          }}
+        />
+      )}
+
+      {/* Series modal */}
+      {showSeriesModal && selectedCount >= 2 && (
+        <BulkSeriesModal
+          events={visibleEvents.filter(e => selectedIds.has(e.id))}
+          onClose={() => {
+            setShowSeriesModal(false);
+            clearSelection();
+          }}
+        />
       )}
 
       {/* Confirmation / result modal */}
