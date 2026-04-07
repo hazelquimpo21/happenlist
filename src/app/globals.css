@@ -23,6 +23,7 @@
   --color-coral-dark: #C45D43;
   --color-sage: #87A878;
   --color-sage-light: #D4E4CD;
+  --color-midnight: #1a1a2e;
 
   /* Semantic colors */
   --color-text-primary: var(--color-charcoal);
@@ -144,5 +145,20 @@
   /* Safe area insets for mobile */
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Topographic contour line texture — Happenlist's visual fingerprint */
+  .bg-topo {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cdefs%3E%3Cstyle%3Ecircle%7Bfill:none;stroke:%232D2A26;stroke-width:1;opacity:0.08%7D%3C/style%3E%3C/defs%3E%3Ccircle cx='100' cy='100' r='20'/%3E%3Ccircle cx='100' cy='100' r='40'/%3E%3Ccircle cx='100' cy='100' r='60'/%3E%3Ccircle cx='100' cy='100' r='80'/%3E%3Ccircle cx='100' cy='100' r='100'/%3E%3Ccircle cx='0' cy='0' r='30'/%3E%3Ccircle cx='0' cy='0' r='55'/%3E%3Ccircle cx='0' cy='0' r='80'/%3E%3Ccircle cx='200' cy='200' r='25'/%3E%3Ccircle cx='200' cy='200' r='50'/%3E%3Ccircle cx='200' cy='200' r='75'/%3E%3Ccircle cx='200' cy='0' r='35'/%3E%3Ccircle cx='200' cy='0' r='65'/%3E%3Ccircle cx='0' cy='200' r='40'/%3E%3Ccircle cx='0' cy='200' r='70'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 200px 200px;
+  }
+
+  /* Coral gradient text for hero headline accent words */
+  .text-gradient-coral {
+    background: linear-gradient(135deg, #E07A5F 0%, #C45D43 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }

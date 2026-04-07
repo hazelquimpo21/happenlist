@@ -25,6 +25,7 @@ const config: Config = {
         sand: '#E8E0D5',            // Borders, dividers, secondary bg
         stone: '#9C9487',           // Secondary text, icons, muted
         charcoal: '#2D2A26',        // Primary text, headlines
+        midnight: '#1a1a2e',        // Dark footer, dark accents
 
         // Accent colors
         coral: {
@@ -35,6 +36,20 @@ const config: Config = {
         sage: {
           DEFAULT: '#87A878',       // Success, "Free" badges
           light: '#D4E4CD',         // Success backgrounds
+        },
+
+        // Category identity colors
+        category: {
+          music: '#7C3AED',
+          arts: '#0D9488',
+          food: '#EA580C',
+          family: '#F59E0B',
+          sports: '#3B82F6',
+          community: '#E07A5F',
+          nightlife: '#6366F1',
+          classes: '#059669',
+          festivals: '#BE185D',
+          workshops: '#8B5CF6',
         },
       },
 
@@ -59,6 +74,9 @@ const config: Config = {
         'body': ['1rem', { lineHeight: '1.6', fontWeight: '400' }],
         'body-sm': ['0.875rem', { lineHeight: '1.5', fontWeight: '400' }],
         'caption': ['0.75rem', { lineHeight: '1.4', fontWeight: '500' }],
+        // Big display sizes for visual overhaul
+        'stat': ['3.5rem', { lineHeight: '1', fontWeight: '600' }],
+        'hero': ['4rem', { lineHeight: '1.05', fontWeight: '600' }],
       },
 
       // ==========================================
@@ -87,6 +105,7 @@ const config: Config = {
         'sm': '0 1px 2px rgba(45, 42, 38, 0.04)',
         'card': '0 2px 8px rgba(45, 42, 38, 0.06)',
         'card-hover': '0 8px 24px rgba(45, 42, 38, 0.1)',
+        'card-lifted': '0 4px 12px rgba(45,42,38,0.08), 0 12px 32px rgba(45,42,38,0.12)',
         'dropdown': '0 4px 16px rgba(45, 42, 38, 0.12)',
         'modal': '0 16px 48px rgba(45, 42, 38, 0.16)',
       },
