@@ -12,3 +12,4 @@ export { SuperadminVenueEditForm } from './venue-edit-form';
 export { SuperadminSeriesEditForm } from './series-edit-form';
 export { RecurrenceBuilder } from './recurrence-builder';
 export { SeriesSearch } from './series-search';
+export { SeriesEventManager } from './series-event-manager';

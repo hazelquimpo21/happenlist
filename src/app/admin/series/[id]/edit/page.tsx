@@ -8,7 +8,7 @@ import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Shield } from 'lucide-react';
 import { AdminHeader, AdminBreadcrumbs } from '@/components/admin';
-import { SuperadminSeriesEditForm } from '@/components/superadmin';
+import { SuperadminSeriesEditForm, SeriesEventManager } from '@/components/superadmin';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/lib/supabase/server';
@@ -82,9 +82,10 @@ export default async function SuperadminSeriesEditPage({ params }: PageProps) {
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main content - Edit form */}
-          <div className="lg:col-span-2">
+          {/* Main content - Edit form + Event Manager */}
+          <div className="lg:col-span-2 space-y-8">
             <SuperadminSeriesEditForm series={series} />
+            <SeriesEventManager seriesId={series.id} />
           </div>
 
           {/* Sidebar */}
