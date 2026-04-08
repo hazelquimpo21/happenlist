@@ -126,7 +126,7 @@ export function AdminEventCard({
 
               {/* Meta row */}
               <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-stone">
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1" suppressHydrationWarning>
                   <Calendar className="w-4 h-4" />
                   {eventDate} at {eventTime}
                 </span>
@@ -173,7 +173,7 @@ export function AdminEventCard({
                 )}
 
                 {scrapedDate && (
-                  <span className="text-xs text-stone">
+                  <span className="text-xs text-stone" suppressHydrationWarning>
                     Scraped: {scrapedDate}
                   </span>
                 )}
