@@ -9,7 +9,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { format } from 'date-fns';
 import {
   Calendar,
   MapPin,
@@ -22,7 +21,7 @@ import {
   DollarSign,
   Repeat,
 } from 'lucide-react';
-import { cn, getBestImageUrl } from '@/lib/utils';
+import { cn, getBestImageUrl, formatMKE, formatTimeMKE, formatDateTimeMKE } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { AdminEventCard as AdminEventCardType } from '@/data/admin';
@@ -54,11 +53,11 @@ export function AdminEventCard({
 
   const statusStyle = statusStyles[event.status] || statusStyles.draft;
 
-  // Format date
-  const eventDate = format(new Date(event.start_datetime), 'EEE, MMM d, yyyy');
-  const eventTime = format(new Date(event.start_datetime), 'h:mm a');
+  // Format date (timezone-safe — no hydration mismatch)
+  const eventDate = formatMKE(event.start_datetime, 'dayShort');
+  const eventTime = formatTimeMKE(event.start_datetime);
   const scrapedDate = event.scraped_at
-    ? format(new Date(event.scraped_at), 'MMM d, h:mm a')
+    ? formatDateTimeMKE(event.scraped_at, 'short')
     : null;
 
   // Price display
@@ -126,7 +125,7 @@ export function AdminEventCard({
 
               {/* Meta row */}
               <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-stone">
-                <span className="flex items-center gap-1" suppressHydrationWarning>
+                <span className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
                   {eventDate} at {eventTime}
                 </span>
@@ -173,7 +172,7 @@ export function AdminEventCard({
                 )}
 
                 {scrapedDate && (
-                  <span className="text-xs text-stone" suppressHydrationWarning>
+                  <span className="text-xs text-stone">
                     Scraped: {scrapedDate}
                   </span>
                 )}

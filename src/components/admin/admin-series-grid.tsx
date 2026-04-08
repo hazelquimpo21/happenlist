@@ -53,7 +53,10 @@ export function AdminSeriesGrid({ series }: AdminSeriesGridProps) {
   const formatDate = (d: string | null) => {
     if (!d) return null;
     try {
-      return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      return new Intl.DateTimeFormat('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric',
+        timeZone: 'America/Chicago',
+      }).format(new Date(d));
     } catch {
       return d;
     }

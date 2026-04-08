@@ -157,7 +157,7 @@ export function SeriesSearch({
                 )}
                 {series.start_date && (
                   <span>
-                    Starts {new Date(series.start_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    Starts {new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Chicago' }).format(new Date(series.start_date + 'T12:00:00'))}
                   </span>
                 )}
                 <span className="capitalize">{series.status.replace('_', ' ')}</span>

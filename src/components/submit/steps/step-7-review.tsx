@@ -137,7 +137,11 @@ export function Step7Review({ draftData, seriesDraftData, categories, onEditStep
   const formatDateTime = (datetime: string | undefined) => {
     if (!datetime) return 'Not set';
     try {
-      return format(new Date(datetime), 'EEEE, MMMM d, yyyy @ h:mm a');
+      return new Intl.DateTimeFormat('en-US', {
+        weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+        hour: 'numeric', minute: '2-digit', hour12: true,
+        timeZone: 'America/Chicago',
+      }).format(new Date(datetime));
     } catch {
       return datetime;
     }

@@ -330,11 +330,10 @@ export function Step3DateTime({
               <div className="flex flex-wrap gap-2">
                 {campDates.map((date) => {
                   const d = new Date(date + 'T00:00:00');
-                  const label = d.toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric',
-                  });
+                  const label = new Intl.DateTimeFormat('en-US', {
+                    weekday: 'short', month: 'short', day: 'numeric',
+                    timeZone: 'America/Chicago',
+                  }).format(d);
                   return (
                     <span
                       key={date}

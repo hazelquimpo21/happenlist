@@ -2,6 +2,11 @@
  * DATE UTILITIES
  * ==============
  * Formatting and manipulation functions for dates.
+ *
+ * TIMEZONE HANDLING:
+ * All display formatting uses America/Chicago (Milwaukee) timezone via
+ * Intl.DateTimeFormat. This ensures server (UTC) and client (local TZ)
+ * produce identical strings, preventing React hydration mismatches.
  */
 
 import {
@@ -20,6 +25,125 @@ import {
   nextFriday,
   getDay,
 } from 'date-fns';
+
+// ---------------------------------------------------------------------------
+// Timezone-safe formatting (hydration-safe)
+// ---------------------------------------------------------------------------
+
+const MKE_TZ = 'America/Chicago';
+
+/**
+ * Common date format presets for display.
+ * All produce identical output on server and client.
+ */
+const DATE_PRESETS = {
+  /** "Feb 14, 2025" */
+  short: { month: 'short', day: 'numeric', year: 'numeric' } as const,
+  /** "Friday, February 14, 2025" */
+  long: { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' } as const,
+  /** "Fri, Feb 14, 2025" */
+  dayShort: { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' } as const,
+  /** "Feb 14" */
+  monthDay: { month: 'short', day: 'numeric' } as const,
+};
+
+const TIME_PRESETS = {
+  /** "7:00 PM" */
+  short: { hour: 'numeric', minute: '2-digit', hour12: true } as const,
+};
+
+/**
+ * Format a date string in Milwaukee timezone. Hydration-safe.
+ *
+ * @example
+ * formatMKE('2025-02-14T19:00:00', 'short')      // "Feb 14, 2025"
+ * formatMKE('2025-02-14T19:00:00', 'long')        // "Friday, February 14, 2025"
+ * formatMKE('2025-02-14T19:00:00', 'dayShort')    // "Fri, Feb 14, 2025"
+ * formatMKE('2025-02-14T19:00:00', 'monthDay')    // "Feb 14"
+ */
+export function formatMKE(
+  dateString: string,
+  preset: keyof typeof DATE_PRESETS = 'short'
+): string {
+  try {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      ...DATE_PRESETS[preset],
+      timeZone: MKE_TZ,
+    }).format(date);
+  } catch {
+    return dateString;
+  }
+}
+
+/**
+ * Format a time string in Milwaukee timezone. Hydration-safe.
+ *
+ * @example
+ * formatTimeMKE('2025-02-14T19:00:00') // "7:00 PM"
+ */
+export function formatTimeMKE(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      ...TIME_PRESETS.short,
+      timeZone: MKE_TZ,
+    }).format(date);
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Format a date + time string in Milwaukee timezone. Hydration-safe.
+ *
+ * @example
+ * formatDateTimeMKE('2025-02-14T19:00:00', 'short')  // "Feb 14, 7:00 PM"
+ * formatDateTimeMKE('2025-02-14T19:00:00', 'long')    // "Friday, February 14, 2025 at 7:00 PM"
+ * formatDateTimeMKE('2025-02-14T19:00:00', 'full')    // "Feb 14, 2025, 7:00 PM"
+ */
+export function formatDateTimeMKE(
+  dateString: string,
+  preset: 'short' | 'long' | 'full' = 'short'
+): string {
+  try {
+    const date = new Date(dateString);
+    const opts: Intl.DateTimeFormatOptions = {
+      timeZone: MKE_TZ,
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    };
+
+    if (preset === 'short') {
+      return new Intl.DateTimeFormat('en-US', {
+        ...opts,
+        month: 'short',
+        day: 'numeric',
+      }).format(date);
+    }
+
+    if (preset === 'long') {
+      return new Intl.DateTimeFormat('en-US', {
+        ...opts,
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      }).format(date);
+    }
+
+    // full
+    return new Intl.DateTimeFormat('en-US', {
+      ...opts,
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }).format(date);
+  } catch {
+    return dateString;
+  }
+}
 
 /**
  * Format options for event dates.

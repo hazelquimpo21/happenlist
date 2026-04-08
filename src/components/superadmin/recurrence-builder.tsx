@@ -80,11 +80,10 @@ export function RecurrenceBuilder({
 
   const formatPreviewDate = (dateStr: string) => {
     const date = new Date(dateStr + 'T12:00:00');
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-    });
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'short', month: 'short', day: 'numeric',
+      timeZone: 'America/Chicago',
+    }).format(date);
   };
 
   return (

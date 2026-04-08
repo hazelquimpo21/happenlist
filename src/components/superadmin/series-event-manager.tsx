@@ -61,13 +61,11 @@ export function SeriesEventManager({ seriesId }: SeriesEventManagerProps) {
   const formatDate = (dt: string | null) => {
     if (!dt) return '';
     try {
-      return new Date(dt).toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-      });
+      return new Intl.DateTimeFormat('en-US', {
+        weekday: 'short', month: 'short', day: 'numeric',
+        hour: 'numeric', minute: '2-digit',
+        timeZone: 'America/Chicago',
+      }).format(new Date(dt));
     } catch {
       return dt;
     }
