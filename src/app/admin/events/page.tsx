@@ -58,7 +58,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
   // Build filter URL helper
   const buildFilterUrl = (params: Record<string, string | undefined>) => {
     const newParams = new URLSearchParams();
-    Object.entries({ status, source, series: seriesFilter, orderBy, orderDir, ...params }).forEach(([key, value]) => {
+    Object.entries({ status, source, q: search, series: seriesFilter, orderBy, orderDir, ...params }).forEach(([key, value]) => {
       if (value) newParams.set(key, value);
     });
     return `/admin/events?${newParams.toString()}`;
@@ -118,6 +118,11 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
         {/* Search bar */}
         <div className="mb-6">
           <form className="relative max-w-md">
+            {status && <input type="hidden" name="status" value={status} />}
+            {source && <input type="hidden" name="source" value={source} />}
+            {seriesFilter && <input type="hidden" name="series" value={seriesFilter} />}
+            {orderBy !== 'created_at' && <input type="hidden" name="orderBy" value={orderBy} />}
+            {orderDir !== 'desc' && <input type="hidden" name="orderDir" value={orderDir} />}
             <input
               type="text"
               name="q"
