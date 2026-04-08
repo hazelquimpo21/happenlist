@@ -153,6 +153,8 @@ export async function getParentEventInfo(
     `
     )
     .eq('id', parentEventId)
+    .eq('status', 'published')
+    .is('deleted_at', null)
     .single();
 
   if (error) {

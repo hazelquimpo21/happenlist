@@ -82,6 +82,7 @@ AS $$
     AND e.status = 'published'
     AND e.deleted_at IS NULL
     AND e.instance_date >= CURRENT_DATE
+    AND e.parent_event_id IS NULL
   ORDER BY similarity_score DESC, e.instance_date ASC
   LIMIT p_limit;
 $$;

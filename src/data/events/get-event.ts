@@ -68,6 +68,8 @@ export async function getEvent(
       .from('events')
       .select('title, slug, instance_date')
       .eq('id', event.parent_event_id)
+      .eq('status', 'published')
+      .is('deleted_at', null)
       .single();
 
     if (parentData) {

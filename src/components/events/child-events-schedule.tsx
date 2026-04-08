@@ -95,6 +95,44 @@ export function ChildEventsSchedule({
 
   if (events.length === 0) return null;
 
+  // Show message when filter yields no results
+  if (filteredEvents.length === 0) {
+    return (
+      <div className="space-y-6">
+        {groups.length > 1 && (
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setActiveGroup(null)}
+              className="px-3 py-1.5 rounded-full text-sm font-medium bg-sand/60 text-stone hover:bg-sand transition-colors"
+            >
+              All
+            </button>
+            {groups.map((group) => (
+              <button
+                key={group}
+                onClick={() => setActiveGroup(group)}
+                className={cn(
+                  'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+                  activeGroup === group
+                    ? 'text-white'
+                    : 'bg-sand/60 text-stone hover:bg-sand'
+                )}
+                style={
+                  activeGroup === group
+                    ? { backgroundColor: categoryColor.accent }
+                    : undefined
+                }
+              >
+                {group}
+              </button>
+            ))}
+          </div>
+        )}
+        <p className="text-body text-stone text-center py-8">No events match this filter.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Filter pills (only if there are groups) */}
