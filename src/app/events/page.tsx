@@ -12,6 +12,7 @@ import { Container, Breadcrumbs } from '@/components/layout';
 import { EventGrid } from '@/components/events';
 import { getEvents } from '@/data/events';
 import { getCategories, getCategoryBySlug } from '@/data/categories';
+import { getMembershipOrgs } from '@/data/membership';
 import { GOOD_FOR_TAGS, getGoodForTag } from '@/types';
 import { getCategoryColor } from '@/lib/constants/category-colors';
 
@@ -36,6 +37,8 @@ interface EventsPageProps {
     noTicketsNeeded?: string;
     dropInOk?: string;
     familyFriendly?: string;
+    memberBenefits?: string;
+    membershipOrg?: string;
     page?: string;
   }>;
 }
@@ -61,6 +64,8 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const noTicketsNeeded = params.noTicketsNeeded === 'true';
   const dropInOk = params.dropInOk === 'true';
   const familyFriendly = params.familyFriendly === 'true';
+  const memberBenefits = params.memberBenefits === 'true';
+  const membershipOrg = params.membershipOrg;
 
   // Build date range if provided
   const dateRange =
@@ -68,8 +73,8 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       ? { start: params.from || '', end: params.to }
       : undefined;
 
-  // Fetch events and categories
-  const [{ events, total }, categories] = await Promise.all([
+  // Fetch events, categories, and membership orgs
+  const [{ events, total }, categories, { orgs: membershipOrgsList }] = await Promise.all([
     getEvents({
       search: params.q,
       categorySlug,
@@ -84,10 +89,13 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       noTicketsNeeded: noTicketsNeeded || undefined,
       dropInOk: dropInOk || undefined,
       familyFriendly: familyFriendly || undefined,
+      hasMemberBenefits: memberBenefits || undefined,
+      membershipOrgId: membershipOrg || undefined,
       page,
       limit: 24,
     }),
     getCategories(),
+    getMembershipOrgs({ limit: 20 }),
   ]);
 
   // Get category name if filtered
@@ -112,7 +120,8 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     (categorySlug ? 1 : 0) + (goodFor ? 1 : 0) + (isFree ? 1 : 0) +
     (vibeTag ? 1 : 0) + (noiseLevel ? 1 : 0) + (accessType ? 1 : 0) +
     (soloFriendly ? 1 : 0) + (beginnerFriendly ? 1 : 0) +
-    (noTicketsNeeded ? 1 : 0) + (dropInOk ? 1 : 0) + (familyFriendly ? 1 : 0);
+    (noTicketsNeeded ? 1 : 0) + (dropInOk ? 1 : 0) + (familyFriendly ? 1 : 0) +
+    (memberBenefits ? 1 : 0) + (membershipOrg ? 1 : 0);
 
   /**
    * Build a filter URL that preserves other active params.
@@ -131,6 +140,8 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     if (noTicketsNeeded) base.noTicketsNeeded = 'true';
     if (dropInOk) base.dropInOk = 'true';
     if (familyFriendly) base.familyFriendly = 'true';
+    if (memberBenefits) base.memberBenefits = 'true';
+    if (membershipOrg) base.membershipOrg = membershipOrg;
     // Apply overrides
     for (const [k, v] of Object.entries(overrides)) {
       if (v === null) {
@@ -266,6 +277,39 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
           );
         })}
       </div>
+
+      {/* Membership benefits filters */}
+      {membershipOrgsList.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <span className="px-2 py-2 text-body-sm text-stone font-medium">Members:</span>
+          <a
+            href={memberBenefits ? filterUrl({ memberBenefits: null }) : filterUrl({ memberBenefits: 'true' })}
+            className={`px-3 py-1.5 rounded-full text-body-sm font-semibold transition-all ${
+              memberBenefits
+                ? 'bg-amber-600 text-white shadow-sm'
+                : 'bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200'
+            }`}
+          >
+            Has Member Pricing
+          </a>
+          {membershipOrgsList.filter((o) => o.event_count > 0).slice(0, 6).map((org) => {
+            const isActive = membershipOrg === org.id;
+            return (
+              <a
+                key={org.id}
+                href={isActive ? filterUrl({ membershipOrg: null }) : filterUrl({ membershipOrg: org.id })}
+                className={`px-3 py-1.5 rounded-full text-body-sm font-medium transition-all ${
+                  isActive
+                    ? 'bg-amber-600 text-white shadow-sm'
+                    : 'border border-amber-200 text-amber-800 hover:bg-amber-100'
+                }`}
+              >
+                {org.name}
+              </a>
+            );
+          })}
+        </div>
+      )}
 
       {/* Quick toggles */}
       <div className="flex flex-wrap items-center gap-2 mb-8">

@@ -17,6 +17,30 @@ function transformToEventCard(row: Record<string, unknown>): EventCard {
   const children = row.children as { count: number }[] | null;
   const childCount = children?.[0]?.count ?? 0;
 
+  // Performers: extract top 2 by billing_order
+  const rawPerformers = row.event_performers as { role: string; billing_order: number; performer: { name: string } }[] | null;
+  const sortedPerformers = rawPerformers
+    ? [...rawPerformers].sort((a, b) => a.billing_order - b.billing_order).slice(0, 2)
+    : [];
+  const performers = sortedPerformers.map((ep) => ({
+    name: ep.performer?.name ?? '',
+    role: ep.role,
+  }));
+
+  // Membership benefits: detect presence and pick best label for card badge
+  const rawBenefits = row.event_membership_benefits as { benefit_type: string; member_price: number | null; benefit_details: string | null }[] | null;
+  const hasMemberBenefits = !!rawBenefits && rawBenefits.length > 0;
+  let memberBenefitLabel: string | null = null;
+  if (hasMemberBenefits && rawBenefits) {
+    const free = rawBenefits.find((b) => b.benefit_type === 'free');
+    if (free) {
+      memberBenefitLabel = 'Free for members';
+    } else {
+      const priced = rawBenefits.find((b) => b.benefit_type === 'member_price');
+      memberBenefitLabel = priced?.member_price ? `$${priced.member_price} members` : 'Member pricing';
+    }
+  }
+
   return {
     id: row.id as string,
     title: row.title as string,
@@ -48,6 +72,11 @@ function transformToEventCard(row: Record<string, unknown>): EventCard {
     // Parent event fields
     parent_event_id: row.parent_event_id as string | null ?? null,
     child_event_count: childCount > 0 ? childCount : undefined,
+    // Performers (top 2 for card display)
+    performers: performers.length > 0 ? performers : undefined,
+    // Membership benefit info for card badges
+    has_member_benefits: hasMemberBenefits || undefined,
+    member_benefit_label: memberBenefitLabel,
   };
 }
 
@@ -81,6 +110,8 @@ export async function getEvents(
     noiseLevel,
     accessType,
     excludeMembership,
+    hasMemberBenefits,
+    membershipOrgId,
     energyMin,
     energyMax,
     formalityMax,
@@ -122,7 +153,9 @@ export async function getEvents(
       parent_event_id,
       category:categories(name, slug),
       location:locations(name, slug),
-      children:events!parent_event_id(count)
+      children:events!parent_event_id(count),
+      event_performers(role, billing_order, performer:performers(name)),
+      event_membership_benefits(benefit_type, member_price, benefit_details)
     `,
       { count: 'exact' }
     )
@@ -229,6 +262,24 @@ export async function getEvents(
 
   if (familyFriendly) {
     query = query.eq('is_family_friendly', true);
+  }
+
+  // Membership benefit filters — requires subquery to get event IDs
+  if (hasMemberBenefits || membershipOrgId) {
+    let benefitQuery = supabase
+      .from('event_membership_benefits')
+      .select('event_id');
+    if (membershipOrgId) {
+      benefitQuery = benefitQuery.eq('membership_org_id', membershipOrgId);
+    }
+    const { data: benefitRows } = await benefitQuery;
+    const eventIds = benefitRows?.map((r) => (r as { event_id: string }).event_id) ?? [];
+    if (eventIds.length > 0) {
+      query = query.in('id', eventIds);
+    } else {
+      // No events match — return empty
+      return { events: [], total: 0 };
+    }
   }
 
   // Apply sorting

@@ -29,6 +29,7 @@ import {
   Mic2,
   Shield,
   DoorOpen,
+  CreditCard,
 } from 'lucide-react';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { Button } from '@/components/ui';
@@ -43,7 +44,7 @@ import { getSeriesById } from '@/data/series';
 import { checkSingleHeart } from '@/data/user';
 import { getSession, isSuperAdmin } from '@/lib/auth';
 import { parseEventSlug, buildVenueUrl, buildOrganizerUrl, getBestImageUrl, getChildEventLabel } from '@/lib/utils';
-import { formatAgeRange, getGoodForTags } from '@/types';
+import { formatAgeRange, getGoodForTags, getPerformerRoleLabel, getBenefitConfig } from '@/types';
 import { formatEventDate, formatDate, formatTime } from '@/lib/utils/dates';
 import { getCategoryColor } from '@/lib/constants/category-colors';
 
@@ -367,13 +368,34 @@ export default async function EventPage({ params }: EventPageProps) {
             </p>
           )}
 
-          {/* Talent / performer line */}
-          {event.talent_name && (
+          {/* Performer line — from linked entities, or fallback to talent_name */}
+          {event.event_performers && event.event_performers.length > 0 ? (
+            <p className="mt-2 text-base md:text-lg text-stone flex items-center gap-2">
+              <Mic2 className="w-4 h-4 flex-shrink-0" style={{ color: categoryColor.accent }} />
+              <span>
+                ft.{' '}
+                {event.event_performers.slice(0, 3).map((ep, i) => (
+                  <span key={ep.id}>
+                    {i > 0 && ', '}
+                    <Link
+                      href={`/performer/${ep.performer.slug}`}
+                      className="font-semibold text-charcoal hover:text-coral transition-colors"
+                    >
+                      {ep.performer.name}
+                    </Link>
+                  </span>
+                ))}
+                {event.event_performers.length > 3 && (
+                  <span className="text-stone"> +{event.event_performers.length - 3} more</span>
+                )}
+              </span>
+            </p>
+          ) : event.talent_name ? (
             <p className="mt-2 text-base md:text-lg text-stone flex items-center gap-2">
               <Mic2 className="w-4 h-4 flex-shrink-0" style={{ color: categoryColor.accent }} />
               <span>feat. <span className="font-semibold text-charcoal">{event.talent_name}</span></span>
             </p>
-          )}
+          ) : null}
 
           {/* One-line summary */}
           {event.short_description && (
@@ -502,8 +524,92 @@ export default async function EventPage({ params }: EventPageProps) {
               </div>
             )}
 
-            {/* Talent / Performer Bio */}
-            {event.talent_name && event.talent_bio && (
+            {/* Performers Section — linked entities with rich display */}
+            {event.event_performers && event.event_performers.length > 0 ? (
+              <div
+                className="p-6 rounded-xl border"
+                style={{
+                  borderColor: `${categoryColor.accent}25`,
+                  backgroundColor: `${categoryColor.accent}06`,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <Mic2 className="w-5 h-5" style={{ color: categoryColor.accent }} />
+                  <h2 className="font-display text-h4 text-charcoal">
+                    {event.event_performers.length === 1 ? 'Featured Artist' : 'Lineup'}
+                  </h2>
+                </div>
+                <div className="space-y-4">
+                  {event.event_performers.map((ep) => {
+                    const isHeadliner = ep.role === 'headliner' || ep.billing_order === 1;
+                    return (
+                      <div
+                        key={ep.id}
+                        className={`flex items-start gap-4 ${isHeadliner ? '' : 'pl-2'}`}
+                      >
+                        {/* Performer image or placeholder */}
+                        <Link
+                          href={`/performer/${ep.performer.slug}`}
+                          className="flex-shrink-0"
+                        >
+                          {ep.performer.image_url ? (
+                            <Image
+                              src={ep.performer.image_url}
+                              alt={ep.performer.name}
+                              width={isHeadliner ? 64 : 48}
+                              height={isHeadliner ? 64 : 48}
+                              className="rounded-full object-cover"
+                            />
+                          ) : (
+                            <div
+                              className={`rounded-full flex items-center justify-center ${
+                                isHeadliner ? 'w-16 h-16' : 'w-12 h-12'
+                              }`}
+                              style={{ backgroundColor: `${categoryColor.accent}15` }}
+                            >
+                              <Mic2
+                                className={isHeadliner ? 'w-7 h-7' : 'w-5 h-5'}
+                                style={{ color: categoryColor.accent }}
+                              />
+                            </div>
+                          )}
+                        </Link>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Link
+                              href={`/performer/${ep.performer.slug}`}
+                              className={`font-semibold text-charcoal hover:text-coral transition-colors ${
+                                isHeadliner ? 'text-lg' : 'text-base'
+                              }`}
+                            >
+                              {ep.performer.name}
+                            </Link>
+                            <span
+                              className="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide"
+                              style={{
+                                backgroundColor: `${categoryColor.accent}15`,
+                                color: categoryColor.accent,
+                              }}
+                            >
+                              {getPerformerRoleLabel(ep.role)}
+                            </span>
+                          </div>
+                          {ep.performer.genre && (
+                            <p className="text-xs text-stone mt-0.5">{ep.performer.genre}</p>
+                          )}
+                          {isHeadliner && ep.performer.bio && (
+                            <p className="text-sm text-charcoal/80 mt-1 leading-relaxed line-clamp-3">
+                              {ep.performer.bio}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : event.talent_name && event.talent_bio ? (
+              /* Fallback: legacy talent_name/talent_bio fields */
               <div
                 className="p-6 rounded-xl border"
                 style={{
@@ -521,7 +627,68 @@ export default async function EventPage({ params }: EventPageProps) {
                   {event.talent_bio}
                 </p>
               </div>
-            )}
+            ) : null}
+
+            {/* Membership Benefits Section — linked orgs with benefit badges */}
+            {event.event_membership_benefits && event.event_membership_benefits.length > 0 ? (
+              <div className="p-6 rounded-xl border border-amber-200 bg-amber-50/50">
+                <div className="flex items-center gap-2 mb-4">
+                  <CreditCard className="w-5 h-5 text-amber-700" />
+                  <h2 className="font-display text-h4 text-charcoal">
+                    Member Benefits
+                  </h2>
+                </div>
+                <div className="space-y-3">
+                  {event.event_membership_benefits.map((emb) => {
+                    const config = getBenefitConfig(emb.benefit_type);
+                    return (
+                      <div key={emb.id} className="flex items-start gap-3 p-3 bg-white rounded-lg border border-amber-100">
+                        {/* Org logo */}
+                        <Link
+                          href={`/membership/${emb.membership_organization.slug}`}
+                          className="flex-shrink-0"
+                        >
+                          {emb.membership_organization.logo_url ? (
+                            <Image
+                              src={emb.membership_organization.logo_url}
+                              alt={emb.membership_organization.name}
+                              width={40}
+                              height={40}
+                              className="rounded-lg object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                              <Shield className="w-5 h-5 text-amber-700" />
+                            </div>
+                          )}
+                        </Link>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Link
+                              href={`/membership/${emb.membership_organization.slug}`}
+                              className="font-medium text-charcoal hover:text-coral transition-colors text-sm"
+                            >
+                              {emb.membership_organization.name}
+                            </Link>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${config.bgColor} ${config.color}`}>
+                              {emb.benefit_type === 'member_price' && emb.member_price
+                                ? `$${emb.member_price} member price`
+                                : config.label}
+                            </span>
+                          </div>
+                          {emb.benefit_details && (
+                            <p className="text-xs text-stone mt-1">{emb.benefit_details}</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : event.membership_required && event.membership_details ? (
+              /* Fallback: legacy membership text in "How to Attend" section handles this */
+              null
+            ) : null}
 
             {/* About This Event (editorial description) */}
             {event.description && (

@@ -19,6 +19,28 @@ export type { Venue, VenueCard, VenueWithCount } from './venue';
 export type { Organizer, OrganizerCard, SocialLinks } from './organizer';
 export type { Category, CategoryWithCount } from './category';
 
+// Performer types
+export type {
+  Performer,
+  EventPerformer,
+  PerformerWithCount,
+  PerformerCard,
+} from './performer';
+export { PERFORMER_ROLE_LABELS, getPerformerRoleLabel } from './performer';
+
+// Membership types
+export type {
+  MembershipOrganization,
+  EventMembershipBenefit,
+  MembershipOrgWithCount,
+  MembershipOrgCard,
+} from './membership';
+export {
+  BENEFIT_TYPE_CONFIG,
+  getBenefitConfig,
+  formatBenefitShort,
+} from './membership';
+
 // Series types (Phase 2)
 export type {
   SeriesRow,

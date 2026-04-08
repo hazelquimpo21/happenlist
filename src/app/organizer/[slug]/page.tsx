@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Image from 'next/image';
+import Link from 'next/link';
 import {
   User,
   Globe,
@@ -23,6 +24,7 @@ import { OrganizerJsonLd } from '@/components/seo';
 import { SuperadminBar } from '@/components/admin-anywhere';
 import { getOrganizer } from '@/data/organizers';
 import { getEvents } from '@/data/events';
+import { getMembershipOrgs } from '@/data/membership';
 import { getSession, isSuperAdmin } from '@/lib/auth';
 
 interface OrganizerPageProps {
@@ -78,11 +80,18 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
   // Check if current user is superadmin
   const userIsSuperAdmin = session ? isSuperAdmin(session.email) : false;
 
-  // Fetch events by this organizer
-  const { events, total } = await getEvents({
-    organizerId: organizer.id,
-    limit: 12,
-  });
+  // Fetch events by this organizer + check if linked membership org exists
+  const [{ events, total }, membershipOrgsResult] = await Promise.all([
+    getEvents({ organizerId: organizer.id, limit: 12 }),
+    organizer.is_membership_org
+      ? getMembershipOrgs({ limit: 100 })
+      : Promise.resolve({ orgs: [], total: 0 }),
+  ]);
+
+  // Find the membership org linked to this organizer
+  const linkedMembershipOrg = organizer.is_membership_org
+    ? membershipOrgsResult.orgs.find((o) => o.name === organizer.name) || null
+    : null;
 
   console.log('✅ [OrganizerPage] Organizer loaded:', organizer.name);
 
@@ -236,6 +245,21 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
                 </p>
               </div>
             </div>
+
+            {/* Membership benefits link */}
+            {linkedMembershipOrg && (
+              <Link
+                href={`/membership/${linkedMembershipOrg.slug}`}
+                className="block p-5 bg-amber-50 rounded-lg border border-amber-200 hover:shadow-card-hover transition-shadow"
+              >
+                <p className="font-semibold text-amber-800 mb-1">Membership Benefits</p>
+                <p className="text-xs text-amber-700">
+                  {linkedMembershipOrg.event_count > 0
+                    ? `${linkedMembershipOrg.event_count} events with member perks`
+                    : 'See what your membership gets you'}
+                </p>
+              </Link>
+            )}
           </div>
         </div>
       </div>

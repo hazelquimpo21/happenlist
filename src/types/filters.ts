@@ -62,6 +62,10 @@ export interface EventFilters {
   dropInOk?: boolean;
   /** Filter by family-friendly events. */
   familyFriendly?: boolean;
+  /** Filter to only events with any membership benefits. */
+  hasMemberBenefits?: boolean;
+  /** Filter to events with benefits from a specific membership org. */
+  membershipOrgId?: string;
 }
 
 /**

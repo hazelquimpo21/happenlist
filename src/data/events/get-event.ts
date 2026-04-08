@@ -42,7 +42,15 @@ export async function getEvent(
         id, name, slug, city, state, address_line, address_line_2,
         postal_code, latitude, longitude, venue_type, website_url
       ),
-      organizer:organizers(id, name, slug, logo_url, description, website_url)
+      organizer:organizers(id, name, slug, logo_url, description, website_url),
+      event_performers(
+        id, performer_id, role, billing_order,
+        performer:performers(id, name, slug, bio, genre, image_url, website_url)
+      ),
+      event_membership_benefits(
+        id, membership_org_id, benefit_type, benefit_details, member_price,
+        membership_organization:membership_organizations(id, name, slug, description, website_url, logo_url)
+      )
     `
     )
     .eq('slug', slug)
@@ -61,6 +69,11 @@ export async function getEvent(
   }
 
   const event = data as EventWithDetails;
+
+  // Sort performers by billing_order
+  if (event.event_performers) {
+    event.event_performers.sort((a, b) => a.billing_order - b.billing_order);
+  }
 
   // If this is a child event, fetch parent title + slug + instance_date for breadcrumbs
   if (event.parent_event_id) {

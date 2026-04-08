@@ -13,8 +13,10 @@ import { SearchBar } from '@/components/search';
 import { getEvents } from '@/data/events';
 import { getVenues } from '@/data/venues';
 import { getOrganizers } from '@/data/organizers';
+import { getPerformers } from '@/data/performers';
 import Link from 'next/link';
-import { MapPin, User, Calendar } from 'lucide-react';
+import Image from 'next/image';
+import { MapPin, User, Calendar, Mic2 } from 'lucide-react';
 import { buildVenueUrl, buildOrganizerUrl } from '@/lib/utils';
 
 export const metadata: Metadata = {
@@ -74,17 +76,18 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   // Fetch results from all sources in parallel
-  const [eventsResult, venuesResult, organizersResult] = await Promise.all([
+  const [eventsResult, venuesResult, organizersResult, performersResult] = await Promise.all([
     getEvents({ search: query, limit: 12 }),
     getVenues({ search: query, limit: 6 }),
     getOrganizers({ search: query, limit: 6 }),
+    getPerformers({ search: query, limit: 6 }),
   ]);
 
   const totalResults =
-    eventsResult.total + venuesResult.total + organizersResult.total;
+    eventsResult.total + venuesResult.total + organizersResult.total + performersResult.total;
 
   console.log(
-    `✅ [SearchPage] Found ${totalResults} results (${eventsResult.total} events, ${venuesResult.total} venues, ${organizersResult.total} organizers)`
+    `✅ [SearchPage] Found ${totalResults} results (${eventsResult.total} events, ${venuesResult.total} venues, ${organizersResult.total} organizers, ${performersResult.total} performers)`
   );
 
   return (
@@ -136,6 +139,55 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             }
           />
           <EventGrid events={eventsResult.events} columns={4} />
+        </section>
+      )}
+
+      {/* Performers results */}
+      {performersResult.performers.length > 0 && (
+        <section className="mb-12">
+          <SectionHeader
+            title="Performers"
+            subtitle={`${performersResult.total} performers found`}
+            action={
+              performersResult.total > 6 ? (
+                <a
+                  href={`/performers?q=${encodeURIComponent(query)}`}
+                  className="text-coral hover:text-coral-dark transition-colors"
+                >
+                  View all performers
+                </a>
+              ) : undefined
+            }
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {performersResult.performers.map((performer) => (
+              <Link
+                key={performer.id}
+                href={`/performer/${performer.slug}`}
+                className="flex items-center gap-3 p-4 rounded-lg bg-warm-white border border-sand hover:shadow-card-hover transition-shadow"
+              >
+                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {performer.image_url ? (
+                    <Image
+                      src={performer.image_url}
+                      alt={performer.name}
+                      width={40}
+                      height={40}
+                      className="object-cover"
+                    />
+                  ) : (
+                    <Mic2 className="w-5 h-5 text-purple-500" />
+                  )}
+                </div>
+                <div>
+                  <p className="font-medium text-charcoal">{performer.name}</p>
+                  {performer.genre && (
+                    <p className="text-body-sm text-stone">{performer.genre}</p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
         </section>
       )}
 

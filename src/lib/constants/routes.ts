@@ -52,6 +52,18 @@ export const ROUTES = {
   organizerDashboard: '/organizer/dashboard',
 
   // -------------------------------------------------------------------------
+  // PERFORMERS
+  // -------------------------------------------------------------------------
+  performers: '/performers',
+  performerDetail: (slug: string) => `/performer/${slug}`,
+
+  // -------------------------------------------------------------------------
+  // MEMBERSHIPS
+  // -------------------------------------------------------------------------
+  memberships: '/memberships',
+  membershipDetail: (slug: string) => `/membership/${slug}`,
+
+  // -------------------------------------------------------------------------
   // SEARCH
   // -------------------------------------------------------------------------
   search: '/search',
@@ -127,6 +139,7 @@ export const NAV_ITEMS = [
   { label: 'Classes & Series', href: ROUTES.series },
   { label: 'Today', href: ROUTES.eventsToday },
   { label: 'This Weekend', href: ROUTES.eventsWeekend },
+  { label: 'Performers', href: ROUTES.performers },
   { label: 'Venues', href: ROUTES.venues },
 ] as const;
 
@@ -138,8 +151,10 @@ export const FOOTER_NAV = {
   discover: [
     { label: 'Events', href: ROUTES.events },
     { label: 'Classes & Series', href: ROUTES.series },
+    { label: 'Performers', href: ROUTES.performers },
     { label: 'Venues', href: ROUTES.venues },
     { label: 'Organizers', href: ROUTES.organizers },
+    { label: 'Memberships', href: ROUTES.memberships },
   ],
   about: [
     { label: 'About Us', href: ROUTES.about },

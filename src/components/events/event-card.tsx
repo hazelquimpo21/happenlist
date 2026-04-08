@@ -285,12 +285,16 @@ function EventCardComponent({
             {event.title}
           </h3>
 
-          {/* Talent name */}
-          {event.talent_name && (
+          {/* Performers (from linked entities) or fallback talent_name */}
+          {event.performers && event.performers.length > 0 ? (
+            <p className="text-xs text-stone mb-1 truncate">
+              ft. {event.performers.map((p) => p.name).join(', ')}
+            </p>
+          ) : event.talent_name ? (
             <p className="text-xs text-stone mb-1 truncate">
               feat. {event.talent_name}
             </p>
-          )}
+          ) : null}
 
           {/* Location + organizer */}
           {event.location_name && (
@@ -342,6 +346,17 @@ function EventCardComponent({
               <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-800">
                 <Users className="w-3 h-3" aria-hidden="true" />
                 Family Friendly
+              </span>
+            )}
+
+            {/* Membership benefit badge */}
+            {event.has_member_benefits && event.member_benefit_label && (
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                event.member_benefit_label === 'Free for members'
+                  ? 'bg-emerald-100 text-emerald-800'
+                  : 'bg-amber-100 text-amber-800'
+              }`}>
+                {event.member_benefit_label}
               </span>
             )}
           </div>

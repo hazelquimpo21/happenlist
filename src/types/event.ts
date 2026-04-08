@@ -5,6 +5,8 @@
  */
 
 import type { Database } from '@/lib/supabase/types';
+import type { EventPerformer } from './performer';
+import type { EventMembershipBenefit } from './membership';
 
 // Base types from database
 export type EventRow = Database['public']['Tables']['events']['Row'];
@@ -40,6 +42,10 @@ export interface EventWithDetails extends EventRow {
   parent_event_title?: string | null;
   parent_event_slug?: string | null;
   child_event_count?: number;
+  // Linked performers (from event_performers junction)
+  event_performers?: EventPerformer[];
+  // Linked membership benefits (from event_membership_benefits junction)
+  event_membership_benefits?: EventMembershipBenefit[];
 }
 
 /**
@@ -90,4 +96,9 @@ export interface EventCard {
   parent_event_id?: string | null;
   parent_group?: string | null;
   child_event_count?: number;
+  // Performers (max 2 for card display)
+  performers?: { name: string; role: string }[];
+  // Membership benefit summary for card badge
+  has_member_benefits?: boolean;
+  member_benefit_label?: string | null;
 }
