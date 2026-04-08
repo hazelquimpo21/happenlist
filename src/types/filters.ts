@@ -36,6 +36,32 @@ export interface EventFilters {
   excludeEventId?: string;
   /** Filter by "Good For" audience tag slug (e.g., "date_night"). */
   goodFor?: string;
+  /** Filter by vibe tag (e.g., "cozy", "hype"). Uses GIN array containment. */
+  vibeTag?: string;
+  /** Filter by subculture tag (e.g., "jazz", "craft-beer"). */
+  subculture?: string;
+  /** Filter by noise level: "quiet", "conversational", "loud", "deafening". */
+  noiseLevel?: string;
+  /** Filter by access type: "open", "ticketed", "rsvp", etc. */
+  accessType?: string;
+  /** Exclude members-only events. */
+  excludeMembership?: boolean;
+  /** Max energy level (1-5). */
+  energyMax?: number;
+  /** Min energy level (1-5). */
+  energyMin?: number;
+  /** Max formality (1-5). */
+  formalityMax?: number;
+  /** Quick toggle: solo-friendly (social_pressure <= 2). */
+  soloFriendly?: boolean;
+  /** Quick toggle: beginner-friendly (accessibility_score >= 4). */
+  beginnerFriendly?: boolean;
+  /** Quick toggle: no tickets needed. */
+  noTicketsNeeded?: boolean;
+  /** Quick toggle: drop-in OK. */
+  dropInOk?: boolean;
+  /** Filter by family-friendly events. */
+  familyFriendly?: boolean;
 }
 
 /**

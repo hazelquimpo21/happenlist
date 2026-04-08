@@ -25,3 +25,4 @@ export { EventLinks, EventLink } from './event-links';
 export { SectionHeader } from './section-header';
 export { FlyerLightbox } from './flyer-lightbox';
 export { ShareButton } from './share-button';
+export { VibeProfileSection, VibeTagPill, AccessBadge, NoiseLevelIndicator } from './vibe-profile';

@@ -321,6 +321,30 @@ export interface Database {
           is_family_friendly: boolean | null;
           // Good For audience tags (migration 20260212)
           good_for: string[];
+          // Talent / performer (migration 00010)
+          talent_name: string | null;
+          talent_bio: string | null;
+          tagline: string | null;
+          // Atmosphere scored dimensions 1-5 (migration 00010)
+          energy_level: number | null;
+          formality: number | null;
+          crowdedness: number | null;
+          social_pressure: number | null;
+          accessibility_score: number | null;
+          // Atmosphere tags & crowd profile (migration 00010)
+          vibe_tags: string[];
+          subcultures: string[];
+          noise_level: string | null;
+          expected_crowd: string | null;
+          dress_vibe: string | null;
+          // Access & attendance (migration 00011)
+          access_type: string | null;
+          attendance_mode: string | null;
+          membership_required: boolean;
+          membership_details: string | null;
+          // Organizer name/venue flag (migration 00011)
+          organizer_name: string | null;
+          organizer_is_venue: boolean;
           created_at: string;
           updated_at: string;
           published_at: string | null;
@@ -421,6 +445,30 @@ export interface Database {
           is_family_friendly?: boolean | null;
           // Good For audience tags (migration 20260212)
           good_for?: string[];
+          // Talent / performer (migration 00010)
+          talent_name?: string | null;
+          talent_bio?: string | null;
+          tagline?: string | null;
+          // Atmosphere scored dimensions 1-5 (migration 00010)
+          energy_level?: number | null;
+          formality?: number | null;
+          crowdedness?: number | null;
+          social_pressure?: number | null;
+          accessibility_score?: number | null;
+          // Atmosphere tags & crowd profile (migration 00010)
+          vibe_tags?: string[];
+          subcultures?: string[];
+          noise_level?: string | null;
+          expected_crowd?: string | null;
+          dress_vibe?: string | null;
+          // Access & attendance (migration 00011)
+          access_type?: string | null;
+          attendance_mode?: string | null;
+          membership_required?: boolean;
+          membership_details?: string | null;
+          // Organizer name/venue flag (migration 00011)
+          organizer_name?: string | null;
+          organizer_is_venue?: boolean;
           created_at?: string;
           updated_at?: string;
           published_at?: string | null;
@@ -521,6 +569,30 @@ export interface Database {
           is_family_friendly?: boolean | null;
           // Good For audience tags (migration 20260212)
           good_for?: string[];
+          // Talent / performer (migration 00010)
+          talent_name?: string | null;
+          talent_bio?: string | null;
+          tagline?: string | null;
+          // Atmosphere scored dimensions 1-5 (migration 00010)
+          energy_level?: number | null;
+          formality?: number | null;
+          crowdedness?: number | null;
+          social_pressure?: number | null;
+          accessibility_score?: number | null;
+          // Atmosphere tags & crowd profile (migration 00010)
+          vibe_tags?: string[];
+          subcultures?: string[];
+          noise_level?: string | null;
+          expected_crowd?: string | null;
+          dress_vibe?: string | null;
+          // Access & attendance (migration 00011)
+          access_type?: string | null;
+          attendance_mode?: string | null;
+          membership_required?: boolean;
+          membership_details?: string | null;
+          // Organizer name/venue flag (migration 00011)
+          organizer_name?: string | null;
+          organizer_is_venue?: boolean;
           created_at?: string;
           updated_at?: string;
           published_at?: string | null;

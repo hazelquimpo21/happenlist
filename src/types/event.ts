@@ -69,4 +69,17 @@ export interface EventCard {
   series_type?: string | null;
   series_sequence?: number | null;
   is_series_instance?: boolean;
+  // Descriptions
+  short_description?: string | null;
+  tagline?: string | null;
+  // Talent
+  talent_name?: string | null;
+  // Access & attendance
+  access_type?: string | null;
+  noise_level?: string | null;
+  // Vibe tags (up to 2 shown on cards)
+  vibe_tags?: string[];
+  // Organizer
+  organizer_name?: string | null;
+  organizer_is_venue?: boolean;
 }

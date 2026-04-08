@@ -36,6 +36,16 @@ function transformToEventCard(row: Record<string, unknown>): EventCard {
     category_slug: category?.slug as string | null ?? null,
     location_name: location?.name as string | null ?? null,
     location_slug: location?.slug as string | null ?? null,
+    age_restriction: row.age_restriction as string | null ?? null,
+    is_family_friendly: row.is_family_friendly as boolean | null ?? null,
+    short_description: row.short_description as string | null ?? null,
+    tagline: row.tagline as string | null ?? null,
+    talent_name: row.talent_name as string | null ?? null,
+    access_type: row.access_type as string | null ?? null,
+    noise_level: row.noise_level as string | null ?? null,
+    vibe_tags: (row.vibe_tags as string[] | null) ?? [],
+    organizer_name: row.organizer_name as string | null ?? null,
+    organizer_is_venue: (row.organizer_is_venue as boolean | null) ?? false,
   };
 }
 
@@ -61,6 +71,10 @@ export async function getFeaturedEvents(
       id, title, slug, start_datetime, instance_date,
       image_url, thumbnail_url, price_type, price_low, price_high,
       is_free, heart_count,
+      short_description, tagline, talent_name,
+      access_type, noise_level, vibe_tags,
+      organizer_name, organizer_is_venue,
+      age_restriction, is_family_friendly,
       category:categories(name, slug),
       location:locations(name, slug)
     `

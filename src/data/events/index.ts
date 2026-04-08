@@ -7,3 +7,4 @@
 export { getEvents } from './get-events';
 export { getEvent } from './get-event';
 export { getFeaturedEvents } from './get-featured-events';
+export { getSimilarEvents } from './get-similar-events';

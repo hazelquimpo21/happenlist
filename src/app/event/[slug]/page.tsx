@@ -26,16 +26,19 @@ import {
   Quote,
   Baby,
   Users,
+  Mic2,
+  Shield,
+  DoorOpen,
 } from 'lucide-react';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { Button } from '@/components/ui';
-import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox, ShareButton } from '@/components/events';
+import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox, ShareButton, VibeProfileSection, AccessBadge } from '@/components/events';
 import { HeartButton } from '@/components/hearts';
 import { SeriesLinkBadge } from '@/components/series';
 import { EventJsonLd } from '@/components/seo';
 import { AdminToolbar, type AdminToolbarEvent } from '@/components/admin-anywhere';
 import { VenueMap } from '@/components/maps';
-import { getEvent, getEvents } from '@/data/events';
+import { getEvent, getSimilarEvents } from '@/data/events';
 import { getSeriesById } from '@/data/series';
 import { checkSingleHeart } from '@/data/user';
 import { getSession, isSuperAdmin } from '@/lib/auth';
@@ -127,11 +130,18 @@ export default async function EventPage({ params }: EventPageProps) {
     console.log('🛡️ [EventPage] Superadmin detected, showing admin toolbar');
   }
 
-  // Fetch related events, heart status, and series info in parallel
-  const [{ events: relatedEvents }, isHearted, seriesInfo] = await Promise.all([
-    getEvents({
-      excludeEventId: event.id,
-      limit: 4,
+  // Fetch related events (vibe-scored), heart status, and series info in parallel
+  const [similarEvents, isHearted, seriesInfo] = await Promise.all([
+    getSimilarEvents({
+      eventId: event.id,
+      categoryId: event.category?.id ?? null,
+      vibeTags: event.vibe_tags ?? [],
+      subcultures: event.subcultures ?? [],
+      energyLevel: event.energy_level ?? null,
+      formality: event.formality ?? null,
+      crowdedness: event.crowdedness ?? null,
+      accessType: event.access_type ?? null,
+      limit: 6,
     }),
     session ? checkSingleHeart(session.id, event.id) : Promise.resolve(false),
     event.series_id ? getSeriesById(event.series_id) : Promise.resolve(null),
@@ -301,6 +311,14 @@ export default async function EventPage({ params }: EventPageProps) {
             {event.title}
           </h1>
 
+          {/* Talent / performer line */}
+          {event.talent_name && (
+            <p className="mt-2 text-base md:text-lg text-stone flex items-center gap-2">
+              <Mic2 className="w-4 h-4 flex-shrink-0" style={{ color: categoryColor.accent }} />
+              <span>feat. <span className="font-semibold text-charcoal">{event.talent_name}</span></span>
+            </p>
+          )}
+
           {/* One-line summary */}
           {event.short_description && (
             <p className="mt-3 text-lg md:text-xl text-stone leading-relaxed">
@@ -428,6 +446,39 @@ export default async function EventPage({ params }: EventPageProps) {
               </div>
             )}
 
+            {/* Talent / Performer Bio */}
+            {event.talent_name && event.talent_bio && (
+              <div
+                className="p-6 rounded-xl border"
+                style={{
+                  borderColor: `${categoryColor.accent}25`,
+                  backgroundColor: `${categoryColor.accent}06`,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <Mic2 className="w-5 h-5" style={{ color: categoryColor.accent }} />
+                  <h2 className="font-display text-h4 text-charcoal">
+                    Featured: {event.talent_name}
+                  </h2>
+                </div>
+                <p className="text-charcoal/80 leading-relaxed">
+                  {event.talent_bio}
+                </p>
+              </div>
+            )}
+
+            {/* About This Event (editorial description) */}
+            {event.description && (
+              <div>
+                <h2 className="font-display text-h4 text-charcoal mb-3">
+                  About This Event
+                </h2>
+                <div className="prose-event text-charcoal/85 leading-relaxed whitespace-pre-wrap">
+                  {event.description}
+                </div>
+              </div>
+            )}
+
             {/* Organizer Description (Verbatim) */}
             {event.organizer_description && (
               <div className="p-6 bg-warm-white rounded-xl border border-sand">
@@ -442,6 +493,50 @@ export default async function EventPage({ params }: EventPageProps) {
                 </div>
               </div>
             )}
+
+            {/* Access & Practical Info */}
+            {(event.access_type || event.attendance_mode || event.membership_required) && (
+              <div className="p-5 bg-warm-white rounded-xl border border-sand">
+                <div className="flex items-center gap-2 mb-4">
+                  <DoorOpen className="w-5 h-5" style={{ color: categoryColor.accent }} />
+                  <h2 className="font-display text-h4 text-charcoal">
+                    How to Attend
+                  </h2>
+                </div>
+                <div className="space-y-3">
+                  {event.access_type && (
+                    <div className="flex items-start gap-3">
+                      <Shield className="w-4 h-4 mt-0.5 text-stone" />
+                      <div>
+                        <AccessBadge accessType={event.access_type} isFree={event.is_free} />
+                        {event.access_type === 'ticketed' && event.ticket_url && (
+                          <p className="text-xs text-stone mt-1">Tickets available online</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {event.attendance_mode && (
+                    <div className="flex items-start gap-3">
+                      <Users className="w-4 h-4 mt-0.5 text-stone" />
+                      <p className="text-sm text-charcoal">
+                        {event.attendance_mode === 'drop_in' && 'Drop in anytime — no commitment needed'}
+                        {event.attendance_mode === 'registered' && 'Registration required — must sign up'}
+                        {event.attendance_mode === 'hybrid' && 'Drop-in or register — either works'}
+                      </p>
+                    </div>
+                  )}
+                  {event.membership_required && event.membership_details && (
+                    <div className="flex items-start gap-3">
+                      <Shield className="w-4 h-4 mt-0.5 text-stone" />
+                      <p className="text-sm text-charcoal">{event.membership_details}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Vibe Profile — "What's It Actually Like?" */}
+            <VibeProfileSection event={event} accentColor={categoryColor.accent} />
 
             {/* Price Details Section */}
             {event.price_details && (
@@ -636,7 +731,7 @@ export default async function EventPage({ params }: EventPageProps) {
               </div>
 
               {/* Organizer card */}
-              {event.organizer && (
+              {event.organizer && !event.organizer_is_venue && (
                 <div className="p-4 bg-warm-white rounded-xl border border-sand">
                   <h3 className="text-body-sm font-medium text-stone uppercase tracking-wide mb-3">
                     Presented By
@@ -703,10 +798,10 @@ export default async function EventPage({ params }: EventPageProps) {
         </div>
 
         {/* Related events */}
-        {relatedEvents.length > 0 && (
+        {similarEvents.length > 0 && (
           <section className="mt-16">
-            <SectionHeader title="You Might Also Like" />
-            <EventGrid events={relatedEvents} columns={4} />
+            <SectionHeader title="Events Like This" />
+            <EventGrid events={similarEvents} columns={4} />
           </section>
         )}
       </Container>

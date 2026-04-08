@@ -36,6 +36,7 @@ import { cn } from '@/lib/utils';
 import { getCategoryColor } from '@/lib/constants/category-colors';
 import { EventImage } from './event-image';
 import { HeartButtonCompact } from '@/components/hearts';
+import { VibeTagPill, AccessBadge, NoiseLevelIndicator } from './vibe-profile';
 import type { EventCard as EventCardType } from '@/types';
 
 // =============================================================================
@@ -126,13 +127,26 @@ function formatEventDate(dateString: string): string {
 function formatPrice(event: EventCardType): string {
   if (event.is_free) return 'Free';
 
-  if (event.price_low && event.price_high && event.price_low !== event.price_high) {
-    return `$${event.price_low} - $${event.price_high}`;
+  switch (event.price_type) {
+    case 'fixed':
+      return event.price_low ? `$${event.price_low}` : 'See details';
+    case 'range':
+      if (event.price_low && event.price_high) return `$${event.price_low} – $${event.price_high}`;
+      if (event.price_low) return `From $${event.price_low}`;
+      return 'See details';
+    case 'donation':
+      return event.price_low ? `$${event.price_low}+ PWYC` : 'Pay What You Can';
+    case 'per_session':
+      return event.price_low ? `$${event.price_low}/session` : 'See details';
+    case 'varies':
+      return 'Varies';
+    default:
+      if (event.price_low && event.price_high && event.price_low !== event.price_high) {
+        return `$${event.price_low} – $${event.price_high}`;
+      }
+      if (event.price_low) return `$${event.price_low}`;
+      return 'See details';
   }
-
-  if (event.price_low) return `$${event.price_low}`;
-
-  return 'See details';
 }
 
 // =============================================================================
@@ -257,31 +271,66 @@ function EventCardComponent({
             {event.title}
           </h3>
 
-          {/* Location */}
+          {/* Talent name */}
+          {event.talent_name && (
+            <p className="text-xs text-stone mb-1 truncate">
+              feat. {event.talent_name}
+            </p>
+          )}
+
+          {/* Location + organizer */}
           {event.location_name && (
-            <p className="text-sm text-stone mb-2 flex items-center gap-1">
+            <p className="text-sm text-stone mb-1 flex items-center gap-1">
               <MapPin className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
               <span className="truncate">{event.location_name}</span>
             </p>
           )}
-
-          {/* Age / audience badges */}
-          {(event.age_restriction || event.is_family_friendly) && (
-            <div className="flex flex-wrap gap-1 mb-2">
-              {event.age_restriction && (
-                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                  <Baby className="w-3 h-3" aria-hidden="true" />
-                  {event.age_restriction}
-                </span>
-              )}
-              {event.is_family_friendly && (
-                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                  <Users className="w-3 h-3" aria-hidden="true" />
-                  Family Friendly
-                </span>
-              )}
-            </div>
+          {event.organizer_name && !event.organizer_is_venue && (
+            <p className="text-xs text-stone/80 mb-1.5 truncate">
+              by {event.organizer_name}
+            </p>
           )}
+
+          {/* Short description teaser */}
+          {event.short_description && variant !== 'compact' && (
+            <p className="text-xs text-stone/90 mb-2 line-clamp-2 leading-relaxed">
+              {event.short_description}
+            </p>
+          )}
+
+          {/* Badges row: access, vibe tags, noise, age, family */}
+          <div className="flex flex-wrap items-center gap-1 mb-2">
+            {/* Access badge */}
+            {event.access_type && (
+              <AccessBadge accessType={event.access_type} isFree={event.is_free} />
+            )}
+
+            {/* Vibe tag pills (max 2) */}
+            {event.vibe_tags && event.vibe_tags.slice(0, 2).map((tag) => (
+              <VibeTagPill key={tag} tag={tag} size="xs" />
+            ))}
+
+            {/* Noise level */}
+            {event.noise_level && (
+              <NoiseLevelIndicator level={event.noise_level} variant="icon" />
+            )}
+
+            {/* Age restriction */}
+            {event.age_restriction && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-orange-100 text-orange-800">
+                <Baby className="w-3 h-3" aria-hidden="true" />
+                {event.age_restriction}
+              </span>
+            )}
+
+            {/* Family friendly */}
+            {event.is_family_friendly && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-800">
+                <Users className="w-3 h-3" aria-hidden="true" />
+                Family Friendly
+              </span>
+            )}
+          </div>
 
           {/* Price */}
           {event.is_free ? (

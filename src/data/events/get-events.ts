@@ -33,6 +33,15 @@ function transformToEventCard(row: Record<string, unknown>): EventCard {
     location_slug: location?.slug as string | null ?? null,
     age_restriction: row.age_restriction as string | null ?? null,
     is_family_friendly: row.is_family_friendly as boolean | null ?? null,
+    // New fields (migrations 00010, 00011)
+    short_description: row.short_description as string | null ?? null,
+    tagline: row.tagline as string | null ?? null,
+    talent_name: row.talent_name as string | null ?? null,
+    access_type: row.access_type as string | null ?? null,
+    noise_level: row.noise_level as string | null ?? null,
+    vibe_tags: (row.vibe_tags as string[] | null) ?? [],
+    organizer_name: row.organizer_name as string | null ?? null,
+    organizer_is_venue: (row.organizer_is_venue as boolean | null) ?? false,
   };
 }
 
@@ -61,6 +70,19 @@ export async function getEvents(
     locationId,
     organizerId,
     excludeEventId,
+    vibeTag,
+    subculture,
+    noiseLevel,
+    accessType,
+    excludeMembership,
+    energyMin,
+    energyMax,
+    formalityMax,
+    soloFriendly,
+    beginnerFriendly,
+    noTicketsNeeded,
+    dropInOk,
+    familyFriendly,
     orderBy = 'date-asc',
     page = 1,
     limit = 24,
@@ -87,6 +109,10 @@ export async function getEvents(
       id, title, slug, start_datetime, instance_date,
       image_url, thumbnail_url, price_type, price_low, price_high,
       is_free, heart_count, good_for,
+      short_description, tagline, talent_name,
+      access_type, noise_level, vibe_tags,
+      organizer_name, organizer_is_venue,
+      age_restriction, is_family_friendly,
       category:categories(name, slug),
       location:locations(name, slug)
     `,
@@ -141,6 +167,59 @@ export async function getEvents(
 
   if (excludeEventId) {
     query = query.neq('id', excludeEventId);
+  }
+
+  // New atmosphere/access filters (migrations 00010, 00011)
+  if (vibeTag) {
+    query = query.contains('vibe_tags', [vibeTag]);
+  }
+
+  if (subculture) {
+    query = query.contains('subcultures', [subculture]);
+  }
+
+  if (noiseLevel) {
+    query = query.eq('noise_level', noiseLevel);
+  }
+
+  if (accessType) {
+    query = query.eq('access_type', accessType);
+  }
+
+  if (excludeMembership) {
+    query = query.eq('membership_required', false);
+  }
+
+  if (energyMin) {
+    query = query.gte('energy_level', energyMin);
+  }
+
+  if (energyMax) {
+    query = query.lte('energy_level', energyMax);
+  }
+
+  if (formalityMax) {
+    query = query.lte('formality', formalityMax);
+  }
+
+  if (soloFriendly) {
+    query = query.lte('social_pressure', 2);
+  }
+
+  if (beginnerFriendly) {
+    query = query.gte('accessibility_score', 4);
+  }
+
+  if (noTicketsNeeded) {
+    query = query.or('access_type.in.(open,pay_at_door),is_free.eq.true');
+  }
+
+  if (dropInOk) {
+    query = query.or('attendance_mode.in.(drop_in,hybrid),attendance_mode.is.null');
+  }
+
+  if (familyFriendly) {
+    query = query.eq('is_family_friendly', true);
   }
 
   // Apply sorting

@@ -28,6 +28,14 @@ interface EventsPageProps {
     free?: string;
     q?: string;
     goodFor?: string;
+    vibeTag?: string;
+    noiseLevel?: string;
+    accessType?: string;
+    soloFriendly?: string;
+    beginnerFriendly?: string;
+    noTicketsNeeded?: string;
+    dropInOk?: string;
+    familyFriendly?: string;
     page?: string;
   }>;
 }
@@ -45,6 +53,14 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const isFree = params.free === 'true';
   const categorySlug = params.category;
   const goodFor = params.goodFor;
+  const vibeTag = params.vibeTag;
+  const noiseLevel = params.noiseLevel;
+  const accessType = params.accessType;
+  const soloFriendly = params.soloFriendly === 'true';
+  const beginnerFriendly = params.beginnerFriendly === 'true';
+  const noTicketsNeeded = params.noTicketsNeeded === 'true';
+  const dropInOk = params.dropInOk === 'true';
+  const familyFriendly = params.familyFriendly === 'true';
 
   // Build date range if provided
   const dateRange =
@@ -60,6 +76,14 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       dateRange,
       isFree,
       goodFor,
+      vibeTag,
+      noiseLevel,
+      accessType,
+      soloFriendly: soloFriendly || undefined,
+      beginnerFriendly: beginnerFriendly || undefined,
+      noTicketsNeeded: noTicketsNeeded || undefined,
+      dropInOk: dropInOk || undefined,
+      familyFriendly: familyFriendly || undefined,
       page,
       limit: 24,
     }),
@@ -85,7 +109,10 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
 
   // Count active filters
   const activeFilterCount =
-    (categorySlug ? 1 : 0) + (goodFor ? 1 : 0) + (isFree ? 1 : 0);
+    (categorySlug ? 1 : 0) + (goodFor ? 1 : 0) + (isFree ? 1 : 0) +
+    (vibeTag ? 1 : 0) + (noiseLevel ? 1 : 0) + (accessType ? 1 : 0) +
+    (soloFriendly ? 1 : 0) + (beginnerFriendly ? 1 : 0) +
+    (noTicketsNeeded ? 1 : 0) + (dropInOk ? 1 : 0) + (familyFriendly ? 1 : 0);
 
   /**
    * Build a filter URL that preserves other active params.
@@ -96,6 +123,14 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     if (categorySlug) base.category = categorySlug;
     if (goodFor) base.goodFor = goodFor;
     if (isFree) base.free = 'true';
+    if (vibeTag) base.vibeTag = vibeTag;
+    if (noiseLevel) base.noiseLevel = noiseLevel;
+    if (accessType) base.accessType = accessType;
+    if (soloFriendly) base.soloFriendly = 'true';
+    if (beginnerFriendly) base.beginnerFriendly = 'true';
+    if (noTicketsNeeded) base.noTicketsNeeded = 'true';
+    if (dropInOk) base.dropInOk = 'true';
+    if (familyFriendly) base.familyFriendly = 'true';
     // Apply overrides
     for (const [k, v] of Object.entries(overrides)) {
       if (v === null) {
@@ -190,7 +225,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       </div>
 
       {/* Good For pills — warm colored per tag */}
-      <div className="flex flex-wrap gap-2 mb-8">
+      <div className="flex flex-wrap gap-2 mb-4">
         <span className="px-2 py-2 text-body-sm text-stone self-center font-medium">Good for:</span>
         {GOOD_FOR_TAGS.slice(0, 8).map((tag) => {
           const isActive = goodFor === tag.slug;
@@ -208,6 +243,52 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
             </a>
           );
         })}
+      </div>
+
+      {/* Vibe tag pills */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <span className="px-2 py-2 text-body-sm text-stone self-center font-medium">Vibe:</span>
+        {(['cozy', 'chill', 'hype', 'rowdy', 'artsy', 'intimate', 'festival-energy', 'nerdy'] as const).map((tag) => {
+          const isActive = vibeTag === tag;
+          const label = tag.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+          return (
+            <a
+              key={tag}
+              href={isActive ? filterUrl({ vibeTag: null }) : filterUrl({ vibeTag: tag })}
+              className={`px-3 py-1.5 rounded-full text-body-sm font-medium transition-all ${
+                isActive
+                  ? 'bg-charcoal text-warm-white shadow-sm'
+                  : 'border border-sand text-stone hover:text-charcoal hover:border-charcoal/20'
+              }`}
+            >
+              {label}
+            </a>
+          );
+        })}
+      </div>
+
+      {/* Quick toggles */}
+      <div className="flex flex-wrap items-center gap-2 mb-8">
+        <span className="px-2 py-2 text-body-sm text-stone font-medium">Quick filters:</span>
+        {([
+          { key: 'soloFriendly', label: 'Solo-Friendly', active: soloFriendly },
+          { key: 'beginnerFriendly', label: 'Beginner-Friendly', active: beginnerFriendly },
+          { key: 'noTicketsNeeded', label: 'No Tickets Needed', active: noTicketsNeeded },
+          { key: 'dropInOk', label: 'Drop-In OK', active: dropInOk },
+          { key: 'familyFriendly', label: 'Family Friendly', active: familyFriendly },
+        ] as const).map(({ key, label, active }) => (
+          <a
+            key={key}
+            href={active ? filterUrl({ [key]: null }) : filterUrl({ [key]: 'true' })}
+            className={`px-3 py-1.5 rounded-full text-body-sm font-semibold transition-all ${
+              active
+                ? 'bg-coral text-white shadow-sm'
+                : 'bg-coral/10 text-coral border border-coral/20 hover:bg-coral/20'
+            }`}
+          >
+            {label}
+          </a>
+        ))}
       </div>
 
       {/* Events grid */}
