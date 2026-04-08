@@ -7,7 +7,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Filter, ArrowUpDown, Upload, Loader2, Repeat } from 'lucide-react';
 
 interface AdminEventFiltersProps {
@@ -27,7 +26,6 @@ export function AdminEventFilters({
   currentSearch,
   currentSeriesFilter,
 }: AdminEventFiltersProps) {
-  const router = useRouter();
   const [isMigrating, setIsMigrating] = useState(false);
   const [migrationResult, setMigrationResult] = useState<{
     success: boolean;
@@ -83,7 +81,7 @@ export function AdminEventFilters({
       }
 
       // Refresh the page to show updated images
-      router.refresh();
+      window.location.reload();
     } catch (error) {
       setMigrationResult({
         success: false,
@@ -119,7 +117,7 @@ export function AdminEventFilters({
       source: value === 'all' ? undefined : value,
       page: undefined,
     });
-    router.push(newUrl);
+    window.location.href = newUrl;
   };
 
   const handleOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -128,7 +126,7 @@ export function AdminEventFilters({
       orderBy: value,
       page: undefined,
     });
-    router.push(newUrl);
+    window.location.href = newUrl;
   };
 
   const handleSeriesFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -137,7 +135,7 @@ export function AdminEventFilters({
       series: value === 'all' ? undefined : value,
       page: undefined,
     });
-    router.push(newUrl);
+    window.location.href = newUrl;
   };
 
   return (
