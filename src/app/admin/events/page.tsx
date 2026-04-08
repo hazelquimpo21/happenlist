@@ -104,6 +104,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
           currentOrderDir={orderDir}
           currentStatus={status}
           currentSeriesFilter={seriesFilter}
+          currentSearch={search}
         />
       </AdminHeader>
 

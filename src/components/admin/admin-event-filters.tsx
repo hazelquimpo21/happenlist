@@ -7,7 +7,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Filter, ArrowUpDown, Upload, Loader2, Repeat } from 'lucide-react';
 
 interface AdminEventFiltersProps {
@@ -16,6 +16,7 @@ interface AdminEventFiltersProps {
   currentOrderDir: string;
   currentStatus?: string;
   currentSeriesFilter?: string;
+  currentSearch?: string;
 }
 
 export function AdminEventFilters({
@@ -23,11 +24,10 @@ export function AdminEventFilters({
   currentOrderBy,
   currentOrderDir,
   currentStatus,
+  currentSearch,
   currentSeriesFilter,
 }: AdminEventFiltersProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const currentSearch = searchParams.get('q') || undefined;
   const [isMigrating, setIsMigrating] = useState(false);
   const [migrationResult, setMigrationResult] = useState<{
     success: boolean;
