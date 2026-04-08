@@ -5,10 +5,11 @@
  */
 
 import Link from 'next/link';
+import Script from 'next/script';
 import {
   Filter,
 } from 'lucide-react';
-import { AdminHeader, AdminBreadcrumbs, AdminEventFilters, AdminEventList } from '@/components/admin';
+import { AdminHeader, AdminBreadcrumbs, AdminEventList } from '@/components/admin';
 import { Button } from '@/components/ui/button';
 import { getAllAdminEvents } from '@/data/admin';
 import { adminDataLogger } from '@/lib/utils/logger';
@@ -28,14 +29,14 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
   // Await searchParams (Next.js 15+ requirement)
   const resolvedSearchParams = await searchParams;
 
-  // Parse search params
+  // Parse search params (empty strings from form submissions treated as "no filter")
   const page = typeof resolvedSearchParams.page === 'string' ? parseInt(resolvedSearchParams.page) : 1;
-  const status = typeof resolvedSearchParams.status === 'string' ? resolvedSearchParams.status : undefined;
-  const source = typeof resolvedSearchParams.source === 'string' ? resolvedSearchParams.source : undefined;
-  const search = typeof resolvedSearchParams.q === 'string' ? resolvedSearchParams.q : undefined;
-  const orderBy = (typeof resolvedSearchParams.orderBy === 'string' ? resolvedSearchParams.orderBy : 'created_at') as 'scraped_at' | 'created_at' | 'start_datetime' | 'title';
-  const orderDir = (typeof resolvedSearchParams.orderDir === 'string' ? resolvedSearchParams.orderDir : 'desc') as 'asc' | 'desc';
-  const seriesFilter = typeof resolvedSearchParams.series === 'string' ? resolvedSearchParams.series as 'in_series' | 'no_series' : undefined;
+  const status = (typeof resolvedSearchParams.status === 'string' && resolvedSearchParams.status) || undefined;
+  const source = (typeof resolvedSearchParams.source === 'string' && resolvedSearchParams.source) || undefined;
+  const search = (typeof resolvedSearchParams.q === 'string' && resolvedSearchParams.q) || undefined;
+  const orderBy = ((typeof resolvedSearchParams.orderBy === 'string' && resolvedSearchParams.orderBy) || 'created_at') as 'scraped_at' | 'created_at' | 'start_datetime' | 'title';
+  const orderDir = ((typeof resolvedSearchParams.orderDir === 'string' && resolvedSearchParams.orderDir) || 'desc') as 'asc' | 'desc';
+  const seriesFilter = (typeof resolvedSearchParams.series === 'string' && resolvedSearchParams.series) ? resolvedSearchParams.series as 'in_series' | 'no_series' : undefined;
   const showDeleted = status === 'deleted';
 
   // Fetch all events
@@ -97,15 +98,52 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
           ))}
         </div>
 
-        {/* Filters and actions - using client component for interactivity */}
-        <AdminEventFilters
-          currentSource={source}
-          currentOrderBy={orderBy}
-          currentOrderDir={orderDir}
-          currentStatus={status}
-          currentSeriesFilter={seriesFilter}
-          currentSearch={search}
-        />
+        {/* Filter dropdowns — plain HTML form, no React hydration needed */}
+        <form method="GET" action="/admin/events" id="admin-filters" className="flex items-center gap-3">
+          {/* Carry forward params that aren't in a visible dropdown */}
+          {status && <input type="hidden" name="status" value={status} />}
+          {search && <input type="hidden" name="q" value={search} />}
+
+          <select
+            name="series"
+            defaultValue={seriesFilter || ''}
+            className="appearance-none bg-warm-white border border-sand rounded-lg px-4 py-2 pr-8 text-sm focus:border-coral outline-none cursor-pointer"
+          >
+            <option value="">All Events</option>
+            <option value="in_series">In a Series</option>
+            <option value="no_series">Not in Series</option>
+          </select>
+
+          <select
+            name="source"
+            defaultValue={source || ''}
+            className="appearance-none bg-warm-white border border-sand rounded-lg px-4 py-2 pr-8 text-sm focus:border-coral outline-none cursor-pointer"
+          >
+            <option value="">All Sources</option>
+            <option value="scraper">Scraped</option>
+            <option value="manual">Manual</option>
+            <option value="api">API</option>
+            <option value="import">Import</option>
+          </select>
+
+          <select
+            name="orderBy"
+            defaultValue={orderBy}
+            className="appearance-none bg-warm-white border border-sand rounded-lg px-4 py-2 pr-8 text-sm focus:border-coral outline-none cursor-pointer"
+          >
+            <option value="created_at">Created Date</option>
+            <option value="start_datetime">Event Date</option>
+            <option value="title">Title</option>
+            <option value="scraped_at">Scraped Date</option>
+          </select>
+
+          <noscript><button type="submit" className="px-3 py-2 text-sm bg-coral text-white rounded-lg">Apply</button></noscript>
+        </form>
+        <Script id="admin-filter-autosubmit" strategy="afterInteractive">{`
+          document.querySelectorAll('#admin-filters select').forEach(function(s){
+            s.addEventListener('change', function(){ s.form.submit(); });
+          });
+        `}</Script>
       </AdminHeader>
 
       <div className="p-8">
