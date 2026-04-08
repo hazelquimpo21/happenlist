@@ -22,7 +22,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const supabase = await createClient();
 
     // Fetch the event
-    const { data: event, error: fetchError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: event, error: fetchError } = await (supabase as any)
       .from('events')
       .select('id, title, series_id, series_sequence')
       .eq('id', eventId)
@@ -45,7 +46,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const previousSeriesId = event.series_id;
 
     // Detach from series
-    const { error: updateError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await (supabase as any)
       .from('events')
       .update({
         series_id: null,

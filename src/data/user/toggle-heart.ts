@@ -109,7 +109,8 @@ export async function toggleHeart(
 
     const supabase = await createClient();
 
-    const { data: existingHeart, error: checkError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existingHeart, error: checkError } = await (supabase as any)
       .from('hearts')
       .select('id')
       .eq('user_id', userId)
@@ -155,7 +156,8 @@ export async function toggleHeart(
       });
     } else {
       // ❤️ ADD HEART
-      const { error: insertError } = await supabase.from('hearts').insert({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: insertError } = await (supabase as any).from('hearts').insert({
         user_id: userId,
         event_id: eventId,
       });
@@ -180,7 +182,8 @@ export async function toggleHeart(
     // 4. GET UPDATED HEART COUNT
     // -------------------------------------------------------------------------
 
-    const { data: event, error: countError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: event, error: countError } = await (supabase as any)
       .from('events')
       .select('heart_count')
       .eq('id', eventId)

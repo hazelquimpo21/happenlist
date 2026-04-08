@@ -82,7 +82,7 @@ export function SubmitEventForm({
   const [popularVenues, setPopularVenues] = useState<Array<{
     id: string;
     name: string;
-    slug?: string;
+    slug: string;
     address_line: string | null;
     city: string;
     state: string | null;

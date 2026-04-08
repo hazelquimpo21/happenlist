@@ -59,14 +59,25 @@ export function WebsiteJsonLd() {
   return <JsonLdScript data={data} />;
 }
 
+/** Child event data for parent event JSON-LD subEvent array */
+interface ChildEventForJsonLd {
+  title: string;
+  slug: string;
+  instance_date: string;
+  start_datetime: string;
+}
+
 interface EventJsonLdProps {
   event: EventWithDetails;
+  /** Child events to include as subEvent (parent events only, max 50) */
+  childEvents?: ChildEventForJsonLd[];
 }
 
 /**
  * Event schema for individual events.
+ * Supports parent/child relationships via subEvent and superEvent.
  */
-export function EventJsonLd({ event }: EventJsonLdProps) {
+export function EventJsonLd({ event, childEvents }: EventJsonLdProps) {
   // Use validated image URL for structured data
   const validImage = getBestImageUrl(event.image_url, event.flyer_url);
   
@@ -130,6 +141,26 @@ export function EventJsonLd({ event }: EventJsonLdProps) {
         url: event.ticket_url,
       };
     }
+  }
+
+  // Parent events: include child events as subEvent (limit 50 for payload size)
+  if (childEvents && childEvents.length > 0) {
+    data.subEvent = childEvents.slice(0, 50).map((child) => ({
+      '@type': 'Event',
+      name: child.title,
+      startDate: child.start_datetime,
+      url: `${SITE_CONFIG.url}/event/${child.slug}-${child.instance_date}`,
+    }));
+  }
+
+  // Child events: reference parent as superEvent
+  if (event.parent_event_id && event.parent_event_title && event.parent_event_slug) {
+    data.superEvent = {
+      '@type': 'Event',
+      name: event.parent_event_title,
+      // parent_event_slug already contains slug-date format
+      url: `${SITE_CONFIG.url}/event/${event.parent_event_slug}`,
+    };
   }
 
   return <JsonLdScript data={data} />;

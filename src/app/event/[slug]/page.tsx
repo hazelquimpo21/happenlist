@@ -32,17 +32,17 @@ import {
 } from 'lucide-react';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { Button } from '@/components/ui';
-import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox, ShareButton, VibeProfileSection, AccessBadge } from '@/components/events';
+import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox, ShareButton, VibeProfileSection, AccessBadge, ChildEventsSchedule } from '@/components/events';
 import { HeartButton } from '@/components/hearts';
 import { SeriesLinkBadge } from '@/components/series';
 import { EventJsonLd } from '@/components/seo';
 import { AdminToolbar, type AdminToolbarEvent } from '@/components/admin-anywhere';
 import { VenueMap } from '@/components/maps';
-import { getEvent, getSimilarEvents } from '@/data/events';
+import { getEvent, getSimilarEvents, getChildEvents, getChildEventCount } from '@/data/events';
 import { getSeriesById } from '@/data/series';
 import { checkSingleHeart } from '@/data/user';
 import { getSession, isSuperAdmin } from '@/lib/auth';
-import { parseEventSlug, buildVenueUrl, buildOrganizerUrl, getBestImageUrl } from '@/lib/utils';
+import { parseEventSlug, buildVenueUrl, buildOrganizerUrl, getBestImageUrl, getChildEventLabel } from '@/lib/utils';
 import { formatAgeRange, getGoodForTags } from '@/types';
 import { formatEventDate, formatDate, formatTime } from '@/lib/utils/dates';
 import { getCategoryColor } from '@/lib/constants/category-colors';
@@ -130,22 +130,42 @@ export default async function EventPage({ params }: EventPageProps) {
     console.log('🛡️ [EventPage] Superadmin detected, showing admin toolbar');
   }
 
-  // Fetch related events (vibe-scored), heart status, and series info in parallel
-  const [similarEvents, isHearted, seriesInfo] = await Promise.all([
-    getSimilarEvents({
-      eventId: event.id,
-      categoryId: event.category?.id ?? null,
-      vibeTags: event.vibe_tags ?? [],
-      subcultures: event.subcultures ?? [],
-      energyLevel: event.energy_level ?? null,
-      formality: event.formality ?? null,
-      crowdedness: event.crowdedness ?? null,
-      accessType: event.access_type ?? null,
-      limit: 6,
-    }),
+  // Determine if this is a parent event (has children) or child event (has parent)
+  const isChildEvent = !!event.parent_event_id;
+
+  // Fetch related data in parallel
+  const [similarEvents, isHearted, seriesInfo, childData, childCount, siblingEvents] = await Promise.all([
+    // Similar events — skip if this is a parent (we'll show children instead)
+    // or a child (we'll show siblings instead)
+    !isChildEvent
+      ? getSimilarEvents({
+          eventId: event.id,
+          categoryId: event.category?.id ?? null,
+          vibeTags: event.vibe_tags ?? [],
+          subcultures: event.subcultures ?? [],
+          energyLevel: event.energy_level ?? null,
+          formality: event.formality ?? null,
+          crowdedness: event.crowdedness ?? null,
+          accessType: event.access_type ?? null,
+          limit: 6,
+        })
+      : Promise.resolve([]),
     session ? checkSingleHeart(session.id, event.id) : Promise.resolve(false),
     event.series_id ? getSeriesById(event.series_id) : Promise.resolve(null),
+    // Fetch children if this might be a parent
+    !isChildEvent ? getChildEvents({ parentEventId: event.id }) : Promise.resolve({ events: [], groups: [] }),
+    !isChildEvent ? getChildEventCount(event.id) : Promise.resolve(0),
+    // Fetch sibling events if this is a child
+    isChildEvent && event.parent_event_id
+      ? getChildEvents({ parentEventId: event.parent_event_id })
+      : Promise.resolve({ events: [], groups: [] }),
   ]);
+
+  const isParentEvent = childCount > 0;
+  // Sibling events: other children of the same parent, excluding this event
+  const siblingEventCards = isChildEvent
+    ? siblingEvents.events.filter((e) => e.id !== event.id).slice(0, 6)
+    : [];
 
   console.log('✅ [EventPage] Event loaded:', event.title);
 
@@ -225,7 +245,15 @@ export default async function EventPage({ params }: EventPageProps) {
   return (
     <>
       {/* Structured data for SEO */}
-      <EventJsonLd event={event} />
+      <EventJsonLd
+        event={event}
+        childEvents={isParentEvent ? childData.events.map((e) => ({
+          title: e.title,
+          slug: e.slug,
+          instance_date: e.instance_date,
+          start_datetime: e.start_datetime,
+        })) : undefined}
+      />
 
       {/* Admin toolbar for superadmins */}
       {adminToolbarEvent && (
@@ -243,7 +271,7 @@ export default async function EventPage({ params }: EventPageProps) {
       />
 
       <Container className="py-8">
-        {/* Breadcrumbs */}
+        {/* Breadcrumbs — child events show parent in the trail */}
         <Breadcrumbs
           items={[
             { label: 'Events', href: '/events' },
@@ -252,6 +280,14 @@ export default async function EventPage({ params }: EventPageProps) {
                   {
                     label: event.category.name,
                     href: `/events?category=${event.category.slug}`,
+                  },
+                ]
+              : []),
+            ...(isChildEvent && event.parent_event_title && event.parent_event_slug
+              ? [
+                  {
+                    label: event.parent_event_title,
+                    href: `/event/${event.parent_event_slug}`,
                   },
                 ]
               : []),
@@ -310,6 +346,26 @@ export default async function EventPage({ params }: EventPageProps) {
           <h1 className="font-display text-h1 md:text-display text-charcoal leading-tight">
             {event.title}
           </h1>
+
+          {/* Child count badge for parent events */}
+          {isParentEvent && (
+            <span
+              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold mt-3"
+              style={{
+                backgroundColor: `${categoryColor.accent}15`,
+                color: categoryColor.accent,
+              }}
+            >
+              {getChildEventLabel(event.category?.slug ?? null, childCount)}
+            </span>
+          )}
+
+          {/* Parent group label for child events */}
+          {isChildEvent && event.parent_group && (
+            <p className="mt-2 text-sm text-stone">
+              {event.parent_group}
+            </p>
+          )}
 
           {/* Talent / performer line */}
           {event.talent_name && (
@@ -797,8 +853,30 @@ export default async function EventPage({ params }: EventPageProps) {
           </div>
         </div>
 
-        {/* Related events */}
-        {similarEvents.length > 0 && (
+        {/* Child events schedule — shown on parent event pages */}
+        {isParentEvent && childData.events.length > 0 && (
+          <section className="mt-16">
+            <SectionHeader title="Schedule" />
+            <ChildEventsSchedule
+              events={childData.events}
+              groups={childData.groups}
+              categorySlug={event.category?.slug ?? null}
+            />
+          </section>
+        )}
+
+        {/* Sibling events — shown on child event pages */}
+        {isChildEvent && siblingEventCards.length > 0 && (
+          <section className="mt-16">
+            <SectionHeader
+              title={`More from ${event.parent_event_title || 'This Event'}`}
+            />
+            <EventGrid events={siblingEventCards} columns={4} />
+          </section>
+        )}
+
+        {/* Similar events — shown on standalone events (not parent/child) */}
+        {!isParentEvent && !isChildEvent && similarEvents.length > 0 && (
           <section className="mt-16">
             <SectionHeader title="Events Like This" />
             <EventGrid events={similarEvents} columns={4} />

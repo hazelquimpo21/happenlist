@@ -59,7 +59,8 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
 
     // Fetch the selected events with their relationships
-    const { data: selectedEvents, error: fetchError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: selectedEvents, error: fetchError } = await (supabase as any)
       .from('events')
       .select(`
         id, title, start_datetime, instance_date,
@@ -78,15 +79,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Extract signature from selected events for matching
-    const titles = selectedEvents.map(e => e.title?.toLowerCase() || '');
-    const categoryIds = [...new Set(selectedEvents.map(e => e.category_id).filter(Boolean))];
-    const locationIds = [...new Set(selectedEvents.map(e => e.location_id).filter(Boolean))];
-    const organizerIds = [...new Set(selectedEvents.map(e => e.organizer_id).filter(Boolean))];
+    const titles = selectedEvents.map((e: any) => e.title?.toLowerCase() || '');
+    const categoryIds = [...new Set(selectedEvents.map((e: any) => e.category_id).filter(Boolean))];
+    const locationIds = [...new Set(selectedEvents.map((e: any) => e.location_id).filter(Boolean))];
+    const organizerIds = [...new Set(selectedEvents.map((e: any) => e.organizer_id).filter(Boolean))];
 
     // Extract common title words (3+ chars, appearing in most events)
     const wordCounts = new Map<string, number>();
     for (const title of titles) {
-      const words = new Set(title.split(/\s+/).filter(w => w.length >= 3));
+      const words: Set<string> = new Set(title.split(/\s+/).filter((w: string) => w.length >= 3));
       for (const word of words) {
         wordCounts.set(word, (wordCounts.get(word) || 0) + 1);
       }
@@ -133,7 +134,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const query = supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const query = (supabase as any)
       .from('events')
       .select(`
         id, title, start_datetime, instance_date, status,
@@ -201,8 +203,8 @@ export async function POST(request: NextRequest) {
       if (c.start_datetime) {
         const candidateDay = new Date(c.start_datetime).getDay();
         const selectedDays = selectedEvents
-          .map(e => e.start_datetime ? new Date(e.start_datetime).getDay() : -1)
-          .filter(d => d >= 0);
+          .map((e: any) => e.start_datetime ? new Date(e.start_datetime).getDay() : -1)
+          .filter((d: number) => d >= 0);
         if (selectedDays.includes(candidateDay)) {
           score += 1;
           reasons.push('same day of week');

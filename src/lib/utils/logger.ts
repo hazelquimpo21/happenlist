@@ -21,6 +21,7 @@ interface LogContext {
   adminEmail?: string;
   duration?: number;
   metadata?: Record<string, unknown>;
+  [key: string]: unknown;
 }
 
 // Emoji prefixes for different log types

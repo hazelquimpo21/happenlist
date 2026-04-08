@@ -61,7 +61,8 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
 
     // Fetch all events
-    const { data: events, error: fetchError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: events, error: fetchError } = await (supabase as any)
       .from('events')
       .select(`
         *,
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Filter out already-deleted events
-    const activeEvents = events.filter(e => !e.deleted_at);
+    const activeEvents = (events as any[]).filter((e: any) => !e.deleted_at);
     if (activeEvents.length < 2) {
       return NextResponse.json(
         { success: false, error: 'At least 2 non-deleted events are required' },
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
 
     // ===== MODE: AUTO DETECT =====
     if (mode === 'auto_detect') {
-      const eventsForAi: EventForPatternDetect[] = activeEvents.map(e => ({
+      const eventsForAi: EventForPatternDetect[] = activeEvents.map((e: any) => ({
         id: e.id,
         title: e.title,
         start_datetime: e.start_datetime,
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
           success: true,
           mode: 'auto_detect',
           pattern,
-          events: activeEvents.map(e => ({
+          events: activeEvents.map((e: any) => ({
             id: e.id,
             title: e.title,
             start_datetime: e.start_datetime,
@@ -144,7 +145,8 @@ export async function POST(request: NextRequest) {
 
     if (existingSeriesId) {
       // Attach to existing series
-      const { data: series, error: seriesError } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: series, error: seriesError } = await (supabase as any)
         .from('series')
         .select('id, title')
         .eq('id', existingSeriesId)
@@ -166,13 +168,14 @@ export async function POST(request: NextRequest) {
 
       // Ensure slug uniqueness — check for existing slugs with the same base
       let slug = baseSlug;
-      const { data: existingSlugs } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: existingSlugs } = await (supabase as any)
         .from('series')
         .select('slug')
         .like('slug', `${baseSlug}%`);
 
-      if (existingSlugs && existingSlugs.some(s => s.slug === baseSlug)) {
-        const usedSlugs = new Set(existingSlugs.map(s => s.slug));
+      if (existingSlugs && existingSlugs.some((s: any) => s.slug === baseSlug)) {
+        const usedSlugs = new Set(existingSlugs.map((s: any) => s.slug));
         let counter = 2;
         while (usedSlugs.has(`${baseSlug}-${counter}`)) {
           counter++;
@@ -180,7 +183,8 @@ export async function POST(request: NextRequest) {
         slug = `${baseSlug}-${counter}`;
       }
 
-      const { data: newSeries, error: createError } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: newSeries, error: createError } = await (supabase as any)
         .from('series')
         .insert({
           title: seriesData.title,
@@ -220,7 +224,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current max sequence in the series
-    const { data: maxSeqData } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: maxSeqData } = await (supabase as any)
       .from('events')
       .select('series_sequence')
       .eq('series_id', seriesId)
@@ -246,7 +251,8 @@ export async function POST(request: NextRequest) {
       }
 
       // Detach from old series if needed
-      const { error: updateError } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: updateError } = await (supabase as any)
         .from('events')
         .update({
           series_id: seriesId,
@@ -269,7 +275,8 @@ export async function POST(request: NextRequest) {
       .filter(Boolean) as string[];
 
     if (allDates.length > 0) {
-      await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
         .from('series')
         .update({
           start_date: allDates[0],
@@ -280,7 +287,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Audit log
-    await supabase.from('admin_audit_log').insert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from('admin_audit_log').insert({
       action: 'superadmin_bulk_attach_series',
       entity_type: 'series',
       entity_id: seriesId,

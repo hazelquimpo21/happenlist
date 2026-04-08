@@ -38,15 +38,17 @@ export default async function SuperadminVenueEditPage({ params }: PageProps) {
 
   // Fetch venue
   const supabase = await createClient();
-  const { data: venue, error } = await supabase
+  const { data: venueData, error } = await supabase
     .from('locations')
     .select('*')
     .eq('id', venueId)
     .single();
 
-  if (error || !venue) {
+  if (error || !venueData) {
     notFound();
   }
+
+  const venue = venueData as any;
 
   // Format address for display
   const fullAddress = [venue.address_line, venue.city, venue.state, venue.postal_code]

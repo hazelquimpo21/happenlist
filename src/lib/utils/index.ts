@@ -63,3 +63,6 @@ export {
   extractImageFromScrapedData,
   getImageUrlIssue,
 } from './image';
+
+// Parent event utilities
+export { getChildEventLabel } from './parent-event-labels';

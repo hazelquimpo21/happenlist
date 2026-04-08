@@ -65,7 +65,7 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
 
   // Format date range
   const dateDisplay = series.start_date
-    ? formatDateRange(series.start_date, series.end_date)
+    ? formatDateRange(series.start_date, series.end_date ?? undefined)
     : null;
 
   // Format recurrence for recurring series
@@ -254,19 +254,13 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
         {/* CTA button -- label adapts to attendance mode */}
         {series.registration_url && (
           <Button
-            asChild
+            href={series.registration_url}
+            external
             size="lg"
             className="w-full sm:w-auto"
+            rightIcon={<ExternalLink className="w-4 h-4" />}
           >
-            <a
-              href={series.registration_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2"
-            >
-              {getCtaLabel(series)}
-              <ExternalLink className="w-4 h-4" />
-            </a>
+            {getCtaLabel(series)}
           </Button>
         )}
 

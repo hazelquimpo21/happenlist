@@ -143,7 +143,8 @@ export async function updateProfile(
 
     const supabase = await createClient();
 
-    const { data: updatedProfile, error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: updatedProfile, error } = await (supabase as any)
       .from('profiles')
       .update(sanitizedData)
       .eq('id', userId)

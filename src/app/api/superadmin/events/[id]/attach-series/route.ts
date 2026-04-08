@@ -42,7 +42,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const supabase = await createClient();
 
     // Verify the event exists and is standalone
-    const { data: event, error: eventError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: event, error: eventError } = await (supabase as any)
       .from('events')
       .select('id, title, series_id')
       .eq('id', eventId)
@@ -63,7 +64,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     // Verify the series exists
-    const { data: series, error: seriesError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: series, error: seriesError } = await (supabase as any)
       .from('series')
       .select('id, title')
       .eq('id', seriesId)
@@ -77,7 +79,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     // Get max series_sequence from existing events in this series
-    const { data: maxSeqData } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: maxSeqData } = await (supabase as any)
       .from('events')
       .select('series_sequence')
       .eq('series_id', seriesId)
@@ -88,7 +91,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const nextSequence = (maxSeqData?.series_sequence || 0) + 1;
 
     // Link the event to the series
-    const { error: updateError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await (supabase as any)
       .from('events')
       .update({
         series_id: seriesId,

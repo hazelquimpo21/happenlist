@@ -81,6 +81,7 @@ export async function getFeaturedEvents(
     )
     .eq('status', 'published')
     .is('deleted_at', null)
+    .is('parent_event_id', null) // Children should not appear in featured
     .eq('is_featured', true)
     .gte('instance_date', new Date().toISOString().split('T')[0])
     .order('featured_order', { ascending: true })

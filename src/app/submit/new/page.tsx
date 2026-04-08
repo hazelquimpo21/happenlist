@@ -37,7 +37,7 @@ export default async function SubmitNewEventPage() {
   }
 
   // Get categories for the form
-  const { categories } = await getCategories();
+  const categories = await getCategories();
 
   return (
     <SubmitEventForm

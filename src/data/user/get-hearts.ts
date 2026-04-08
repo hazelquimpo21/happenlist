@@ -282,7 +282,8 @@ export async function getHeartedEventIds(userId: string): Promise<string[]> {
 
     const supabase = await createClient();
 
-    const { data, error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
       .from('hearts')
       .select('event_id')
       .eq('user_id', userId);
@@ -292,7 +293,7 @@ export async function getHeartedEventIds(userId: string): Promise<string[]> {
       return [];
     }
 
-    return (data || []).map((h) => h.event_id);
+    return ((data || []) as any[]).map((h) => h.event_id);
   } catch (error) {
     logger2.error('Unexpected error', error);
     return [];

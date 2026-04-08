@@ -70,6 +70,7 @@ export async function getSimilarEvents(
       `)
       .eq('status', 'published')
       .is('deleted_at', null)
+      .is('parent_event_id', null) // Exclude child events from similar results
       .neq('id', eventId)
       .gte('instance_date', today)
       .order('instance_date', { ascending: true })
@@ -115,6 +116,7 @@ export async function getSimilarEvents(
       `)
       .eq('status', 'published')
       .is('deleted_at', null)
+      .is('parent_event_id', null) // Exclude child events
       .neq('id', eventId)
       .gte('instance_date', today)
       .order('instance_date', { ascending: true })

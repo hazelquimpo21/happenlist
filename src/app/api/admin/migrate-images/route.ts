@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Filter to only include events with truly external images
-    const externalEvents = (events || []).filter(event => {
+    const externalEvents = ((events || []) as any[]).filter(event => {
       return event.image_url && !isHostedImage(event.image_url);
     });
 
@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
 
     const results: MigrationResult[] = [];
 
-    for (const event of events) {
+    for (const event of (events as any[])) {
       // Migrate hero image
       if (event.image_url && !isHostedImage(event.image_url) && !event.image_hosted) {
         if (dryRun) {
@@ -211,7 +211,8 @@ export async function POST(request: NextRequest) {
           
           if (uploadResult.success && uploadResult.url) {
             // Update the event with the new hosted URL
-            const { error: updateError } = await supabase
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error: updateError } = await (supabase as any)
               .from('events')
               .update({
                 image_url: uploadResult.url,
@@ -263,7 +264,8 @@ export async function POST(request: NextRequest) {
           const uploadResult = await reHostImage(event.thumbnail_url, event.id, 'thumbnail');
           
           if (uploadResult.success && uploadResult.url) {
-            await supabase
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase as any)
               .from('events')
               .update({
                 thumbnail_url: uploadResult.url,
@@ -300,7 +302,8 @@ export async function POST(request: NextRequest) {
           const uploadResult = await reHostImage(event.flyer_url, event.id, 'flyer');
           
           if (uploadResult.success && uploadResult.url) {
-            await supabase
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase as any)
               .from('events')
               .update({
                 flyer_url: uploadResult.url,

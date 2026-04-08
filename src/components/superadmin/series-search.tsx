@@ -81,7 +81,7 @@ export function SeriesSearch({
     const info = SERIES_TYPE_INFO[seriesType as keyof typeof SERIES_TYPE_INFO];
     if (!info) return null;
     return (
-      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${info.color}`}>
+      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${info.badgeColor}`}>
         {info.label}
       </span>
     );

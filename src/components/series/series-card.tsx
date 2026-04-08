@@ -86,9 +86,9 @@ export function SeriesCard({
 
   // Format date range for display
   const dateDisplay = series.start_date
-    ? formatDateRange(series.start_date, series.end_date)
+    ? formatDateRange(series.start_date, series.end_date ?? undefined)
     : series.next_event_date
-    ? `Next: ${formatDateRange(series.next_event_date, null)}`
+    ? `Next: ${formatDateRange(series.next_event_date, undefined)}`
     : null;
 
   // Session info text

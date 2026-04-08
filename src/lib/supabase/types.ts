@@ -57,6 +57,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
 
       // =====================================================================
@@ -162,6 +163,7 @@ export interface Database {
           import_batch_id?: string | null;
           social_links?: Record<string, string> | null;
         };
+        Relationships: [];
       };
 
       // =====================================================================
@@ -219,6 +221,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
 
       // =====================================================================
@@ -345,6 +348,9 @@ export interface Database {
           // Organizer name/venue flag (migration 00011)
           organizer_name: string | null;
           organizer_is_venue: boolean;
+          // Parent event relationships (migration 00007)
+          parent_event_id: string | null;
+          parent_group: string | null;
           created_at: string;
           updated_at: string;
           published_at: string | null;
@@ -469,6 +475,8 @@ export interface Database {
           // Organizer name/venue flag (migration 00011)
           organizer_name?: string | null;
           organizer_is_venue?: boolean;
+          parent_event_id?: string | null;
+          parent_group?: string | null;
           created_at?: string;
           updated_at?: string;
           published_at?: string | null;
@@ -593,10 +601,13 @@ export interface Database {
           // Organizer name/venue flag (migration 00011)
           organizer_name?: string | null;
           organizer_is_venue?: boolean;
+          parent_event_id?: string | null;
+          parent_group?: string | null;
           created_at?: string;
           updated_at?: string;
           published_at?: string | null;
         };
+        Relationships: [];
       };
 
       // =====================================================================
@@ -791,6 +802,7 @@ export interface Database {
           term_name?: string | null;
           parent_series_id?: string | null;
         };
+        Relationships: [];
       };
 
       // =====================================================================
@@ -815,6 +827,7 @@ export interface Database {
           event_id?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
 
       // =====================================================================
@@ -845,6 +858,7 @@ export interface Database {
           notify_new_events?: boolean;
           created_at?: string;
         };
+        Relationships: [];
       };
 
       // =====================================================================
@@ -884,6 +898,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
 
       // =====================================================================
@@ -932,6 +947,7 @@ export interface Database {
           updated_at?: string;
           expires_at?: string;
         };
+        Relationships: [];
       };
 
       // =====================================================================
@@ -962,6 +978,7 @@ export interface Database {
           status?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
 
       // =====================================================================
@@ -1007,6 +1024,7 @@ export interface Database {
           user_agent?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
 
@@ -1055,6 +1073,23 @@ export interface Database {
           status: string;
           location_name: string | null;
           location_slug: string | null;
+        }>;
+      };
+      search_venues: {
+        Args: {
+          search_query: string;
+          result_limit: number;
+        };
+        Returns: Array<{
+          id: string;
+          name: string;
+          slug: string;
+          address_line: string | null;
+          city: string | null;
+          state: string | null;
+          postal_code: string | null;
+          venue_type: string | null;
+          similarity: number;
         }>;
       };
     };

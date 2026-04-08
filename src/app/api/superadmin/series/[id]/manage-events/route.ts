@@ -25,7 +25,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const supabase = await createClient();
 
     // Fetch the series with its metadata
-    const { data: series, error: seriesError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: series, error: seriesError } = await (supabase as any)
       .from('series')
       .select('id, title, organizer_id, location_id, category_id')
       .eq('id', seriesId)
@@ -39,7 +40,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     // Fetch events currently in this series
-    const { data: currentEvents } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: currentEvents } = await (supabase as any)
       .from('events')
       .select(`
         id, title, start_datetime, instance_date, status,
@@ -97,7 +99,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
         allOrConditions.push(`title.ilike.%${word}%`);
       }
 
-      const { data: candidates } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: candidates } = await (supabase as any)
         .from('events')
         .select(`
           id, title, start_datetime, instance_date, status,
@@ -120,8 +123,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
       if (filteredCandidates.length > 0) {
         // Also get day-of-week pattern from current events
         const seriesDays = (currentEvents || [])
-          .filter(e => e.start_datetime)
-          .map(e => new Date(e.start_datetime!).getDay());
+          .filter((e: any) => e.start_datetime)
+          .map((e: any) => new Date(e.start_datetime!).getDay());
         const seriesDaySet = new Set(seriesDays);
 
         // Score each candidate
@@ -243,7 +246,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     // Verify series exists
-    const { data: series, error: seriesError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: series, error: seriesError } = await (supabase as any)
       .from('series')
       .select('id, title')
       .eq('id', seriesId)
@@ -258,7 +262,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (action === 'add') {
       // Get current max sequence
-      const { data: maxSeqData } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: maxSeqData } = await (supabase as any)
         .from('events')
         .select('series_sequence')
         .eq('series_id', seriesId)
@@ -269,7 +274,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
       let nextSequence = (maxSeqData?.series_sequence || 0) + 1;
 
       for (const eventId of eventIds) {
-        const { error: updateError } = await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: updateError } = await (supabase as any)
           .from('events')
           .update({
             series_id: seriesId,
@@ -288,7 +294,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     } else {
       // Remove events from series
       for (const eventId of eventIds) {
-        const { error: updateError } = await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: updateError } = await (supabase as any)
           .from('events')
           .update({
             series_id: null,
@@ -307,7 +314,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     // Update series date range and session count
-    const { data: allSeriesEvents } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: allSeriesEvents } = await (supabase as any)
       .from('events')
       .select('instance_date, start_datetime')
       .eq('series_id', seriesId)
@@ -316,10 +324,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (allSeriesEvents && allSeriesEvents.length > 0) {
       const allDates = allSeriesEvents
-        .map(e => e.instance_date || e.start_datetime?.split('T')[0])
+        .map((e: any) => e.instance_date || e.start_datetime?.split('T')[0])
         .filter(Boolean) as string[];
 
-      await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
         .from('series')
         .update({
           start_date: allDates[0] || null,
@@ -328,14 +337,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
         })
         .eq('id', seriesId);
     } else {
-      await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
         .from('series')
         .update({ start_date: null, end_date: null, total_sessions: 0 })
         .eq('id', seriesId);
     }
 
     // Audit log
-    await supabase.from('admin_audit_log').insert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from('admin_audit_log').insert({
       action: `superadmin_series_${action}_events`,
       entity_type: 'series',
       entity_id: seriesId,

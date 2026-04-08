@@ -33,6 +33,7 @@ import {
 } from 'date-fns';
 import { buildEventUrl } from '@/lib/utils/url';
 import { cn } from '@/lib/utils';
+import { getChildEventLabel } from '@/lib/utils/parent-event-labels';
 import { getCategoryColor } from '@/lib/constants/category-colors';
 import { EventImage } from './event-image';
 import { HeartButtonCompact } from '@/components/hearts';
@@ -260,6 +261,19 @@ function EventCardComponent({
           <p className="text-sm font-semibold text-charcoal mb-1">
             {formatEventDate(event.start_datetime)}
           </p>
+
+          {/* Parent event badge — shows child count for parent events */}
+          {event.child_event_count && event.child_event_count > 0 && !event.parent_event_id && (
+            <span
+              className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold mb-1.5"
+              style={{
+                backgroundColor: `${categoryColor.accent}15`,
+                color: categoryColor.accent,
+              }}
+            >
+              {getChildEventLabel(event.category_slug, event.child_event_count)}
+            </span>
+          )}
 
           {/* Title */}
           <h3

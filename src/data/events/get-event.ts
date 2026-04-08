@@ -60,7 +60,25 @@ export async function getEvent(
     throw error;
   }
 
-  console.log('✅ [getEvent] Found event:', (data as EventWithDetails)?.title);
+  const event = data as EventWithDetails;
 
-  return data as EventWithDetails;
+  // If this is a child event, fetch parent title + slug + instance_date for breadcrumbs
+  if (event.parent_event_id) {
+    const { data: parentData } = await supabase
+      .from('events')
+      .select('title, slug, instance_date')
+      .eq('id', event.parent_event_id)
+      .single();
+
+    if (parentData) {
+      const parent = parentData as { title: string; slug: string; instance_date: string };
+      event.parent_event_title = parent.title;
+      // Store slug with date appended so breadcrumb can link directly
+      event.parent_event_slug = `${parent.slug}-${parent.instance_date}`;
+    }
+  }
+
+  console.log('✅ [getEvent] Found event:', event.title);
+
+  return event;
 }

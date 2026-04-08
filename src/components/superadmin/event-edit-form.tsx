@@ -1375,6 +1375,34 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
           </div>
         )}
 
+        {/* ------------------------------------------------------------------ */}
+        {/* PARENT EVENT — link this event to a parent (festival, conference) */}
+        {/* ------------------------------------------------------------------ */}
+        <div className="p-4 bg-pink-50/50 border border-pink-200/50 rounded-lg">
+          <div className="flex items-start gap-3">
+            <Layers className="w-5 h-5 text-pink-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-pink-800">Parent Event</p>
+              {(event as unknown as Record<string, unknown>).parent_event_id ? (
+                <div className="mt-1">
+                  <p className="text-sm text-pink-700">
+                    Child of: <span className="font-medium">{(event as unknown as Record<string, unknown>).parent_event_id as string}</span>
+                  </p>
+                  {(event as unknown as Record<string, unknown>).parent_group ? (
+                    <p className="text-sm text-pink-600 mt-0.5">
+                      Group: {String((event as unknown as Record<string, unknown>).parent_group)}
+                    </p>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="text-sm text-stone mt-0.5">
+                  Not linked to a parent event. Use the scraper extension to set parent relationships.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Status */}
         <div>
           <label htmlFor="status" className="block text-sm font-medium text-charcoal mb-2">

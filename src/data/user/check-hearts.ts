@@ -100,7 +100,8 @@ export async function checkHearts(params: {
 
     const supabase = await createClient();
 
-    const { data, error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
       .from('hearts')
       .select('event_id')
       .eq('user_id', userId)
@@ -119,7 +120,7 @@ export async function checkHearts(params: {
     // 3. BUILD RESULT MAP
     // -------------------------------------------------------------------------
 
-    const heartedIds = new Set((data || []).map((h) => h.event_id));
+    const heartedIds = new Set(((data || []) as any[]).map((h: any) => h.event_id));
 
     const hearts: HeartStatusMap = {};
     eventIds.forEach((id) => {

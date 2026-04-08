@@ -170,7 +170,8 @@ export async function getSeries(
 
   if (categorySlug) {
     // Look up category ID first
-    const { data: categoryData } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: categoryData } = await (supabase as any)
       .from('categories')
       .select('id')
       .eq('slug', categorySlug)
@@ -185,7 +186,8 @@ export async function getSeries(
 
   if (organizerSlug) {
     // Look up organizer ID first
-    const { data: organizerData } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: organizerData } = await (supabase as any)
       .from('organizers')
       .select('id')
       .eq('slug', organizerSlug)

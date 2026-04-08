@@ -38,15 +38,17 @@ export default async function SuperadminSeriesEditPage({ params }: PageProps) {
 
   // Fetch series
   const supabase = await createClient();
-  const { data: series, error } = await supabase
+  const { data: seriesData, error } = await supabase
     .from('series')
     .select('*')
     .eq('id', seriesId)
     .single();
 
-  if (error || !series) {
+  if (error || !seriesData) {
     notFound();
   }
+
+  const series = seriesData as any;
 
   return (
     <div className="min-h-screen">

@@ -38,7 +38,8 @@ export async function POST(request: NextRequest) {
     const failed: { id: string; error: string }[] = [];
 
     for (const seriesId of seriesIds) {
-      const { data: events } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: events } = await (supabase as any)
         .from('events')
         .select('id')
         .eq('series_id', seriesId)
@@ -47,7 +48,8 @@ export async function POST(request: NextRequest) {
       if (events && events.length > 0) {
         if (deleteEvents) {
           // Soft-delete the events and detach from series (so FK doesn't block series delete)
-          const { error: softDeleteError } = await supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { error: softDeleteError } = await (supabase as any)
             .from('events')
             .update({
               deleted_at: new Date().toISOString(),
@@ -64,7 +66,8 @@ export async function POST(request: NextRequest) {
           }
         } else {
           // Detach events — they become orphans
-          const { error: detachError } = await supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { error: detachError } = await (supabase as any)
             .from('events')
             .update({
               series_id: null,
@@ -97,7 +100,8 @@ export async function POST(request: NextRequest) {
     const eventAction = deleteEvents ? 'deleted' : 'detached';
 
     // Audit log
-    await supabase.from('admin_audit_log').insert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from('admin_audit_log').insert({
       action: 'superadmin_bulk_delete_series',
       entity_type: 'series',
       entity_id: deleted[0] || seriesIds[0],

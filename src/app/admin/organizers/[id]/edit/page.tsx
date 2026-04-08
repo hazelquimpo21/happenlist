@@ -38,15 +38,17 @@ export default async function SuperadminOrganizerEditPage({ params }: PageProps)
 
   // Fetch organizer
   const supabase = await createClient();
-  const { data: organizer, error } = await supabase
+  const { data: organizerData, error } = await supabase
     .from('organizers')
     .select('*')
     .eq('id', organizerId)
     .single();
 
-  if (error || !organizer) {
+  if (error || !organizerData) {
     notFound();
   }
+
+  const organizer = organizerData as any;
 
   return (
     <div className="min-h-screen">

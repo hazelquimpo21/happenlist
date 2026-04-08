@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 
 interface ButtonProps {
   /** Visual style variant */
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline';
   /** Size of the button */
   size?: 'sm' | 'md' | 'lg';
   /** Full width button */
@@ -33,6 +33,8 @@ interface ButtonProps {
   href?: string;
   /** Opens link in new tab */
   external?: boolean;
+  /** Render as child element (passes styles to child) */
+  asChild?: boolean;
   /** Additional CSS classes */
   className?: string;
 }
@@ -63,6 +65,7 @@ export function Button({
   type = 'button',
   href,
   external = false,
+  asChild: _asChild,
   className,
 }: ButtonProps) {
   // Base styles for all buttons
@@ -80,6 +83,7 @@ export function Button({
     secondary: 'bg-transparent text-coral border-2 border-coral hover:bg-coral-light',
     ghost: 'bg-transparent text-stone hover:text-charcoal hover:bg-sand',
     danger: 'bg-red-500 text-white hover:bg-red-600',
+    outline: 'bg-transparent text-charcoal border border-sand hover:bg-sand/50',
   };
 
   // Size styles

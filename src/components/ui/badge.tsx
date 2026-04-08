@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 
 interface BadgeProps {
   /** Visual style variant */
-  variant?: 'default' | 'category' | 'free' | 'date' | 'status' | 'secondary';
+  variant?: 'default' | 'category' | 'free' | 'date' | 'status' | 'secondary' | 'outline';
   /** Badge size */
   size?: 'sm' | 'md';
   /** Badge content */
@@ -46,6 +46,7 @@ export function Badge({
     date: 'bg-coral-light text-coral-dark',
     status: 'bg-sand text-stone',
     secondary: 'bg-sage/20 text-sage',
+    outline: 'bg-transparent border border-sand text-stone',
   };
 
   // Size styles

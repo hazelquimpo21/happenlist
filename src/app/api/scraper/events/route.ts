@@ -150,7 +150,8 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminClient();
 
     // -- Deduplicate by source_url --
-    const { data: existing } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existing } = await (supabase as any)
       .from('events')
       .select('id, title, status')
       .eq('source_url', body.source_url)
@@ -169,7 +170,8 @@ export async function POST(request: NextRequest) {
     // -- Resolve category (by ID or slug) --
     let categoryId = body.category_id || null;
     if (!categoryId && body.category_slug) {
-      const { data: cat } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: cat } = await (supabase as any)
         .from('categories')
         .select('id')
         .eq('slug', body.category_slug)
@@ -243,7 +245,8 @@ export async function POST(request: NextRequest) {
       scraped_data: body.scraped_data || null,
     };
 
-    const { data: event, error: insertError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: event, error: insertError } = await (supabase as any)
       .from('events')
       .insert(eventData)
       .select('id, title, slug, status')

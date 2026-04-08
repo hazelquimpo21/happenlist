@@ -20,6 +20,7 @@ import {
   Tag,
   DollarSign,
   Repeat,
+  GitBranch,
 } from 'lucide-react';
 import { cn, getBestImageUrl, formatMKE, formatTimeMKE, formatDateTimeMKE } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -161,6 +162,13 @@ export function AdminEventCard({
                   <Badge size="sm" className="bg-indigo-100 text-indigo-800">
                     <Repeat className="w-3 h-3 mr-1" />
                     {event.series_title || 'Series'}
+                  </Badge>
+                )}
+
+                {event.parent_event_id && (
+                  <Badge size="sm" className="bg-pink-100 text-pink-800">
+                    <GitBranch className="w-3 h-3 mr-1" />
+                    {event.parent_event_title || 'Child Event'}
                   </Badge>
                 )}
 

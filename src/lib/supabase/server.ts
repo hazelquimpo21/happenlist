@@ -43,7 +43,7 @@ export async function createClient() {
     supabaseAnonKey,
     {
       global: {
-        fetch: (url, options) =>
+        fetch: (url: string | URL | Request, options?: RequestInit) =>
           fetch(url, { ...options, cache: 'no-store' }),
       },
       cookies: {

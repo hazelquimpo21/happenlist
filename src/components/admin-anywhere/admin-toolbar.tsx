@@ -195,7 +195,7 @@ export function AdminToolbar({
     return null;
   }
 
-  logger.debug('Showing admin toolbar for event:', event.title);
+  logger.debug('Showing admin toolbar for event', { metadata: { eventTitle: event.title } });
 
   // -------------------------------------------------------------------------
   // DERIVED VALUES

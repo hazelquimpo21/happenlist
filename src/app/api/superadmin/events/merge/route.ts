@@ -62,7 +62,8 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
 
     // Fetch all events with related data
-    const { data: events, error: fetchError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: events, error: fetchError } = await (supabase as any)
       .from('events')
       .select(`
         *,
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Filter out already-deleted events — can't merge something that's gone
-    const activeEvents = events.filter(e => !e.deleted_at);
+    const activeEvents = (events as any[]).filter((e: any) => !e.deleted_at);
     if (activeEvents.length < 2) {
       return NextResponse.json(
         { success: false, error: 'At least 2 non-deleted events are required to merge' },
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     // ===== PREVIEW MODE: return AI suggestion =====
     if (useAi && !mergedFields) {
-      const eventsForAi: EventForMerge[] = activeEvents.map((e) => ({
+      const eventsForAi: EventForMerge[] = activeEvents.map((e: any) => ({
         id: e.id,
         title: e.title,
         description: e.description,
@@ -125,7 +126,7 @@ export async function POST(request: NextRequest) {
           success: true,
           mode: 'preview',
           suggestion,
-          events: activeEvents.map(e => ({
+          events: activeEvents.map((e: any) => ({
             id: e.id,
             title: e.title,
             start_datetime: e.start_datetime,
@@ -149,7 +150,7 @@ export async function POST(request: NextRequest) {
       (a, b) => (a.start_datetime || '').localeCompare(b.start_datetime || '')
     );
     const primary = primaryEventId
-      ? activeEvents.find(e => e.id === primaryEventId) || sortedByDate[0]
+      ? activeEvents.find((e: any) => e.id === primaryEventId) || sortedByDate[0]
       : sortedByDate[0];
 
     const otherIds = eventIds.filter(id => id !== primary.id);
@@ -180,7 +181,8 @@ export async function POST(request: NextRequest) {
       }
 
       if (Object.keys(safeFields).length > 0) {
-        const { error: updateError } = await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: updateError } = await (supabase as any)
           .from('events')
           .update(safeFields)
           .eq('id', primary.id);
@@ -195,7 +197,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Soft-delete the other events (match existing delete pattern)
-    const { error: deleteError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: deleteError } = await (supabase as any)
       .from('events')
       .update({
         status: 'deleted',
@@ -218,7 +221,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Audit log
-    await supabase.from('admin_audit_log').insert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from('admin_audit_log').insert({
       action: 'superadmin_merge_events',
       entity_type: 'event',
       entity_id: primary.id,

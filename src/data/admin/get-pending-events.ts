@@ -25,6 +25,9 @@ export interface AdminEventCard {
   created_at: string;
   series_id: string | null;
   series_title: string | null;
+  parent_event_id: string | null;
+  parent_event_title: string | null;
+  parent_group: string | null;
   category_name: string | null;
   category_slug: string | null;
   location_name: string | null;
@@ -108,6 +111,9 @@ export async function getPendingEvents(
         created_at,
         series_id,
         series:series(title),
+        parent_event_id,
+        parent_group,
+        parent_event:events!parent_event_id(title),
         price_type,
         price_low,
         price_high,
@@ -183,6 +189,9 @@ export async function getPendingEvents(
       created_at: event.created_at,
       series_id: event.series_id || null,
       series_title: (event.series as { title: string } | null)?.title || null,
+      parent_event_id: event.parent_event_id || null,
+      parent_event_title: (event.parent_event as { title: string } | null)?.title || null,
+      parent_group: event.parent_group || null,
       price_type: event.price_type,
       price_low: event.price_low,
       price_high: event.price_high,

@@ -40,7 +40,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify target exists
-    const { data: targetSeries, error: targetError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: targetSeries, error: targetError } = await (supabase as any)
       .from('series')
       .select('id, title')
       .eq('id', targetSeriesId)
@@ -51,7 +52,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify sources exist
-    const { data: sourceSeries } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: sourceSeries } = await (supabase as any)
       .from('series')
       .select('id, title')
       .in('id', sourceSeriesIds);
@@ -61,7 +63,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current max sequence in target
-    const { data: maxSeqData } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: maxSeqData } = await (supabase as any)
       .from('events')
       .select('series_sequence')
       .eq('series_id', targetSeriesId)
@@ -74,7 +77,8 @@ export async function POST(request: NextRequest) {
 
     // Move events from each source to target
     for (const sourceId of sourceSeriesIds) {
-      const { data: sourceEvents } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: sourceEvents } = await (supabase as any)
         .from('events')
         .select('id, start_datetime')
         .eq('series_id', sourceId)
@@ -83,7 +87,8 @@ export async function POST(request: NextRequest) {
 
       if (sourceEvents && sourceEvents.length > 0) {
         for (const event of sourceEvents) {
-          await supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase as any)
             .from('events')
             .update({
               series_id: targetSeriesId,
@@ -105,7 +110,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Update target series date range and session count
-    const { data: allTargetEvents } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: allTargetEvents } = await (supabase as any)
       .from('events')
       .select('instance_date, start_datetime')
       .eq('series_id', targetSeriesId)
@@ -114,10 +120,11 @@ export async function POST(request: NextRequest) {
 
     if (allTargetEvents && allTargetEvents.length > 0) {
       const allDates = allTargetEvents
-        .map(e => e.instance_date || e.start_datetime?.split('T')[0])
+        .map((e: any) => e.instance_date || e.start_datetime?.split('T')[0])
         .filter(Boolean) as string[];
 
-      await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
         .from('series')
         .update({
           start_date: allDates[0] || null,
@@ -128,7 +135,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Audit log
-    await supabase.from('admin_audit_log').insert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from('admin_audit_log').insert({
       action: 'superadmin_merge_series',
       entity_type: 'series',
       entity_id: targetSeriesId,

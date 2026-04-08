@@ -58,6 +58,7 @@ The color map lives at `src/lib/constants/category-colors.ts`. Use `getCategoryC
 - Date format: "Sat · 7pm" (day-of-week + time). Today/Tomorrow for near events. Month + day for distant events.
 - Layered shadow: `shadow-card` default, `shadow-card-lifted` on hover with `-translate-y-1.5`
 - "Free" price: sage-colored pill badge
+- **Parent badge**: when `child_event_count > 0`, shows contextual label (e.g., "12 acts", "48 showings") using category accent color at 15% opacity. Not shown on child event cards.
 
 ### SeriesCard
 - Type badge in bold color (Camp = amber, Class = emerald, etc.)
@@ -75,6 +76,34 @@ Each category card has full background in the category's light tint, bold left b
 
 ## Signature Visual Element
 **Topographic contour line pattern** — applied via `.bg-topo` CSS class. Subtle organic texture on section backgrounds (hero, CTA). Happenlist's visual fingerprint.
+
+## Parent Events
+
+Events can have a parent-child relationship (festivals → screenings, conferences → sessions, theatrical runs → performances). Only one level of nesting is supported.
+
+### Data Layer
+- `getChildEvents(parentEventId)` — fetches published children ordered by `start_datetime ASC`, returns events + distinct `parent_group` values for filter pills
+- `getParentEventInfo(parentEventId)` — lightweight fetch for breadcrumbs (title, slug, dates, image, category)
+- `getChildEventCount(parentEventId)` — head-only count query
+- Main event feeds (`getEvents`, `getFeaturedEvents`) filter `WHERE parent_event_id IS NULL` to hide children
+- `getEvent` joins parent title + slug when `parent_event_id` is set
+
+### ChildEventsSchedule Component
+Client component (`src/components/events/child-events-schedule.tsx`) shown on parent event detail pages:
+- Groups children by date with Fraunces date headers (editorial program feel)
+- Filter pills for `parent_group` values (venues, stages) — client-side filter, no page reload
+- "Today" indicator with auto-scroll
+- Each row: time (bold, tabular) + category dot + title (links to child) + venue + price badge
+- Responsive: compact rows on desktop, stacked on mobile
+
+### Event Detail Page Behavior
+- **Parent events**: show child count badge + ChildEventsSchedule below description (replaces "Similar Events")
+- **Child events**: show parent breadcrumb trail + `parent_group` label + "More from [Parent]" sibling events (replaces "Similar Events")
+- **Standalone events**: unchanged, show "Events Like This" similar events
+
+### SEO
+- Parent events add `subEvent` array to JSON-LD (max 50 children)
+- Child events add `superEvent` reference to parent in JSON-LD
 
 ## Behavioral Design Notes
 The primary user ("Jamie") is in browse mode — low effort, high openness. They want to be SURPRISED by something cool. Design decisions support this:

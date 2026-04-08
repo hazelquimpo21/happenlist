@@ -650,7 +650,8 @@ export async function restoreEvent(eventId: string, adminEmail: string): Promise
     const supabase = await createClient();
 
     // Get event title
-    const { data, error: fetchError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error: fetchError } = await (supabase as any)
       .from('events')
       .select('title')
       .eq('id', eventId)

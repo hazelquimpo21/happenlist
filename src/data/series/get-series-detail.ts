@@ -35,7 +35,8 @@ export async function getSeriesBySlug(
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from('series')
     .select(
       `
@@ -58,19 +59,21 @@ export async function getSeriesBySlug(
     throw error;
   }
 
+  const row = data as Record<string, unknown>;
+
   // Log camps/classes fields for troubleshooting (only when they have values)
-  console.log(`✅ [getSeriesBySlug] Found series: ${data.title}`, {
-    series_type: data.series_type,
-    attendance_mode: data.attendance_mode,
-    ...(data.age_low != null && { age_low: data.age_low }),
-    ...(data.age_high != null && { age_high: data.age_high }),
-    ...(data.skill_level && { skill_level: data.skill_level }),
-    ...(data.extended_start_time && { extended_start_time: data.extended_start_time }),
-    ...(data.extended_end_time && { extended_end_time: data.extended_end_time }),
-    ...(data.per_session_price != null && { per_session_price: data.per_session_price }),
-    ...(data.materials_fee != null && { materials_fee: data.materials_fee }),
-    ...(data.days_of_week && { days_of_week: data.days_of_week }),
-    ...(data.term_name && { term_name: data.term_name }),
+  console.log(`✅ [getSeriesBySlug] Found series: ${row.title}`, {
+    series_type: row.series_type,
+    attendance_mode: row.attendance_mode,
+    ...(row.age_low != null && { age_low: row.age_low }),
+    ...(row.age_high != null && { age_high: row.age_high }),
+    ...(row.skill_level ? { skill_level: row.skill_level } : {}),
+    ...(row.extended_start_time ? { extended_start_time: row.extended_start_time } : {}),
+    ...(row.extended_end_time ? { extended_end_time: row.extended_end_time } : {}),
+    ...(row.per_session_price != null ? { per_session_price: row.per_session_price } : {}),
+    ...(row.materials_fee != null ? { materials_fee: row.materials_fee } : {}),
+    ...(row.days_of_week ? { days_of_week: row.days_of_week } : {}),
+    ...(row.term_name ? { term_name: row.term_name } : {}),
   });
 
   return data as SeriesWithDetails;
@@ -137,7 +140,8 @@ export async function getSeriesEvents(
 
   const supabase = await createClient();
 
-  let query = supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (supabase as any)
     .from('events')
     .select(
       `
@@ -167,7 +171,7 @@ export async function getSeriesEvents(
   }
 
   // Transform to SeriesEvent format
-  const events: SeriesEvent[] = (data || []).map((row) => {
+  const events: SeriesEvent[] = (data || []).map((row: any) => {
     const location = row.location as Record<string, unknown> | null;
     return {
       id: row.id,
@@ -298,7 +302,8 @@ export async function getSeriesStats(seriesId: string): Promise<{
     .gte('instance_date', today);
 
   // Get next event date
-  const { data: nextEvent } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: nextEvent } = await (supabase as any)
     .from('events')
     .select('instance_date')
     .eq('series_id', seriesId)

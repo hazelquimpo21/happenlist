@@ -13,6 +13,9 @@ import type { EventCard, EventQueryParams } from '@/types';
 function transformToEventCard(row: Record<string, unknown>): EventCard {
   const category = row.category as Record<string, unknown> | null;
   const location = row.location as Record<string, unknown> | null;
+  // PostgREST returns embedded count as [{ count: N }]
+  const children = row.children as { count: number }[] | null;
+  const childCount = children?.[0]?.count ?? 0;
 
   return {
     id: row.id as string,
@@ -42,6 +45,9 @@ function transformToEventCard(row: Record<string, unknown>): EventCard {
     vibe_tags: (row.vibe_tags as string[] | null) ?? [],
     organizer_name: row.organizer_name as string | null ?? null,
     organizer_is_venue: (row.organizer_is_venue as boolean | null) ?? false,
+    // Parent event fields
+    parent_event_id: row.parent_event_id as string | null ?? null,
+    child_event_count: childCount > 0 ? childCount : undefined,
   };
 }
 
@@ -113,13 +119,16 @@ export async function getEvents(
       access_type, noise_level, vibe_tags,
       organizer_name, organizer_is_venue,
       age_restriction, is_family_friendly,
+      parent_event_id,
       category:categories(name, slug),
-      location:locations(name, slug)
+      location:locations(name, slug),
+      children:events!parent_event_id(count)
     `,
       { count: 'exact' }
     )
     .eq('status', 'published')
     .is('deleted_at', null)
+    .is('parent_event_id', null) // Hide child events from main feed
     .gte('instance_date', new Date().toISOString().split('T')[0]);
 
   // Apply filters

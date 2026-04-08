@@ -45,7 +45,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const supabase = await createClient();
 
     // Fetch the original event
-    const { data: event, error: fetchError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: event, error: fetchError } = await (supabase as any)
       .from('events')
       .select('*')
       .eq('id', eventId)
@@ -67,7 +68,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     // Create a recurring series from the event's metadata
     const seriesSlug = generateSlug(event.title || 'recurring-series');
-    const { data: series, error: seriesError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: series, error: seriesError } = await (supabase as any)
       .from('series')
       .insert({
         title: event.title,
@@ -98,7 +100,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     // Link the original event as instance #1
-    const { error: linkError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: linkError } = await (supabase as any)
       .from('events')
       .update({
         series_id: series.id,
@@ -165,7 +168,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
         source: 'admin',
       }));
 
-      const { data: inserted, error: insertError } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: inserted, error: insertError } = await (supabase as any)
         .from('events')
         .insert(newEvents)
         .select('id');

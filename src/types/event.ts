@@ -36,6 +36,10 @@ export interface EventWithDetails extends EventRow {
     OrganizerRow,
     'id' | 'name' | 'slug' | 'logo_url' | 'description' | 'website_url'
   > | null;
+  // Parent event relationships (parent_event_id and parent_group come from EventRow)
+  parent_event_title?: string | null;
+  parent_event_slug?: string | null;
+  child_event_count?: number;
 }
 
 /**
@@ -82,4 +86,8 @@ export interface EventCard {
   // Organizer
   organizer_name?: string | null;
   organizer_is_venue?: boolean;
+  // Parent event relationships
+  parent_event_id?: string | null;
+  parent_group?: string | null;
+  child_event_count?: number;
 }

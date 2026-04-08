@@ -121,7 +121,8 @@ export async function toggleFollow(
     // Build the filter based on entity type
     const entityColumn = `${entityType}_id`;
 
-    const { data: existingFollow, error: checkError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existingFollow, error: checkError } = await (supabase as any)
       .from('user_follows')
       .select('id')
       .eq('user_id', userId)
@@ -173,7 +174,8 @@ export async function toggleFollow(
       // Set the correct entity column
       insertData[entityColumn] = entityId;
 
-      const { error: insertError } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: insertError } = await (supabase as any)
         .from('user_follows')
         .insert(insertData);
 

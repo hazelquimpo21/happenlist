@@ -771,7 +771,7 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
                     <Button
                       onClick={manualCreateAndAttach}
                       disabled={
-                        phase === 'creating' ||
+                        (phase as string) === 'creating' ||
                         (createMode === 'new' && !seriesTitle.trim()) ||
                         (createMode === 'existing' && !selectedExistingId)
                       }

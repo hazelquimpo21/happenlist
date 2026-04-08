@@ -83,7 +83,8 @@ export async function searchVenues(
   try {
     // Call the PostgreSQL search_venues function
     // This uses pg_trgm for fuzzy matching and full-text search
-    const { data, error } = await supabase.rpc('search_venues', {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc('search_venues', {
       search_query: cleanQuery,
       result_limit: limit,
     });
@@ -135,7 +136,8 @@ async function searchVenuesFallback(
   // special characters that could alter filter syntax (commas, dots, parens).
   const sanitized = query.replace(/[,().%_\\]/g, (c) => `\\${c}`);
 
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from('locations')
     .select(`
       id,
@@ -161,7 +163,7 @@ async function searchVenuesFallback(
   }
 
   // Add a dummy similarity score for fallback results
-  const results: VenueSearchResult[] = (data || []).map((venue) => ({
+  const results: VenueSearchResult[] = ((data || []) as any[]).map((venue) => ({
     ...venue,
     similarity_score: 0.5, // Dummy score for fallback
   }));
@@ -191,7 +193,8 @@ export async function getVenueById(
 ): Promise<VenueSearchResult | null> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from('locations')
     .select(`
       id,
@@ -215,7 +218,7 @@ export async function getVenueById(
     return null;
   }
 
-  return { ...data, similarity_score: 0 };
+  return { ...(data as Record<string, unknown>), similarity_score: 0 } as VenueSearchResult;
 }
 
 /**
@@ -232,7 +235,8 @@ export async function getPopularVenues(
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from('locations')
     .select(`
       id,
@@ -259,7 +263,7 @@ export async function getPopularVenues(
   }
 
   // Add similarity score of 0 for popular venues (not from search)
-  const results: VenueSearchResult[] = (data || []).map((venue) => ({
+  const results: VenueSearchResult[] = ((data || []) as any[]).map((venue) => ({
     ...venue,
     similarity_score: 0,
   }));
