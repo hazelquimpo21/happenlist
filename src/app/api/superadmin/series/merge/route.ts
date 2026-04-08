@@ -120,6 +120,7 @@ export async function POST(request: NextRequest) {
 
     if (allTargetEvents && allTargetEvents.length > 0) {
       const allDates = allTargetEvents
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((e: any) => e.instance_date || e.start_datetime?.split('T')[0])
         .filter(Boolean) as string[];
 

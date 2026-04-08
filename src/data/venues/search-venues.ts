@@ -163,6 +163,7 @@ async function searchVenuesFallback(
   }
 
   // Add a dummy similarity score for fallback results
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const results: VenueSearchResult[] = ((data || []) as any[]).map((venue) => ({
     ...venue,
     similarity_score: 0.5, // Dummy score for fallback
@@ -263,6 +264,7 @@ export async function getPopularVenues(
   }
 
   // Add similarity score of 0 for popular venues (not from search)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const results: VenueSearchResult[] = ((data || []) as any[]).map((venue) => ({
     ...venue,
     similarity_score: 0,

@@ -9,13 +9,11 @@ export const dynamic = 'force-dynamic';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import Link from 'next/link';
 import {
   MapPin,
   Globe,
   Phone,
   ExternalLink,
-  Calendar,
 } from 'lucide-react';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { Button, Badge } from '@/components/ui';

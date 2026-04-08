@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Container, Breadcrumbs } from '@/components/layout';
-import { EventGrid, SectionHeader } from '@/components/events';
+import { EventGrid } from '@/components/events';
 import { getEvents } from '@/data/events';
 import { getCategories, getCategoryBySlug } from '@/data/categories';
 import { GOOD_FOR_TAGS, getGoodForTag } from '@/types';

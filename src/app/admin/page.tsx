@@ -11,10 +11,8 @@ import {
   CheckCircle,
   XCircle,
   Calendar,
-  TrendingUp,
   FileText,
   ArrowRight,
-  ExternalLink,
 } from 'lucide-react';
 import { AdminHeader, StatCard, StatCardGrid } from '@/components/admin';
 import { Button } from '@/components/ui/button';

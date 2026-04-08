@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Filter out already-deleted events
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const activeEvents = (events as any[]).filter((e: any) => !e.deleted_at);
     if (activeEvents.length < 2) {
       return NextResponse.json(
@@ -89,6 +90,7 @@ export async function POST(request: NextRequest) {
 
     // ===== MODE: AUTO DETECT =====
     if (mode === 'auto_detect') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const eventsForAi: EventForPatternDetect[] = activeEvents.map((e: any) => ({
         id: e.id,
         title: e.title,
@@ -106,6 +108,7 @@ export async function POST(request: NextRequest) {
           success: true,
           mode: 'auto_detect',
           pattern,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           events: activeEvents.map((e: any) => ({
             id: e.id,
             title: e.title,
@@ -174,7 +177,9 @@ export async function POST(request: NextRequest) {
         .select('slug')
         .like('slug', `${baseSlug}%`);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (existingSlugs && existingSlugs.some((s: any) => s.slug === baseSlug)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const usedSlugs = new Set(existingSlugs.map((s: any) => s.slug));
         let counter = 2;
         while (usedSlugs.has(`${baseSlug}-${counter}`)) {

@@ -5,7 +5,7 @@
  */
 
 import { cn } from '@/lib/utils';
-import { formatPrice, isFreeEvent, getPriceClassName } from '@/lib/utils/price';
+import { formatPrice, isFreeEvent } from '@/lib/utils/price';
 
 interface EventPriceProps {
   /** Event pricing data */

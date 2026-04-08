@@ -120,6 +120,7 @@ export async function checkHearts(params: {
     // 3. BUILD RESULT MAP
     // -------------------------------------------------------------------------
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const heartedIds = new Set(((data || []) as any[]).map((h: any) => h.event_id));
 
     const hearts: HeartStatusMap = {};

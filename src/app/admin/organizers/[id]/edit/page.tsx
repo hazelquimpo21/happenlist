@@ -48,6 +48,7 @@ export default async function SuperadminOrganizerEditPage({ params }: PageProps)
     notFound();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const organizer = organizerData as any;
 
   return (

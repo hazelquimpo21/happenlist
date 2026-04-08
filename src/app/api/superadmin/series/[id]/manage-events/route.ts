@@ -123,7 +123,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
       if (filteredCandidates.length > 0) {
         // Also get day-of-week pattern from current events
         const seriesDays = (currentEvents || [])
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .filter((e: any) => e.start_datetime)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .map((e: any) => new Date(e.start_datetime!).getDay());
         const seriesDaySet = new Set(seriesDays);
 
@@ -324,6 +326,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (allSeriesEvents && allSeriesEvents.length > 0) {
       const allDates = allSeriesEvents
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((e: any) => e.instance_date || e.start_datetime?.split('T')[0])
         .filter(Boolean) as string[];
 

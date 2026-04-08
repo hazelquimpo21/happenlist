@@ -293,6 +293,7 @@ export async function getHeartedEventIds(userId: string): Promise<string[]> {
       return [];
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return ((data || []) as any[]).map((h) => h.event_id);
   } catch (error) {
     logger2.error('Unexpected error', error);

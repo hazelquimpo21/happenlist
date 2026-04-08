@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Filter out already-deleted events — can't merge something that's gone
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const activeEvents = (events as any[]).filter((e: any) => !e.deleted_at);
     if (activeEvents.length < 2) {
       return NextResponse.json(
@@ -91,6 +92,7 @@ export async function POST(request: NextRequest) {
 
     // ===== PREVIEW MODE: return AI suggestion =====
     if (useAi && !mergedFields) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const eventsForAi: EventForMerge[] = activeEvents.map((e: any) => ({
         id: e.id,
         title: e.title,
@@ -126,6 +128,7 @@ export async function POST(request: NextRequest) {
           success: true,
           mode: 'preview',
           suggestion,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           events: activeEvents.map((e: any) => ({
             id: e.id,
             title: e.title,
@@ -150,6 +153,7 @@ export async function POST(request: NextRequest) {
       (a, b) => (a.start_datetime || '').localeCompare(b.start_datetime || '')
     );
     const primary = primaryEventId
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? activeEvents.find((e: any) => e.id === primaryEventId) || sortedByDate[0]
       : sortedByDate[0];
 

@@ -11,12 +11,10 @@ export const dynamic = 'force-dynamic';
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
 import { Container, Breadcrumbs } from '@/components/layout';
 import {
   SeriesHeader,
   SeriesEventsList,
-  SeriesDetailSkeleton,
 } from '@/components/series';
 import { SeriesGrid } from '@/components/series';
 import { SuperadminBar } from '@/components/admin-anywhere';

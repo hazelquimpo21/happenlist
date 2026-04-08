@@ -4,7 +4,7 @@
  * Displays formatted event date and time.
  */
 
-import { Calendar, Clock } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { formatEventDate } from '@/lib/utils/dates';
 import { cn } from '@/lib/utils';
 

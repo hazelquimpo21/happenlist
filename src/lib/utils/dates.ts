@@ -14,7 +14,6 @@ import {
   parseISO,
   isToday,
   isTomorrow,
-  isThisWeek,
   startOfDay,
   endOfDay,
   startOfWeek,

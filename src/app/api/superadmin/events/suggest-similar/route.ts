@@ -79,9 +79,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Extract signature from selected events for matching
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const titles = selectedEvents.map((e: any) => e.title?.toLowerCase() || '');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const categoryIds = [...new Set(selectedEvents.map((e: any) => e.category_id).filter(Boolean))];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const locationIds = [...new Set(selectedEvents.map((e: any) => e.location_id).filter(Boolean))];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const organizerIds = [...new Set(selectedEvents.map((e: any) => e.organizer_id).filter(Boolean))];
 
     // Extract common title words (3+ chars, appearing in most events)
@@ -203,6 +207,7 @@ export async function POST(request: NextRequest) {
       if (c.start_datetime) {
         const candidateDay = new Date(c.start_datetime).getDay();
         const selectedDays = selectedEvents
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .map((e: any) => e.start_datetime ? new Date(e.start_datetime).getDay() : -1)
           .filter((d: number) => d >= 0);
         if (selectedDays.includes(candidateDay)) {

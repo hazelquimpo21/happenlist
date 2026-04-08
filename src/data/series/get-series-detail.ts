@@ -171,6 +171,7 @@ export async function getSeriesEvents(
   }
 
   // Transform to SeriesEvent format
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const events: SeriesEvent[] = (data || []).map((row: any) => {
     const location = row.location as Record<string, unknown> | null;
     return {

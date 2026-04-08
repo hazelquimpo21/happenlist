@@ -5,7 +5,6 @@
  */
 
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { Heart, MapPin, Users, Calendar } from 'lucide-react';
 import { Container } from '@/components/layout';
 import { Button } from '@/components/ui';

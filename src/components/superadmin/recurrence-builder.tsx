@@ -12,7 +12,7 @@ import { RefreshCw, Calendar } from 'lucide-react';
 import { Input } from '@/components/ui';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { calculateRecurringDates, addMinutesToTime } from '@/lib/utils/recurrence';
+import { calculateRecurringDates } from '@/lib/utils/recurrence';
 import { RECURRENCE_FREQUENCY_OPTIONS } from '@/lib/constants/series-limits';
 import { DAY_OF_WEEK_SHORT } from '@/types/submission';
 import type { RecurrenceRule } from '@/lib/supabase/types';

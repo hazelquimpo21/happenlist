@@ -48,6 +48,7 @@ export default async function SuperadminSeriesEditPage({ params }: PageProps) {
     notFound();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const series = seriesData as any;
 
   return (

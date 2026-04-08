@@ -65,7 +65,6 @@ export function Button({
   type = 'button',
   href,
   external = false,
-  asChild: _asChild,
   className,
 }: ButtonProps) {
   // Base styles for all buttons

@@ -48,6 +48,7 @@ export default async function SuperadminVenueEditPage({ params }: PageProps) {
     notFound();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const venue = venueData as any;
 
   // Format address for display

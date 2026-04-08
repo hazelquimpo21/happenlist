@@ -88,6 +88,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Filter to only include events with truly external images
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const externalEvents = ((events || []) as any[]).filter(event => {
       return event.image_url && !isHostedImage(event.image_url);
     });
@@ -192,6 +193,7 @@ export async function POST(request: NextRequest) {
 
     const results: MigrationResult[] = [];
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const event of (events as any[])) {
       // Migrate hero image
       if (event.image_url && !isHostedImage(event.image_url) && !event.image_hosted) {

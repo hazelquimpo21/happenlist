@@ -15,12 +15,11 @@ import {
   ExternalLink,
   Clock,
   Shield,
-  DollarSign,
   Baby,
   GraduationCap,
   CalendarDays,
 } from 'lucide-react';
-import { Badge, Button } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { SeriesTypeBadge } from './series-type-badge';
 import { SeriesPrice } from './series-price';
 import { formatDateRange } from '@/lib/utils/dates';

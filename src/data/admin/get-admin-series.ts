@@ -61,7 +61,6 @@ export async function getAdminSeries(
   const offset = (page - 1) * limit;
 
   // Build query
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = supabase
     .from('series')
     .select(
