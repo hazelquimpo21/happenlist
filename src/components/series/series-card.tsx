@@ -123,8 +123,8 @@ export function SeriesCard({
             />
           ) : (
             // Placeholder gradient with series type icon
-            <div className="w-full h-full bg-gradient-to-br from-sage/20 to-coral/20 flex items-center justify-center">
-              <span className="text-stone text-h1 font-display opacity-50">
+            <div className="w-full h-full bg-gradient-to-br from-blue/10 to-orange/10 flex items-center justify-center">
+              <span className="text-zinc text-h1 font-body opacity-50">
                 {series.title.charAt(0).toUpperCase()}
               </span>
             </div>
@@ -140,7 +140,7 @@ export function SeriesCard({
             <div className="absolute top-3 right-3">
               <Badge
                 variant="category"
-                className="bg-warm-white/90 backdrop-blur-sm"
+                className="bg-pure/90 backdrop-blur-sm"
               >
                 {series.category_name}
               </Badge>
@@ -152,7 +152,7 @@ export function SeriesCard({
         <div className="p-4">
           {/* Date range */}
           {dateDisplay && (
-            <p className="text-body-sm text-stone mb-1 flex items-center gap-1">
+            <p className="text-body-sm text-zinc mb-1 flex items-center gap-1">
               <Calendar className="w-3 h-3 flex-shrink-0" />
               <span>{dateDisplay}</span>
             </p>
@@ -161,7 +161,7 @@ export function SeriesCard({
           {/* Title */}
           <h3
             className={cn(
-              'font-display text-charcoal mb-1 line-clamp-2',
+              'font-body text-ink mb-1 line-clamp-2',
               titleSize[variant]
             )}
           >
@@ -170,7 +170,7 @@ export function SeriesCard({
 
           {/* Location */}
           {series.location_name && (
-            <p className="text-body-sm text-stone mb-2 flex items-center gap-1">
+            <p className="text-body-sm text-zinc mb-2 flex items-center gap-1">
               <MapPin className="w-3 h-3 flex-shrink-0" />
               <span className="truncate">{series.location_name}</span>
             </p>
@@ -178,7 +178,7 @@ export function SeriesCard({
 
           {/* Session count */}
           {showSessions && sessionInfo && (
-            <p className="text-body-sm text-sage mb-2 flex items-center gap-1">
+            <p className="text-body-sm text-emerald mb-2 flex items-center gap-1">
               <Users className="w-3 h-3 flex-shrink-0" />
               <span>{sessionInfo}</span>
             </p>

@@ -45,8 +45,8 @@ export default async function WeekendEventsPage() {
 
       {/* Page header */}
       <div className="mb-8">
-        <h1 className="font-display text-h1 text-charcoal">This Weekend</h1>
-        <p className="text-stone text-body mt-2">
+        <h1 className="font-body text-h1 text-ink">This Weekend</h1>
+        <p className="text-zinc text-body mt-2">
           {total} {total === 1 ? 'event' : 'events'} happening this weekend
         </p>
       </div>

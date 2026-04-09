@@ -177,9 +177,9 @@ export function FormWrapper({
 
   // ========== Render ==========
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen bg-white">
       {/* ========== Header ========== */}
-      <div className="sticky top-0 z-10 bg-warm-white border-b border-sand shadow-sm">
+      <div className="sticky top-0 z-10 bg-pure border-b border-mist shadow-sm">
         <div className="max-w-3xl mx-auto px-4">
           <StepProgress
             currentStep={currentStep}
@@ -206,7 +206,7 @@ export function FormWrapper({
         )}
 
         {/* Form Fields */}
-        <div className="bg-warm-white rounded-xl p-6 shadow-sm border border-sand">
+        <div className="bg-pure rounded-xl p-6 shadow-sm border border-mist">
           {children}
         </div>
 
@@ -227,7 +227,7 @@ export function FormWrapper({
           <div className="flex items-center space-x-3">
             {/* Save indicator */}
             {lastSaved && (
-              <span className="text-sm text-stone">
+              <span className="text-sm text-zinc">
                 {isSaving ? (
                   <span className="flex items-center">
                     <Loader2 className="w-3 h-3 mr-1 animate-spin" />
@@ -259,7 +259,7 @@ export function FormWrapper({
               <Button
                 onClick={onSubmit}
                 disabled={isSubmitting}
-                className="bg-sage hover:bg-sage/90"
+                className="bg-emerald hover:bg-emerald/90"
               >
                 {isSubmitting ? (
                   <>
@@ -278,7 +278,7 @@ export function FormWrapper({
         </div>
 
         {/* Help text */}
-        <p className="mt-4 text-center text-sm text-stone">
+        <p className="mt-4 text-center text-sm text-zinc">
           {currentStep === FORM_STEPS.length
             ? "Ready to submit? Our team will review your event within 24 hours."
             : "Your progress is saved automatically. You can return anytime to complete your submission."}

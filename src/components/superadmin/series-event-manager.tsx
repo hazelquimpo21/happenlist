@@ -158,8 +158,8 @@ export function SeriesEventManager({ seriesId }: SeriesEventManagerProps) {
 
   if (phase === 'idle' || phase === 'loading') {
     return (
-      <Card padding="lg" className="border border-sand">
-        <div className="flex items-center gap-2 text-stone">
+      <Card padding="lg" className="border border-mist">
+        <div className="flex items-center gap-2 text-zinc">
           <RefreshCw className="w-4 h-4 animate-spin" />
           <span className="text-sm">Loading events...</span>
         </div>
@@ -185,45 +185,45 @@ export function SeriesEventManager({ seriesId }: SeriesEventManagerProps) {
     <div className="space-y-4">
       {/* Action feedback */}
       {actionMessage && (
-        <div className="flex items-center gap-2 p-2.5 bg-sage/10 text-sage border border-sage/20 rounded-lg text-sm">
+        <div className="flex items-center gap-2 p-2.5 bg-emerald/10 text-emerald border border-sage/20 rounded-lg text-sm">
           <Check className="w-4 h-4 shrink-0" />
           {actionMessage}
-          <button onClick={() => setActionMessage('')} className="ml-auto text-sage/60 hover:text-sage">
+          <button onClick={() => setActionMessage('')} className="ml-auto text-emerald/60 hover:text-emerald">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
       {/* ===== CURRENT EVENTS ===== */}
-      <Card padding="lg" className="border border-sand">
+      <Card padding="lg" className="border border-mist">
         <button
           onClick={() => setShowCurrentEvents(!showCurrentEvents)}
           className="w-full flex items-center justify-between mb-0"
         >
-          <h3 className="font-medium text-charcoal flex items-center gap-2">
-            <Repeat className="w-4 h-4 text-coral" />
+          <h3 className="font-medium text-ink flex items-center gap-2">
+            <Repeat className="w-4 h-4 text-blue" />
             Events in Series
-            <span className="text-stone text-sm font-normal">({currentEvents.length})</span>
+            <span className="text-zinc text-sm font-normal">({currentEvents.length})</span>
           </h3>
-          {showCurrentEvents ? <ChevronUp className="w-4 h-4 text-stone" /> : <ChevronDown className="w-4 h-4 text-stone" />}
+          {showCurrentEvents ? <ChevronUp className="w-4 h-4 text-zinc" /> : <ChevronDown className="w-4 h-4 text-zinc" />}
         </button>
 
         {showCurrentEvents && (
           <div className="mt-3">
             {currentEvents.length === 0 ? (
-              <p className="text-sm text-stone py-2">No events in this series yet.</p>
+              <p className="text-sm text-zinc py-2">No events in this series yet.</p>
             ) : (
               <>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] text-stone">
+                  <span className="text-[11px] text-zinc">
                     {selectedToRemove.size > 0 && `${selectedToRemove.size} selected`}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <button onClick={selectAllCurrent} className="text-[11px] text-stone hover:text-coral underline underline-offset-2">
+                    <button onClick={selectAllCurrent} className="text-[11px] text-zinc hover:text-blue underline underline-offset-2">
                       Select all
                     </button>
-                    <span className="text-stone text-[10px]">·</span>
-                    <button onClick={selectNoneCurrent} className="text-[11px] text-stone hover:text-coral underline underline-offset-2">
+                    <span className="text-zinc text-[10px]">·</span>
+                    <button onClick={selectNoneCurrent} className="text-[11px] text-zinc hover:text-blue underline underline-offset-2">
                       None
                     </button>
                   </span>
@@ -239,7 +239,7 @@ export function SeriesEventManager({ seriesId }: SeriesEventManagerProps) {
                         className={`w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded transition-colors text-left ${
                           isSelected
                             ? 'bg-red-50 border border-red-200'
-                            : 'bg-cream border border-transparent hover:border-sand'
+                            : 'bg-white border border-transparent hover:border-mist'
                         }`}
                       >
                         <input
@@ -248,10 +248,10 @@ export function SeriesEventManager({ seriesId }: SeriesEventManagerProps) {
                           readOnly
                           className="rounded text-red-500 w-3.5 h-3.5 shrink-0"
                         />
-                        <span className="text-stone w-28 shrink-0">{formatDate(event.start_datetime)}</span>
-                        <span className="text-charcoal truncate flex-1">{event.title}</span>
+                        <span className="text-zinc w-28 shrink-0">{formatDate(event.start_datetime)}</span>
+                        <span className="text-ink truncate flex-1">{event.title}</span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded shrink-0 ${
-                          event.status === 'published' ? 'bg-sage/10 text-sage' : 'bg-amber-50 text-amber-600'
+                          event.status === 'published' ? 'bg-emerald/10 text-emerald' : 'bg-amber-50 text-amber-600'
                         }`}>
                           {event.status}
                         </span>
@@ -261,7 +261,7 @@ export function SeriesEventManager({ seriesId }: SeriesEventManagerProps) {
                 </div>
 
                 {selectedToRemove.size > 0 && (
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-sand">
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-mist">
                     <Button
                       variant="secondary"
                       size="sm"
@@ -285,25 +285,25 @@ export function SeriesEventManager({ seriesId }: SeriesEventManagerProps) {
       </Card>
 
       {/* ===== SMART SUGGESTIONS ===== */}
-      <Card padding="lg" className="border border-sand">
+      <Card padding="lg" className="border border-mist">
         <button
           onClick={() => setShowSuggestions(!showSuggestions)}
           className="w-full flex items-center justify-between"
         >
-          <h3 className="font-medium text-charcoal flex items-center gap-2">
+          <h3 className="font-medium text-ink flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-amber-500" />
             Smart Suggestions
             {suggestions.length > 0 && (
-              <span className="text-stone text-sm font-normal">({suggestions.length} found)</span>
+              <span className="text-zinc text-sm font-normal">({suggestions.length} found)</span>
             )}
           </h3>
-          {showSuggestions ? <ChevronUp className="w-4 h-4 text-stone" /> : <ChevronDown className="w-4 h-4 text-stone" />}
+          {showSuggestions ? <ChevronUp className="w-4 h-4 text-zinc" /> : <ChevronDown className="w-4 h-4 text-zinc" />}
         </button>
 
         {showSuggestions && (
           <div className="mt-3">
             {suggestions.length === 0 ? (
-              <div className="text-sm text-stone py-2">
+              <div className="text-sm text-zinc py-2">
                 <p>No matching events found.</p>
                 <p className="text-xs mt-1 opacity-70">
                   Events are matched by title keywords, organizer, location, and category.
@@ -311,20 +311,20 @@ export function SeriesEventManager({ seriesId }: SeriesEventManagerProps) {
               </div>
             ) : (
               <>
-                <p className="text-xs text-stone mb-2">
+                <p className="text-xs text-zinc mb-2">
                   Events scored by title match, organizer, location, category, and day pattern.
                 </p>
 
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] text-stone">
+                  <span className="text-[11px] text-zinc">
                     {selectedToAdd.size > 0 && `${selectedToAdd.size} selected`}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <button onClick={selectAllSuggestions} className="text-[11px] text-stone hover:text-coral underline underline-offset-2">
+                    <button onClick={selectAllSuggestions} className="text-[11px] text-zinc hover:text-blue underline underline-offset-2">
                       Select all
                     </button>
-                    <span className="text-stone text-[10px]">·</span>
-                    <button onClick={selectNoneSuggestions} className="text-[11px] text-stone hover:text-coral underline underline-offset-2">
+                    <span className="text-zinc text-[10px]">·</span>
+                    <button onClick={selectNoneSuggestions} className="text-[11px] text-zinc hover:text-blue underline underline-offset-2">
                       None
                     </button>
                   </span>
@@ -340,19 +340,19 @@ export function SeriesEventManager({ seriesId }: SeriesEventManagerProps) {
                         className={`w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded transition-colors text-left ${
                           isSelected
                             ? 'bg-coral/10 border border-coral/30'
-                            : 'bg-cream border border-transparent hover:border-sand'
+                            : 'bg-white border border-transparent hover:border-mist'
                         }`}
                       >
                         <input
                           type="checkbox"
                           checked={isSelected}
                           readOnly
-                          className="rounded text-coral w-3.5 h-3.5 shrink-0"
+                          className="rounded text-blue w-3.5 h-3.5 shrink-0"
                         />
-                        <span className="text-stone w-24 shrink-0">{formatDate(s.start_datetime)}</span>
-                        <span className="text-charcoal truncate flex-1">{s.title}</span>
+                        <span className="text-zinc w-24 shrink-0">{formatDate(s.start_datetime)}</span>
+                        <span className="text-ink truncate flex-1">{s.title}</span>
                         <span
-                          className="text-[10px] text-stone shrink-0 max-w-[160px] truncate"
+                          className="text-[10px] text-zinc shrink-0 max-w-[160px] truncate"
                           title={s.match_reasons.join(', ')}
                         >
                           {s.match_reasons.slice(0, 2).join(' · ')}
@@ -373,12 +373,12 @@ export function SeriesEventManager({ seriesId }: SeriesEventManagerProps) {
                 </div>
 
                 {selectedToAdd.size > 0 && (
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-sand">
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-mist">
                     <Button
                       size="sm"
                       onClick={() => handleAction('add')}
                       disabled={actionLoading}
-                      className="bg-coral hover:bg-coral/90 text-white"
+                      className="bg-blue hover:bg-blue/90 text-white"
                     >
                       {actionLoading ? (
                         <RefreshCw className="w-3.5 h-3.5 animate-spin mr-1.5" />
@@ -392,7 +392,7 @@ export function SeriesEventManager({ seriesId }: SeriesEventManagerProps) {
               </>
             )}
 
-            <div className="mt-3 pt-3 border-t border-sand">
+            <div className="mt-3 pt-3 border-t border-mist">
               <Button
                 variant="secondary"
                 size="sm"

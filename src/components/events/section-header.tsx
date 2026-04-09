@@ -54,9 +54,9 @@ export function SectionHeader({
       )}
     >
       <div>
-        <h2 className="font-display text-h2 text-charcoal">{title}</h2>
+        <h2 className="font-body text-h2 text-ink">{title}</h2>
         {displayDescription && (
-          <p className="text-stone text-body-sm mt-1">{displayDescription}</p>
+          <p className="text-zinc text-body-sm mt-1">{displayDescription}</p>
         )}
       </div>
 
@@ -67,8 +67,8 @@ export function SectionHeader({
           href={viewAllHref}
           className={cn(
             'inline-flex items-center gap-1',
-            'text-coral text-body-sm font-medium',
-            'hover:text-coral-dark transition-colors',
+            'text-blue text-body-sm font-semibold',
+            'hover:text-blue-dark transition-colors',
             'flex-shrink-0'
           )}
         >

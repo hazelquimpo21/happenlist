@@ -45,10 +45,10 @@ export default async function TodayEventsPage() {
 
       {/* Page header */}
       <div className="mb-8">
-        <h1 className="font-display text-h1 text-charcoal">
+        <h1 className="font-body text-h1 text-ink">
           Today&apos;s Events
         </h1>
-        <p className="text-stone text-body mt-2">
+        <p className="text-zinc text-body mt-2">
           {total} {total === 1 ? 'event' : 'events'} happening today
         </p>
       </div>

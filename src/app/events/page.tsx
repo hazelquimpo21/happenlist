@@ -169,14 +169,14 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       {/* Page header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="font-display text-h1 text-charcoal">{title}</h1>
+          <h1 className="font-body text-h1 text-ink">{title}</h1>
           {activeFilterCount > 1 && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-coral text-white">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue text-white">
               {activeFilterCount} filters
             </span>
           )}
         </div>
-        <p className="text-stone text-body mt-2">
+        <p className="text-zinc text-body mt-2">
           {total} {total === 1 ? 'event' : 'events'} found
         </p>
       </div>
@@ -187,8 +187,8 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
           href={filterUrl({ category: null })}
           className={`px-4 py-2 rounded-full text-body-sm font-medium transition-all ${
             !categorySlug
-              ? 'bg-charcoal text-warm-white shadow-sm'
-              : 'bg-sand/50 text-charcoal hover:bg-sand border border-sand'
+              ? 'bg-ink text-pure shadow-sm'
+              : 'bg-cloud/50 text-ink hover:bg-cloud border border-mist'
           }`}
         >
           All
@@ -227,8 +227,8 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
           href={isFree ? filterUrl({ free: null }) : filterUrl({ free: 'true' })}
           className={`px-4 py-2 rounded-full text-body-sm font-semibold transition-all ${
             isFree
-              ? 'bg-sage text-white shadow-sm'
-              : 'bg-sage/10 text-sage border border-sage/30 hover:bg-sage/20'
+              ? 'bg-emerald text-white shadow-sm'
+              : 'bg-emerald/10 text-emerald border border-sage/30 hover:bg-emerald/20'
           }`}
         >
           {isFree ? 'Free Only' : 'Free'}
@@ -237,7 +237,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
 
       {/* Good For pills — warm colored per tag */}
       <div className="flex flex-wrap gap-2 mb-4">
-        <span className="px-2 py-2 text-body-sm text-stone self-center font-medium">Good for:</span>
+        <span className="px-2 py-2 text-body-sm text-zinc self-center font-medium">Good for:</span>
         {GOOD_FOR_TAGS.slice(0, 8).map((tag) => {
           const isActive = goodFor === tag.slug;
           return (
@@ -247,7 +247,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
               className={`px-3 py-1.5 rounded-full text-body-sm font-medium transition-all ${
                 isActive
                   ? `${tag.color} ring-2 ring-offset-1 ring-current shadow-sm`
-                  : `border border-sand text-stone hover:text-charcoal hover:border-charcoal/20`
+                  : `border border-mist text-zinc hover:text-ink hover:border-charcoal/20`
               }`}
             >
               {tag.label}
@@ -258,7 +258,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
 
       {/* Vibe tag pills */}
       <div className="flex flex-wrap gap-2 mb-4">
-        <span className="px-2 py-2 text-body-sm text-stone self-center font-medium">Vibe:</span>
+        <span className="px-2 py-2 text-body-sm text-zinc self-center font-medium">Vibe:</span>
         {(['cozy', 'chill', 'hype', 'rowdy', 'artsy', 'intimate', 'festival-energy', 'nerdy'] as const).map((tag) => {
           const isActive = vibeTag === tag;
           const label = tag.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
@@ -268,8 +268,8 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
               href={isActive ? filterUrl({ vibeTag: null }) : filterUrl({ vibeTag: tag })}
               className={`px-3 py-1.5 rounded-full text-body-sm font-medium transition-all ${
                 isActive
-                  ? 'bg-charcoal text-warm-white shadow-sm'
-                  : 'border border-sand text-stone hover:text-charcoal hover:border-charcoal/20'
+                  ? 'bg-ink text-pure shadow-sm'
+                  : 'border border-mist text-zinc hover:text-ink hover:border-charcoal/20'
               }`}
             >
               {label}
@@ -281,7 +281,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       {/* Membership benefits filters */}
       {membershipOrgsList.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 mb-4">
-          <span className="px-2 py-2 text-body-sm text-stone font-medium">Members:</span>
+          <span className="px-2 py-2 text-body-sm text-zinc font-medium">Members:</span>
           <a
             href={memberBenefits ? filterUrl({ memberBenefits: null }) : filterUrl({ memberBenefits: 'true' })}
             className={`px-3 py-1.5 rounded-full text-body-sm font-semibold transition-all ${
@@ -313,7 +313,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
 
       {/* Quick toggles */}
       <div className="flex flex-wrap items-center gap-2 mb-8">
-        <span className="px-2 py-2 text-body-sm text-stone font-medium">Quick filters:</span>
+        <span className="px-2 py-2 text-body-sm text-zinc font-medium">Quick filters:</span>
         {([
           { key: 'soloFriendly', label: 'Solo-Friendly', active: soloFriendly },
           { key: 'beginnerFriendly', label: 'Beginner-Friendly', active: beginnerFriendly },
@@ -326,8 +326,8 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
             href={active ? filterUrl({ [key]: null }) : filterUrl({ [key]: 'true' })}
             className={`px-3 py-1.5 rounded-full text-body-sm font-semibold transition-all ${
               active
-                ? 'bg-coral text-white shadow-sm'
-                : 'bg-coral/10 text-coral border border-coral/20 hover:bg-coral/20'
+                ? 'bg-blue text-white shadow-sm'
+                : 'bg-blue/10 text-blue border border-blue/20 hover:bg-blue/20'
             }`}
           >
             {label}
@@ -353,18 +353,18 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
           {page > 1 && (
             <a
               href={`/events?page=${page - 1}${categorySlug ? `&category=${categorySlug}` : ''}${goodFor ? `&goodFor=${goodFor}` : ''}`}
-              className="px-4 py-2 rounded-md bg-sand text-charcoal hover:bg-coral-light transition-colors"
+              className="px-4 py-2 rounded-md bg-cloud text-ink hover:bg-blue-light transition-colors"
             >
               Previous
             </a>
           )}
-          <span className="px-4 py-2 text-stone">
+          <span className="px-4 py-2 text-zinc">
             Page {page} of {Math.ceil(total / 24)}
           </span>
           {page * 24 < total && (
             <a
               href={`/events?page=${page + 1}${categorySlug ? `&category=${categorySlug}` : ''}${goodFor ? `&goodFor=${goodFor}` : ''}`}
-              className="px-4 py-2 rounded-md bg-sand text-charcoal hover:bg-coral-light transition-colors"
+              className="px-4 py-2 rounded-md bg-cloud text-ink hover:bg-blue-light transition-colors"
             >
               Next
             </a>

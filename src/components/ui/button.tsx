@@ -72,17 +72,17 @@ export function Button({
     'inline-flex items-center justify-center gap-2',
     'font-body font-medium',
     'rounded-md transition-all duration-base',
-    'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coral-light',
+    'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue/30',
     'disabled:opacity-50 disabled:pointer-events-none'
   );
 
-  // Variant styles
+  // Variant styles — v3 palette
   const variantStyles = {
-    primary: 'bg-coral text-warm-white hover:bg-coral-dark active:bg-coral-dark',
-    secondary: 'bg-transparent text-coral border-2 border-coral hover:bg-coral-light',
-    ghost: 'bg-transparent text-stone hover:text-charcoal hover:bg-sand',
-    danger: 'bg-red-500 text-white hover:bg-red-600',
-    outline: 'bg-transparent text-charcoal border border-sand hover:bg-sand/50',
+    primary: 'bg-blue text-pure hover:bg-blue-dark active:bg-blue-dark',
+    secondary: 'bg-transparent text-ink border-2 border-mist hover:bg-cloud',
+    ghost: 'bg-transparent text-zinc hover:text-ink hover:bg-cloud',
+    danger: 'bg-rose text-pure hover:bg-rose/90',
+    outline: 'bg-transparent text-ink border border-mist hover:bg-cloud',
   };
 
   // Size styles

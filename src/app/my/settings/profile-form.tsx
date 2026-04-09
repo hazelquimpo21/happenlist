@@ -123,16 +123,16 @@ export function ProfileSettingsForm({
         <div
           className={cn(
             'w-16 h-16 rounded-full flex items-center justify-center',
-            'bg-coral/10 text-coral text-xl font-display font-medium'
+            'bg-blue/10 text-blue text-xl font-body font-medium'
           )}
         >
           {displayName.slice(0, 2).toUpperCase() || <User className="w-6 h-6" />}
         </div>
         <div>
-          <p className="text-body font-medium text-charcoal">
+          <p className="text-body font-medium text-ink">
             {displayName || 'Your Name'}
           </p>
-          <p className="text-body-sm text-stone">{userEmail}</p>
+          <p className="text-body-sm text-zinc">{userEmail}</p>
         </div>
       </div>
 
@@ -140,7 +140,7 @@ export function ProfileSettingsForm({
       <div>
         <label
           htmlFor="display_name"
-          className="block text-body-sm font-medium text-charcoal mb-1.5"
+          className="block text-body-sm font-medium text-ink mb-1.5"
         >
           Display Name
         </label>
@@ -153,7 +153,7 @@ export function ProfileSettingsForm({
           maxLength={50}
           className="max-w-md"
         />
-        <p className="mt-1.5 text-body-xs text-stone">
+        <p className="mt-1.5 text-body-xs text-zinc">
           This is how your name appears on the site.
         </p>
       </div>
@@ -162,7 +162,7 @@ export function ProfileSettingsForm({
       <div>
         <label
           htmlFor="timezone"
-          className="block text-body-sm font-medium text-charcoal mb-1.5"
+          className="block text-body-sm font-medium text-ink mb-1.5"
         >
           Timezone
         </label>
@@ -171,9 +171,9 @@ export function ProfileSettingsForm({
           type="text"
           value={profile?.timezone || 'America/Chicago'}
           disabled
-          className="max-w-md bg-sand/30"
+          className="max-w-md bg-cloud/30"
         />
-        <p className="mt-1.5 text-body-xs text-stone">
+        <p className="mt-1.5 text-body-xs text-zinc">
           Used for event time display. Auto-detected from your browser.
         </p>
       </div>
@@ -196,7 +196,7 @@ export function ProfileSettingsForm({
         </Button>
 
         {hasChanges && (
-          <span className="text-body-sm text-stone">
+          <span className="text-body-sm text-zinc">
             You have unsaved changes
           </span>
         )}

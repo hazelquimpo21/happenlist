@@ -69,7 +69,7 @@ export function EventDate({
   }
 
   return (
-    <div className={cn('flex items-center gap-2 text-stone', className)}>
+    <div className={cn('flex items-center gap-2 text-zinc', className)}>
       {showIcon && <Calendar className="w-4 h-4 flex-shrink-0" />}
       <span>
         {formattedStart}

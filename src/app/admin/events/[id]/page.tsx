@@ -214,8 +214,8 @@ export default async function EventReviewPage({ params }: PageProps) {
             })()}
 
             {/* Event details */}
-            <Card padding="lg" className="border border-sand">
-              <h2 className="font-display text-2xl text-charcoal mb-4">
+            <Card padding="lg" className="border border-mist">
+              <h2 className="font-body text-2xl text-ink mb-4">
                 {event.title}
               </h2>
 
@@ -223,25 +223,25 @@ export default async function EventReviewPage({ params }: PageProps) {
                 {/* Date */}
                 <div className="flex items-start gap-3">
                   <div className="p-2 bg-coral/10 rounded-lg">
-                    <Calendar className="w-5 h-5 text-coral" />
+                    <Calendar className="w-5 h-5 text-blue" />
                   </div>
                   <div>
-                    <p className="text-sm text-stone">Date & Time</p>
-                    <p className="text-charcoal font-medium">{eventDate}</p>
-                    <p className="text-charcoal">{eventTime}</p>
+                    <p className="text-sm text-zinc">Date & Time</p>
+                    <p className="text-ink font-medium">{eventDate}</p>
+                    <p className="text-ink">{eventTime}</p>
                   </div>
                 </div>
 
                 {/* Location */}
                 {event.location && (
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-sage/10 rounded-lg">
-                      <MapPin className="w-5 h-5 text-sage" />
+                    <div className="p-2 bg-emerald/10 rounded-lg">
+                      <MapPin className="w-5 h-5 text-emerald" />
                     </div>
                     <div>
-                      <p className="text-sm text-stone">Location</p>
-                      <p className="text-charcoal font-medium">{event.location.name}</p>
-                      <p className="text-charcoal text-sm">
+                      <p className="text-sm text-zinc">Location</p>
+                      <p className="text-ink font-medium">{event.location.name}</p>
+                      <p className="text-ink text-sm">
                         {event.location.city}
                         {event.location.state && `, ${event.location.state}`}
                       </p>
@@ -251,14 +251,14 @@ export default async function EventReviewPage({ params }: PageProps) {
 
                 {/* Price */}
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-sand rounded-lg">
-                    <DollarSign className="w-5 h-5 text-charcoal" />
+                  <div className="p-2 bg-cloud rounded-lg">
+                    <DollarSign className="w-5 h-5 text-ink" />
                   </div>
                   <div>
-                    <p className="text-sm text-stone">Price</p>
-                    <p className="text-charcoal font-medium">{getPriceDisplay()}</p>
+                    <p className="text-sm text-zinc">Price</p>
+                    <p className="text-ink font-medium">{getPriceDisplay()}</p>
                     {event.price_details && (
-                      <p className="text-charcoal text-sm">{event.price_details}</p>
+                      <p className="text-ink text-sm">{event.price_details}</p>
                     )}
                   </div>
                 </div>
@@ -266,12 +266,12 @@ export default async function EventReviewPage({ params }: PageProps) {
                 {/* Category */}
                 {event.category && (
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-sand rounded-lg">
-                      <Tag className="w-5 h-5 text-charcoal" />
+                    <div className="p-2 bg-cloud rounded-lg">
+                      <Tag className="w-5 h-5 text-ink" />
                     </div>
                     <div>
-                      <p className="text-sm text-stone">Category</p>
-                      <p className="text-charcoal font-medium">{event.category.name}</p>
+                      <p className="text-sm text-zinc">Category</p>
+                      <p className="text-ink font-medium">{event.category.name}</p>
                     </div>
                   </div>
                 )}
@@ -279,12 +279,12 @@ export default async function EventReviewPage({ params }: PageProps) {
                 {/* Organizer */}
                 {event.organizer && (
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-sand rounded-lg">
-                      <User className="w-5 h-5 text-charcoal" />
+                    <div className="p-2 bg-cloud rounded-lg">
+                      <User className="w-5 h-5 text-ink" />
                     </div>
                     <div>
-                      <p className="text-sm text-stone">Organizer</p>
-                      <p className="text-charcoal font-medium">{event.organizer.name}</p>
+                      <p className="text-sm text-zinc">Organizer</p>
+                      <p className="text-ink font-medium">{event.organizer.name}</p>
                     </div>
                   </div>
                 )}
@@ -292,9 +292,9 @@ export default async function EventReviewPage({ params }: PageProps) {
 
               {/* Description */}
               {event.description && (
-                <div className="pt-4 border-t border-sand">
-                  <h3 className="font-medium text-charcoal mb-2">Description</h3>
-                  <div className="prose prose-sm max-w-none text-stone">
+                <div className="pt-4 border-t border-mist">
+                  <h3 className="font-medium text-ink mb-2">Description</h3>
+                  <div className="prose prose-sm max-w-none text-zinc">
                     <p className="whitespace-pre-wrap">{event.description}</p>
                   </div>
                 </div>
@@ -302,19 +302,19 @@ export default async function EventReviewPage({ params }: PageProps) {
 
               {/* Short description */}
               {event.short_description && (
-                <div className="pt-4 border-t border-sand">
-                  <h3 className="font-medium text-charcoal mb-2">Short Description</h3>
-                  <p className="text-stone">{event.short_description}</p>
+                <div className="pt-4 border-t border-mist">
+                  <h3 className="font-medium text-ink mb-2">Short Description</h3>
+                  <p className="text-zinc">{event.short_description}</p>
                 </div>
               )}
             </Card>
 
             {/* Scraped data (if available) */}
             {event.scraped_data && (
-              <Card padding="lg" className="border border-sand">
+              <Card padding="lg" className="border border-mist">
                 <div className="flex items-center gap-2 mb-4">
                   <AlertCircle className="w-5 h-5 text-purple-600" />
-                  <h3 className="font-medium text-charcoal">Raw Scraped Data</h3>
+                  <h3 className="font-medium text-ink">Raw Scraped Data</h3>
                 </div>
                 <pre className="bg-charcoal text-cream p-4 rounded-lg overflow-auto text-xs max-h-64">
                   {JSON.stringify(event.scraped_data, null, 2)}
@@ -324,10 +324,10 @@ export default async function EventReviewPage({ params }: PageProps) {
 
             {/* Audit history */}
             {auditHistory.length > 0 && (
-              <Card padding="lg" className="border border-sand">
+              <Card padding="lg" className="border border-mist">
                 <div className="flex items-center gap-2 mb-4">
-                  <History className="w-5 h-5 text-stone" />
-                  <h3 className="font-medium text-charcoal">Activity History</h3>
+                  <History className="w-5 h-5 text-zinc" />
+                  <h3 className="font-medium text-ink">Activity History</h3>
                 </div>
                 <div className="space-y-3">
                   {auditHistory.map((entry) => (
@@ -335,27 +335,27 @@ export default async function EventReviewPage({ params }: PageProps) {
                       key={entry.id}
                       className="flex items-start gap-3 text-sm"
                     >
-                      <div className="w-8 h-8 rounded-full bg-sand flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-cloud flex items-center justify-center flex-shrink-0">
                         {entry.action.includes('approved') && (
-                          <CheckCircle className="w-4 h-4 text-sage" />
+                          <CheckCircle className="w-4 h-4 text-emerald" />
                         )}
                         {entry.action.includes('rejected') && (
                           <XCircle className="w-4 h-4 text-red-500" />
                         )}
                         {entry.action.includes('edited') && (
-                          <Edit className="w-4 h-4 text-stone" />
+                          <Edit className="w-4 h-4 text-zinc" />
                         )}
                       </div>
                       <div>
-                        <p className="text-charcoal">
+                        <p className="text-ink">
                           <span className="font-medium">{entry.admin_email || 'Admin'}</span>
                           {' '}
                           {entry.action.replace(/_/g, ' ')}
                         </p>
                         {entry.notes && (
-                          <p className="text-stone mt-0.5">{entry.notes}</p>
+                          <p className="text-zinc mt-0.5">{entry.notes}</p>
                         )}
-                        <p className="text-stone/70 text-xs mt-1">
+                        <p className="text-zinc/70 text-xs mt-1">
                           {format(new Date(entry.created_at), 'MMM d, yyyy h:mm a')}
                         </p>
                       </div>
@@ -372,54 +372,54 @@ export default async function EventReviewPage({ params }: PageProps) {
             <EventApprovalForm event={event} />
 
             {/* Meta info */}
-            <Card padding="lg" className="border border-sand">
-              <h3 className="font-medium text-charcoal mb-4">Event Info</h3>
+            <Card padding="lg" className="border border-mist">
+              <h3 className="font-medium text-ink mb-4">Event Info</h3>
               <dl className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-stone">ID</dt>
-                  <dd className="text-charcoal font-mono text-xs">{event.id.slice(0, 8)}...</dd>
+                  <dt className="text-zinc">ID</dt>
+                  <dd className="text-ink font-mono text-xs">{event.id.slice(0, 8)}...</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-stone">Source</dt>
-                  <dd className="text-charcoal capitalize">{event.source}</dd>
+                  <dt className="text-zinc">Source</dt>
+                  <dd className="text-ink capitalize">{event.source}</dd>
                 </div>
                 {scrapedDate && (
                   <div className="flex justify-between">
-                    <dt className="text-stone">Scraped</dt>
-                    <dd className="text-charcoal">{scrapedDate}</dd>
+                    <dt className="text-zinc">Scraped</dt>
+                    <dd className="text-ink">{scrapedDate}</dd>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <dt className="text-stone">Created</dt>
-                  <dd className="text-charcoal">
+                  <dt className="text-zinc">Created</dt>
+                  <dd className="text-ink">
                     {format(new Date(event.created_at), 'MMM d, yyyy')}
                   </dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-stone">Updated</dt>
-                  <dd className="text-charcoal">
+                  <dt className="text-zinc">Updated</dt>
+                  <dd className="text-ink">
                     {format(new Date(event.updated_at), 'MMM d, yyyy')}
                   </dd>
                 </div>
                 {event.reviewed_by && (
                   <div className="flex justify-between">
-                    <dt className="text-stone">Reviewed by</dt>
-                    <dd className="text-charcoal">{event.reviewed_by}</dd>
+                    <dt className="text-zinc">Reviewed by</dt>
+                    <dd className="text-ink">{event.reviewed_by}</dd>
                   </div>
                 )}
               </dl>
             </Card>
 
             {/* Links */}
-            <Card padding="lg" className="border border-sand">
-              <h3 className="font-medium text-charcoal mb-4">Links</h3>
+            <Card padding="lg" className="border border-mist">
+              <h3 className="font-medium text-ink mb-4">Links</h3>
               <div className="space-y-2">
                 {event.ticket_url && (
                   <a
                     href={event.ticket_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-coral hover:underline"
+                    className="flex items-center gap-2 text-sm text-blue hover:underline"
                   >
                     <ExternalLink className="w-4 h-4" />
                     Ticket Link
@@ -430,7 +430,7 @@ export default async function EventReviewPage({ params }: PageProps) {
                     href={event.source_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-coral hover:underline"
+                    className="flex items-center gap-2 text-sm text-blue hover:underline"
                   >
                     <ExternalLink className="w-4 h-4" />
                     Original Source
@@ -441,7 +441,7 @@ export default async function EventReviewPage({ params }: PageProps) {
                     href={event.organizer.website_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-coral hover:underline"
+                    className="flex items-center gap-2 text-sm text-blue hover:underline"
                   >
                     <ExternalLink className="w-4 h-4" />
                     Organizer Website

@@ -713,7 +713,7 @@ Events have four separate text fields for descriptions. Three are displayed on t
 | Field | What it is | Who writes it | UI location | Example |
 |-------|-----------|---------------|-------------|---------|
 | `short_description` | One-line teaser | Admin/scraper | Italic text directly below the event title | "Live jazz at the Pabst Theater" (max ~160 chars) |
-| `happenlist_summary` | Editorial third-person summary | Scraper (AI-generated) | Highlighted "Happenlist Highlights" box (coral background, Sparkles icon) | "This intimate jazz show highlights three of Milwaukee's finest..." |
+| `happenlist_summary` | Editorial third-person summary | Scraper (AI-generated) | Highlighted "Happenlist Highlights" box (blue accent, Sparkles icon) | "This intimate jazz show highlights three of Milwaukee's finest..." |
 | `organizer_description` | Verbatim copy from the source | Scraper/submitter | Quoted "From the Organizer" section (italic, Quote icon) | The exact text from the event page, preserving original formatting |
 | `description` | General cleaned-up description | Admin/scraper | **Not displayed on detail page** (SEO fallback only) | "Live jazz featuring the Milwaukee Trio..." |
 

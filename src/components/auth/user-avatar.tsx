@@ -70,7 +70,7 @@ const ICON_SIZES = {
  * These match the Happenlist design system
  */
 const AVATAR_COLORS = [
-  'bg-coral',           // Primary coral
+  'bg-blue',            // Primary blue
   'bg-amber-500',       // Warm amber
   'bg-emerald-500',     // Fresh green
   'bg-sky-500',         // Sky blue
@@ -208,7 +208,7 @@ export function UserAvatar({
   // ---------------------------------------------------------------------------
 
   return (
-    <div className={cn(baseClasses, 'bg-stone')}>
+    <div className={cn(baseClasses, 'bg-zinc')}>
       <User className={ICON_SIZES[size]} />
     </div>
   );

@@ -67,7 +67,7 @@ export default async function SuperadminSeriesEditPage({ params }: PageProps) {
 
           <Link
             href={`/series/${series.slug}`}
-            className="flex items-center gap-2 text-sm text-stone hover:text-charcoal transition-colors"
+            className="flex items-center gap-2 text-sm text-zinc hover:text-ink transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Series
@@ -93,29 +93,29 @@ export default async function SuperadminSeriesEditPage({ params }: PageProps) {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            <Card padding="lg" className="border border-sand">
-              <h3 className="font-medium text-charcoal mb-4">Series Info</h3>
+            <Card padding="lg" className="border border-mist">
+              <h3 className="font-medium text-ink mb-4">Series Info</h3>
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-stone">ID</dt>
-                  <dd className="text-charcoal font-mono text-xs">{series.id.slice(0, 8)}...</dd>
+                  <dt className="text-zinc">ID</dt>
+                  <dd className="text-ink font-mono text-xs">{series.id.slice(0, 8)}...</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-stone">Slug</dt>
-                  <dd className="text-charcoal">{series.slug}</dd>
+                  <dt className="text-zinc">Slug</dt>
+                  <dd className="text-ink">{series.slug}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-stone">Type</dt>
-                  <dd className="text-charcoal capitalize">{series.series_type}</dd>
+                  <dt className="text-zinc">Type</dt>
+                  <dd className="text-ink capitalize">{series.series_type}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-stone">Status</dt>
-                  <dd className="text-charcoal capitalize">{series.status}</dd>
+                  <dt className="text-zinc">Status</dt>
+                  <dd className="text-ink capitalize">{series.status}</dd>
                 </div>
                 {series.total_sessions && (
                   <div className="flex justify-between">
-                    <dt className="text-stone">Sessions</dt>
-                    <dd className="text-charcoal">{series.total_sessions}</dd>
+                    <dt className="text-zinc">Sessions</dt>
+                    <dd className="text-ink">{series.total_sessions}</dd>
                   </div>
                 )}
               </dl>

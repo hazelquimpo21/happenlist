@@ -71,14 +71,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           {/* Back Link */}
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-stone hover:text-charcoal transition-colors mb-8"
+            className="inline-flex items-center gap-2 text-zinc hover:text-ink transition-colors mb-8"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to home
           </Link>
 
           {/* Card */}
-          <div className="bg-white rounded-2xl shadow-soft border border-sand p-8">
+          <div className="bg-white rounded-2xl shadow-soft border border-mist p-8">
             {/* Error Alert */}
             {errorMessage && (
               <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200">
@@ -93,9 +93,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </div>
 
           {/* Help Text */}
-          <p className="mt-6 text-center text-body-sm text-stone">
+          <p className="mt-6 text-center text-body-sm text-zinc">
             Questions?{' '}
-            <Link href="/contact" className="text-coral hover:underline">
+            <Link href="/contact" className="text-blue hover:underline">
               Contact us
             </Link>
           </p>

@@ -66,8 +66,8 @@ export const BENEFIT_TYPE_CONFIG: Record<string, { label: string; color: string;
 export function getBenefitConfig(benefitType: string) {
   return BENEFIT_TYPE_CONFIG[benefitType] || {
     label: benefitType.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-    color: 'text-stone',
-    bgColor: 'bg-sand',
+    color: 'text-zinc',
+    bgColor: 'bg-cloud',
   };
 }
 

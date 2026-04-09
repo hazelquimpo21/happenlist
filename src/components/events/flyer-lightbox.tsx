@@ -48,9 +48,9 @@ export function FlyerLightbox({
       <Dialog.Trigger asChild>
         <button
           className={cn(
-            'group relative overflow-hidden rounded-lg border-2 border-sand',
+            'group relative overflow-hidden rounded-lg border-2 border-mist',
             'hover:border-coral transition-colors cursor-pointer',
-            'focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2',
+            'focus:outline-none focus:ring-2 focus:ring-blue focus:ring-offset-2',
             className
           )}
           aria-label="View full flyer"
@@ -64,7 +64,7 @@ export function FlyerLightbox({
               sizes="(max-width: 768px) 100vw, 200px"
             />
             {/* Hover overlay */}
-            <div className="absolute inset-0 bg-charcoal/0 group-hover:bg-charcoal/30 transition-colors flex items-center justify-center">
+            <div className="absolute inset-0 bg-ink/0 group-hover:bg-ink/30 transition-colors flex items-center justify-center">
               <Maximize2 
                 className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" 
               />
@@ -80,13 +80,13 @@ export function FlyerLightbox({
 
       {/* Lightbox modal */}
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-charcoal/90 backdrop-blur-sm z-50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <Dialog.Overlay className="fixed inset-0 bg-ink/90 backdrop-blur-sm z-50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         
         <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
           {/* Close button */}
           <Dialog.Close asChild>
             <button
-              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-charcoal/50 hover:bg-charcoal/70 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white"
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-ink/50 hover:bg-ink/70 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white"
               aria-label="Close lightbox"
             >
               <X className="w-6 h-6" />
@@ -100,7 +100,7 @@ export function FlyerLightbox({
               download={`${eventTitle.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}-flyer`}
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute top-4 right-16 z-10 p-2 rounded-full bg-charcoal/50 hover:bg-charcoal/70 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white"
+              className="absolute top-4 right-16 z-10 p-2 rounded-full bg-ink/50 hover:bg-ink/70 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white"
               aria-label="Download flyer"
             >
               <Download className="w-6 h-6" />

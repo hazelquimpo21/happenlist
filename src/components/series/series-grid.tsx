@@ -88,7 +88,7 @@ export function SeriesGrid({
   if (series.length === 0) {
     return (
       <div className={cn('text-center py-12', className)}>
-        <p className="text-stone text-body">{emptyMessage}</p>
+        <p className="text-zinc text-body">{emptyMessage}</p>
       </div>
     );
   }

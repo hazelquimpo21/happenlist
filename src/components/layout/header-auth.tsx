@@ -32,9 +32,9 @@ function AuthSkeleton() {
   return (
     <div className="flex items-center gap-2">
       {/* Submit button skeleton */}
-      <div className="hidden md:block w-28 h-9 rounded-md bg-sand animate-pulse" />
+      <div className="hidden md:block w-28 h-9 rounded-md bg-cloud animate-pulse" />
       {/* Login button skeleton */}
-      <div className="w-20 h-9 rounded-md bg-sand animate-pulse" />
+      <div className="w-20 h-9 rounded-md bg-cloud animate-pulse" />
     </div>
   );
 }

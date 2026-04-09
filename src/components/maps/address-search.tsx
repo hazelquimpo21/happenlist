@@ -310,7 +310,7 @@ export function AddressSearch({
   if (!isConfigured) {
     return (
       <div className={cn('relative', className)}>
-        <div className="flex items-center gap-2 p-3 bg-sand/50 rounded-lg text-stone text-sm">
+        <div className="flex items-center gap-2 p-3 bg-cloud/50 rounded-lg text-zinc text-sm">
           <AlertCircle className="w-4 h-4" />
           <span>Address search requires NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN</span>
         </div>
@@ -322,7 +322,7 @@ export function AddressSearch({
     <div className={cn('relative', className)}>
       {/* Search Input */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc" />
         <Input
           ref={inputRef}
           type="text"
@@ -335,7 +335,7 @@ export function AddressSearch({
           className="pl-10 pr-10"
         />
         {isLoading && (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone animate-spin" />
+          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc animate-spin" />
         )}
       </div>
 
@@ -350,7 +350,7 @@ export function AddressSearch({
           ref={resultsRef}
           className={cn(
             'absolute z-50 w-full mt-1',
-            'bg-white rounded-lg border border-sand shadow-lg',
+            'bg-white rounded-lg border border-mist shadow-lg',
             'max-h-64 overflow-y-auto'
           )}
         >
@@ -361,17 +361,17 @@ export function AddressSearch({
               onClick={() => handleSelect(feature)}
               className={cn(
                 'w-full flex items-start gap-3 p-3 text-left',
-                'hover:bg-cream transition-colors',
-                index === selectedIndex && 'bg-cream',
-                index !== results.length - 1 && 'border-b border-sand/50'
+                'hover:bg-white transition-colors',
+                index === selectedIndex && 'bg-white',
+                index !== results.length - 1 && 'border-b border-mist/50'
               )}
             >
-              <MapPin className="w-4 h-4 text-coral mt-0.5 flex-shrink-0" />
+              <MapPin className="w-4 h-4 text-blue mt-0.5 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="font-medium text-charcoal truncate">
+                <p className="font-medium text-ink truncate">
                   {feature.text}
                 </p>
-                <p className="text-sm text-stone truncate">
+                <p className="text-sm text-zinc truncate">
                   {feature.place_name}
                 </p>
               </div>
@@ -382,8 +382,8 @@ export function AddressSearch({
 
       {/* No Results */}
       {isOpen && results.length === 0 && query.length >= 3 && !isLoading && (
-        <div className="absolute z-50 w-full mt-1 p-3 bg-white rounded-lg border border-sand shadow-lg">
-          <p className="text-sm text-stone text-center">No addresses found</p>
+        <div className="absolute z-50 w-full mt-1 p-3 bg-white rounded-lg border border-mist shadow-lg">
+          <p className="text-sm text-zinc text-center">No addresses found</p>
         </div>
       )}
     </div>

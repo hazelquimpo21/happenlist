@@ -122,7 +122,7 @@ export function SeriesPrice({ series, size = 'md', className }: SeriesPriceProps
     <p
       className={cn(
         sizeClasses[size],
-        isFree ? 'text-sage font-medium' : 'text-charcoal font-semibold',
+        isFree ? 'text-emerald font-medium' : 'text-ink font-semibold',
         className
       )}
     >

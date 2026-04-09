@@ -43,19 +43,19 @@ export function StepProgress({
       {/* ========== Mobile: Compact View ========== */}
       <div className="md:hidden">
         <div className="flex items-center justify-between px-4">
-          <span className="text-sm font-medium text-charcoal">
+          <span className="text-sm font-medium text-ink">
             Step {currentStep} of {FORM_STEPS.length}
           </span>
-          <span className="text-sm text-stone">
+          <span className="text-sm text-zinc">
             {FORM_STEPS[currentStep - 1]?.name || 'Unknown'}
           </span>
         </div>
 
         {/* Progress bar */}
         <div className="mt-2 mx-4">
-          <div className="h-2 bg-sand rounded-full overflow-hidden">
+          <div className="h-2 bg-cloud rounded-full overflow-hidden">
             <div
-              className="h-full bg-coral transition-all duration-300 ease-out rounded-full"
+              className="h-full bg-blue transition-all duration-300 ease-out rounded-full"
               style={{ width: `${(currentStep / FORM_STEPS.length) * 100}%` }}
             />
           </div>
@@ -77,7 +77,7 @@ export function StepProgress({
                 <div
                   className={cn(
                     'hidden lg:block w-8 h-0.5 mr-2',
-                    isCompleted || isCurrent ? 'bg-coral' : 'bg-sand'
+                    isCompleted || isCurrent ? 'bg-blue' : 'bg-cloud'
                   )}
                 />
               )}
@@ -96,10 +96,10 @@ export function StepProgress({
                   className={cn(
                     'flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-all',
                     isCompleted
-                      ? 'bg-sage text-white'
+                      ? 'bg-emerald text-white'
                       : isCurrent
-                        ? 'bg-coral text-white ring-2 ring-coral ring-offset-2'
-                        : 'bg-sand text-stone'
+                        ? 'bg-blue text-white ring-2 ring-blue ring-offset-2'
+                        : 'bg-cloud text-zinc'
                   )}
                 >
                   {isCompleted ? (
@@ -114,10 +114,10 @@ export function StepProgress({
                   className={cn(
                     'hidden lg:block text-sm font-medium transition-colors',
                     isCurrent
-                      ? 'text-charcoal'
+                      ? 'text-ink'
                       : isCompleted
-                        ? 'text-sage'
-                        : 'text-stone'
+                        ? 'text-emerald'
+                        : 'text-zinc'
                   )}
                 >
                   {step.name}
@@ -148,17 +148,17 @@ export function StepHeader({ step, title, description, className }: StepHeaderPr
   return (
     <div className={cn('mb-6', className)}>
       {/* Step number badge */}
-      <div className="inline-flex items-center px-2 py-1 mb-2 text-xs font-medium bg-coral/10 text-coral rounded">
+      <div className="inline-flex items-center px-2 py-1 mb-2 text-xs font-medium bg-blue/10 text-blue rounded">
         Step {step} of {FORM_STEPS.length}
       </div>
 
       {/* Title */}
-      <h2 className="text-2xl font-display font-semibold text-charcoal">
+      <h2 className="text-2xl font-body font-semibold text-ink">
         {title}
       </h2>
 
       {/* Description */}
-      <p className="mt-1 text-stone">
+      <p className="mt-1 text-zinc">
         {description || stepConfig?.description}
       </p>
     </div>

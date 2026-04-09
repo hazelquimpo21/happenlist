@@ -123,7 +123,7 @@ const STATUS_CONFIG: Record<
 > = {
   draft: {
     label: 'Draft',
-    className: 'bg-stone/20 text-stone border-stone/30',
+    className: 'bg-zinc/20 text-zinc border-zinc/30',
     emoji: '📝',
   },
   pending_review: {
@@ -138,7 +138,7 @@ const STATUS_CONFIG: Record<
   },
   published: {
     label: 'Published',
-    className: 'bg-sage/20 text-sage border-sage/30',
+    className: 'bg-emerald/20 text-emerald border-sage/30',
     emoji: '✅',
   },
   rejected: {
@@ -148,7 +148,7 @@ const STATUS_CONFIG: Record<
   },
   cancelled: {
     label: 'Cancelled',
-    className: 'bg-stone/30 text-stone border-stone/40',
+    className: 'bg-zinc/30 text-zinc border-zinc/40',
     emoji: '🚫',
   },
 };

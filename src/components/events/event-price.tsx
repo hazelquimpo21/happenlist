@@ -55,7 +55,7 @@ export function EventPrice({
         className={cn(
           'font-medium',
           sizeStyles[size],
-          isFree ? 'text-sage' : 'text-charcoal'
+          isFree ? 'text-emerald' : 'text-ink'
         )}
       >
         {price}
@@ -63,7 +63,7 @@ export function EventPrice({
 
       {/* Additional price details */}
       {showDetails && event.price_details && (
-        <span className="text-body-sm text-stone mt-0.5">
+        <span className="text-body-sm text-zinc mt-0.5">
           {event.price_details}
         </span>
       )}

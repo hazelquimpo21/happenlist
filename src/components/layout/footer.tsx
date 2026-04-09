@@ -1,41 +1,37 @@
 /**
- * FOOTER COMPONENT
- * ================
- * Dark-grounded site footer with warm typography,
- * coral accent links, and topographic texture.
+ * FOOTER COMPONENT — v3 Redesign
+ * ==============================
+ * Dark footer. Blue accent links. Clean sans-serif.
  */
 
 import Link from 'next/link';
 import { Container } from './container';
 import { FOOTER_NAV, ROUTES } from '@/lib/constants';
 
-/**
- * Site footer with navigation links.
- */
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-midnight bg-topo-light mt-auto">
+    <footer className="bg-night mt-auto">
       <Container className="py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo and tagline */}
           <div className="md:col-span-2">
             <Link
               href={ROUTES.home}
-              className="inline-block font-display text-h2 text-warm-white hover:text-coral transition-colors"
+              className="inline-block font-body text-h2 font-bold text-pure hover:text-blue transition-colors"
             >
-              <span className="text-coral">H</span>appenlist
+              <span className="text-blue">H</span>appenlist
             </Link>
-            <p className="mt-3 text-stone text-body-sm max-w-sm">
+            <p className="mt-3 text-zinc text-body-sm max-w-sm">
               Discover concerts, festivals, classes, workshops, and more
-              happening in your area.
+              happening in Milwaukee.
             </p>
           </div>
 
           {/* Discover links */}
           <div>
-            <h3 className="font-display text-h4 text-warm-white mb-4">
+            <h3 className="font-body text-h4 font-bold text-pure mb-4">
               Discover
             </h3>
             <ul className="space-y-2">
@@ -43,7 +39,7 @@ export function Footer() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="text-stone text-body-sm hover:text-coral transition-colors"
+                    className="text-zinc text-body-sm hover:text-blue transition-colors"
                   >
                     {item.label}
                   </Link>
@@ -54,7 +50,7 @@ export function Footer() {
 
           {/* About links */}
           <div>
-            <h3 className="font-display text-h4 text-warm-white mb-4">
+            <h3 className="font-body text-h4 font-bold text-pure mb-4">
               About
             </h3>
             <ul className="space-y-2">
@@ -62,7 +58,7 @@ export function Footer() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="text-stone text-body-sm hover:text-coral transition-colors"
+                    className="text-zinc text-body-sm hover:text-blue transition-colors"
                   >
                     {item.label}
                   </Link>
@@ -73,8 +69,8 @@ export function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="mt-12 pt-6 border-t border-warm-white/10">
-          <p className="text-stone/60 text-body-sm text-center">
+        <div className="mt-12 pt-6 border-t border-pure/10">
+          <p className="text-zinc/60 text-body-sm text-center">
             &copy; {currentYear} Happenlist. All rights reserved.
           </p>
         </div>

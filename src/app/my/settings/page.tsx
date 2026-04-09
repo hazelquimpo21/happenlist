@@ -64,10 +64,10 @@ export default async function SettingsPage() {
       <Container>
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="font-display text-h2 md:text-h1 text-charcoal mb-2">
+          <h1 className="font-body text-h2 md:text-h1 text-ink mb-2">
             ⚙️ Settings
           </h1>
-          <p className="text-stone text-body">
+          <p className="text-zinc text-body">
             Manage your account and preferences
           </p>
         </div>
@@ -77,19 +77,19 @@ export default async function SettingsPage() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Profile Section */}
-            <section className="bg-white rounded-xl border border-sand p-6">
-              <h2 className="font-display text-h4 text-charcoal mb-6">
+            <section className="bg-white rounded-xl border border-mist p-6">
+              <h2 className="font-body text-h4 text-ink mb-6">
                 👤 Profile
               </h2>
               <ProfileSettingsForm profile={profile} userEmail={user.email || ''} />
             </section>
 
             {/* Notification Preferences */}
-            <section className="bg-white rounded-xl border border-sand p-6">
-              <h2 className="font-display text-h4 text-charcoal mb-6">
+            <section className="bg-white rounded-xl border border-mist p-6">
+              <h2 className="font-body text-h4 text-ink mb-6">
                 🔔 Notifications
               </h2>
-              <div className="space-y-4 text-stone">
+              <div className="space-y-4 text-zinc">
                 <p>Email notification settings coming soon!</p>
                 <ul className="list-disc list-inside text-body-sm space-y-1">
                   <li>Get notified when your events are approved</li>
@@ -103,20 +103,20 @@ export default async function SettingsPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Account Info Card */}
-            <div className="bg-white rounded-xl border border-sand p-6">
-              <h3 className="font-display text-h5 text-charcoal mb-4">
+            <div className="bg-white rounded-xl border border-mist p-6">
+              <h3 className="font-body text-h5 text-ink mb-4">
                 📧 Account
               </h3>
               <dl className="space-y-3 text-body-sm">
                 <div>
-                  <dt className="text-stone mb-0.5">Email</dt>
-                  <dd className="text-charcoal font-medium break-all">
+                  <dt className="text-zinc mb-0.5">Email</dt>
+                  <dd className="text-ink font-medium break-all">
                     {user.email}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-stone mb-0.5">Member since</dt>
-                  <dd className="text-charcoal">
+                  <dt className="text-zinc mb-0.5">Member since</dt>
+                  <dd className="text-ink">
                     {new Date(user.created_at).toLocaleDateString('en-US', {
                       month: 'long',
                       year: 'numeric',
@@ -127,8 +127,8 @@ export default async function SettingsPage() {
             </div>
 
             {/* Quick Links */}
-            <div className="bg-white rounded-xl border border-sand p-6">
-              <h3 className="font-display text-h5 text-charcoal mb-4">
+            <div className="bg-white rounded-xl border border-mist p-6">
+              <h3 className="font-body text-h5 text-ink mb-4">
                 🔗 Quick Links
               </h3>
               <nav className="space-y-2">
@@ -146,7 +146,7 @@ export default async function SettingsPage() {
 
             {/* Danger Zone */}
             <div className="bg-red-50 rounded-xl border border-red-200 p-6">
-              <h3 className="font-display text-h5 text-red-700 mb-2">
+              <h3 className="font-body text-h5 text-red-700 mb-2">
                 ⚠️ Danger Zone
               </h3>
               <p className="text-body-sm text-red-600 mb-4">
@@ -180,7 +180,7 @@ function SettingsLink({
   return (
     <a
       href={href}
-      className="block py-2 px-3 -mx-3 rounded-lg text-stone hover:text-charcoal hover:bg-sand/50 transition-colors"
+      className="block py-2 px-3 -mx-3 rounded-lg text-zinc hover:text-ink hover:bg-cloud/50 transition-colors"
     >
       {children}
     </a>

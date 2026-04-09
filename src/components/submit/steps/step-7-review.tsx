@@ -79,16 +79,16 @@ function ReviewSection({ title, icon, isValid, errors, onEdit, children }: Revie
     <div
       className={cn(
         'p-4 rounded-lg border',
-        isValid ? 'border-sand bg-warm-white' : 'border-red-300 bg-red-50'
+        isValid ? 'border-mist bg-pure' : 'border-red-300 bg-red-50'
       )}
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center">
-          <span className={cn('mr-2', isValid ? 'text-sage' : 'text-red-500')}>
+          <span className={cn('mr-2', isValid ? 'text-emerald' : 'text-red-500')}>
             {isValid ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
           </span>
-          <span className="mr-2 text-stone">{icon}</span>
-          <h3 className="font-medium text-charcoal">{title}</h3>
+          <span className="mr-2 text-zinc">{icon}</span>
+          <h3 className="font-medium text-ink">{title}</h3>
         </div>
         <Button variant="ghost" size="sm" onClick={onEdit}>
           <Edit className="w-4 h-4 mr-1" />
@@ -104,7 +104,7 @@ function ReviewSection({ title, icon, isValid, errors, onEdit, children }: Revie
         </ul>
       )}
 
-      <div className="text-sm text-charcoal">{children}</div>
+      <div className="text-sm text-ink">{children}</div>
     </div>
   );
 }
@@ -175,23 +175,23 @@ export function Step7Review({ draftData, seriesDraftData, categories, onEditStep
       <div
         className={cn(
           'p-4 rounded-lg flex items-center',
-          allValid ? 'bg-sage/10 border border-sage/30' : 'bg-red-50 border border-red-200'
+          allValid ? 'bg-emerald/10 border border-sage/30' : 'bg-red-50 border border-red-200'
         )}
       >
         {allValid ? (
           <>
-            <CheckCircle className="w-6 h-6 text-sage mr-3" />
+            <CheckCircle className="w-6 h-6 text-emerald mr-3" />
             <div>
-              <p className="font-medium text-charcoal">Ready to submit!</p>
-              <p className="text-sm text-stone">All required information is complete.</p>
+              <p className="font-medium text-ink">Ready to submit!</p>
+              <p className="text-sm text-zinc">All required information is complete.</p>
             </div>
           </>
         ) : (
           <>
             <AlertCircle className="w-6 h-6 text-red-500 mr-3" />
             <div>
-              <p className="font-medium text-charcoal">Please fix the issues below</p>
-              <p className="text-sm text-stone">Some required information is missing.</p>
+              <p className="font-medium text-ink">Please fix the issues below</p>
+              <p className="text-sm text-zinc">Some required information is missing.</p>
             </div>
           </>
         )}
@@ -209,16 +209,16 @@ export function Step7Review({ draftData, seriesDraftData, categories, onEditStep
         >
           <div className="space-y-2">
             <div>
-              <span className="text-stone">Title:</span>{' '}
+              <span className="text-zinc">Title:</span>{' '}
               <span className="font-medium">{draftData.title || 'Not set'}</span>
             </div>
             <div>
-              <span className="text-stone">Category:</span>{' '}
+              <span className="text-zinc">Category:</span>{' '}
               <span className="font-medium">{getCategoryName(draftData.category_id)}</span>
             </div>
             {draftData.short_description && (
               <div>
-                <span className="text-stone">Summary:</span>{' '}
+                <span className="text-zinc">Summary:</span>{' '}
                 <span>{draftData.short_description}</span>
               </div>
             )}
@@ -235,7 +235,7 @@ export function Step7Review({ draftData, seriesDraftData, categories, onEditStep
         >
           <div className="space-y-2">
             <div>
-              <span className="text-stone">Type:</span>{' '}
+              <span className="text-zinc">Type:</span>{' '}
               <span className="font-medium">
                 {draftData.event_mode
                   ? EVENT_MODE_LABELS[draftData.event_mode].title
@@ -244,16 +244,16 @@ export function Step7Review({ draftData, seriesDraftData, categories, onEditStep
             </div>
             {seriesDraftData?.title && (
               <div>
-                <span className="text-stone">New Series:</span>{' '}
+                <span className="text-zinc">New Series:</span>{' '}
                 <span className="font-medium">{seriesDraftData.title}</span>
                 {seriesDraftData.series_type && (
-                  <span className="text-stone ml-1">({seriesDraftData.series_type})</span>
+                  <span className="text-zinc ml-1">({seriesDraftData.series_type})</span>
                 )}
               </div>
             )}
             {seriesDraftData?.attendance_mode && (
               <div>
-                <span className="text-stone">Attendance:</span>{' '}
+                <span className="text-zinc">Attendance:</span>{' '}
                 <span className="font-medium">
                   {ATTENDANCE_MODE_OPTIONS.find((o) => o.value === seriesDraftData.attendance_mode)?.label || seriesDraftData.attendance_mode}
                 </span>
@@ -261,7 +261,7 @@ export function Step7Review({ draftData, seriesDraftData, categories, onEditStep
             )}
             {(seriesDraftData?.age_low != null || seriesDraftData?.age_high != null) && (
               <div>
-                <span className="text-stone">Age Range:</span>{' '}
+                <span className="text-zinc">Age Range:</span>{' '}
                 <span className="font-medium">
                   {formatAgeRange(seriesDraftData.age_low ?? null, seriesDraftData.age_high ?? null) || 'All ages'}
                 </span>
@@ -269,7 +269,7 @@ export function Step7Review({ draftData, seriesDraftData, categories, onEditStep
             )}
             {seriesDraftData?.skill_level && (
               <div>
-                <span className="text-stone">Skill Level:</span>{' '}
+                <span className="text-zinc">Skill Level:</span>{' '}
                 <span className="font-medium">
                   {SKILL_LEVEL_OPTIONS.find((o) => o.value === seriesDraftData.skill_level)?.label || seriesDraftData.skill_level}
                 </span>
@@ -277,7 +277,7 @@ export function Step7Review({ draftData, seriesDraftData, categories, onEditStep
             )}
             {seriesDraftData?.core_start_time && (
               <div>
-                <span className="text-stone">Core Hours:</span>{' '}
+                <span className="text-zinc">Core Hours:</span>{' '}
                 <span className="font-medium">
                   {seriesDraftData.core_start_time}
                   {seriesDraftData.core_end_time && ` – ${seriesDraftData.core_end_time}`}
@@ -286,7 +286,7 @@ export function Step7Review({ draftData, seriesDraftData, categories, onEditStep
             )}
             {(seriesDraftData?.extended_start_time || seriesDraftData?.extended_end_time) && (
               <div>
-                <span className="text-stone">Extended Care:</span>{' '}
+                <span className="text-zinc">Extended Care:</span>{' '}
                 <span className="font-medium">
                   {seriesDraftData.extended_start_time && `Before: ${seriesDraftData.extended_start_time}`}
                   {seriesDraftData.extended_start_time && seriesDraftData.extended_end_time && ' / '}
@@ -296,7 +296,7 @@ export function Step7Review({ draftData, seriesDraftData, categories, onEditStep
             )}
             {seriesDraftData?.days_of_week && seriesDraftData.days_of_week.length > 0 && (
               <div>
-                <span className="text-stone">Days:</span>{' '}
+                <span className="text-zinc">Days:</span>{' '}
                 <span className="font-medium">
                   {seriesDraftData.days_of_week.map((d) =>
                     ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]
@@ -317,17 +317,17 @@ export function Step7Review({ draftData, seriesDraftData, categories, onEditStep
         >
           <div className="space-y-2">
             <div>
-              <span className="text-stone">Starts:</span>{' '}
+              <span className="text-zinc">Starts:</span>{' '}
               <span className="font-medium">{formatDateTime(draftData.start_datetime)}</span>
             </div>
             {draftData.end_datetime && (
               <div>
-                <span className="text-stone">Ends:</span>{' '}
+                <span className="text-zinc">Ends:</span>{' '}
                 <span>{formatDateTime(draftData.end_datetime)}</span>
               </div>
             )}
             {draftData.is_all_day && (
-              <div className="text-sage font-medium">All-day event</div>
+              <div className="text-emerald font-medium">All-day event</div>
             )}
           </div>
         </ReviewSection>
@@ -341,7 +341,7 @@ export function Step7Review({ draftData, seriesDraftData, categories, onEditStep
           onEdit={() => onEditStep(4)}
         >
           <div>
-            <span className="text-stone">Type:</span>{' '}
+            <span className="text-zinc">Type:</span>{' '}
             <span className="font-medium">
               {draftData.location_mode
                 ? LOCATION_MODE_LABELS[draftData.location_mode].title
@@ -369,40 +369,40 @@ export function Step7Review({ draftData, seriesDraftData, categories, onEditStep
         >
           <div className="space-y-2">
             <div>
-              <span className="text-stone">Price:</span>{' '}
+              <span className="text-zinc">Price:</span>{' '}
               <span className="font-medium">{formatPrice()}</span>
             </div>
             {seriesDraftData?.per_session_price != null && seriesDraftData.per_session_price > 0 && (
               <div>
-                <span className="text-stone">Per Session:</span>{' '}
+                <span className="text-zinc">Per Session:</span>{' '}
                 <span className="font-medium">${seriesDraftData.per_session_price}</span>
               </div>
             )}
             {seriesDraftData?.materials_fee != null && seriesDraftData.materials_fee > 0 && (
               <div>
-                <span className="text-stone">Materials Fee:</span>{' '}
+                <span className="text-zinc">Materials Fee:</span>{' '}
                 <span className="font-medium">${seriesDraftData.materials_fee}</span>
               </div>
             )}
             {seriesDraftData?.pricing_notes && (
               <div>
-                <span className="text-stone">Pricing Notes:</span>{' '}
+                <span className="text-zinc">Pricing Notes:</span>{' '}
                 <span>{seriesDraftData.pricing_notes}</span>
               </div>
             )}
             {draftData.price_details && (
               <div>
-                <span className="text-stone">Details:</span> <span>{draftData.price_details}</span>
+                <span className="text-zinc">Details:</span> <span>{draftData.price_details}</span>
               </div>
             )}
             {draftData.ticket_url && (
               <div>
-                <span className="text-stone">Ticket URL:</span>{' '}
+                <span className="text-zinc">Ticket URL:</span>{' '}
                 <a
                   href={draftData.ticket_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-coral hover:underline"
+                  className="text-blue hover:underline"
                 >
                   {draftData.ticket_url.slice(0, 40)}...
                 </a>
@@ -421,7 +421,7 @@ export function Step7Review({ draftData, seriesDraftData, categories, onEditStep
         >
           {draftData.image_url ? (
             <div className="flex items-center space-x-4">
-              <div className="w-24 h-16 rounded overflow-hidden bg-sand">
+              <div className="w-24 h-16 rounded overflow-hidden bg-cloud">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={draftData.image_url}
@@ -429,38 +429,38 @@ export function Step7Review({ draftData, seriesDraftData, categories, onEditStep
                   className="w-full h-full object-cover"
                 />
               </div>
-              <span className="text-sage">Image added</span>
+              <span className="text-emerald">Image added</span>
             </div>
           ) : (
-            <span className="text-stone">No image (a default will be used)</span>
+            <span className="text-zinc">No image (a default will be used)</span>
           )}
         </ReviewSection>
       </div>
 
       {/* ========== What Happens Next ========== */}
-      <div className="p-4 bg-cream rounded-lg border border-sand">
-        <h4 className="font-medium text-charcoal mb-2">What happens after you submit?</h4>
-        <ol className="text-sm text-stone space-y-2">
+      <div className="p-4 bg-white rounded-lg border border-mist">
+        <h4 className="font-medium text-ink mb-2">What happens after you submit?</h4>
+        <ol className="text-sm text-zinc space-y-2">
           <li className="flex items-start">
-            <span className="bg-coral text-white w-5 h-5 rounded-full flex items-center justify-center text-xs mr-2 flex-shrink-0 mt-0.5">
+            <span className="bg-blue text-white w-5 h-5 rounded-full flex items-center justify-center text-xs mr-2 flex-shrink-0 mt-0.5">
               1
             </span>
             <span>Your event goes to our review queue</span>
           </li>
           <li className="flex items-start">
-            <span className="bg-coral text-white w-5 h-5 rounded-full flex items-center justify-center text-xs mr-2 flex-shrink-0 mt-0.5">
+            <span className="bg-blue text-white w-5 h-5 rounded-full flex items-center justify-center text-xs mr-2 flex-shrink-0 mt-0.5">
               2
             </span>
             <span>We review it within 24 hours (usually much faster!)</span>
           </li>
           <li className="flex items-start">
-            <span className="bg-coral text-white w-5 h-5 rounded-full flex items-center justify-center text-xs mr-2 flex-shrink-0 mt-0.5">
+            <span className="bg-blue text-white w-5 h-5 rounded-full flex items-center justify-center text-xs mr-2 flex-shrink-0 mt-0.5">
               3
             </span>
             <span>You&apos;ll get an email when it&apos;s approved</span>
           </li>
           <li className="flex items-start">
-            <span className="bg-sage text-white w-5 h-5 rounded-full flex items-center justify-center text-xs mr-2 flex-shrink-0 mt-0.5">
+            <span className="bg-emerald text-white w-5 h-5 rounded-full flex items-center justify-center text-xs mr-2 flex-shrink-0 mt-0.5">
               ✓
             </span>
             <span>Your event goes live on Happenlist!</span>

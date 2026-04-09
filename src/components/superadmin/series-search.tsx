@@ -88,8 +88,8 @@ export function SeriesSearch({
   };
 
   return (
-    <div className="space-y-4 p-4 bg-cream rounded-lg border border-sand">
-      <h3 className="font-medium text-charcoal flex items-center">
+    <div className="space-y-4 p-4 bg-white rounded-lg border border-mist">
+      <h3 className="font-medium text-ink flex items-center">
         <Search className="w-4 h-4 mr-2" />
         Find Existing Series
       </h3>
@@ -116,7 +116,7 @@ export function SeriesSearch({
               setSelectedId(null);
               setHasSearched(false);
             }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-stone hover:text-charcoal"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc hover:text-ink"
           >
             <X className="w-4 h-4" />
           </button>
@@ -125,7 +125,7 @@ export function SeriesSearch({
 
       {/* Loading */}
       {isSearching && (
-        <div className="flex items-center gap-2 text-sm text-stone py-2">
+        <div className="flex items-center gap-2 text-sm text-zinc py-2">
           <Loader2 className="w-4 h-4 animate-spin" />
           Searching...
         </div>
@@ -142,16 +142,16 @@ export function SeriesSearch({
               className={`w-full text-left px-3 py-2.5 rounded-lg border transition-all ${
                 selectedId === series.id
                   ? 'border-coral bg-coral/5'
-                  : 'border-sand bg-warm-white hover:border-coral/50'
+                  : 'border-mist bg-pure hover:border-coral/50'
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="font-medium text-charcoal text-sm">
+                <span className="font-medium text-ink text-sm">
                   {series.title}
                 </span>
                 {getTypeBadge(series.series_type)}
               </div>
-              <div className="flex items-center gap-3 mt-1 text-xs text-stone">
+              <div className="flex items-center gap-3 mt-1 text-xs text-zinc">
                 {series.total_sessions && (
                   <span>{series.total_sessions} sessions</span>
                 )}
@@ -169,13 +169,13 @@ export function SeriesSearch({
 
       {/* No results */}
       {!isSearching && hasSearched && results.length === 0 && query.length >= 2 && (
-        <p className="text-sm text-stone py-2">
+        <p className="text-sm text-zinc py-2">
           No series found matching &ldquo;{query}&rdquo;
         </p>
       )}
 
       {/* Actions */}
-      <div className="flex justify-end gap-3 pt-2 border-t border-sand">
+      <div className="flex justify-end gap-3 pt-2 border-t border-mist">
         <Button variant="secondary" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </Button>
@@ -186,7 +186,7 @@ export function SeriesSearch({
             }
           }}
           disabled={!selectedId || isSubmitting}
-          className="bg-coral hover:bg-coral/90 text-white"
+          className="bg-blue hover:bg-blue/90 text-white"
         >
           {isSubmitting ? (
             <>

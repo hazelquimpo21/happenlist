@@ -73,13 +73,13 @@ export function EventGrid({
   if (events.length === 0) {
     return (
       <div className="text-center py-20 px-4">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-coral/10 mb-6">
-          <Compass className="w-10 h-10 text-coral" />
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-blue/10 mb-6">
+          <Compass className="w-10 h-10 text-blue" />
         </div>
-        <h3 className="font-display text-h3 text-charcoal mb-3">
+        <h3 className="font-body text-h3 text-ink mb-3">
           {emptyTitle}
         </h3>
-        <p className="text-stone text-body max-w-md mx-auto mb-8">
+        <p className="text-zinc text-body max-w-md mx-auto mb-8">
           {emptyMessage ||
             "Try browsing by category or checking out what's happening this weekend."}
         </p>
@@ -88,8 +88,8 @@ export function EventGrid({
             href={ROUTES.events}
             className={cn(
               'inline-flex items-center gap-2 px-5 py-2.5 rounded-full',
-              'bg-coral text-white font-medium text-sm',
-              'hover:bg-coral/90 transition-colors'
+              'bg-blue text-white font-medium text-sm',
+              'hover:bg-blue/90 transition-colors'
             )}
           >
             <Compass className="w-4 h-4" />
@@ -99,8 +99,8 @@ export function EventGrid({
             href={ROUTES.eventsWeekend}
             className={cn(
               'inline-flex items-center gap-2 px-5 py-2.5 rounded-full',
-              'bg-sand/60 text-charcoal font-medium text-sm',
-              'hover:bg-sand transition-colors'
+              'bg-cloud/60 text-ink font-medium text-sm',
+              'hover:bg-cloud transition-colors'
             )}
           >
             <CalendarDays className="w-4 h-4" />

@@ -161,7 +161,7 @@ function EventImageComponent({
         )}
         aria-label={`Placeholder for ${alt}`}
       >
-        <span className="text-stone/50 text-4xl md:text-5xl font-display font-semibold select-none">
+        <span className="text-zinc/50 text-4xl md:text-5xl font-body font-semibold select-none">
           {letter}
         </span>
       </div>

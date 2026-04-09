@@ -101,12 +101,12 @@ export function AdminSidebar({ pendingCount = 0 }: AdminSidebarProps) {
   ];
 
   return (
-    <aside className="w-64 bg-charcoal text-warm-white flex flex-col h-screen sticky top-0">
+    <aside className="w-64 bg-ink text-pure flex flex-col h-screen sticky top-0">
       {/* Logo/Brand */}
       <div className="p-6 border-b border-white/10">
         <Link href="/admin" className="flex items-center gap-2">
-          <span className="font-display text-xl font-semibold">Happenlist</span>
-          <span className="text-coral text-xs font-medium px-2 py-0.5 rounded bg-coral/20">
+          <span className="font-body text-xl font-semibold">Happenlist</span>
+          <span className="text-blue text-xs font-medium px-2 py-0.5 rounded bg-blue/20">
             Admin
           </span>
         </Link>
@@ -116,7 +116,7 @@ export function AdminSidebar({ pendingCount = 0 }: AdminSidebarProps) {
       <nav className="flex-1 overflow-y-auto py-4">
         {navSections.map((section) => (
           <div key={section.title} className="mb-6">
-            <h3 className="px-6 text-xs font-medium text-stone uppercase tracking-wider mb-2">
+            <h3 className="px-6 text-xs font-medium text-zinc uppercase tracking-wider mb-2">
               {section.title}
             </h3>
             <ul className="space-y-1">
@@ -133,20 +133,20 @@ export function AdminSidebar({ pendingCount = 0 }: AdminSidebarProps) {
                         'transition-colors duration-150',
                         'hover:bg-white/5',
                         isActive
-                          ? 'bg-white/10 text-coral border-r-2 border-coral'
+                          ? 'bg-white/10 text-blue border-r-2 border-blue'
                           : 'text-white/70 hover:text-white'
                       )}
                     >
-                      <span className={cn(isActive && 'text-coral')}>
+                      <span className={cn(isActive && 'text-blue')}>
                         {item.icon}
                       </span>
                       <span className="flex-1">{item.label}</span>
                       {item.badge !== undefined && item.badge > 0 && (
-                        <span className="bg-coral text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                        <span className="bg-blue text-white text-xs font-bold px-2 py-0.5 rounded-full">
                           {item.badge}
                         </span>
                       )}
-                      {isActive && <ChevronRight className="w-4 h-4 text-coral" />}
+                      {isActive && <ChevronRight className="w-4 h-4 text-blue" />}
                     </Link>
                   </li>
                 );

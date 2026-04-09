@@ -71,16 +71,16 @@ const LINK_CONFIGS: LinkConfig[] = [
     label: 'Event Website',
     shortLabel: 'Website',
     icon: Globe,
-    colorClass: 'text-coral',
-    hoverClass: 'hover:text-coral/80 hover:bg-coral/5',
+    colorClass: 'text-blue',
+    hoverClass: 'hover:text-blue/80 hover:bg-blue/5',
   },
   {
     key: 'registration',
     label: 'Register / RSVP',
     shortLabel: 'Register',
     icon: ClipboardList,
-    colorClass: 'text-sage',
-    hoverClass: 'hover:text-sage/80 hover:bg-sage/5',
+    colorClass: 'text-emerald',
+    hoverClass: 'hover:text-emerald/80 hover:bg-emerald/5',
   },
   {
     key: 'ticket',
@@ -251,15 +251,15 @@ export function EventLinks({
             rel="noopener noreferrer"
             className={cn(
               'flex items-center gap-3 px-3 py-2 rounded-lg',
-              'text-charcoal transition-colors',
+              'text-ink transition-colors',
               'border border-transparent',
               config.hoverClass,
-              'hover:border-sand'
+              'hover:border-mist'
             )}
           >
             <Icon className={cn('w-5 h-5 flex-shrink-0', config.colorClass)} />
             <span className="text-body-sm font-medium">{config.label}</span>
-            <ExternalLink className="w-3.5 h-3.5 text-stone/50 ml-auto" />
+            <ExternalLink className="w-3.5 h-3.5 text-zinc/50 ml-auto" />
           </a>
         );
       })}

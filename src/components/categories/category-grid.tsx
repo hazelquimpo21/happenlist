@@ -85,7 +85,7 @@ export function CategoryGrid({ categories, className }: CategoryGridProps) {
             >
               <IconComponent className="w-8 h-8" />
             </div>
-            <span className="font-semibold text-charcoal text-body-sm">
+            <span className="font-semibold text-ink text-body-sm">
               {category.name}
             </span>
           </Link>

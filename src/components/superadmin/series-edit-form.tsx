@@ -156,15 +156,15 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
             status === 'saving'
               ? 'bg-amber-50 border border-amber-200'
               : status === 'saved'
-              ? 'bg-sage/10 border border-sage/30'
+              ? 'bg-emerald/10 border border-sage/30'
               : 'bg-red-50 border border-red-200'
           }`}
         >
           {status === 'saving' && <Clock className="w-5 h-5 text-amber-600 animate-spin" />}
-          {status === 'saved' && <CheckCircle className="w-5 h-5 text-sage" />}
+          {status === 'saved' && <CheckCircle className="w-5 h-5 text-emerald" />}
           {status === 'error' && <AlertTriangle className="w-5 h-5 text-red-600" />}
           <span className={`text-sm font-medium ${
-            status === 'saving' ? 'text-amber-800' : status === 'saved' ? 'text-sage' : 'text-red-800'
+            status === 'saving' ? 'text-amber-800' : status === 'saved' ? 'text-emerald' : 'text-red-800'
           }`}>
             {statusMessage}
           </span>
@@ -172,10 +172,10 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
       )}
 
       {/* Form */}
-      <div className="bg-warm-white border border-sand rounded-lg p-6 space-y-6">
+      <div className="bg-pure border border-mist rounded-lg p-6 space-y-6">
         {/* Title */}
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-charcoal mb-2">
+          <label htmlFor="title" className="block text-sm font-medium text-ink mb-2">
             Series Title
           </label>
           <input
@@ -184,14 +184,14 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
             name="title"
             value={formState.title}
             onChange={handleInputChange}
-            className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
           />
         </div>
 
         {/* Short Description */}
         <div>
-          <label htmlFor="short_description" className="block text-sm font-medium text-charcoal mb-2">
-            Short Description <span className="text-stone font-normal">(max 160 chars)</span>
+          <label htmlFor="short_description" className="block text-sm font-medium text-ink mb-2">
+            Short Description <span className="text-zinc font-normal">(max 160 chars)</span>
           </label>
           <textarea
             id="short_description"
@@ -200,14 +200,14 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
             onChange={handleInputChange}
             rows={2}
             maxLength={160}
-            className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none resize-none"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none resize-none"
           />
-          <p className="text-xs text-stone mt-1">{formState.short_description.length}/160</p>
+          <p className="text-xs text-zinc mt-1">{formState.short_description.length}/160</p>
         </div>
 
         {/* Full Description */}
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-charcoal mb-2">
+          <label htmlFor="description" className="block text-sm font-medium text-ink mb-2">
             Full Description
           </label>
           <textarea
@@ -216,14 +216,14 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
             value={formState.description}
             onChange={handleInputChange}
             rows={6}
-            className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none resize-y"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none resize-y"
           />
         </div>
 
         {/* Type and Status */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="series_type" className="block text-sm font-medium text-charcoal mb-2">
+            <label htmlFor="series_type" className="block text-sm font-medium text-ink mb-2">
               Series Type
             </label>
             <div className="relative">
@@ -232,17 +232,17 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
                 name="series_type"
                 value={formState.series_type}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none appearance-none pr-10"
+                className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none appearance-none pr-10"
               >
                 {SERIES_TYPES.map(t => (
                   <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc pointer-events-none" />
             </div>
           </div>
           <div>
-            <label htmlFor="status" className="block text-sm font-medium text-charcoal mb-2">
+            <label htmlFor="status" className="block text-sm font-medium text-ink mb-2">
               Status
             </label>
             <div className="relative">
@@ -251,13 +251,13 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
                 name="status"
                 value={formState.status}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none appearance-none pr-10"
+                className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none appearance-none pr-10"
               >
                 {STATUS_OPTIONS.map(s => (
                   <option key={s.value} value={s.value}>{s.label}</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc pointer-events-none" />
             </div>
           </div>
         </div>
@@ -265,7 +265,7 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
         {/* Pricing */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label htmlFor="price_type" className="block text-sm font-medium text-charcoal mb-2">
+            <label htmlFor="price_type" className="block text-sm font-medium text-ink mb-2">
               Price Type
             </label>
             <div className="relative">
@@ -274,20 +274,20 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
                 name="price_type"
                 value={formState.price_type}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none appearance-none pr-10"
+                className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none appearance-none pr-10"
               >
                 {PRICE_TYPES.map(p => (
                   <option key={p.value} value={p.value}>{p.label}</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc pointer-events-none" />
             </div>
           </div>
 
           {formState.price_type !== 'free' && formState.price_type !== 'varies' && (
             <>
               <div>
-                <label htmlFor="price_low" className="block text-sm font-medium text-charcoal mb-2">
+                <label htmlFor="price_low" className="block text-sm font-medium text-ink mb-2">
                   {formState.price_type === 'range' ? 'Min Price ($)' : 'Price ($)'}
                 </label>
                 <input
@@ -298,12 +298,12 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
                   onChange={handleInputChange}
                   min="0"
                   step="0.01"
-                  className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+                  className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
                 />
               </div>
               {formState.price_type === 'range' && (
                 <div>
-                  <label htmlFor="price_high" className="block text-sm font-medium text-charcoal mb-2">
+                  <label htmlFor="price_high" className="block text-sm font-medium text-ink mb-2">
                     Max Price ($)
                   </label>
                   <input
@@ -314,7 +314,7 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
                     onChange={handleInputChange}
                     min="0"
                     step="0.01"
-                    className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+                    className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
                   />
                 </div>
               )}
@@ -324,7 +324,7 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
 
         {/* Registration URL */}
         <div>
-          <label htmlFor="registration_url" className="block text-sm font-medium text-charcoal mb-2">
+          <label htmlFor="registration_url" className="block text-sm font-medium text-ink mb-2">
             Registration URL
           </label>
           <input
@@ -333,14 +333,14 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
             name="registration_url"
             value={formState.registration_url}
             onChange={handleInputChange}
-            className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
             placeholder="https://..."
           />
         </div>
 
         {/* Image URL */}
         <div>
-          <label htmlFor="image_url" className="block text-sm font-medium text-charcoal mb-2">
+          <label htmlFor="image_url" className="block text-sm font-medium text-ink mb-2">
             Image URL
           </label>
           <input
@@ -349,17 +349,17 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
             name="image_url"
             value={formState.image_url}
             onChange={handleInputChange}
-            className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
             placeholder="https://..."
           />
         </div>
 
         {/* SEO */}
-        <div className="p-4 bg-cream/50 rounded-lg border border-sand/50">
-          <p className="text-sm font-medium text-charcoal mb-3">SEO</p>
+        <div className="p-4 bg-white/50 rounded-lg border border-mist/50">
+          <p className="text-sm font-medium text-ink mb-3">SEO</p>
           <div className="space-y-4">
             <div>
-              <label htmlFor="meta_title" className="block text-xs text-stone mb-1">
+              <label htmlFor="meta_title" className="block text-xs text-zinc mb-1">
                 Meta Title
               </label>
               <input
@@ -368,11 +368,11 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
                 name="meta_title"
                 value={formState.meta_title}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+                className="w-full px-3 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none text-sm"
               />
             </div>
             <div>
-              <label htmlFor="meta_description" className="block text-xs text-stone mb-1">
+              <label htmlFor="meta_description" className="block text-xs text-zinc mb-1">
                 Meta Description
               </label>
               <textarea
@@ -381,7 +381,7 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
                 value={formState.meta_description}
                 onChange={handleInputChange}
                 rows={2}
-                className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm resize-none"
+                className="w-full px-3 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none text-sm resize-none"
               />
             </div>
           </div>
@@ -394,22 +394,22 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
             name="is_featured"
             checked={formState.is_featured}
             onChange={handleInputChange}
-            className="w-5 h-5 rounded border-sand text-coral focus:ring-coral"
+            className="w-5 h-5 rounded border-mist text-blue focus:ring-blue"
           />
-          <span className="text-sm text-charcoal">Featured series</span>
+          <span className="text-sm text-ink">Featured series</span>
         </label>
 
         {/* Notes */}
         <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-charcoal mb-2">
-            Edit Notes <span className="text-stone font-normal">(for audit log)</span>
+          <label htmlFor="notes" className="block text-sm font-medium text-ink mb-2">
+            Edit Notes <span className="text-zinc font-normal">(for audit log)</span>
           </label>
           <textarea
             id="notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={2}
-            className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none resize-none"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none resize-none"
             placeholder="Why are you making these changes?"
           />
         </div>
@@ -430,7 +430,7 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
         <Button
           onClick={handleSave}
           disabled={status === 'saving'}
-          className="flex items-center gap-2 bg-coral hover:bg-coral/90 text-white px-6"
+          className="flex items-center gap-2 bg-blue hover:bg-blue/90 text-white px-6"
         >
           <Save className="w-4 h-4" />
           {status === 'saving' ? 'Saving...' : 'Save Changes'}
@@ -440,27 +440,27 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
       {/* Delete confirmation modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-charcoal/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-warm-white rounded-xl shadow-xl max-w-md w-full p-6">
+          <div className="bg-pure rounded-xl shadow-xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display text-xl text-charcoal flex items-center gap-2">
+              <h3 className="font-body text-xl text-ink flex items-center gap-2">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
                 Cancel Series
               </h3>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="p-1 hover:bg-sand/50 rounded-lg"
+                className="p-1 hover:bg-cloud/50 rounded-lg"
               >
-                <X className="w-5 h-5 text-stone" />
+                <X className="w-5 h-5 text-zinc" />
               </button>
             </div>
 
-            <p className="text-stone mb-4">
+            <p className="text-zinc mb-4">
               This will mark <strong>{series.title}</strong> as cancelled.
               The series can be republished later by changing the status.
             </p>
 
             <div className="mb-4">
-              <label htmlFor="deleteReason" className="block text-sm font-medium text-charcoal mb-2">
+              <label htmlFor="deleteReason" className="block text-sm font-medium text-ink mb-2">
                 Reason <span className="text-red-600">*</span>
               </label>
               <textarea
@@ -468,7 +468,7 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
                 value={deleteReason}
                 onChange={(e) => setDeleteReason(e.target.value)}
                 rows={2}
-                className="w-full px-4 py-2 border border-sand rounded-lg focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none resize-none"
+                className="w-full px-4 py-2 border border-mist rounded-lg focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none resize-none"
                 placeholder="Why are you cancelling this series?"
               />
             </div>

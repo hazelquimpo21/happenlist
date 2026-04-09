@@ -40,11 +40,11 @@ export default async function ActivityLogPage({ searchParams }: PageProps) {
 
   // Action icon mapping
   const getActionIcon = (action: string) => {
-    if (action.includes('approved')) return <CheckCircle className="w-4 h-4 text-sage" />;
+    if (action.includes('approved')) return <CheckCircle className="w-4 h-4 text-emerald" />;
     if (action.includes('rejected')) return <XCircle className="w-4 h-4 text-red-500" />;
     if (action.includes('edited')) return <Edit className="w-4 h-4 text-blue-500" />;
-    if (action.includes('published')) return <Calendar className="w-4 h-4 text-coral" />;
-    return <FileText className="w-4 h-4 text-stone" />;
+    if (action.includes('published')) return <Calendar className="w-4 h-4 text-blue" />;
+    return <FileText className="w-4 h-4 text-zinc" />;
   };
 
   // Action label formatting
@@ -72,44 +72,44 @@ export default async function ActivityLogPage({ searchParams }: PageProps) {
         />
 
         {activities.length === 0 ? (
-          <Card padding="lg" className="border border-sand text-center">
-            <FileText className="w-16 h-16 mx-auto mb-4 text-stone/50" />
-            <h2 className="font-display text-xl text-charcoal mb-2">
+          <Card padding="lg" className="border border-mist text-center">
+            <FileText className="w-16 h-16 mx-auto mb-4 text-zinc/50" />
+            <h2 className="font-body text-xl text-ink mb-2">
               No Activity Yet
             </h2>
-            <p className="text-stone max-w-md mx-auto">
+            <p className="text-zinc max-w-md mx-auto">
               Admin actions like approving, rejecting, and editing events will appear here.
             </p>
           </Card>
         ) : (
-          <Card className="border border-sand overflow-hidden">
+          <Card className="border border-mist overflow-hidden">
             <table className="w-full">
-              <thead className="bg-sand/30">
+              <thead className="bg-cloud/30">
                 <tr>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-stone uppercase tracking-wider">
+                  <th className="text-left px-6 py-3 text-xs font-medium text-zinc uppercase tracking-wider">
                     Action
                   </th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-stone uppercase tracking-wider">
+                  <th className="text-left px-6 py-3 text-xs font-medium text-zinc uppercase tracking-wider">
                     Entity
                   </th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-stone uppercase tracking-wider">
+                  <th className="text-left px-6 py-3 text-xs font-medium text-zinc uppercase tracking-wider">
                     Admin
                   </th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-stone uppercase tracking-wider">
+                  <th className="text-left px-6 py-3 text-xs font-medium text-zinc uppercase tracking-wider">
                     Notes
                   </th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-stone uppercase tracking-wider">
+                  <th className="text-left px-6 py-3 text-xs font-medium text-zinc uppercase tracking-wider">
                     Time
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-sand">
                 {activities.map((activity) => (
-                  <tr key={activity.id} className="hover:bg-sand/20 transition-colors">
+                  <tr key={activity.id} className="hover:bg-cloud/20 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         {getActionIcon(activity.action)}
-                        <span className="text-sm font-medium text-charcoal">
+                        <span className="text-sm font-medium text-ink">
                           {formatAction(activity.action)}
                         </span>
                       </div>
@@ -119,27 +119,27 @@ export default async function ActivityLogPage({ searchParams }: PageProps) {
                         <Badge variant="secondary" size="sm">
                           {activity.entity_type}
                         </Badge>
-                        <span className="text-xs font-mono text-stone">
+                        <span className="text-xs font-mono text-zinc">
                           {activity.entity_id.slice(0, 8)}...
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-charcoal">
+                      <span className="text-sm text-ink">
                         {activity.admin_email || 'System'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       {activity.notes ? (
-                        <span className="text-sm text-stone line-clamp-1 max-w-xs">
+                        <span className="text-sm text-zinc line-clamp-1 max-w-xs">
                           {activity.notes}
                         </span>
                       ) : (
-                        <span className="text-sm text-stone/50">—</span>
+                        <span className="text-sm text-zinc/50">—</span>
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-stone">
+                      <span className="text-sm text-zinc">
                         {format(new Date(activity.created_at), 'MMM d, h:mm a')}
                       </span>
                     </td>

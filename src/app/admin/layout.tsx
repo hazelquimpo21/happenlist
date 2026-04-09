@@ -38,7 +38,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-cream">
+    <div className="flex min-h-screen bg-white">
       {/* Sidebar — loads async, doesn't block page content */}
       <Suspense fallback={<AdminSidebar pendingCount={0} />}>
         <SidebarWithStats />

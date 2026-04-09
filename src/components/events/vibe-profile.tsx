@@ -59,7 +59,7 @@ const SUBCULTURE_COLORS: Record<string, { bg: string; text: string }> = {
   outdoorsy: { bg: 'bg-emerald-50', text: 'text-emerald-700' },
   gaming: { bg: 'bg-slate-100', text: 'text-slate-700' },
   sneakerhead: { bg: 'bg-zinc-100', text: 'text-zinc-700' },
-  vintage: { bg: 'bg-stone-100', text: 'text-stone-700' },
+  vintage: { bg: 'bg-stone-100', text: 'text-zinc-700' },
   academia: { bg: 'bg-neutral-100', text: 'text-neutral-700' },
   maker: { bg: 'bg-lime-50', text: 'text-lime-700' },
 };
@@ -101,11 +101,11 @@ function VibeDimensionBar({
 
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between text-xs text-stone">
-        <span className="font-medium text-charcoal">{label}</span>
+      <div className="flex items-center justify-between text-xs text-zinc">
+        <span className="font-medium text-ink">{label}</span>
         <span className="text-[11px]">{value}/5</span>
       </div>
-      <div className="relative h-1.5 bg-sand/60 rounded-full">
+      <div className="relative h-1.5 bg-cloud/60 rounded-full">
         <div
           className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full shadow-sm border-2 border-white"
           style={{
@@ -114,7 +114,7 @@ function VibeDimensionBar({
           }}
         />
       </div>
-      <div className="flex justify-between text-[10px] text-stone/70">
+      <div className="flex justify-between text-[10px] text-zinc/70">
         <span>{lowLabel}</span>
         <span>{highLabel}</span>
       </div>
@@ -135,7 +135,7 @@ export function VibeTagPill({
   size?: 'sm' | 'xs';
   className?: string;
 }) {
-  const colors = VIBE_TAG_COLORS[tag] ?? { bg: 'bg-stone/10', text: 'text-stone' };
+  const colors = VIBE_TAG_COLORS[tag] ?? { bg: 'bg-stone/10', text: 'text-zinc' };
   const label = tag.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
   return (
@@ -158,7 +158,7 @@ export function VibeTagPill({
 // =============================================================================
 
 function SubculturePill({ tag }: { tag: string }) {
-  const colors = SUBCULTURE_COLORS[tag] ?? { bg: 'bg-stone/5', text: 'text-stone' };
+  const colors = SUBCULTURE_COLORS[tag] ?? { bg: 'bg-stone/5', text: 'text-zinc' };
   const label = tag.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
   return (
@@ -207,13 +207,13 @@ export function NoiseLevelIndicator({
             key={i}
             className={cn(
               'w-1 rounded-full transition-colors',
-              i <= config.waves ? 'bg-charcoal' : 'bg-sand'
+              i <= config.waves ? 'bg-ink' : 'bg-cloud'
             )}
             style={{ height: `${8 + i * 3}px` }}
           />
         ))}
       </div>
-      <span className="text-sm text-charcoal">{config.label}</span>
+      <span className="text-sm text-ink">{config.label}</span>
     </div>
   );
 }
@@ -297,7 +297,7 @@ export function VibeProfileSection({
 
   return (
     <div className={cn('space-y-6', className)}>
-      <h2 className="font-display text-h4 text-charcoal">
+      <h2 className="font-body text-h4 text-ink">
         What&apos;s It Actually Like?
       </h2>
 
@@ -343,26 +343,26 @@ export function VibeProfileSection({
 
       {/* Crowd profile — insider tips style */}
       {hasCrowd && (
-        <div className="space-y-3 p-4 bg-cream rounded-lg">
+        <div className="space-y-3 p-4 bg-white rounded-lg">
           {event.noise_level && (
             <NoiseLevelIndicator level={event.noise_level} />
           )}
           {event.expected_crowd && (
             <div>
-              <p className="text-xs font-medium text-stone uppercase tracking-wide mb-1">
+              <p className="text-xs font-medium text-zinc uppercase tracking-wide mb-1">
                 Who&apos;ll Be There
               </p>
-              <p className="text-sm text-charcoal/80 italic leading-relaxed">
+              <p className="text-sm text-ink/80 italic leading-relaxed">
                 {event.expected_crowd}
               </p>
             </div>
           )}
           {event.dress_vibe && (
             <div>
-              <p className="text-xs font-medium text-stone uppercase tracking-wide mb-1">
+              <p className="text-xs font-medium text-zinc uppercase tracking-wide mb-1">
                 What to Wear
               </p>
-              <p className="text-sm text-charcoal/80 italic leading-relaxed">
+              <p className="text-sm text-ink/80 italic leading-relaxed">
                 {event.dress_vibe}
               </p>
             </div>

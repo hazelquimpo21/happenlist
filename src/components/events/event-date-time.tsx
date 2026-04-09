@@ -115,11 +115,11 @@ function TimeBadge({
   return (
     <div className={cn('flex flex-col', className)}>
       {label && (
-        <span className="text-xs text-stone uppercase tracking-wide mb-0.5">
+        <span className="text-xs text-zinc uppercase tracking-wide mb-0.5">
           {label}
         </span>
       )}
-      <span className="font-medium text-charcoal">{time}</span>
+      <span className="font-medium text-ink">{time}</span>
     </div>
   );
 }
@@ -191,10 +191,10 @@ export function EventDateTime({
   if (isAllDay) {
     return (
       <div className={cn('flex items-center gap-2', className)}>
-        {showIcon && <Sun className="w-5 h-5 text-coral flex-shrink-0" />}
+        {showIcon && <Sun className="w-5 h-5 text-blue flex-shrink-0" />}
         <div>
-          {showDate && <p className="text-body-sm text-stone">{startDate}</p>}
-          <p className="font-medium text-charcoal">All Day Event</p>
+          {showDate && <p className="text-body-sm text-zinc">{startDate}</p>}
+          <p className="font-medium text-ink">All Day Event</p>
         </div>
       </div>
     );
@@ -207,7 +207,7 @@ export function EventDateTime({
     const timeDisplay = endTime ? `${startTime} – ${endTime}` : startTime;
 
     return (
-      <span className={cn('text-charcoal', className)}>
+      <span className={cn('text-ink', className)}>
         {showDate && `${formatDate(startDatetime)} · `}
         {timeDisplay}
       </span>
@@ -222,8 +222,8 @@ export function EventDateTime({
 
     return (
       <div className={cn('flex items-center gap-2', className)}>
-        {showIcon && <Clock className="w-4 h-4 text-coral flex-shrink-0" />}
-        <span className="text-body-sm text-charcoal">{timeDisplay}</span>
+        {showIcon && <Clock className="w-4 h-4 text-blue flex-shrink-0" />}
+        <span className="text-body-sm text-ink">{timeDisplay}</span>
       </div>
     );
   }
@@ -238,22 +238,22 @@ export function EventDateTime({
       <div className={cn('space-y-3', className)}>
         {/* Start */}
         <div className="flex items-start gap-3">
-          {showIcon && <Calendar className="w-5 h-5 text-coral mt-0.5 flex-shrink-0" />}
+          {showIcon && <Calendar className="w-5 h-5 text-blue mt-0.5 flex-shrink-0" />}
           <div>
-            <p className="text-xs text-stone uppercase tracking-wide">Starts</p>
-            <p className="font-medium text-charcoal">{startDate}</p>
-            <p className="text-body-sm text-stone">{startTime}</p>
+            <p className="text-xs text-zinc uppercase tracking-wide">Starts</p>
+            <p className="font-medium text-ink">{startDate}</p>
+            <p className="text-body-sm text-zinc">{startTime}</p>
           </div>
         </div>
 
         {/* End */}
         {endDatetime && (
           <div className="flex items-start gap-3">
-            {showIcon && <Calendar className="w-5 h-5 text-sage mt-0.5 flex-shrink-0" />}
+            {showIcon && <Calendar className="w-5 h-5 text-emerald mt-0.5 flex-shrink-0" />}
             <div>
-              <p className="text-xs text-stone uppercase tracking-wide">Ends</p>
-              <p className="font-medium text-charcoal">{endDate}</p>
-              <p className="text-body-sm text-stone">{endTime}</p>
+              <p className="text-xs text-zinc uppercase tracking-wide">Ends</p>
+              <p className="font-medium text-ink">{endDate}</p>
+              <p className="text-body-sm text-zinc">{endTime}</p>
             </div>
           </div>
         )}
@@ -265,10 +265,10 @@ export function EventDateTime({
   if (endTime) {
     return (
       <div className={cn('flex items-start gap-3', className)}>
-        {showIcon && <Clock className="w-5 h-5 text-coral mt-0.5 flex-shrink-0" />}
+        {showIcon && <Clock className="w-5 h-5 text-blue mt-0.5 flex-shrink-0" />}
         <div className="flex items-center gap-4">
           <TimeBadge time={startTime} label="Starts" />
-          <span className="text-stone">→</span>
+          <span className="text-zinc">→</span>
           <TimeBadge time={endTime} label="Ends" />
         </div>
       </div>
@@ -278,12 +278,12 @@ export function EventDateTime({
   // Single start time only
   return (
     <div className={cn('flex items-start gap-3', className)}>
-      {showIcon && <Clock className="w-5 h-5 text-coral mt-0.5 flex-shrink-0" />}
+      {showIcon && <Clock className="w-5 h-5 text-blue mt-0.5 flex-shrink-0" />}
       <div>
-        <p className="text-xs text-stone uppercase tracking-wide">Time</p>
-        <p className="font-medium text-charcoal">{startTime}</p>
+        <p className="text-xs text-zinc uppercase tracking-wide">Time</p>
+        <p className="font-medium text-ink">{startTime}</p>
         {timezone && (
-          <p className="text-xs text-stone mt-0.5">{timezone}</p>
+          <p className="text-xs text-zinc mt-0.5">{timezone}</p>
         )}
       </div>
     </div>

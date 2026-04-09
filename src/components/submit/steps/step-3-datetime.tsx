@@ -224,23 +224,23 @@ export function Step3DateTime({
 
       {/* ========== Camp Date Range Mode ========== */}
       {isCampMode && (
-        <div className="space-y-6 p-4 bg-cream rounded-lg border border-sand">
-          <h3 className="font-medium text-charcoal flex items-center">
+        <div className="space-y-6 p-4 bg-white rounded-lg border border-mist">
+          <h3 className="font-medium text-ink flex items-center">
             <Tent className="w-4 h-4 mr-2" />
             Camp Schedule
           </h3>
-          <p className="text-sm text-stone -mt-4">
+          <p className="text-sm text-zinc -mt-4">
             Set the date range and which days the camp runs. Individual session events will be auto-generated.
           </p>
 
           {/* Date range */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="camp_start_date" className="block text-sm font-medium text-charcoal mb-1">
-                Start Date <span className="text-coral">*</span>
+              <label htmlFor="camp_start_date" className="block text-sm font-medium text-ink mb-1">
+                Start Date <span className="text-blue">*</span>
               </label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc" />
                 <Input
                   id="camp_start_date"
                   type="date"
@@ -251,11 +251,11 @@ export function Step3DateTime({
               </div>
             </div>
             <div>
-              <label htmlFor="camp_end_date" className="block text-sm font-medium text-charcoal mb-1">
-                End Date <span className="text-coral">*</span>
+              <label htmlFor="camp_end_date" className="block text-sm font-medium text-ink mb-1">
+                End Date <span className="text-blue">*</span>
               </label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc" />
                 <Input
                   id="camp_end_date"
                   type="date"
@@ -271,8 +271,8 @@ export function Step3DateTime({
           {/* Core hours */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="camp_time" className="block text-sm font-medium text-charcoal mb-1">
-                Start Time <span className="text-coral">*</span>
+              <label htmlFor="camp_time" className="block text-sm font-medium text-ink mb-1">
+                Start Time <span className="text-blue">*</span>
               </label>
               <Input
                 id="camp_time"
@@ -283,8 +283,8 @@ export function Step3DateTime({
               />
             </div>
             <div>
-              <label htmlFor="camp_end_time" className="block text-sm font-medium text-charcoal mb-1">
-                End Time <span className="text-coral">*</span>
+              <label htmlFor="camp_end_time" className="block text-sm font-medium text-ink mb-1">
+                End Time <span className="text-blue">*</span>
               </label>
               <Input
                 id="camp_end_time"
@@ -298,7 +298,7 @@ export function Step3DateTime({
 
           {/* Days of week selector */}
           <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">
+            <label className="block text-sm font-medium text-ink mb-2">
               Which days does the camp run?
             </label>
             <div className="flex gap-2">
@@ -310,8 +310,8 @@ export function Step3DateTime({
                   className={cn(
                     'w-10 h-10 rounded-lg border font-medium transition-all',
                     campDaysOfWeek.includes(index)
-                      ? 'border-coral bg-coral text-white'
-                      : 'border-sand bg-warm-white text-charcoal hover:border-coral/50'
+                      ? 'border-blue bg-blue text-white'
+                      : 'border-mist bg-pure text-ink hover:border-blue/50'
                   )}
                 >
                   {day.charAt(0)}
@@ -322,8 +322,8 @@ export function Step3DateTime({
 
           {/* Preview of generated dates */}
           {campDates.length > 0 && (
-            <div className="p-3 bg-sage/10 border border-sage/30 rounded-lg">
-              <p className="text-sm font-medium text-charcoal flex items-center mb-2">
+            <div className="p-3 bg-emerald/10 border border-sage/30 rounded-lg">
+              <p className="text-sm font-medium text-ink flex items-center mb-2">
                 <CalendarDays className="w-4 h-4 mr-1.5" />
                 {campDates.length} session{campDates.length !== 1 ? 's' : ''} will be created:
               </p>
@@ -337,7 +337,7 @@ export function Step3DateTime({
                   return (
                     <span
                       key={date}
-                      className="text-xs bg-sage/20 text-sage px-2 py-1 rounded"
+                      className="text-xs bg-emerald/20 text-emerald px-2 py-1 rounded"
                     >
                       {label}
                     </span>
@@ -348,7 +348,7 @@ export function Step3DateTime({
           )}
 
           {campStartDate && campEndDate && campDates.length === 0 && (
-            <p className="text-sm text-coral">
+            <p className="text-sm text-blue">
               No matching days found in the selected range. Check your day selections above.
             </p>
           )}
@@ -362,13 +362,13 @@ export function Step3DateTime({
           <div>
             <label
               htmlFor="start_datetime"
-              className="block text-sm font-medium text-charcoal mb-1"
+              className="block text-sm font-medium text-ink mb-1"
             >
-              Start Date & Time <span className="text-coral">*</span>
+              Start Date & Time <span className="text-blue">*</span>
             </label>
             <div className="flex items-center space-x-3">
               <div className="relative flex-1">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc" />
                 <Input
                   id="start_datetime"
                   type="datetime-local"
@@ -393,14 +393,14 @@ export function Step3DateTime({
               className={cn(
                 'flex items-center px-4 py-2 rounded-lg border transition-all',
                 draftData.is_all_day
-                  ? 'border-coral bg-coral/10 text-coral'
-                  : 'border-sand bg-warm-white text-charcoal hover:border-coral/50'
+                  ? 'border-blue bg-blue/10 text-blue'
+                  : 'border-mist bg-pure text-ink hover:border-blue/50'
               )}
             >
               <Sun className="w-4 h-4 mr-2" />
               All-day event
             </button>
-            <span className="text-sm text-stone">
+            <span className="text-sm text-zinc">
               No specific start/end time
             </span>
           </div>
@@ -410,12 +410,12 @@ export function Step3DateTime({
             <div>
               <label
                 htmlFor="end_datetime"
-                className="block text-sm font-medium text-charcoal mb-1"
+                className="block text-sm font-medium text-ink mb-1"
               >
                 End Date & Time (optional)
               </label>
               <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc" />
                 <Input
                   id="end_datetime"
                   type="datetime-local"
@@ -424,7 +424,7 @@ export function Step3DateTime({
                   className="pl-10"
                 />
               </div>
-              <p className="text-xs text-stone mt-1">
+              <p className="text-xs text-zinc mt-1">
                 Helps attendees plan their time
               </p>
             </div>
@@ -434,15 +434,15 @@ export function Step3DateTime({
 
       {/* ========== Recurring Event Pattern ========== */}
       {isRecurring && (
-        <div className="space-y-6 p-4 bg-cream rounded-lg border border-sand">
-          <h3 className="font-medium text-charcoal flex items-center">
+        <div className="space-y-6 p-4 bg-white rounded-lg border border-mist">
+          <h3 className="font-medium text-ink flex items-center">
             <RefreshCw className="w-4 h-4 mr-2" />
             Recurrence Pattern
           </h3>
 
           {/* Frequency */}
           <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">
+            <label className="block text-sm font-medium text-ink mb-2">
               Repeats
             </label>
             <div className="flex flex-wrap gap-2">
@@ -456,8 +456,8 @@ export function Step3DateTime({
                   className={cn(
                     'px-4 py-2 rounded-lg border transition-all',
                     recurrence.frequency === option.value
-                      ? 'border-coral bg-coral/10 text-coral'
-                      : 'border-sand bg-warm-white text-charcoal hover:border-coral/50'
+                      ? 'border-blue bg-blue/10 text-blue'
+                      : 'border-mist bg-pure text-ink hover:border-blue/50'
                   )}
                 >
                   {option.label}
@@ -469,7 +469,7 @@ export function Step3DateTime({
           {/* Days of Week (for weekly/biweekly) */}
           {(recurrence.frequency === 'weekly' || recurrence.frequency === 'biweekly') && (
             <div>
-              <label className="block text-sm font-medium text-charcoal mb-2">
+              <label className="block text-sm font-medium text-ink mb-2">
                 On these days
               </label>
               <div className="flex gap-2">
@@ -481,8 +481,8 @@ export function Step3DateTime({
                     className={cn(
                       'w-10 h-10 rounded-lg border font-medium transition-all',
                       recurrence.days_of_week?.includes(index)
-                        ? 'border-coral bg-coral text-white'
-                        : 'border-sand bg-warm-white text-charcoal hover:border-coral/50'
+                        ? 'border-blue bg-blue text-white'
+                        : 'border-mist bg-pure text-ink hover:border-blue/50'
                     )}
                   >
                     {day.charAt(0)}
@@ -496,7 +496,7 @@ export function Step3DateTime({
           <div>
             <label
               htmlFor="recurrence_time"
-              className="block text-sm font-medium text-charcoal mb-1"
+              className="block text-sm font-medium text-ink mb-1"
             >
               Event Time
             </label>
@@ -513,7 +513,7 @@ export function Step3DateTime({
           <div>
             <label
               htmlFor="duration"
-              className="block text-sm font-medium text-charcoal mb-1"
+              className="block text-sm font-medium text-ink mb-1"
             >
               Duration (minutes)
             </label>
@@ -529,14 +529,14 @@ export function Step3DateTime({
               }
               className="w-32"
             />
-            <p className="text-xs text-stone mt-1">
+            <p className="text-xs text-zinc mt-1">
               Common durations: 60 (1 hour), 90 (1.5 hours), 120 (2 hours)
             </p>
           </div>
 
           {/* End Type */}
           <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">
+            <label className="block text-sm font-medium text-ink mb-2">
               Ends
             </label>
             <div className="space-y-3">
@@ -547,9 +547,9 @@ export function Step3DateTime({
                   name="end_type"
                   checked={recurrence.end_type === 'never'}
                   onChange={() => updateRecurrence({ end_type: 'never' })}
-                  className="w-4 h-4 text-coral"
+                  className="w-4 h-4 text-blue"
                 />
-                <span className="text-charcoal">Never (ongoing)</span>
+                <span className="text-ink">Never (ongoing)</span>
               </label>
 
               {/* After count */}
@@ -559,9 +559,9 @@ export function Step3DateTime({
                   name="end_type"
                   checked={recurrence.end_type === 'count'}
                   onChange={() => updateRecurrence({ end_type: 'count', end_count: 10 })}
-                  className="w-4 h-4 text-coral"
+                  className="w-4 h-4 text-blue"
                 />
-                <span className="text-charcoal">After</span>
+                <span className="text-ink">After</span>
                 <Input
                   type="number"
                   min={1}
@@ -576,7 +576,7 @@ export function Step3DateTime({
                   disabled={recurrence.end_type !== 'count'}
                   className="w-20"
                 />
-                <span className="text-charcoal">occurrences</span>
+                <span className="text-ink">occurrences</span>
               </label>
 
               {/* By date */}
@@ -586,9 +586,9 @@ export function Step3DateTime({
                   name="end_type"
                   checked={recurrence.end_type === 'date'}
                   onChange={() => updateRecurrence({ end_type: 'date' })}
-                  className="w-4 h-4 text-coral"
+                  className="w-4 h-4 text-blue"
                 />
-                <span className="text-charcoal">On</span>
+                <span className="text-ink">On</span>
                 <Input
                   type="date"
                   value={recurrence.end_date || ''}
@@ -606,9 +606,9 @@ export function Step3DateTime({
           <div>
             <label
               htmlFor="first_date"
-              className="block text-sm font-medium text-charcoal mb-1"
+              className="block text-sm font-medium text-ink mb-1"
             >
-              First occurrence date <span className="text-coral">*</span>
+              First occurrence date <span className="text-blue">*</span>
             </label>
             <Input
               id="first_date"
@@ -627,7 +627,7 @@ export function Step3DateTime({
       )}
 
       {/* ========== Timezone Note ========== */}
-      <p className="text-sm text-stone">
+      <p className="text-sm text-zinc">
         All times are in Central Time (CT). Adjust if needed.
       </p>
     </div>

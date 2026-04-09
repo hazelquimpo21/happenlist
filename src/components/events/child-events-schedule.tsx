@@ -103,7 +103,7 @@ export function ChildEventsSchedule({
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setActiveGroup(null)}
-              className="px-3 py-1.5 rounded-full text-sm font-medium bg-sand/60 text-stone hover:bg-sand transition-colors"
+              className="px-3 py-1.5 rounded-full text-sm font-medium bg-cloud/60 text-zinc hover:bg-cloud transition-colors"
             >
               All
             </button>
@@ -115,7 +115,7 @@ export function ChildEventsSchedule({
                   'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
                   activeGroup === group
                     ? 'text-white'
-                    : 'bg-sand/60 text-stone hover:bg-sand'
+                    : 'bg-cloud/60 text-zinc hover:bg-cloud'
                 )}
                 style={
                   activeGroup === group
@@ -128,7 +128,7 @@ export function ChildEventsSchedule({
             ))}
           </div>
         )}
-        <p className="text-body text-stone text-center py-8">No events match this filter.</p>
+        <p className="text-body text-zinc text-center py-8">No events match this filter.</p>
       </div>
     );
   }
@@ -144,7 +144,7 @@ export function ChildEventsSchedule({
               'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
               activeGroup === null
                 ? 'text-white'
-                : 'bg-sand/60 text-stone hover:bg-sand'
+                : 'bg-cloud/60 text-zinc hover:bg-cloud'
             )}
             style={
               activeGroup === null
@@ -162,7 +162,7 @@ export function ChildEventsSchedule({
                 'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
                 activeGroup === group
                   ? 'text-white'
-                  : 'bg-sand/60 text-stone hover:bg-sand'
+                  : 'bg-cloud/60 text-zinc hover:bg-cloud'
               )}
               style={
                 activeGroup === group
@@ -191,19 +191,19 @@ export function ChildEventsSchedule({
               <div
                 className={cn(
                   'flex items-center gap-3 mb-4 pb-2 border-b',
-                  isTodayDate ? 'border-coral' : 'border-sand'
+                  isTodayDate ? 'border-blue' : 'border-mist'
                 )}
               >
                 <div
                   className="w-1 h-8 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: isTodayDate ? '#E07A5F' : categoryColor.accent }}
+                  style={{ backgroundColor: isTodayDate ? '#008bd2' : categoryColor.accent }}
                   aria-hidden="true"
                 />
-                <h3 className="font-display text-lg md:text-xl text-charcoal">
+                <h3 className="font-body text-lg md:text-xl text-ink">
                   {format(date, 'EEEE, MMMM d')}
                 </h3>
                 {isTodayDate && (
-                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-coral text-white">
+                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue text-white">
                     Today
                   </span>
                 )}
@@ -250,7 +250,7 @@ function ChildEventRow({ event, categorySlug, showVenue }: ChildEventRowProps) {
       href={eventUrl}
       className={cn(
         'group flex items-center gap-4 p-3 rounded-lg',
-        'bg-warm-white border border-sand/50',
+        'bg-pure border border-mist/50',
         'transition-all duration-200',
         'hover:shadow-card-lifted hover:-translate-y-0.5'
       )}
@@ -258,8 +258,8 @@ function ChildEventRow({ event, categorySlug, showVenue }: ChildEventRowProps) {
       {/* Time — bold, left-aligned */}
       <div className="flex-shrink-0 w-16 md:w-20">
         {time && (
-          <span className="flex items-center gap-1 text-sm font-semibold text-charcoal tabular-nums">
-            <Clock className="w-3.5 h-3.5 text-stone hidden md:block" aria-hidden="true" />
+          <span className="flex items-center gap-1 text-sm font-semibold text-ink tabular-nums">
+            <Clock className="w-3.5 h-3.5 text-zinc hidden md:block" aria-hidden="true" />
             {time}
           </span>
         )}
@@ -274,18 +274,18 @@ function ChildEventRow({ event, categorySlug, showVenue }: ChildEventRowProps) {
 
       {/* Title + venue */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-charcoal group-hover:text-coral transition-colors truncate">
+        <p className="text-sm font-medium text-ink group-hover:text-blue transition-colors truncate">
           {event.title}
         </p>
         {showVenue && event.location_name && (
-          <p className="text-xs text-stone flex items-center gap-1 mt-0.5">
+          <p className="text-xs text-zinc flex items-center gap-1 mt-0.5">
             <MapPin className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
             <span className="truncate">{event.location_name}</span>
           </p>
         )}
         {/* Show parent_group only when it differs from venue name (avoid duplication) */}
         {event.parent_group && event.parent_group !== event.location_name && (
-          <p className="text-xs text-stone mt-0.5 truncate">
+          <p className="text-xs text-zinc mt-0.5 truncate">
             {event.parent_group}
           </p>
         )}
@@ -294,11 +294,11 @@ function ChildEventRow({ event, categorySlug, showVenue }: ChildEventRowProps) {
       {/* Price badge */}
       <div className="flex-shrink-0">
         {event.is_free ? (
-          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-sage/10 text-sage">
+          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald/10 text-emerald">
             Free
           </span>
         ) : price ? (
-          <span className="text-xs font-medium text-stone">
+          <span className="text-xs font-medium text-zinc">
             {price}
           </span>
         ) : null}

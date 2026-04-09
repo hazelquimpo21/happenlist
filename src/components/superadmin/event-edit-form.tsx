@@ -112,12 +112,12 @@ interface FormState {
 // ============================================================================
 
 const STATUS_OPTIONS = [
-  { value: 'draft', label: 'Draft', color: 'bg-stone/20 text-stone' },
+  { value: 'draft', label: 'Draft', color: 'bg-stone/20 text-zinc' },
   { value: 'pending_review', label: 'Pending Review', color: 'bg-amber-100 text-amber-800' },
   { value: 'changes_requested', label: 'Changes Requested', color: 'bg-orange-100 text-orange-800' },
-  { value: 'published', label: 'Published', color: 'bg-sage/20 text-sage' },
+  { value: 'published', label: 'Published', color: 'bg-emerald/20 text-emerald' },
   { value: 'rejected', label: 'Rejected', color: 'bg-red-100 text-red-800' },
-  { value: 'cancelled', label: 'Cancelled', color: 'bg-stone/30 text-stone' },
+  { value: 'cancelled', label: 'Cancelled', color: 'bg-stone/30 text-zinc' },
 ];
 
 const PRICE_TYPES = [
@@ -611,7 +611,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
         <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center animate-in fade-in duration-300">
           <div className="flex items-center justify-center gap-3 mb-2">
             <Trash2 className="w-6 h-6 text-red-600" />
-            <h3 className="font-display text-xl text-red-800 font-bold">Event Deleted</h3>
+            <h3 className="font-body text-xl text-red-800 font-bold">Event Deleted</h3>
           </div>
           <p className="text-red-700 text-sm">
             &quot;{event.title}&quot; has been removed. Redirecting to events list...
@@ -637,16 +637,16 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
             status === 'saving'
               ? 'bg-amber-50 border border-amber-200'
               : status === 'saved'
-              ? 'bg-sage/10 border border-sage/30'
+              ? 'bg-emerald/10 border border-sage/30'
               : 'bg-red-50 border border-red-200'
           }`}
         >
           {status === 'saving' && <Clock className="w-5 h-5 text-amber-600 animate-spin" />}
-          {status === 'saved' && <CheckCircle className="w-5 h-5 text-sage" />}
+          {status === 'saved' && <CheckCircle className="w-5 h-5 text-emerald" />}
           {status === 'error' && <AlertTriangle className="w-5 h-5 text-red-600" />}
           <span
             className={`text-sm font-medium ${
-              status === 'saving' ? 'text-amber-800' : status === 'saved' ? 'text-sage' : 'text-red-800'
+              status === 'saving' ? 'text-amber-800' : status === 'saved' ? 'text-emerald' : 'text-red-800'
             }`}
           >
             {statusMessage}
@@ -655,10 +655,10 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
       )}
 
       {/* Form */}
-      <div className="bg-warm-white border border-sand rounded-lg p-6 space-y-6">
+      <div className="bg-pure border border-mist rounded-lg p-6 space-y-6">
         {/* Title */}
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-charcoal mb-2">
+          <label htmlFor="title" className="block text-sm font-medium text-ink mb-2">
             Event Title
           </label>
           <input
@@ -667,16 +667,16 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
             name="title"
             value={formState.title}
             onChange={handleInputChange}
-            className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
             placeholder="Enter event title..."
           />
         </div>
 
         {/* Short Description */}
         <div>
-          <label htmlFor="short_description" className="block text-sm font-medium text-charcoal mb-2">
+          <label htmlFor="short_description" className="block text-sm font-medium text-ink mb-2">
             Short Description
-            <span className="text-stone font-normal ml-2">(for cards, max 160 chars)</span>
+            <span className="text-zinc font-normal ml-2">(for cards, max 160 chars)</span>
           </label>
           <textarea
             id="short_description"
@@ -685,17 +685,17 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
             onChange={handleInputChange}
             rows={2}
             maxLength={160}
-            className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none resize-none"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none resize-none"
             placeholder="Brief description for event cards..."
           />
-          <p className="text-xs text-stone mt-1">
+          <p className="text-xs text-zinc mt-1">
             {formState.short_description.length}/160 characters
           </p>
         </div>
 
         {/* Full Description */}
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-charcoal mb-2">
+          <label htmlFor="description" className="block text-sm font-medium text-ink mb-2">
             Full Description
           </label>
           <textarea
@@ -704,7 +704,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
             value={formState.description}
             onChange={handleInputChange}
             rows={6}
-            className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none resize-y"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none resize-y"
             placeholder="Full event description..."
           />
         </div>
@@ -712,7 +712,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
         {/* Date & Time */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="start_datetime" className="block text-sm font-medium text-charcoal mb-2">
+            <label htmlFor="start_datetime" className="block text-sm font-medium text-ink mb-2">
               Start Date & Time
             </label>
             <input
@@ -721,14 +721,14 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
               name="start_datetime"
               value={formState.start_datetime}
               onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
             />
           </div>
 
           <div>
-            <label htmlFor="end_datetime" className="block text-sm font-medium text-charcoal mb-2">
+            <label htmlFor="end_datetime" className="block text-sm font-medium text-ink mb-2">
               End Date & Time
-              <span className="text-stone font-normal ml-2">(optional)</span>
+              <span className="text-zinc font-normal ml-2">(optional)</span>
             </label>
             <input
               type="datetime-local"
@@ -736,7 +736,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
               name="end_datetime"
               value={formState.end_datetime}
               onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
             />
           </div>
         </div>
@@ -748,15 +748,15 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
             name="is_all_day"
             checked={formState.is_all_day}
             onChange={handleInputChange}
-            className="w-5 h-5 rounded border-sand text-coral focus:ring-coral"
+            className="w-5 h-5 rounded border-mist text-blue focus:ring-blue"
           />
-          <span className="text-sm text-charcoal">This is an all-day event</span>
+          <span className="text-sm text-ink">This is an all-day event</span>
         </label>
 
         {/* Pricing */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label htmlFor="price_type" className="block text-sm font-medium text-charcoal mb-2">
+            <label htmlFor="price_type" className="block text-sm font-medium text-ink mb-2">
               Price Type
             </label>
             <select
@@ -764,7 +764,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
               name="price_type"
               value={formState.price_type}
               onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
             >
               {PRICE_TYPES.map(type => (
                 <option key={type.value} value={type.value}>
@@ -777,7 +777,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
           {formState.price_type !== 'free' && formState.price_type !== 'varies' && (
             <>
               <div>
-                <label htmlFor="price_low" className="block text-sm font-medium text-charcoal mb-2">
+                <label htmlFor="price_low" className="block text-sm font-medium text-ink mb-2">
                   {formState.price_type === 'range' ? 'Min Price ($)' : 'Price ($)'}
                 </label>
                 <input
@@ -788,14 +788,14 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                   onChange={handleInputChange}
                   min="0"
                   step="0.01"
-                  className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+                  className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
                   placeholder="0.00"
                 />
               </div>
 
               {formState.price_type === 'range' && (
                 <div>
-                  <label htmlFor="price_high" className="block text-sm font-medium text-charcoal mb-2">
+                  <label htmlFor="price_high" className="block text-sm font-medium text-ink mb-2">
                     Max Price ($)
                   </label>
                   <input
@@ -806,7 +806,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                     onChange={handleInputChange}
                     min="0"
                     step="0.01"
-                    className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+                    className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
                     placeholder="0.00"
                   />
                 </div>
@@ -817,9 +817,9 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
 
         {/* Ticket URL */}
         <div>
-          <label htmlFor="ticket_url" className="block text-sm font-medium text-charcoal mb-2">
+          <label htmlFor="ticket_url" className="block text-sm font-medium text-ink mb-2">
             Ticket URL
-            <span className="text-stone font-normal ml-2">(optional)</span>
+            <span className="text-zinc font-normal ml-2">(optional)</span>
           </label>
           <input
             type="url"
@@ -827,7 +827,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
             name="ticket_url"
             value={formState.ticket_url}
             onChange={handleInputChange}
-            className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
             placeholder="https://..."
           />
         </div>
@@ -835,13 +835,13 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
         {/* ------------------------------------------------------------------ */}
         {/* EXTERNAL LINKS */}
         {/* ------------------------------------------------------------------ */}
-        <div className="p-4 bg-cream/50 rounded-lg border border-sand/50">
-          <p className="text-sm font-medium text-charcoal mb-3">
-            External Links <span className="text-stone font-normal">(optional)</span>
+        <div className="p-4 bg-white/50 rounded-lg border border-mist/50">
+          <p className="text-sm font-medium text-ink mb-3">
+            External Links <span className="text-zinc font-normal">(optional)</span>
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="website_url" className="block text-xs text-stone mb-1">
+              <label htmlFor="website_url" className="block text-xs text-zinc mb-1">
                 Event Website
               </label>
               <input
@@ -850,12 +850,12 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                 name="website_url"
                 value={formState.website_url}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+                className="w-full px-3 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none text-sm"
                 placeholder="https://myevent.com"
               />
             </div>
             <div>
-              <label htmlFor="registration_url" className="block text-xs text-stone mb-1">
+              <label htmlFor="registration_url" className="block text-xs text-zinc mb-1">
                 Registration / RSVP URL
               </label>
               <input
@@ -864,12 +864,12 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                 name="registration_url"
                 value={formState.registration_url}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+                className="w-full px-3 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none text-sm"
                 placeholder="https://rsvp.example.com"
               />
             </div>
             <div>
-              <label htmlFor="instagram_url" className="block text-xs text-stone mb-1">
+              <label htmlFor="instagram_url" className="block text-xs text-zinc mb-1">
                 Instagram
               </label>
               <input
@@ -878,12 +878,12 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                 name="instagram_url"
                 value={formState.instagram_url}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+                className="w-full px-3 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none text-sm"
                 placeholder="https://instagram.com/event"
               />
             </div>
             <div>
-              <label htmlFor="facebook_url" className="block text-xs text-stone mb-1">
+              <label htmlFor="facebook_url" className="block text-xs text-zinc mb-1">
                 Facebook Event
               </label>
               <input
@@ -892,7 +892,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                 name="facebook_url"
                 value={formState.facebook_url}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+                className="w-full px-3 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none text-sm"
                 placeholder="https://facebook.com/events/123"
               />
             </div>
@@ -902,9 +902,9 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
         {/* ------------------------------------------------------------------ */}
         {/* GOOD FOR AUDIENCE TAGS */}
         {/* ------------------------------------------------------------------ */}
-        <div className="p-4 bg-cream/50 rounded-lg border border-sand/50">
-          <p className="text-sm font-medium text-charcoal mb-3">
-            Good For <span className="text-stone font-normal">(select all that apply)</span>
+        <div className="p-4 bg-white/50 rounded-lg border border-mist/50">
+          <p className="text-sm font-medium text-ink mb-3">
+            Good For <span className="text-zinc font-normal">(select all that apply)</span>
           </p>
           <div className="flex flex-wrap gap-2">
             {GOOD_FOR_TAGS.map((tag) => {
@@ -925,7 +925,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                     isSelected
                       ? `${tag.color} ring-2 ring-offset-1 ring-current`
-                      : 'bg-sand/50 text-stone hover:bg-sand'
+                      : 'bg-cloud/50 text-zinc hover:bg-cloud'
                   }`}
                 >
                   {tag.label}
@@ -934,7 +934,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
             })}
           </div>
           {formState.good_for.length > 0 && (
-            <p className="text-xs text-stone mt-2">
+            <p className="text-xs text-zinc mt-2">
               {formState.good_for.length} selected
             </p>
           )}
@@ -945,7 +945,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
         {/* ------------------------------------------------------------------ */}
         {categories.length > 0 && (
           <div>
-            <label htmlFor="category_id" className="block text-sm font-medium text-charcoal mb-2">
+            <label htmlFor="category_id" className="block text-sm font-medium text-ink mb-2">
               Category
             </label>
             <div className="relative">
@@ -954,7 +954,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                 name="category_id"
                 value={formState.category_id}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none appearance-none pr-10"
+                className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none appearance-none pr-10"
               >
                 <option value="">No category</option>
                 {categories.map(cat => (
@@ -963,7 +963,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc pointer-events-none" />
             </div>
           </div>
         )}
@@ -972,28 +972,28 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
         {/* VENUE / LOCATION */}
         {/* ------------------------------------------------------------------ */}
         <div>
-          <label className="block text-sm font-medium text-charcoal mb-2">
+          <label className="block text-sm font-medium text-ink mb-2">
             Venue / Location
           </label>
 
           {selectedVenue && !showVenueSearch && (
-            <div className="p-4 bg-sage/10 border border-sage/30 rounded-lg">
+            <div className="p-4 bg-emerald/10 border border-sage/30 rounded-lg">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-sage mt-0.5" />
+                  <MapPin className="w-5 h-5 text-emerald mt-0.5" />
                   <div>
-                    <p className="font-medium text-charcoal">{selectedVenue.name}</p>
-                    <p className="text-sm text-stone">
+                    <p className="font-medium text-ink">{selectedVenue.name}</p>
+                    <p className="text-sm text-zinc">
                       {selectedVenue.address_line && `${selectedVenue.address_line}, `}
                       {selectedVenue.city}
                       {selectedVenue.state && `, ${selectedVenue.state}`}
                     </p>
                     {selectedVenue.rating && (
-                      <div className="flex items-center gap-1 mt-1 text-xs text-stone">
+                      <div className="flex items-center gap-1 mt-1 text-xs text-zinc">
                         <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
                         <span>{selectedVenue.rating.toFixed(1)}</span>
                         {selectedVenue.review_count > 0 && (
-                          <span className="text-stone/60">({selectedVenue.review_count})</span>
+                          <span className="text-zinc/60">({selectedVenue.review_count})</span>
                         )}
                       </div>
                     )}
@@ -1003,14 +1003,14 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                   <button
                     type="button"
                     onClick={() => setShowVenueSearch(true)}
-                    className="text-sm text-coral hover:text-coral/80"
+                    className="text-sm text-blue hover:text-blue/80"
                   >
                     Change
                   </button>
                   <button
                     type="button"
                     onClick={clearVenue}
-                    className="text-sm text-stone hover:text-charcoal"
+                    className="text-sm text-zinc hover:text-ink"
                   >
                     Clear
                   </button>
@@ -1023,24 +1023,24 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
             <button
               type="button"
               onClick={() => setShowVenueSearch(true)}
-              className="w-full p-4 border border-dashed border-sand rounded-lg hover:border-coral hover:bg-coral/5 transition-colors text-left"
+              className="w-full p-4 border border-dashed border-mist rounded-lg hover:border-coral hover:bg-blue/5 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-sand rounded-lg">
-                  <MapPin className="w-5 h-5 text-stone" />
+                <div className="p-2 bg-cloud rounded-lg">
+                  <MapPin className="w-5 h-5 text-zinc" />
                 </div>
                 <div>
-                  <p className="font-medium text-charcoal">No venue selected</p>
-                  <p className="text-sm text-stone">Click to search and select a venue</p>
+                  <p className="font-medium text-ink">No venue selected</p>
+                  <p className="text-sm text-zinc">Click to search and select a venue</p>
                 </div>
               </div>
             </button>
           )}
 
           {showVenueSearch && (
-            <div className="p-4 bg-cream rounded-lg border border-sand space-y-3">
+            <div className="p-4 bg-white rounded-lg border border-mist space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-charcoal">Search Venues</p>
+                <p className="text-sm font-medium text-ink">Search Venues</p>
                 <button
                   type="button"
                   onClick={() => {
@@ -1048,24 +1048,24 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                     setVenueQuery('');
                     setVenueResults([]);
                   }}
-                  className="text-sm text-stone hover:text-charcoal"
+                  className="text-sm text-zinc hover:text-ink"
                 >
                   Cancel
                 </button>
               </div>
 
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc" />
                 <input
                   type="text"
                   value={venueQuery}
                   onChange={(e) => handleVenueSearch(e.target.value)}
                   placeholder="Type venue name or address..."
-                  className="w-full pl-10 pr-10 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+                  className="w-full pl-10 pr-10 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
                   autoFocus
                 />
                 {isSearchingVenue && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone animate-spin" />
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc animate-spin" />
                 )}
               </div>
 
@@ -1076,26 +1076,26 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                       key={venue.id}
                       type="button"
                       onClick={() => selectVenue(venue)}
-                      className="w-full flex items-start justify-between p-3 rounded-lg border border-sand bg-warm-white hover:border-coral hover:bg-coral/5 transition-all text-left"
+                      className="w-full flex items-start justify-between p-3 rounded-lg border border-mist bg-pure hover:border-coral hover:bg-blue/5 transition-all text-left"
                     >
                       <div className="min-w-0">
-                        <p className="font-medium text-charcoal truncate">{venue.name}</p>
-                        <p className="text-sm text-stone truncate">
+                        <p className="font-medium text-ink truncate">{venue.name}</p>
+                        <p className="text-sm text-zinc truncate">
                           {venue.address_line && `${venue.address_line}, `}
                           {venue.city}
                           {venue.state && `, ${venue.state}`}
                         </p>
                         {venue.rating && (
-                          <div className="flex items-center gap-1 mt-1 text-xs text-stone">
+                          <div className="flex items-center gap-1 mt-1 text-xs text-zinc">
                             <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
                             <span>{venue.rating.toFixed(1)}</span>
                             {venue.review_count > 0 && (
-                              <span className="text-stone/60">({venue.review_count})</span>
+                              <span className="text-zinc/60">({venue.review_count})</span>
                             )}
                           </div>
                         )}
                       </div>
-                      <span className="text-xs bg-sand text-stone px-2 py-0.5 rounded capitalize flex-shrink-0 ml-2">
+                      <span className="text-xs bg-cloud text-zinc px-2 py-0.5 rounded capitalize flex-shrink-0 ml-2">
                         {venue.category || venue.venue_type}
                       </span>
                     </button>
@@ -1104,8 +1104,8 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
               )}
 
               {venueQuery.length >= 2 && !isSearchingVenue && venueResults.length === 0 && (
-                <div className="p-3 bg-sand/30 rounded-lg text-center">
-                  <p className="text-sm text-stone">No venues found for &quot;{venueQuery}&quot;</p>
+                <div className="p-3 bg-cloud/30 rounded-lg text-center">
+                  <p className="text-sm text-zinc">No venues found for &quot;{venueQuery}&quot;</p>
                 </div>
               )}
             </div>
@@ -1116,7 +1116,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
         {/* ORGANIZER */}
         {/* ------------------------------------------------------------------ */}
         <div>
-          <label className="block text-sm font-medium text-charcoal mb-2">
+          <label className="block text-sm font-medium text-ink mb-2">
             Organizer
           </label>
 
@@ -1126,9 +1126,9 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                 <div className="flex items-start gap-3">
                   <User className="w-5 h-5 text-blue-600 mt-0.5" />
                   <div>
-                    <p className="font-medium text-charcoal">{selectedOrganizer.name}</p>
+                    <p className="font-medium text-ink">{selectedOrganizer.name}</p>
                     {selectedOrganizer.website_url && (
-                      <p className="text-sm text-stone truncate max-w-[250px]">
+                      <p className="text-sm text-zinc truncate max-w-[250px]">
                         {selectedOrganizer.website_url}
                       </p>
                     )}
@@ -1138,14 +1138,14 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                   <button
                     type="button"
                     onClick={() => setShowOrganizerSearch(true)}
-                    className="text-sm text-coral hover:text-coral/80"
+                    className="text-sm text-blue hover:text-blue/80"
                   >
                     Change
                   </button>
                   <button
                     type="button"
                     onClick={clearOrganizer}
-                    className="text-sm text-stone hover:text-charcoal"
+                    className="text-sm text-zinc hover:text-ink"
                   >
                     Clear
                   </button>
@@ -1158,24 +1158,24 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
             <button
               type="button"
               onClick={() => setShowOrganizerSearch(true)}
-              className="w-full p-4 border border-dashed border-sand rounded-lg hover:border-coral hover:bg-coral/5 transition-colors text-left"
+              className="w-full p-4 border border-dashed border-mist rounded-lg hover:border-coral hover:bg-blue/5 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-sand rounded-lg">
-                  <User className="w-5 h-5 text-stone" />
+                <div className="p-2 bg-cloud rounded-lg">
+                  <User className="w-5 h-5 text-zinc" />
                 </div>
                 <div>
-                  <p className="font-medium text-charcoal">No organizer selected</p>
-                  <p className="text-sm text-stone">Click to search and select an organizer</p>
+                  <p className="font-medium text-ink">No organizer selected</p>
+                  <p className="text-sm text-zinc">Click to search and select an organizer</p>
                 </div>
               </div>
             </button>
           )}
 
           {showOrganizerSearch && (
-            <div className="p-4 bg-cream rounded-lg border border-sand space-y-3">
+            <div className="p-4 bg-white rounded-lg border border-mist space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-charcoal">Search Organizers</p>
+                <p className="text-sm font-medium text-ink">Search Organizers</p>
                 <button
                   type="button"
                   onClick={() => {
@@ -1183,24 +1183,24 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                     setOrganizerQuery('');
                     setOrganizerResults([]);
                   }}
-                  className="text-sm text-stone hover:text-charcoal"
+                  className="text-sm text-zinc hover:text-ink"
                 >
                   Cancel
                 </button>
               </div>
 
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc" />
                 <input
                   type="text"
                   value={organizerQuery}
                   onChange={(e) => handleOrganizerSearch(e.target.value)}
                   placeholder="Type organizer name..."
-                  className="w-full pl-10 pr-10 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+                  className="w-full pl-10 pr-10 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
                   autoFocus
                 />
                 {isSearchingOrganizer && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone animate-spin" />
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc animate-spin" />
                 )}
               </div>
 
@@ -1211,13 +1211,13 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                       key={org.id}
                       type="button"
                       onClick={() => selectOrganizer(org)}
-                      className="w-full flex items-start gap-3 p-3 rounded-lg border border-sand bg-warm-white hover:border-coral hover:bg-coral/5 transition-all text-left"
+                      className="w-full flex items-start gap-3 p-3 rounded-lg border border-mist bg-pure hover:border-coral hover:bg-blue/5 transition-all text-left"
                     >
-                      <User className="w-4 h-4 text-stone mt-0.5 flex-shrink-0" />
+                      <User className="w-4 h-4 text-zinc mt-0.5 flex-shrink-0" />
                       <div className="min-w-0">
-                        <p className="font-medium text-charcoal truncate">{org.name}</p>
+                        <p className="font-medium text-ink truncate">{org.name}</p>
                         {org.website_url && (
-                          <p className="text-xs text-stone truncate">{org.website_url}</p>
+                          <p className="text-xs text-zinc truncate">{org.website_url}</p>
                         )}
                       </div>
                     </button>
@@ -1226,8 +1226,8 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
               )}
 
               {organizerQuery.length >= 2 && !isSearchingOrganizer && organizerResults.length === 0 && (
-                <div className="p-3 bg-sand/30 rounded-lg text-center">
-                  <p className="text-sm text-stone">No organizers found for &quot;{organizerQuery}&quot;</p>
+                <div className="p-3 bg-cloud/30 rounded-lg text-center">
+                  <p className="text-sm text-zinc">No organizers found for &quot;{organizerQuery}&quot;</p>
                 </div>
               )}
             </div>
@@ -1243,7 +1243,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
           <div className={`p-3 rounded-lg text-sm ${
             seriesMessage.includes('Failed') || seriesMessage.includes('Error')
               ? 'bg-red-50 text-red-800 border border-red-200'
-              : 'bg-sage/10 text-sage border border-sage/20'
+              : 'bg-emerald/10 text-emerald border border-sage/20'
           }`}>
             {seriesMessage}
           </div>
@@ -1251,12 +1251,12 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
 
         {/* Standalone event — offer to make recurring or attach to series */}
         {!event.series_id && (
-          <div className="p-4 bg-stone/5 border border-sand rounded-lg">
+          <div className="p-4 bg-stone/5 border border-mist rounded-lg">
             <div className="flex items-start gap-3">
-              <Layers className="w-5 h-5 text-stone mt-0.5 flex-shrink-0" />
+              <Layers className="w-5 h-5 text-zinc mt-0.5 flex-shrink-0" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-charcoal">Standalone Event</p>
-                <p className="text-sm text-stone mt-0.5">
+                <p className="text-sm font-medium text-ink">Standalone Event</p>
+                <p className="text-sm text-zinc mt-0.5">
                   This event is not part of a series.
                 </p>
 
@@ -1395,7 +1395,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                   ) : null}
                 </div>
               ) : (
-                <p className="text-sm text-stone mt-0.5">
+                <p className="text-sm text-zinc mt-0.5">
                   Not linked to a parent event. Use the scraper extension to set parent relationships.
                 </p>
               )}
@@ -1405,7 +1405,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
 
         {/* Status */}
         <div>
-          <label htmlFor="status" className="block text-sm font-medium text-charcoal mb-2">
+          <label htmlFor="status" className="block text-sm font-medium text-ink mb-2">
             Event Status
           </label>
           <div className="relative">
@@ -1414,7 +1414,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
               name="status"
               value={formState.status}
               onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none appearance-none pr-10"
+              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none appearance-none pr-10"
             >
               {STATUS_OPTIONS.map(option => (
                 <option key={option.value} value={option.value}>
@@ -1422,15 +1422,15 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc pointer-events-none" />
           </div>
         </div>
 
         {/* Notes for audit log */}
         <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-charcoal mb-2">
+          <label htmlFor="notes" className="block text-sm font-medium text-ink mb-2">
             Edit Notes
-            <span className="text-stone font-normal ml-2">(for audit log)</span>
+            <span className="text-zinc font-normal ml-2">(for audit log)</span>
           </label>
           <textarea
             id="notes"
@@ -1438,7 +1438,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={2}
-            className="w-full px-4 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none resize-none"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none resize-none"
             placeholder="Why are you making these changes? (optional but helpful for records)"
           />
         </div>
@@ -1473,7 +1473,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
         <Button
           onClick={handleSave}
           disabled={status === 'saving'}
-          className="flex items-center gap-2 bg-coral hover:bg-coral/90 text-white px-6"
+          className="flex items-center gap-2 bg-blue hover:bg-blue/90 text-white px-6"
         >
           <Save className="w-4 h-4" />
           {status === 'saving' ? 'Saving...' : 'Save Changes'}
@@ -1483,27 +1483,27 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
       {/* Delete confirmation modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-charcoal/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-warm-white rounded-xl shadow-xl max-w-md w-full p-6">
+          <div className="bg-pure rounded-xl shadow-xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display text-xl text-charcoal flex items-center gap-2">
+              <h3 className="font-body text-xl text-ink flex items-center gap-2">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
                 Delete Event
               </h3>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="p-1 hover:bg-sand/50 rounded-lg"
+                className="p-1 hover:bg-cloud/50 rounded-lg"
               >
-                <X className="w-5 h-5 text-stone" />
+                <X className="w-5 h-5 text-zinc" />
               </button>
             </div>
 
-            <p className="text-stone mb-4">
+            <p className="text-zinc mb-4">
               Are you sure you want to delete &quot;<strong>{event.title}</strong>&quot;?
               This action can be undone by restoring the event later.
             </p>
 
             <div className="mb-4">
-              <label htmlFor="deleteReason" className="block text-sm font-medium text-charcoal mb-2">
+              <label htmlFor="deleteReason" className="block text-sm font-medium text-ink mb-2">
                 Reason for deletion <span className="text-red-600">*</span>
               </label>
               <textarea
@@ -1511,7 +1511,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                 value={deleteReason}
                 onChange={(e) => setDeleteReason(e.target.value)}
                 rows={2}
-                className="w-full px-4 py-2 border border-sand rounded-lg focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none resize-none"
+                className="w-full px-4 py-2 border border-mist rounded-lg focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none resize-none"
                 placeholder="Why are you deleting this event?"
               />
             </div>

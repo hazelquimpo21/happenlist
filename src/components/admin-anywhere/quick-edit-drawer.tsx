@@ -120,7 +120,7 @@ export function QuickEditDrawer({
     <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true">
       {/* Backdrop overlay */}
       <div
-        className="fixed inset-0 bg-charcoal/50 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-ink/50 backdrop-blur-sm transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -128,18 +128,18 @@ export function QuickEditDrawer({
       {/* Drawer panel */}
       <div className="fixed inset-y-0 right-0 flex max-w-full">
         <div className="w-screen max-w-md sm:max-w-lg">
-          <div className="flex h-full flex-col bg-warm-white shadow-xl">
+          <div className="flex h-full flex-col bg-pure shadow-xl">
             {/* -------------------------------------------------------------- */}
             {/* Header */}
             {/* -------------------------------------------------------------- */}
-            <div className="sticky top-0 z-10 bg-warm-white border-b border-sand px-4 py-4 sm:px-6">
+            <div className="sticky top-0 z-10 bg-pure border-b border-mist px-4 py-4 sm:px-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-lg font-display font-semibold text-charcoal flex items-center gap-2">
+                  <h2 className="text-lg font-body font-semibold text-ink flex items-center gap-2">
                     <span>✏️</span>
                     Quick Edit
                   </h2>
-                  <p className="mt-1 text-sm text-stone truncate max-w-[280px]">
+                  <p className="mt-1 text-sm text-zinc truncate max-w-[280px]">
                     {event.title}
                   </p>
                 </div>
@@ -148,7 +148,7 @@ export function QuickEditDrawer({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-md p-2 text-stone hover:text-charcoal hover:bg-sand/50 transition-colors"
+                  className="rounded-md p-2 text-zinc hover:text-ink hover:bg-cloud/50 transition-colors"
                   aria-label="Close panel"
                 >
                   <X className="w-5 h-5" />
@@ -182,12 +182,12 @@ export function QuickEditDrawer({
             {/* -------------------------------------------------------------- */}
             {/* Footer note */}
             {/* -------------------------------------------------------------- */}
-            <div className="border-t border-sand px-4 py-3 sm:px-6 bg-cream/50">
-              <p className="text-xs text-stone text-center">
+            <div className="border-t border-mist px-4 py-3 sm:px-6 bg-white/50">
+              <p className="text-xs text-zinc text-center">
                 For category or image changes,{' '}
                 <a
                   href={`/admin/events/${event.id}/edit`}
-                  className="text-coral hover:underline font-medium"
+                  className="text-blue hover:underline font-medium"
                 >
                   use Full Edit
                 </a>

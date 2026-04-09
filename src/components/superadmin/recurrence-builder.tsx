@@ -87,15 +87,15 @@ export function RecurrenceBuilder({
   };
 
   return (
-    <div className="space-y-6 p-4 bg-cream rounded-lg border border-sand">
-      <h3 className="font-medium text-charcoal flex items-center">
+    <div className="space-y-6 p-4 bg-white rounded-lg border border-mist">
+      <h3 className="font-medium text-ink flex items-center">
         <RefreshCw className="w-4 h-4 mr-2" />
         Recurrence Pattern
       </h3>
 
       {/* Frequency */}
       <div>
-        <label className="block text-sm font-medium text-charcoal mb-2">
+        <label className="block text-sm font-medium text-ink mb-2">
           Repeats
         </label>
         <div className="flex flex-wrap gap-2">
@@ -108,7 +108,7 @@ export function RecurrenceBuilder({
                 'px-4 py-2 rounded-lg border transition-all',
                 rule.frequency === option.value
                   ? 'border-coral bg-coral/10 text-coral'
-                  : 'border-sand bg-warm-white text-charcoal hover:border-coral/50'
+                  : 'border-mist bg-pure text-ink hover:border-coral/50'
               )}
             >
               {option.label}
@@ -120,7 +120,7 @@ export function RecurrenceBuilder({
       {/* Days of Week (for weekly/biweekly) */}
       {(rule.frequency === 'weekly' || rule.frequency === 'biweekly') && (
         <div>
-          <label className="block text-sm font-medium text-charcoal mb-2">
+          <label className="block text-sm font-medium text-ink mb-2">
             On these days
           </label>
           <div className="flex gap-2">
@@ -132,8 +132,8 @@ export function RecurrenceBuilder({
                 className={cn(
                   'w-10 h-10 rounded-lg border font-medium transition-all',
                   rule.days_of_week?.includes(index)
-                    ? 'border-coral bg-coral text-white'
-                    : 'border-sand bg-warm-white text-charcoal hover:border-coral/50'
+                    ? 'border-coral bg-blue text-white'
+                    : 'border-mist bg-pure text-ink hover:border-coral/50'
                 )}
               >
                 {day.charAt(0)}
@@ -146,7 +146,7 @@ export function RecurrenceBuilder({
       {/* Time & Duration */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-charcoal mb-1">
+          <label className="block text-sm font-medium text-ink mb-1">
             Event Time
           </label>
           <Input
@@ -157,7 +157,7 @@ export function RecurrenceBuilder({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-charcoal mb-1">
+          <label className="block text-sm font-medium text-ink mb-1">
             Duration (min)
           </label>
           <Input
@@ -174,7 +174,7 @@ export function RecurrenceBuilder({
 
       {/* End Type */}
       <div>
-        <label className="block text-sm font-medium text-charcoal mb-2">
+        <label className="block text-sm font-medium text-ink mb-2">
           Ends
         </label>
         <div className="space-y-3">
@@ -184,9 +184,9 @@ export function RecurrenceBuilder({
               name="recurrence_end_type"
               checked={rule.end_type === 'never'}
               onChange={() => updateRule({ end_type: 'never' })}
-              className="w-4 h-4 text-coral"
+              className="w-4 h-4 text-blue"
             />
-            <span className="text-charcoal">Never (ongoing, generates ~12 weeks)</span>
+            <span className="text-ink">Never (ongoing, generates ~12 weeks)</span>
           </label>
 
           <label className="flex items-center space-x-3 cursor-pointer">
@@ -195,9 +195,9 @@ export function RecurrenceBuilder({
               name="recurrence_end_type"
               checked={rule.end_type === 'count'}
               onChange={() => updateRule({ end_type: 'count', end_count: rule.end_count || 10 })}
-              className="w-4 h-4 text-coral"
+              className="w-4 h-4 text-blue"
             />
-            <span className="text-charcoal">After</span>
+            <span className="text-ink">After</span>
             <Input
               type="number"
               min={2}
@@ -207,7 +207,7 @@ export function RecurrenceBuilder({
               disabled={rule.end_type !== 'count'}
               className="w-20"
             />
-            <span className="text-charcoal">occurrences</span>
+            <span className="text-ink">occurrences</span>
           </label>
 
           <label className="flex items-center space-x-3 cursor-pointer">
@@ -216,9 +216,9 @@ export function RecurrenceBuilder({
               name="recurrence_end_type"
               checked={rule.end_type === 'date'}
               onChange={() => updateRule({ end_type: 'date' })}
-              className="w-4 h-4 text-coral"
+              className="w-4 h-4 text-blue"
             />
-            <span className="text-charcoal">On</span>
+            <span className="text-ink">On</span>
             <Input
               type="date"
               value={rule.end_date || ''}
@@ -233,7 +233,7 @@ export function RecurrenceBuilder({
       {/* Date Preview */}
       {previewDates.length > 0 && (
         <div>
-          <label className="block text-sm font-medium text-charcoal mb-2">
+          <label className="block text-sm font-medium text-ink mb-2">
             <Calendar className="w-4 h-4 inline mr-1" />
             Preview ({totalDates} events total, including original)
           </label>
@@ -244,15 +244,15 @@ export function RecurrenceBuilder({
                 className={cn(
                   'text-xs px-2 py-1 rounded',
                   i === 0
-                    ? 'bg-coral/10 text-coral font-medium'
-                    : 'bg-sand/50 text-stone'
+                    ? 'bg-coral/10 text-blue font-medium'
+                    : 'bg-cloud/50 text-zinc'
                 )}
               >
                 {i === 0 ? `${formatPreviewDate(date)} (original)` : formatPreviewDate(date)}
               </div>
             ))}
             {totalDates > 12 && (
-              <div className="text-xs px-2 py-1 text-stone">
+              <div className="text-xs px-2 py-1 text-zinc">
                 +{totalDates - 12} more...
               </div>
             )}
@@ -261,14 +261,14 @@ export function RecurrenceBuilder({
       )}
 
       {/* Actions */}
-      <div className="flex justify-end gap-3 pt-2 border-t border-sand">
+      <div className="flex justify-end gap-3 pt-2 border-t border-mist">
         <Button variant="secondary" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </Button>
         <Button
           onClick={() => onSubmit(rule)}
           disabled={isSubmitting || totalDates < 2}
-          className="bg-coral hover:bg-coral/90 text-white"
+          className="bg-blue hover:bg-blue/90 text-white"
         >
           {isSubmitting ? (
             <>

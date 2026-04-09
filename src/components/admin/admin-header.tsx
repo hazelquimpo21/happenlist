@@ -15,13 +15,13 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ title, description, children }: AdminHeaderProps) {
   return (
-    <header className="bg-warm-white border-b border-sand sticky top-0 z-10">
+    <header className="bg-pure border-b border-mist sticky top-0 z-10">
       <div className="flex items-center justify-between px-8 py-4">
         {/* Title section */}
         <div>
-          <h1 className="font-display text-2xl text-charcoal">{title}</h1>
+          <h1 className="font-body text-2xl text-ink">{title}</h1>
           {description && (
-            <p className="text-sm text-stone mt-0.5">{description}</p>
+            <p className="text-sm text-zinc mt-0.5">{description}</p>
           )}
         </div>
 
@@ -30,7 +30,7 @@ export function AdminHeader({ title, description, children }: AdminHeaderProps) 
           {/* Search - placeholder for now */}
           <button
             className={cn(
-              'p-2 rounded-lg text-stone hover:text-charcoal hover:bg-sand/50',
+              'p-2 rounded-lg text-zinc hover:text-ink hover:bg-cloud/50',
               'transition-colors'
             )}
             title="Search"
@@ -41,22 +41,22 @@ export function AdminHeader({ title, description, children }: AdminHeaderProps) 
           {/* Notifications - placeholder */}
           <button
             className={cn(
-              'p-2 rounded-lg text-stone hover:text-charcoal hover:bg-sand/50',
+              'p-2 rounded-lg text-zinc hover:text-ink hover:bg-cloud/50',
               'transition-colors relative'
             )}
             title="Notifications"
           >
             <Bell className="w-5 h-5" />
             {/* Notification dot */}
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-coral rounded-full" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue rounded-full" />
           </button>
 
           {/* User menu - placeholder */}
-          <div className="flex items-center gap-2 pl-4 border-l border-sand">
-            <div className="w-8 h-8 rounded-full bg-coral/20 flex items-center justify-center">
-              <User className="w-4 h-4 text-coral" />
+          <div className="flex items-center gap-2 pl-4 border-l border-mist">
+            <div className="w-8 h-8 rounded-full bg-blue/10 flex items-center justify-center">
+              <User className="w-4 h-4 text-blue" />
             </div>
-            <span className="text-sm font-medium text-charcoal">Admin</span>
+            <span className="text-sm font-medium text-ink">Admin</span>
           </div>
         </div>
       </div>
@@ -85,16 +85,16 @@ interface AdminBreadcrumbsProps {
 
 export function AdminBreadcrumbs({ items }: AdminBreadcrumbsProps) {
   return (
-    <nav className="flex items-center gap-2 text-sm text-stone mb-4">
+    <nav className="flex items-center gap-2 text-sm text-zinc mb-4">
       {items.map((item, index) => (
         <span key={item.label} className="flex items-center gap-2">
           {index > 0 && <span>/</span>}
           {item.href ? (
-            <a href={item.href} className="hover:text-charcoal transition-colors">
+            <a href={item.href} className="hover:text-ink transition-colors">
               {item.label}
             </a>
           ) : (
-            <span className="text-charcoal">{item.label}</span>
+            <span className="text-ink">{item.label}</span>
           )}
         </span>
       ))}

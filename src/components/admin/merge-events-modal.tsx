@@ -178,17 +178,17 @@ export function MergeEventsModal({ events, onClose, onMergeComplete }: MergeEven
   }, [events, primaryId, editTitle, editDescription, merged, onClose, onMergeComplete, router]);
 
   return (
-    <div className="fixed inset-0 bg-charcoal/50 flex items-center justify-center z-[60] p-4">
-      <div className="bg-warm-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-ink/50 flex items-center justify-center z-[60] p-4">
+      <div className="bg-pure rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-sand">
+        <div className="flex items-center justify-between p-5 border-b border-mist">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-coral" />
-            <h2 className="font-display text-xl text-charcoal">
+            <Sparkles className="w-5 h-5 text-blue" />
+            <h2 className="font-body text-xl text-ink">
               Merge {events.length} Events
             </h2>
           </div>
-          <button onClick={onClose} className="text-stone hover:text-charcoal">
+          <button onClick={onClose} className="text-zinc hover:text-ink">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -197,7 +197,7 @@ export function MergeEventsModal({ events, onClose, onMergeComplete }: MergeEven
           {/* Step 1: Review */}
           {step === 'review' && (
             <>
-              <p className="text-sm text-stone mb-4">
+              <p className="text-sm text-zinc mb-4">
                 Select events to merge into a single event. AI can help pick the best fields.
               </p>
 
@@ -206,16 +206,16 @@ export function MergeEventsModal({ events, onClose, onMergeComplete }: MergeEven
                 {events.map((event) => (
                   <div
                     key={event.id}
-                    className="flex items-center gap-3 p-3 bg-cream rounded-lg border border-sand"
+                    className="flex items-center gap-3 p-3 bg-white rounded-lg border border-mist"
                   >
                     {event.thumbnail_url ? (
                       <img src={event.thumbnail_url} alt="" className="w-12 h-12 rounded object-cover" />
                     ) : (
-                      <div className="w-12 h-12 rounded bg-sand" />
+                      <div className="w-12 h-12 rounded bg-cloud" />
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-charcoal truncate">{event.title}</p>
-                      <p className="text-xs text-stone">
+                      <p className="font-medium text-ink truncate">{event.title}</p>
+                      <p className="text-xs text-zinc">
                         {formatDate(event.start_datetime)} · {event.location_name || 'No location'} · {event.source}
                       </p>
                     </div>
@@ -229,10 +229,10 @@ export function MergeEventsModal({ events, onClose, onMergeComplete }: MergeEven
                   type="checkbox"
                   checked={useAi}
                   onChange={(e) => setUseAi(e.target.checked)}
-                  className="w-4 h-4 rounded border-sand text-coral focus:ring-coral"
+                  className="w-4 h-4 rounded border-mist text-blue focus:ring-blue"
                 />
-                <Sparkles className="w-4 h-4 text-coral" />
-                <span className="text-sm text-charcoal">Use AI to pick the best fields</span>
+                <Sparkles className="w-4 h-4 text-blue" />
+                <span className="text-sm text-ink">Use AI to pick the best fields</span>
               </label>
 
               {errorMessage && (
@@ -247,7 +247,7 @@ export function MergeEventsModal({ events, onClose, onMergeComplete }: MergeEven
                 <Button
                   onClick={useAi ? runAiPreview : skipAi}
                   disabled={loading}
-                  className="bg-coral hover:bg-coral/90 text-white"
+                  className="bg-blue hover:bg-blue/90 text-white"
                 >
                   {loading ? (
                     <><RefreshCw className="w-4 h-4 animate-spin mr-2" />Analyzing...</>
@@ -273,7 +273,7 @@ export function MergeEventsModal({ events, onClose, onMergeComplete }: MergeEven
 
               {/* Primary event selection */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-charcoal mb-2">
+                <label className="block text-sm font-medium text-ink mb-2">
                   Keep this event (primary):
                 </label>
                 <div className="space-y-1">
@@ -281,7 +281,7 @@ export function MergeEventsModal({ events, onClose, onMergeComplete }: MergeEven
                     <label
                       key={event.id}
                       className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
-                        primaryId === event.id ? 'bg-coral/10 border border-coral' : 'bg-cream border border-transparent hover:border-sand'
+                        primaryId === event.id ? 'bg-blue/10 border border-blue' : 'bg-white border border-transparent hover:border-mist'
                       }`}
                     >
                       <input
@@ -290,11 +290,11 @@ export function MergeEventsModal({ events, onClose, onMergeComplete }: MergeEven
                         value={event.id}
                         checked={primaryId === event.id}
                         onChange={() => setPrimaryId(event.id)}
-                        className="text-coral focus:ring-coral"
+                        className="text-blue focus:ring-blue"
                       />
-                      <Star className={`w-3.5 h-3.5 ${primaryId === event.id ? 'text-coral' : 'text-stone'}`} />
-                      <span className="text-sm text-charcoal truncate">{event.title}</span>
-                      <span className="text-xs text-stone ml-auto">{event.source}</span>
+                      <Star className={`w-3.5 h-3.5 ${primaryId === event.id ? 'text-blue' : 'text-zinc'}`} />
+                      <span className="text-sm text-ink truncate">{event.title}</span>
+                      <span className="text-xs text-zinc ml-auto">{event.source}</span>
                     </label>
                   ))}
                 </div>
@@ -302,44 +302,44 @@ export function MergeEventsModal({ events, onClose, onMergeComplete }: MergeEven
 
               {/* Editable title */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-charcoal mb-1">Title</label>
+                <label className="block text-sm font-medium text-ink mb-1">Title</label>
                 <input
                   type="text"
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+                  className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none text-sm"
                 />
               </div>
 
               {/* Editable description */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-charcoal mb-1">Description</label>
+                <label className="block text-sm font-medium text-ink mb-1">Description</label>
                 <textarea
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm resize-none"
+                  className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none text-sm resize-none"
                 />
               </div>
 
               {/* AI-picked fields summary */}
               {merged && (
-                <div className="mb-4 p-3 bg-cream rounded-lg border border-sand">
-                  <p className="text-xs font-medium text-stone mb-2 uppercase tracking-wide">
+                <div className="mb-4 p-3 bg-white rounded-lg border border-mist">
+                  <p className="text-xs font-medium text-zinc mb-2 uppercase tracking-wide">
                     AI-selected fields (auto-applied)
                   </p>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-charcoal">
+                  <div className="grid grid-cols-2 gap-2 text-xs text-ink">
                     {merged.start_datetime && (
-                      <div><span className="text-stone">Date:</span> {formatDate(merged.start_datetime)}</div>
+                      <div><span className="text-zinc">Date:</span> {formatDate(merged.start_datetime)}</div>
                     )}
                     {merged.price_type && (
-                      <div><span className="text-stone">Price:</span> {merged.price_type}{merged.price_low != null ? ` $${merged.price_low}` : ''}</div>
+                      <div><span className="text-zinc">Price:</span> {merged.price_type}{merged.price_low != null ? ` $${merged.price_low}` : ''}</div>
                     )}
                     {merged.ticket_url && (
-                      <div className="col-span-2 truncate"><span className="text-stone">Ticket:</span> {merged.ticket_url}</div>
+                      <div className="col-span-2 truncate"><span className="text-zinc">Ticket:</span> {merged.ticket_url}</div>
                     )}
                     {merged.website_url && (
-                      <div className="col-span-2 truncate"><span className="text-stone">Website:</span> {merged.website_url}</div>
+                      <div className="col-span-2 truncate"><span className="text-zinc">Website:</span> {merged.website_url}</div>
                     )}
                   </div>
                 </div>
@@ -352,7 +352,7 @@ export function MergeEventsModal({ events, onClose, onMergeComplete }: MergeEven
                 <Button
                   onClick={() => setStep('confirm')}
                   disabled={!editTitle.trim()}
-                  className="bg-coral hover:bg-coral/90 text-white"
+                  className="bg-blue hover:bg-blue/90 text-white"
                 >
                   Review Merge<ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
@@ -363,11 +363,11 @@ export function MergeEventsModal({ events, onClose, onMergeComplete }: MergeEven
           {/* Step 3: Confirm */}
           {step === 'confirm' && (
             <>
-              <div className="mb-4 p-4 bg-cream rounded-lg border border-sand">
-                <h3 className="font-medium text-charcoal mb-2">Merge Summary</h3>
-                <ul className="text-sm text-charcoal space-y-1">
+              <div className="mb-4 p-4 bg-white rounded-lg border border-mist">
+                <h3 className="font-medium text-ink mb-2">Merge Summary</h3>
+                <ul className="text-sm text-ink space-y-1">
                   <li>
-                    <span className="text-sage font-medium">Keep:</span>{' '}
+                    <span className="text-emerald font-medium">Keep:</span>{' '}
                     &quot;{editTitle}&quot; ({events.find(e => e.id === primaryId)?.source || 'unknown'})
                   </li>
                   <li>
@@ -388,7 +388,7 @@ export function MergeEventsModal({ events, onClose, onMergeComplete }: MergeEven
                 </Button>
                 <Button
                   onClick={commitMerge}
-                  className="bg-coral hover:bg-coral/90 text-white"
+                  className="bg-blue hover:bg-blue/90 text-white"
                 >
                   Merge Events
                 </Button>
@@ -399,16 +399,16 @@ export function MergeEventsModal({ events, onClose, onMergeComplete }: MergeEven
           {/* Executing */}
           {step === 'executing' && (
             <div className="flex items-center gap-3 py-8 justify-center">
-              <RefreshCw className="w-5 h-5 text-coral animate-spin" />
-              <span className="text-charcoal">Merging events...</span>
+              <RefreshCw className="w-5 h-5 text-blue animate-spin" />
+              <span className="text-ink">Merging events...</span>
             </div>
           )}
 
           {/* Done */}
           {step === 'done' && (
             <div className="flex items-center gap-3 py-8 justify-center">
-              <CheckCircle className="w-5 h-5 text-sage" />
-              <span className="text-charcoal">{resultMessage}</span>
+              <CheckCircle className="w-5 h-5 text-emerald" />
+              <span className="text-ink">{resultMessage}</span>
             </div>
           )}
 

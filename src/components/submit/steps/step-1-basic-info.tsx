@@ -54,9 +54,9 @@ export function Step1BasicInfo({ draftData, updateData, categories }: Step1Props
       <div>
         <label
           htmlFor="title"
-          className="block text-sm font-medium text-charcoal mb-1"
+          className="block text-sm font-medium text-ink mb-1"
         >
-          Event Title <span className="text-coral">*</span>
+          Event Title <span className="text-blue">*</span>
         </label>
         <Input
           id="title"
@@ -68,10 +68,10 @@ export function Step1BasicInfo({ draftData, updateData, categories }: Step1Props
           className="w-full"
         />
         <div className="flex justify-between mt-1">
-          <p className="text-xs text-stone">
+          <p className="text-xs text-zinc">
             Be specific and descriptive
           </p>
-          <p className="text-xs text-stone">
+          <p className="text-xs text-zinc">
             {(draftData.title || '').length}/{MAX_TITLE_LENGTH}
           </p>
         </div>
@@ -79,8 +79,8 @@ export function Step1BasicInfo({ draftData, updateData, categories }: Step1Props
 
       {/* ========== Category ========== */}
       <div>
-        <label className="block text-sm font-medium text-charcoal mb-2">
-          Category <span className="text-coral">*</span>
+        <label className="block text-sm font-medium text-ink mb-2">
+          Category <span className="text-blue">*</span>
         </label>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {categories.map((category) => (
@@ -90,10 +90,10 @@ export function Step1BasicInfo({ draftData, updateData, categories }: Step1Props
               onClick={() => updateData({ category_id: category.id })}
               className={cn(
                 'px-4 py-3 rounded-lg border text-left transition-all',
-                'hover:border-coral hover:bg-coral/5',
+                'hover:border-blue hover:bg-blue/5',
                 draftData.category_id === category.id
-                  ? 'border-coral bg-coral/10 text-coral'
-                  : 'border-sand bg-warm-white text-charcoal'
+                  ? 'border-blue bg-blue/10 text-blue'
+                  : 'border-mist bg-pure text-ink'
               )}
             >
               <span className="font-medium">{category.name}</span>
@@ -106,7 +106,7 @@ export function Step1BasicInfo({ draftData, updateData, categories }: Step1Props
       <div>
         <label
           htmlFor="short_description"
-          className="block text-sm font-medium text-charcoal mb-1"
+          className="block text-sm font-medium text-ink mb-1"
         >
           Short Description
         </label>
@@ -118,17 +118,17 @@ export function Step1BasicInfo({ draftData, updateData, categories }: Step1Props
           rows={2}
           maxLength={MAX_SHORT_DESCRIPTION_LENGTH}
           className={cn(
-            'w-full px-3 py-2 rounded-lg border border-sand',
-            'bg-warm-white text-charcoal placeholder:text-stone/60',
-            'focus:outline-none focus:ring-2 focus:ring-coral/30 focus:border-coral',
+            'w-full px-3 py-2 rounded-lg border border-mist',
+            'bg-pure text-ink placeholder:text-zinc/60',
+            'focus:outline-none focus:ring-2 focus:ring-blue/30 focus:border-coral',
             'resize-none'
           )}
         />
         <div className="flex justify-between mt-1">
-          <p className="text-xs text-stone">
+          <p className="text-xs text-zinc">
             This appears on event cards and search results
           </p>
-          <p className="text-xs text-stone">
+          <p className="text-xs text-zinc">
             {(draftData.short_description || '').length}/{MAX_SHORT_DESCRIPTION_LENGTH}
           </p>
         </div>
@@ -138,7 +138,7 @@ export function Step1BasicInfo({ draftData, updateData, categories }: Step1Props
       <div>
         <label
           htmlFor="description"
-          className="block text-sm font-medium text-charcoal mb-1"
+          className="block text-sm font-medium text-ink mb-1"
         >
           Full Description
         </label>
@@ -149,13 +149,13 @@ export function Step1BasicInfo({ draftData, updateData, categories }: Step1Props
           placeholder="Tell potential attendees all about your event. Include what they can expect, any special guests, what to bring, etc."
           rows={6}
           className={cn(
-            'w-full px-3 py-2 rounded-lg border border-sand',
-            'bg-warm-white text-charcoal placeholder:text-stone/60',
-            'focus:outline-none focus:ring-2 focus:ring-coral/30 focus:border-coral',
+            'w-full px-3 py-2 rounded-lg border border-mist',
+            'bg-pure text-ink placeholder:text-zinc/60',
+            'focus:outline-none focus:ring-2 focus:ring-blue/30 focus:border-coral',
             'resize-y min-h-[150px]'
           )}
         />
-        <p className="text-xs text-stone mt-1">
+        <p className="text-xs text-zinc mt-1">
           Tip: More detail helps people decide to attend!
         </p>
       </div>

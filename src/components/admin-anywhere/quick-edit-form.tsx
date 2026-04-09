@@ -428,7 +428,7 @@ export function QuickEditForm({
       )}
 
       {success && (
-        <div className="flex items-center gap-2 p-3 bg-sage/20 border border-sage/30 rounded-lg text-sage text-sm">
+        <div className="flex items-center gap-2 p-3 bg-emerald/20 border border-sage/30 rounded-lg text-emerald text-sm">
           <CheckCircle className="w-4 h-4 flex-shrink-0" />
           <span>Changes saved successfully!</span>
         </div>
@@ -440,7 +440,7 @@ export function QuickEditForm({
       <div>
         <label
           htmlFor="title"
-          className="block text-sm font-medium text-charcoal mb-1.5"
+          className="block text-sm font-medium text-ink mb-1.5"
         >
           Title
         </label>
@@ -450,7 +450,7 @@ export function QuickEditForm({
           name="title"
           value={formState.title}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+          className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none"
           placeholder="Event title..."
           required
         />
@@ -462,10 +462,10 @@ export function QuickEditForm({
       <div>
         <label
           htmlFor="short_description"
-          className="block text-sm font-medium text-charcoal mb-1.5"
+          className="block text-sm font-medium text-ink mb-1.5"
         >
           Short Description
-          <span className="text-stone font-normal ml-1">(for cards)</span>
+          <span className="text-zinc font-normal ml-1">(for cards)</span>
         </label>
         <textarea
           id="short_description"
@@ -474,10 +474,10 @@ export function QuickEditForm({
           onChange={handleChange}
           rows={2}
           maxLength={160}
-          className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none resize-none"
+          className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none resize-none"
           placeholder="Brief description..."
         />
-        <p className="text-xs text-stone mt-1">
+        <p className="text-xs text-zinc mt-1">
           {formState.short_description.length}/160 characters
         </p>
       </div>
@@ -488,7 +488,7 @@ export function QuickEditForm({
       <div>
         <label
           htmlFor="description"
-          className="block text-sm font-medium text-charcoal mb-1.5"
+          className="block text-sm font-medium text-ink mb-1.5"
         >
           Full Description
         </label>
@@ -498,7 +498,7 @@ export function QuickEditForm({
           value={formState.description}
           onChange={handleChange}
           rows={4}
-          className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none resize-y"
+          className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none resize-y"
           placeholder="Detailed event description..."
         />
       </div>
@@ -510,7 +510,7 @@ export function QuickEditForm({
         <div>
           <label
             htmlFor="start_datetime"
-            className="block text-sm font-medium text-charcoal mb-1.5"
+            className="block text-sm font-medium text-ink mb-1.5"
           >
             Start
           </label>
@@ -520,15 +520,15 @@ export function QuickEditForm({
             name="start_datetime"
             value={formState.start_datetime}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+            className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none text-sm"
           />
         </div>
         <div>
           <label
             htmlFor="end_datetime"
-            className="block text-sm font-medium text-charcoal mb-1.5"
+            className="block text-sm font-medium text-ink mb-1.5"
           >
-            End <span className="text-stone font-normal">(optional)</span>
+            End <span className="text-zinc font-normal">(optional)</span>
           </label>
           <input
             type="datetime-local"
@@ -536,7 +536,7 @@ export function QuickEditForm({
             name="end_datetime"
             value={formState.end_datetime}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+            className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none text-sm"
           />
         </div>
       </div>
@@ -548,9 +548,9 @@ export function QuickEditForm({
           name="is_all_day"
           checked={formState.is_all_day}
           onChange={handleChange}
-          className="w-4 h-4 rounded border-sand text-coral focus:ring-coral"
+          className="w-4 h-4 rounded border-mist text-blue focus:ring-blue"
         />
-        <span className="text-sm text-charcoal">All-day event</span>
+        <span className="text-sm text-ink">All-day event</span>
       </label>
 
       {/* ------------------------------------------------------------------ */}
@@ -559,7 +559,7 @@ export function QuickEditForm({
       <div>
         <label
           htmlFor="price_type"
-          className="block text-sm font-medium text-charcoal mb-1.5"
+          className="block text-sm font-medium text-ink mb-1.5"
         >
           Pricing
         </label>
@@ -569,7 +569,7 @@ export function QuickEditForm({
             name="price_type"
             value={formState.price_type}
             onChange={handleChange}
-            className="flex-1 px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+            className="flex-1 px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none"
           >
             {PRICE_TYPES.map((type) => (
               <option key={type.value} value={type.value}>
@@ -583,9 +583,9 @@ export function QuickEditForm({
               name="is_free"
               checked={formState.is_free}
               onChange={handleChange}
-              className="w-4 h-4 rounded border-sand text-sage focus:ring-sage"
+              className="w-4 h-4 rounded border-mist text-emerald focus:ring-sage"
             />
-            <span className="text-sm text-charcoal">Free</span>
+            <span className="text-sm text-ink">Free</span>
           </label>
         </div>
 
@@ -594,7 +594,7 @@ export function QuickEditForm({
             <div>
               <label
                 htmlFor="price_low"
-                className="block text-xs text-stone mb-1"
+                className="block text-xs text-zinc mb-1"
               >
                 {formState.price_type === 'range' ? 'Min Price' : 'Price'} ($)
               </label>
@@ -606,7 +606,7 @@ export function QuickEditForm({
                 onChange={handleChange}
                 min="0"
                 step="0.01"
-                className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+                className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none"
                 placeholder="0.00"
               />
             </div>
@@ -614,7 +614,7 @@ export function QuickEditForm({
               <div>
                 <label
                   htmlFor="price_high"
-                  className="block text-xs text-stone mb-1"
+                  className="block text-xs text-zinc mb-1"
                 >
                   Max Price ($)
                 </label>
@@ -626,7 +626,7 @@ export function QuickEditForm({
                   onChange={handleChange}
                   min="0"
                   step="0.01"
-                  className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+                  className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none"
                   placeholder="0.00"
                 />
               </div>
@@ -641,9 +641,9 @@ export function QuickEditForm({
       <div>
         <label
           htmlFor="ticket_url"
-          className="block text-sm font-medium text-charcoal mb-1.5"
+          className="block text-sm font-medium text-ink mb-1.5"
         >
-          Ticket URL <span className="text-stone font-normal">(optional)</span>
+          Ticket URL <span className="text-zinc font-normal">(optional)</span>
         </label>
         <input
           type="url"
@@ -651,7 +651,7 @@ export function QuickEditForm({
           name="ticket_url"
           value={formState.ticket_url}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+          className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none"
           placeholder="https://tickets.example.com"
         />
       </div>
@@ -659,16 +659,16 @@ export function QuickEditForm({
       {/* ------------------------------------------------------------------ */}
       {/* External Links */}
       {/* ------------------------------------------------------------------ */}
-      <div className="p-4 bg-cream/50 rounded-lg border border-sand/50">
-        <p className="text-sm font-medium text-charcoal mb-3">
-          🔗 External Links <span className="text-stone font-normal">(optional)</span>
+      <div className="p-4 bg-white/50 rounded-lg border border-mist/50">
+        <p className="text-sm font-medium text-ink mb-3">
+          🔗 External Links <span className="text-zinc font-normal">(optional)</span>
         </p>
         <div className="space-y-3">
           {/* Website URL */}
           <div>
             <label
               htmlFor="website_url"
-              className="block text-xs text-stone mb-1"
+              className="block text-xs text-zinc mb-1"
             >
               🌐 Event Website
             </label>
@@ -678,7 +678,7 @@ export function QuickEditForm({
               name="website_url"
               value={formState.website_url}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+              className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none text-sm"
               placeholder="https://myevent.com"
             />
           </div>
@@ -687,7 +687,7 @@ export function QuickEditForm({
           <div>
             <label
               htmlFor="registration_url"
-              className="block text-xs text-stone mb-1"
+              className="block text-xs text-zinc mb-1"
             >
               📝 Registration / RSVP URL
             </label>
@@ -697,7 +697,7 @@ export function QuickEditForm({
               name="registration_url"
               value={formState.registration_url}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+              className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none text-sm"
               placeholder="https://rsvp.example.com"
             />
           </div>
@@ -706,7 +706,7 @@ export function QuickEditForm({
           <div>
             <label
               htmlFor="instagram_url"
-              className="block text-xs text-stone mb-1"
+              className="block text-xs text-zinc mb-1"
             >
               📸 Instagram
             </label>
@@ -716,7 +716,7 @@ export function QuickEditForm({
               name="instagram_url"
               value={formState.instagram_url}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+              className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none text-sm"
               placeholder="https://instagram.com/event"
             />
           </div>
@@ -725,7 +725,7 @@ export function QuickEditForm({
           <div>
             <label
               htmlFor="facebook_url"
-              className="block text-xs text-stone mb-1"
+              className="block text-xs text-zinc mb-1"
             >
               📘 Facebook Event
             </label>
@@ -735,7 +735,7 @@ export function QuickEditForm({
               name="facebook_url"
               value={formState.facebook_url}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+              className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none text-sm"
               placeholder="https://facebook.com/events/123"
             />
           </div>
@@ -745,9 +745,9 @@ export function QuickEditForm({
       {/* ------------------------------------------------------------------ */}
       {/* Good For Tags */}
       {/* ------------------------------------------------------------------ */}
-      <div className="p-4 bg-cream/50 rounded-lg border border-sand/50">
-        <p className="text-sm font-medium text-charcoal mb-3">
-          Good For <span className="text-stone font-normal">(select all that apply)</span>
+      <div className="p-4 bg-white/50 rounded-lg border border-mist/50">
+        <p className="text-sm font-medium text-ink mb-3">
+          Good For <span className="text-zinc font-normal">(select all that apply)</span>
         </p>
         <div className="flex flex-wrap gap-2">
           {GOOD_FOR_TAGS.map((tag) => {
@@ -767,7 +767,7 @@ export function QuickEditForm({
                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                   isSelected
                     ? `${tag.color} ring-2 ring-offset-1 ring-current`
-                    : 'bg-sand/50 text-stone hover:bg-sand'
+                    : 'bg-cloud/50 text-zinc hover:bg-cloud'
                 }`}
               >
                 {tag.label}
@@ -776,7 +776,7 @@ export function QuickEditForm({
           })}
         </div>
         {formState.good_for.length > 0 && (
-          <p className="text-xs text-stone mt-2">
+          <p className="text-xs text-zinc mt-2">
             {formState.good_for.length} selected
           </p>
         )}
@@ -785,18 +785,18 @@ export function QuickEditForm({
       {/* ------------------------------------------------------------------ */}
       {/* Venue / Location */}
       {/* ------------------------------------------------------------------ */}
-      <div className="p-3 bg-cream/50 rounded-lg border border-sand/50">
-        <p className="text-sm font-medium text-charcoal mb-2">
+      <div className="p-3 bg-white/50 rounded-lg border border-mist/50">
+        <p className="text-sm font-medium text-ink mb-2">
           Venue / Location
         </p>
 
         {selectedVenue && !showVenueSearch && (
-          <div className="flex items-start justify-between gap-2 p-2 bg-sage/10 border border-sage/30 rounded-lg">
+          <div className="flex items-start justify-between gap-2 p-2 bg-emerald/10 border border-sage/30 rounded-lg">
             <div className="flex items-start gap-2 min-w-0">
-              <MapPin className="w-4 h-4 text-sage mt-0.5 flex-shrink-0" />
+              <MapPin className="w-4 h-4 text-emerald mt-0.5 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-sm font-medium text-charcoal truncate">{selectedVenue.name}</p>
-                <p className="text-xs text-stone truncate">
+                <p className="text-sm font-medium text-ink truncate">{selectedVenue.name}</p>
+                <p className="text-xs text-zinc truncate">
                   {selectedVenue.address_line && `${selectedVenue.address_line}, `}
                   {selectedVenue.city}
                   {selectedVenue.state && `, ${selectedVenue.state}`}
@@ -804,15 +804,15 @@ export function QuickEditForm({
               </div>
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
-              <button type="button" onClick={() => setShowVenueSearch(true)} className="text-xs text-coral hover:text-coral/80">Change</button>
-              <button type="button" onClick={() => setSelectedVenue(null)} className="text-xs text-stone hover:text-charcoal">Clear</button>
+              <button type="button" onClick={() => setShowVenueSearch(true)} className="text-xs text-blue hover:text-blue/80">Change</button>
+              <button type="button" onClick={() => setSelectedVenue(null)} className="text-xs text-zinc hover:text-ink">Clear</button>
             </div>
           </div>
         )}
 
         {!selectedVenue && !showVenueSearch && (
           <button type="button" onClick={() => setShowVenueSearch(true)}
-            className="w-full p-2 border border-dashed border-sand rounded-lg hover:border-coral hover:bg-coral/5 transition-colors text-left text-sm text-stone">
+            className="w-full p-2 border border-dashed border-mist rounded-lg hover:border-coral hover:bg-blue/5 transition-colors text-left text-sm text-zinc">
             No venue selected - click to search
           </button>
         )}
@@ -820,28 +820,28 @@ export function QuickEditForm({
         {showVenueSearch && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-stone">Search venues</span>
-              <button type="button" onClick={() => { setShowVenueSearch(false); setVenueQuery(''); setVenueResults([]); }} className="text-xs text-stone hover:text-charcoal">Cancel</button>
+              <span className="text-xs text-zinc">Search venues</span>
+              <button type="button" onClick={() => { setShowVenueSearch(false); setVenueQuery(''); setVenueResults([]); }} className="text-xs text-zinc hover:text-ink">Cancel</button>
             </div>
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc" />
               <input type="text" value={venueQuery} onChange={(e) => handleVenueSearch(e.target.value)} placeholder="Type venue name..."
-                className="w-full pl-8 pr-8 py-1.5 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm" autoFocus />
-              {isSearchingVenue && <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone animate-spin" />}
+                className="w-full pl-8 pr-8 py-1.5 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none text-sm" autoFocus />
+              {isSearchingVenue && <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc animate-spin" />}
             </div>
             {venueResults.length > 0 && (
               <div className="max-h-40 overflow-y-auto space-y-1">
                 {venueResults.map((v) => (
                   <button key={v.id} type="button" onClick={() => { setSelectedVenue(v as typeof selectedVenue); setShowVenueSearch(false); setVenueQuery(''); setVenueResults([]); }}
-                    className="w-full p-2 rounded-lg border border-sand bg-warm-white hover:border-coral text-left text-sm">
-                    <p className="font-medium text-charcoal truncate">{v.name}</p>
-                    <p className="text-xs text-stone truncate">{v.address_line && `${v.address_line}, `}{v.city}</p>
+                    className="w-full p-2 rounded-lg border border-mist bg-pure hover:border-coral text-left text-sm">
+                    <p className="font-medium text-ink truncate">{v.name}</p>
+                    <p className="text-xs text-zinc truncate">{v.address_line && `${v.address_line}, `}{v.city}</p>
                   </button>
                 ))}
               </div>
             )}
             {venueQuery.length >= 2 && !isSearchingVenue && venueResults.length === 0 && (
-              <p className="text-xs text-stone text-center py-2">No venues found</p>
+              <p className="text-xs text-zinc text-center py-2">No venues found</p>
             )}
           </div>
         )}
@@ -850,8 +850,8 @@ export function QuickEditForm({
       {/* ------------------------------------------------------------------ */}
       {/* Organizer */}
       {/* ------------------------------------------------------------------ */}
-      <div className="p-3 bg-cream/50 rounded-lg border border-sand/50">
-        <p className="text-sm font-medium text-charcoal mb-2">
+      <div className="p-3 bg-white/50 rounded-lg border border-mist/50">
+        <p className="text-sm font-medium text-ink mb-2">
           Organizer
         </p>
 
@@ -860,22 +860,22 @@ export function QuickEditForm({
             <div className="flex items-start gap-2 min-w-0">
               <User className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-sm font-medium text-charcoal truncate">{selectedOrganizer.name}</p>
+                <p className="text-sm font-medium text-ink truncate">{selectedOrganizer.name}</p>
                 {selectedOrganizer.website_url && (
-                  <p className="text-xs text-stone truncate">{selectedOrganizer.website_url}</p>
+                  <p className="text-xs text-zinc truncate">{selectedOrganizer.website_url}</p>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
-              <button type="button" onClick={() => setShowOrganizerSearch(true)} className="text-xs text-coral hover:text-coral/80">Change</button>
-              <button type="button" onClick={() => setSelectedOrganizer(null)} className="text-xs text-stone hover:text-charcoal">Clear</button>
+              <button type="button" onClick={() => setShowOrganizerSearch(true)} className="text-xs text-blue hover:text-blue/80">Change</button>
+              <button type="button" onClick={() => setSelectedOrganizer(null)} className="text-xs text-zinc hover:text-ink">Clear</button>
             </div>
           </div>
         )}
 
         {!selectedOrganizer && !showOrganizerSearch && (
           <button type="button" onClick={() => setShowOrganizerSearch(true)}
-            className="w-full p-2 border border-dashed border-sand rounded-lg hover:border-coral hover:bg-coral/5 transition-colors text-left text-sm text-stone">
+            className="w-full p-2 border border-dashed border-mist rounded-lg hover:border-coral hover:bg-blue/5 transition-colors text-left text-sm text-zinc">
             No organizer selected - click to search
           </button>
         )}
@@ -883,28 +883,28 @@ export function QuickEditForm({
         {showOrganizerSearch && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-stone">Search organizers</span>
-              <button type="button" onClick={() => { setShowOrganizerSearch(false); setOrganizerQuery(''); setOrganizerResults([]); }} className="text-xs text-stone hover:text-charcoal">Cancel</button>
+              <span className="text-xs text-zinc">Search organizers</span>
+              <button type="button" onClick={() => { setShowOrganizerSearch(false); setOrganizerQuery(''); setOrganizerResults([]); }} className="text-xs text-zinc hover:text-ink">Cancel</button>
             </div>
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc" />
               <input type="text" value={organizerQuery} onChange={(e) => handleOrganizerSearch(e.target.value)} placeholder="Type organizer name..."
-                className="w-full pl-8 pr-8 py-1.5 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm" autoFocus />
-              {isSearchingOrganizer && <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone animate-spin" />}
+                className="w-full pl-8 pr-8 py-1.5 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none text-sm" autoFocus />
+              {isSearchingOrganizer && <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc animate-spin" />}
             </div>
             {organizerResults.length > 0 && (
               <div className="max-h-40 overflow-y-auto space-y-1">
                 {organizerResults.map((o) => (
                   <button key={o.id} type="button" onClick={() => { setSelectedOrganizer(o as typeof selectedOrganizer); setShowOrganizerSearch(false); setOrganizerQuery(''); setOrganizerResults([]); }}
-                    className="w-full flex items-start gap-2 p-2 rounded-lg border border-sand bg-warm-white hover:border-coral text-left text-sm">
-                    <User className="w-3.5 h-3.5 text-stone mt-0.5 flex-shrink-0" />
-                    <p className="font-medium text-charcoal truncate">{o.name}</p>
+                    className="w-full flex items-start gap-2 p-2 rounded-lg border border-mist bg-pure hover:border-coral text-left text-sm">
+                    <User className="w-3.5 h-3.5 text-zinc mt-0.5 flex-shrink-0" />
+                    <p className="font-medium text-ink truncate">{o.name}</p>
                   </button>
                 ))}
               </div>
             )}
             {organizerQuery.length >= 2 && !isSearchingOrganizer && organizerResults.length === 0 && (
-              <p className="text-xs text-stone text-center py-2">No organizers found</p>
+              <p className="text-xs text-zinc text-center py-2">No organizers found</p>
             )}
           </div>
         )}
@@ -914,9 +914,9 @@ export function QuickEditForm({
       {/* Category (read-only in quick edit, shows current) */}
       {/* ------------------------------------------------------------------ */}
       {event.category && (
-        <div className="p-3 bg-cream/50 rounded-lg border border-sand/50">
-          <p className="text-sm font-medium text-charcoal mb-1">Category</p>
-          <p className="text-sm text-stone">{event.category.name} <span className="text-xs">(use Full Edit to change)</span></p>
+        <div className="p-3 bg-white/50 rounded-lg border border-mist/50">
+          <p className="text-sm font-medium text-ink mb-1">Category</p>
+          <p className="text-sm text-zinc">{event.category.name} <span className="text-xs">(use Full Edit to change)</span></p>
         </div>
       )}
 
@@ -961,7 +961,7 @@ export function QuickEditForm({
       {/* Status */}
       {/* ------------------------------------------------------------------ */}
       <div>
-        <label className="block text-sm font-medium text-charcoal mb-1.5">
+        <label className="block text-sm font-medium text-ink mb-1.5">
           Status
         </label>
         <StatusBadgeSelect
@@ -976,10 +976,10 @@ export function QuickEditForm({
       <div>
         <label
           htmlFor="notes"
-          className="block text-sm font-medium text-charcoal mb-1.5"
+          className="block text-sm font-medium text-ink mb-1.5"
         >
           Edit Notes{' '}
-          <span className="text-stone font-normal">(for audit log)</span>
+          <span className="text-zinc font-normal">(for audit log)</span>
         </label>
         <textarea
           id="notes"
@@ -987,7 +987,7 @@ export function QuickEditForm({
           value={formState.notes}
           onChange={handleChange}
           rows={2}
-          className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none resize-none"
+          className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none resize-none"
           placeholder="Why are you making these changes?"
         />
       </div>
@@ -995,7 +995,7 @@ export function QuickEditForm({
       {/* ------------------------------------------------------------------ */}
       {/* Action Buttons */}
       {/* ------------------------------------------------------------------ */}
-      <div className="flex items-center justify-between pt-4 border-t border-sand">
+      <div className="flex items-center justify-between pt-4 border-t border-mist">
         {/* Delete button */}
         <button
           type="button"
@@ -1013,14 +1013,14 @@ export function QuickEditForm({
             type="button"
             onClick={onCancel}
             disabled={isLoading}
-            className="px-4 py-2 text-stone hover:text-charcoal rounded-lg text-sm font-medium transition-colors"
+            className="px-4 py-2 text-zinc hover:text-ink rounded-lg text-sm font-medium transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isLoading}
-            className="flex items-center gap-1.5 px-4 py-2 bg-coral hover:bg-coral/90 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-4 py-2 bg-blue hover:bg-blue/90 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
           >
             {isLoading ? (
               <>

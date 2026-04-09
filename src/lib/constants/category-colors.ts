@@ -1,102 +1,127 @@
 /**
- * CATEGORY COLOR MAP
- * ==================
+ * CATEGORY COLOR MAP — v3 Redesign
+ * =================================
  * Maps event category slugs to their visual identity colors.
- * Used across EventCard, SeriesCard, category pages, and badges
- * to give each category a distinct, recognizable look.
+ * City festival poster palette: bold, multi-chromatic, all unique.
  *
  * Usage:
  *   import { getCategoryColor } from '@/lib/constants/category-colors';
  *   const colors = getCategoryColor('music');
- *   // -> { bg: '#7C3AED', text: '#FFFFFF', accent: '#7C3AED', light: 'rgba(124,58,237,0.1)' }
  */
 
 export interface CategoryColor {
-  /** Saturated color for badge backgrounds */
+  /** Saturated color for badge backgrounds & full-color tiles */
   bg: string;
-  /** Text color for contrast on bg (white or dark) */
+  /** Text color for contrast on bg (typically white) */
   text: string;
-  /** Border/stripe accent color */
+  /** Border/stripe accent color (same as bg) */
   accent: string;
-  /** 10% opacity tint for card backgrounds */
+  /** 12% opacity tint for card backgrounds */
   light: string;
 }
 
 export const CATEGORY_COLORS: Record<string, CategoryColor> = {
   music: {
-    bg: '#7C3AED',
+    bg: '#008bd2',
     text: '#FFFFFF',
-    accent: '#7C3AED',
-    light: 'rgba(124,58,237,0.1)',
+    accent: '#008bd2',
+    light: 'rgba(0,139,210,0.12)',
   },
   arts: {
-    bg: '#0D9488',
+    bg: '#008e91',
     text: '#FFFFFF',
-    accent: '#0D9488',
-    light: 'rgba(13,148,136,0.1)',
+    accent: '#008e91',
+    light: 'rgba(0,142,145,0.12)',
   },
   food: {
-    bg: '#EA580C',
+    bg: '#d95927',
     text: '#FFFFFF',
-    accent: '#EA580C',
-    light: 'rgba(234,88,12,0.1)',
+    accent: '#d95927',
+    light: 'rgba(217,89,39,0.12)',
   },
   family: {
-    bg: '#F59E0B',
-    text: '#2D2A26',
-    accent: '#F59E0B',
-    light: 'rgba(245,158,11,0.1)',
+    bg: '#e7b746',
+    text: '#020203',
+    accent: '#e7b746',
+    light: 'rgba(231,183,70,0.12)',
   },
   sports: {
-    bg: '#3B82F6',
+    bg: '#E85D45',
     text: '#FFFFFF',
-    accent: '#3B82F6',
-    light: 'rgba(59,130,246,0.1)',
+    accent: '#E85D45',
+    light: 'rgba(232,93,69,0.12)',
   },
   community: {
-    bg: '#E07A5F',
+    bg: '#D94B7A',
     text: '#FFFFFF',
-    accent: '#E07A5F',
-    light: 'rgba(224,122,95,0.1)',
+    accent: '#D94B7A',
+    light: 'rgba(217,75,122,0.12)',
   },
   nightlife: {
-    bg: '#6366F1',
+    bg: '#7B2D8E',
     text: '#FFFFFF',
-    accent: '#6366F1',
-    light: 'rgba(99,102,241,0.1)',
+    accent: '#7B2D8E',
+    light: 'rgba(123,45,142,0.12)',
   },
   classes: {
-    bg: '#059669',
+    bg: '#009768',
     text: '#FFFFFF',
-    accent: '#059669',
-    light: 'rgba(5,150,105,0.1)',
+    accent: '#009768',
+    light: 'rgba(0,151,104,0.12)',
   },
   festivals: {
-    bg: '#BE185D',
+    bg: '#d48700',
     text: '#FFFFFF',
-    accent: '#BE185D',
-    light: 'rgba(190,24,93,0.1)',
+    accent: '#d48700',
+    light: 'rgba(212,135,0,0.12)',
   },
   workshops: {
-    bg: '#8B5CF6',
+    bg: '#5B4FC4',
     text: '#FFFFFF',
-    accent: '#8B5CF6',
-    light: 'rgba(139,92,246,0.1)',
+    accent: '#5B4FC4',
+    light: 'rgba(91,79,196,0.12)',
+  },
+  markets: {
+    bg: '#ace671',
+    text: '#020203',
+    accent: '#ace671',
+    light: 'rgba(172,230,113,0.12)',
+  },
+  talks: {
+    bg: '#008bd2',
+    text: '#FFFFFF',
+    accent: '#008bd2',
+    light: 'rgba(0,139,210,0.12)',
+  },
+  outdoors: {
+    bg: '#6BAD5A',
+    text: '#FFFFFF',
+    accent: '#6BAD5A',
+    light: 'rgba(107,173,90,0.12)',
+  },
+  charity: {
+    bg: '#D94B7A',
+    text: '#FFFFFF',
+    accent: '#D94B7A',
+    light: 'rgba(217,75,122,0.12)',
+  },
+  holiday: {
+    bg: '#e7b746',
+    text: '#020203',
+    accent: '#e7b746',
+    light: 'rgba(231,183,70,0.12)',
   },
   default: {
-    bg: '#E07A5F',
+    bg: '#008bd2',
     text: '#FFFFFF',
-    accent: '#E07A5F',
-    light: 'rgba(224,122,95,0.1)',
+    accent: '#008bd2',
+    light: 'rgba(0,139,210,0.12)',
   },
 };
 
 /**
  * Get the color object for a category slug.
- * Returns the default (coral) color if the slug is null or not found.
- *
- * @param slug - The category slug (e.g. 'music', 'food') or null
- * @returns The CategoryColor object with bg, text, accent, and light values
+ * Returns the default (blue) color if the slug is null or not found.
  */
 export function getCategoryColor(slug: string | null): CategoryColor {
   if (!slug) return CATEGORY_COLORS.default;

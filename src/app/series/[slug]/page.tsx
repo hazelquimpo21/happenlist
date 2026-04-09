@@ -143,7 +143,7 @@ export default async function SeriesDetailPage({ params }: SeriesDetailPageProps
         {/* Description */}
         {series.description && (
           <section className="mb-12">
-            <h2 className="font-display text-h2 text-charcoal mb-4">About</h2>
+            <h2 className="font-body text-h2 text-ink mb-4">About</h2>
             <div
               className="prose prose-stone max-w-none"
               dangerouslySetInnerHTML={{ __html: formatDescription(series.description) }}
@@ -161,18 +161,18 @@ export default async function SeriesDetailPage({ params }: SeriesDetailPageProps
 
         {/* Organizer info (if has description) */}
         {series.organizer?.description && (
-          <section className="mb-12 p-6 bg-cream rounded-lg">
-            <h2 className="font-display text-h3 text-charcoal mb-3">
+          <section className="mb-12 p-6 bg-white rounded-lg">
+            <h2 className="font-body text-h3 text-ink mb-3">
               About the Organizer
             </h2>
-            <p className="text-body text-stone">{series.organizer.description}</p>
+            <p className="text-body text-zinc">{series.organizer.description}</p>
           </section>
         )}
 
         {/* Related series */}
         {relatedSeries.length > 0 && (
           <section>
-            <h2 className="font-display text-h2 text-charcoal mb-6">
+            <h2 className="font-body text-h2 text-ink mb-6">
               Similar Series
             </h2>
             <SeriesGrid

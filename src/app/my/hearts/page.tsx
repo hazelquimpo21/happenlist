@@ -84,10 +84,10 @@ export default async function MyHeartsPage() {
       <Container>
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="font-display text-h2 md:text-h1 text-charcoal mb-2">
+          <h1 className="font-body text-h2 md:text-h1 text-ink mb-2">
             ❤️ My Saved Events
           </h1>
-          <p className="text-stone text-body">
+          <p className="text-zinc text-body">
             Events you&apos;ve saved to attend later
           </p>
         </div>
@@ -148,8 +148,8 @@ function SectionHeader({
     <div className="flex items-center gap-3 mb-6">
       <span className="text-xl">{icon}</span>
       <h2 className={cn(
-        'font-display text-h4',
-        muted ? 'text-stone' : 'text-charcoal'
+        'font-body text-h4',
+        muted ? 'text-zinc' : 'text-ink'
       )}>
         {title}
       </h2>
@@ -198,14 +198,14 @@ function HeartedEventCard({
       href={`/event/${event.slug}`}
       className={cn(
         'group block rounded-xl overflow-hidden',
-        'bg-white border border-sand',
+        'bg-white border border-mist',
         'transition-all duration-200',
-        'hover:shadow-medium hover:border-sand-dark',
+        'hover:shadow-medium hover:border-mist-dark',
         isPast && 'opacity-75 hover:opacity-100'
       )}
     >
       {/* Event Image */}
-      <div className="aspect-[16/9] relative overflow-hidden bg-sand">
+      <div className="aspect-[16/9] relative overflow-hidden bg-cloud">
         {event.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -258,20 +258,20 @@ function HeartedEventCard({
       <div className="p-4">
         {/* Title */}
         <h3 className={cn(
-          'font-display text-body-lg font-medium text-charcoal',
+          'font-body text-body-lg font-medium text-ink',
           'line-clamp-2 mb-2',
-          'group-hover:text-coral transition-colors'
+          'group-hover:text-blue transition-colors'
         )}>
           {event.title}
         </h3>
 
         {/* Date & Time */}
-        <div className="flex items-center gap-2 text-body-sm text-stone mb-1">
+        <div className="flex items-center gap-2 text-body-sm text-zinc mb-1">
           <Calendar className="w-4 h-4 flex-shrink-0" />
           <span>
             {formatDate(event.instance_date, 'EEE, MMM d')}
             {event.start_datetime && (
-              <span className="text-stone-light">
+              <span className="text-zinc-light">
                 {' '}at {formatTime(event.start_datetime)}
               </span>
             )}
@@ -280,7 +280,7 @@ function HeartedEventCard({
 
         {/* Location */}
         {event.location_name && (
-          <div className="flex items-center gap-2 text-body-sm text-stone">
+          <div className="flex items-center gap-2 text-body-sm text-zinc">
             <MapPin className="w-4 h-4 flex-shrink-0" />
             <span className="truncate">
               {event.location_name}
@@ -291,18 +291,18 @@ function HeartedEventCard({
 
         {/* Price */}
         {!isPast && (
-          <div className="mt-3 pt-3 border-t border-sand">
+          <div className="mt-3 pt-3 border-t border-mist">
             {event.is_free ? (
               <Badge variant="secondary" size="sm">Free</Badge>
             ) : event.price_low !== null ? (
-              <span className="text-body-sm text-charcoal font-medium">
+              <span className="text-body-sm text-ink font-medium">
                 ${event.price_low}
                 {event.price_high && event.price_high !== event.price_low && (
-                  <span className="text-stone"> - ${event.price_high}</span>
+                  <span className="text-zinc"> - ${event.price_high}</span>
                 )}
               </span>
             ) : (
-              <span className="text-body-sm text-stone">See event</span>
+              <span className="text-body-sm text-zinc">See event</span>
             )}
           </div>
         )}
@@ -318,15 +318,15 @@ function EmptyState() {
   return (
     <div className="text-center py-16 px-4">
       {/* Icon */}
-      <div className="mx-auto w-16 h-16 rounded-full bg-sand flex items-center justify-center mb-6">
-        <Heart className="w-8 h-8 text-stone" />
+      <div className="mx-auto w-16 h-16 rounded-full bg-cloud flex items-center justify-center mb-6">
+        <Heart className="w-8 h-8 text-zinc" />
       </div>
 
       {/* Message */}
-      <h2 className="font-display text-h4 text-charcoal mb-2">
+      <h2 className="font-body text-h4 text-ink mb-2">
         No saved events yet
       </h2>
-      <p className="text-stone mb-6 max-w-md mx-auto">
+      <p className="text-zinc mb-6 max-w-md mx-auto">
         When you find events you&apos;re interested in, tap the heart icon to save them here for later.
       </p>
 
@@ -336,8 +336,8 @@ function EmptyState() {
         className={cn(
           'inline-flex items-center gap-2',
           'px-6 py-3 rounded-lg',
-          'bg-coral text-white font-medium',
-          'hover:bg-coral-dark transition-colors'
+          'bg-blue text-white font-medium',
+          'hover:bg-blue-dark transition-colors'
         )}
       >
         Browse Events

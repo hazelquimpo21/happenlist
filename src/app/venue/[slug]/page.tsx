@@ -156,7 +156,7 @@ export default async function VenuePage({ params }: VenuePageProps) {
             <Badge variant="secondary" className="mb-3">
               Venue
             </Badge>
-            <h1 className="font-display text-h1 text-charcoal">
+            <h1 className="font-body text-h1 text-ink">
               {venue.name}
             </h1>
           </div>
@@ -164,7 +164,7 @@ export default async function VenuePage({ params }: VenuePageProps) {
           {/* Description */}
           {venue.description && (
             <div className="mb-8">
-              <h2 className="font-display text-h3 text-charcoal mb-4">
+              <h2 className="font-body text-h3 text-ink mb-4">
                 About This Venue
               </h2>
               <div className="prose-event whitespace-pre-wrap">
@@ -178,13 +178,13 @@ export default async function VenuePage({ params }: VenuePageProps) {
         <div className="lg:col-span-1">
           <div className="sticky top-24 space-y-6">
             {/* Venue info card */}
-            <div className="p-6 bg-warm-white rounded-lg border border-sand">
+            <div className="p-6 bg-pure rounded-lg border border-mist">
               {/* Address */}
               <div className="flex items-start gap-3 mb-4">
-                <MapPin className="w-5 h-5 text-sage mt-0.5" />
+                <MapPin className="w-5 h-5 text-emerald mt-0.5" />
                 <div>
-                  <p className="font-medium text-charcoal">Address</p>
-                  <p className="text-body-sm text-stone">
+                  <p className="font-medium text-ink">Address</p>
+                  <p className="text-body-sm text-zinc">
                     {fullAddress || 'Address not available'}
                   </p>
                 </div>
@@ -193,14 +193,14 @@ export default async function VenuePage({ params }: VenuePageProps) {
               {/* Website */}
               {venue.website_url && (
                 <div className="flex items-start gap-3 mb-4">
-                  <Globe className="w-5 h-5 text-sage mt-0.5" />
+                  <Globe className="w-5 h-5 text-emerald mt-0.5" />
                   <div>
-                    <p className="font-medium text-charcoal">Website</p>
+                    <p className="font-medium text-ink">Website</p>
                     <a
                       href={venue.website_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-body-sm text-coral hover:text-coral-dark transition-colors"
+                      className="text-body-sm text-blue hover:text-orange-dark transition-colors"
                     >
                       Visit website
                     </a>
@@ -211,12 +211,12 @@ export default async function VenuePage({ params }: VenuePageProps) {
               {/* Phone */}
               {venue.phone && (
                 <div className="flex items-start gap-3 mb-6">
-                  <Phone className="w-5 h-5 text-sage mt-0.5" />
+                  <Phone className="w-5 h-5 text-emerald mt-0.5" />
                   <div>
-                    <p className="font-medium text-charcoal">Phone</p>
+                    <p className="font-medium text-ink">Phone</p>
                     <a
                       href={`tel:${venue.phone}`}
-                      className="text-body-sm text-coral hover:text-coral-dark transition-colors"
+                      className="text-body-sm text-blue hover:text-orange-dark transition-colors"
                     >
                       {venue.phone}
                     </a>

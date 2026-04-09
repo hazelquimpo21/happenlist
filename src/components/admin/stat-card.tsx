@@ -31,16 +31,16 @@ export function StatCard({
   className,
 }: StatCardProps) {
   const iconColorStyles = {
-    coral: 'text-coral bg-coral/10',
-    sage: 'text-sage bg-sage/10',
-    stone: 'text-stone bg-sand',
-    charcoal: 'text-charcoal bg-sand',
+    coral: 'text-blue bg-blue/10',
+    sage: 'text-emerald bg-emerald/10',
+    stone: 'text-zinc bg-cloud',
+    charcoal: 'text-ink bg-cloud',
   };
 
   const trendStyles = {
-    up: 'text-sage',
+    up: 'text-emerald',
     down: 'text-red-500',
-    neutral: 'text-stone',
+    neutral: 'text-zinc',
   };
 
   const Wrapper = href ? 'a' : 'div';
@@ -49,16 +49,16 @@ export function StatCard({
     <Wrapper
       href={href}
       className={cn(
-        'bg-warm-white rounded-xl p-6 border border-sand',
+        'bg-pure rounded-xl p-6 border border-mist',
         'transition-all duration-200',
-        href && 'hover:border-coral hover:shadow-md cursor-pointer',
+        href && 'hover:border-blue hover:shadow-md cursor-pointer',
         className
       )}
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-stone font-medium mb-1">{label}</p>
-          <p className="text-3xl font-display font-semibold text-charcoal">
+          <p className="text-sm text-zinc font-medium mb-1">{label}</p>
+          <p className="text-3xl font-body font-semibold text-ink">
             {typeof value === 'number' ? value.toLocaleString() : value}
           </p>
         </div>
@@ -80,7 +80,7 @@ export function StatCard({
             {trend.direction !== 'neutral' && (trend.value > 0 ? '+' : '')}
             {trend.value}
           </span>
-          <span className="text-sm text-stone">{trend.label}</span>
+          <span className="text-sm text-zinc">{trend.label}</span>
         </div>
       )}
     </Wrapper>

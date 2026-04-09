@@ -31,7 +31,7 @@ Events are added in two ways:
 | Database | Supabase (PostgreSQL) | Data storage, auth, file storage, Row-Level Security |
 | Auth | Supabase Auth (Magic Links) | Passwordless email login |
 | Styling | Tailwind CSS | Utility-first CSS with custom design tokens |
-| Icons | Lucide React | Consistent icon set |
+| Icons | Custom SVGs + Lucide React | 15 bold category icons + utility icons |
 | Dates | date-fns | Date formatting and manipulation |
 | Maps | Mapbox GL | Venue maps and address autocomplete |
 | Hosting | Vercel | Frontend + API deployment |
@@ -119,6 +119,8 @@ happenlist/
 │   │   ├── auth/               # LoginForm, UserMenu
 │   │   ├── submit/             # Event submission form steps
 │   │   ├── admin-anywhere/     # Superadmin edit toolbar
+│   │   ├── homepage/            # Hero slideshow, filter pills, just-added rows
+│   │   ├── icons/              # Custom category SVG icons
 │   │   ├── hearts/             # Heart/save button
 │   │   ├── search/             # Search bar
 │   │   ├── maps/               # Mapbox map and address search
@@ -162,28 +164,36 @@ happenlist/
 
 ---
 
-## Design System
+## Design System (v3)
 
 ### Colors
 
 | Token | Hex | Usage |
 |-------|-----|-------|
-| `cream` | #F9F6F0 | Page backgrounds |
-| `warm-white` | #FFFDF9 | Cards, elevated sections |
-| `sand` | #E8E2D9 | Borders, dividers |
-| `stone` | #7A7670 | Secondary text |
-| `charcoal` | #2D2A26 | Primary text |
-| `coral` | #E86C5D | Primary accent, CTAs, hearts |
-| `sage` | #7B9E87 | Secondary accent, "Free" badges, success |
+| `ink` | #020203 | Primary text, headlines |
+| `night` | #141416 | Dark backgrounds (hero, weekend section) |
+| `zinc` | #71717A | Secondary text, metadata |
+| `mist` | #E4E4E7 | Borders, dividers |
+| `cloud` | #F4F4F5 | Subtle backgrounds |
+| `white` | #FAFAFA | Page background |
+| `pure` | #FFFFFF | Card backgrounds |
+| `blue` | #008bd2 | Primary brand, CTAs, links, selected states |
+| `orange` | #d95927 | Secondary accent |
+| `rose` | #F43F5E | Hearts |
+| `emerald` | #009768 | "Free" badges, success |
+
+Plus 15 unique category identity colors (see `CLAUDE.md` or `src/lib/constants/category-colors.ts`).
 
 ### Typography
 
-- **Headlines**: Fraunces (serif) - warm, editorial feel
-- **Body text**: Inter (sans-serif) - clean, readable
+- **Font**: Plus Jakarta Sans (sans-serif) - one family for everything
+- **Scale**: `text-hero` (4.5rem) down to `text-caption` (0.75rem)
 
 ### Design Philosophy
 
-Warm and editorial, inspired by well-designed local magazines. Retro-modern aesthetic with generous whitespace, soft rounded cards, and a mobile-first responsive layout.
+Bold, multi-chromatic city festival poster aesthetic. Each event category has a unique color identity. Mobile-first with horizontal scroll cards. Browse-first UX designed for discovery mode.
+
+For the full design reference, see [CLAUDE.md](./CLAUDE.md) and [DESIGN-GUIDE.md](./DESIGN-GUIDE.md).
 
 ---
 

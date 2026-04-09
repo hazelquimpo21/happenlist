@@ -184,20 +184,17 @@ function EventCardComponent({
   return (
     <article
       className={cn(
-        // Base styles
-        'bg-warm-white rounded-lg overflow-hidden',
-        // Border for edge definition
-        'border border-sand/50',
+        // Base styles — v3 redesign
+        'bg-pure rounded-lg overflow-hidden',
         // Shadows
         'shadow-card',
         // Hover: deeper shadow + lift
         'transition-all duration-200',
-        'hover:shadow-card-lifted hover:-translate-y-1.5',
+        'hover:shadow-card-lifted hover:-translate-y-1',
         className
       )}
-      style={{ borderTopWidth: '3px', borderTopColor: categoryColor.accent }}
     >
-      <Link href={eventUrl} className="block">
+      <Link href={eventUrl} className="block focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2 rounded-lg">
         {/* ---------------------------------------------------------------- */}
         {/* 🖼️ IMAGE SECTION */}
         {/* ---------------------------------------------------------------- */}
@@ -211,11 +208,11 @@ function EventCardComponent({
             priority={priority}
           />
 
-          {/* Category badge — opaque pill, top-left */}
+          {/* Category badge — pill, top-left */}
           {showCategory && event.category_name && (
             <div className="absolute top-3 left-3 z-10">
               <span
-                className="px-2.5 py-1 text-xs font-semibold rounded-full shadow-sm"
+                className="px-2.5 py-1 text-caption uppercase font-semibold tracking-wider rounded-sm shadow-sm"
                 style={{
                   backgroundColor: categoryColor.bg,
                   color: categoryColor.text,
@@ -231,8 +228,8 @@ function EventCardComponent({
             <div className="absolute top-3 right-3 z-10">
               <span
                 className={cn(
-                  'px-2 py-1 text-xs font-medium rounded-full',
-                  'bg-coral/90 backdrop-blur-sm text-white',
+                  'px-2 py-1 text-caption font-medium rounded-sm',
+                  'bg-blue/90 backdrop-blur-sm text-pure',
                   'shadow-sm'
                 )}
               >
@@ -257,8 +254,8 @@ function EventCardComponent({
         {/* 📝 CONTENT SECTION */}
         {/* ---------------------------------------------------------------- */}
         <div className="p-4">
-          {/* Date — promoted to prominent */}
-          <p className="text-sm font-semibold text-charcoal mb-1">
+          {/* Date — prominent */}
+          <p className="text-body-sm font-semibold text-blue mb-1">
             {formatEventDate(event.start_datetime)}
           </p>
 
@@ -278,7 +275,7 @@ function EventCardComponent({
           {/* Title */}
           <h3
             className={cn(
-              'font-display text-charcoal mb-1 line-clamp-2',
+              'font-body text-ink mb-1 line-clamp-2',
               TITLE_SIZES[variant]
             )}
           >
@@ -287,31 +284,31 @@ function EventCardComponent({
 
           {/* Performers (from linked entities) or fallback talent_name */}
           {event.performers && event.performers.length > 0 ? (
-            <p className="text-xs text-stone mb-1 truncate">
+            <p className="text-xs text-zinc mb-1 truncate">
               ft. {event.performers.map((p) => p.name).join(', ')}
             </p>
           ) : event.talent_name ? (
-            <p className="text-xs text-stone mb-1 truncate">
+            <p className="text-xs text-zinc mb-1 truncate">
               feat. {event.talent_name}
             </p>
           ) : null}
 
           {/* Location + organizer */}
           {event.location_name && (
-            <p className="text-sm text-stone mb-1 flex items-center gap-1">
+            <p className="text-body-sm text-zinc mb-1 flex items-center gap-1">
               <MapPin className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
               <span className="truncate">{event.location_name}</span>
             </p>
           )}
           {event.organizer_name && !event.organizer_is_venue && (
-            <p className="text-xs text-stone/80 mb-1.5 truncate">
+            <p className="text-xs text-zinc/80 mb-1.5 truncate">
               by {event.organizer_name}
             </p>
           )}
 
           {/* Short description teaser */}
           {event.short_description && variant !== 'compact' && (
-            <p className="text-xs text-stone/90 mb-2 line-clamp-2 leading-relaxed">
+            <p className="text-xs text-zinc/90 mb-2 line-clamp-2 leading-relaxed">
               {event.short_description}
             </p>
           )}
@@ -363,11 +360,11 @@ function EventCardComponent({
 
           {/* Price */}
           {event.is_free ? (
-            <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-sage/10 text-sage">
+            <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-light text-emerald">
               Free
             </span>
           ) : (
-            <p className="text-sm font-semibold text-charcoal">
+            <p className="text-body-sm font-semibold text-ink">
               {formatPrice(event)}
             </p>
           )}

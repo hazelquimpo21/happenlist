@@ -10,7 +10,7 @@
  */
 
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/auth-context';
 import { Header, Footer } from '@/components/layout';
@@ -21,11 +21,13 @@ import './globals.css';
 // FONTS
 // ============================================================================
 
-// Load Inter font for body text
-const inter = Inter({
+// Plus Jakarta Sans — single font family for entire app
+// Rounded terminals = friendly, geometric structure = modern
+const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-body',
+  weight: ['200', '300', '400', '500', '600', '700', '800'],
 });
 
 // ============================================================================
@@ -97,33 +99,24 @@ export default function RootLayout({ children }: RootLayoutProps) {
   }
 
   return (
-    <html lang="en" className={inter.variable}>
-      <head>
-        {/* Google Fonts - Fraunces for display text */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preload"
-          as="style"
-          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="en" className={jakarta.variable}>
+      <head />
       <body className="min-h-screen flex flex-col">
+        {/* Skip to content — visible only on keyboard focus */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-blue focus:text-pure focus:px-4 focus:py-2 focus:rounded-lg focus:font-semibold focus:shadow-lg focus:outline-none"
+        >
+          Skip to main content
+        </a>
+
         {/* Auth Provider - Wraps entire app for auth state */}
         <AuthProvider>
           {/* Site Header */}
           <Header />
 
           {/* Main Content */}
-          <main className="flex-1">{children}</main>
+          <main id="main-content" className="flex-1">{children}</main>
 
           {/* Site Footer */}
           <Footer />
@@ -135,8 +128,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
               duration: 4000,
               className: 'font-body',
               style: {
-                background: 'white',
-                border: '1px solid hsl(var(--sand))',
+                background: '#FFFFFF',
+                border: '1px solid #E4E4E7',
                 borderRadius: '12px',
               },
             }}

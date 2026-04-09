@@ -41,7 +41,7 @@ export function Spinner({
   // Color styles
   const colorStyles = {
     coral: 'text-coral',
-    stone: 'text-stone',
+    stone: 'text-zinc',
     white: 'text-white',
   };
 
@@ -84,7 +84,7 @@ export function PageSpinner() {
     <div className="flex items-center justify-center min-h-[50vh]">
       <div className="text-center">
         <Spinner size="lg" />
-        <p className="mt-4 text-stone text-body-sm">Loading...</p>
+        <p className="mt-4 text-zinc text-body-sm">Loading...</p>
       </div>
     </div>
   );

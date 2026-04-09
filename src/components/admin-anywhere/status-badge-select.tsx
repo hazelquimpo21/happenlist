@@ -27,7 +27,7 @@ const STATUS_OPTIONS = [
     value: 'draft',
     label: 'Draft',
     emoji: '📝',
-    className: 'bg-stone/20 text-stone',
+    className: 'bg-zinc/20 text-zinc',
   },
   {
     value: 'pending_review',
@@ -45,7 +45,7 @@ const STATUS_OPTIONS = [
     value: 'published',
     label: 'Published',
     emoji: '✅',
-    className: 'bg-sage/20 text-sage',
+    className: 'bg-emerald/20 text-emerald',
   },
   {
     value: 'rejected',
@@ -57,7 +57,7 @@ const STATUS_OPTIONS = [
     value: 'cancelled',
     label: 'Cancelled',
     emoji: '🚫',
-    className: 'bg-stone/30 text-stone',
+    className: 'bg-zinc/30 text-zinc',
   },
 ];
 
@@ -106,7 +106,7 @@ export function StatusBadgeSelect({
       <div
         className={`
           relative flex items-center gap-2 px-3 py-2
-          border border-sand rounded-lg
+          border border-mist rounded-lg
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
       >
@@ -122,7 +122,7 @@ export function StatusBadgeSelect({
         </span>
 
         {/* Dropdown indicator */}
-        <ChevronDown className="w-4 h-4 text-stone ml-auto" />
+        <ChevronDown className="w-4 h-4 text-zinc ml-auto" />
 
         {/* Actual select (invisible but functional) */}
         <select
@@ -141,7 +141,7 @@ export function StatusBadgeSelect({
       </div>
 
       {/* Status explanation */}
-      <p className="text-xs text-stone mt-1.5">
+      <p className="text-xs text-zinc mt-1.5">
         {getStatusHint(value)}
       </p>
     </div>

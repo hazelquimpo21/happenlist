@@ -105,7 +105,7 @@ export function SeriesTypeBadge({
 
   // Bold badge colors (saturated pills per design spec)
   const badgeColors = SERIES_TYPE_BADGE_COLORS[type as SeriesType] || {
-    bg: 'bg-coral',
+    bg: 'bg-blue',
     text: 'text-white',
   };
 

@@ -99,15 +99,15 @@ export function EventApprovalForm({ event }: EventApprovalFormProps) {
   // Already reviewed
   if (event.status !== 'pending_review' && event.status !== 'draft') {
     return (
-      <Card padding="lg" className="border border-sand">
-        <h3 className="font-medium text-charcoal mb-4">Review Status</h3>
+      <Card padding="lg" className="border border-mist">
+        <h3 className="font-medium text-ink mb-4">Review Status</h3>
         <div className="text-center py-4">
           {event.status === 'published' && (
             <>
-              <CheckCircle className="w-12 h-12 mx-auto mb-2 text-sage" />
-              <p className="text-sage font-medium">Event Published</p>
+              <CheckCircle className="w-12 h-12 mx-auto mb-2 text-emerald" />
+              <p className="text-emerald font-medium">Event Published</p>
               {event.reviewed_at && (
-                <p className="text-sm text-stone mt-1">
+                <p className="text-sm text-zinc mt-1">
                   Reviewed by {event.reviewed_by}
                 </p>
               )}
@@ -118,7 +118,7 @@ export function EventApprovalForm({ event }: EventApprovalFormProps) {
               <XCircle className="w-12 h-12 mx-auto mb-2 text-red-500" />
               <p className="text-red-500 font-medium">Event Rejected</p>
               {event.rejection_reason && (
-                <p className="text-sm text-stone mt-2 bg-sand/50 p-3 rounded-lg">
+                <p className="text-sm text-zinc mt-2 bg-cloud/50 p-3 rounded-lg">
                   {event.rejection_reason}
                 </p>
               )}
@@ -128,7 +128,7 @@ export function EventApprovalForm({ event }: EventApprovalFormProps) {
 
         {/* Re-review option */}
         {event.status === 'rejected' && (
-          <div className="mt-4 pt-4 border-t border-sand">
+          <div className="mt-4 pt-4 border-t border-mist">
             <Button
               variant="secondary"
               fullWidth
@@ -147,7 +147,7 @@ export function EventApprovalForm({ event }: EventApprovalFormProps) {
 
   return (
     <Card padding="lg" className="border border-coral/30 bg-coral/5">
-      <h3 className="font-medium text-charcoal mb-4">Review This Event</h3>
+      <h3 className="font-medium text-ink mb-4">Review This Event</h3>
 
       {/* Status messages */}
       {error && (
@@ -166,14 +166,14 @@ export function EventApprovalForm({ event }: EventApprovalFormProps) {
 
       {/* Notes field */}
       <div className="mb-4">
-        <label className="block text-sm text-stone mb-1">
+        <label className="block text-sm text-zinc mb-1">
           Admin Notes (optional)
         </label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Add any notes about this review..."
-          className="w-full px-3 py-2 border border-sand rounded-lg text-sm resize-none focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+          className="w-full px-3 py-2 border border-mist rounded-lg text-sm resize-none focus:border-coral focus:ring-1 focus:ring-blue outline-none"
           rows={2}
         />
       </div>
@@ -182,13 +182,13 @@ export function EventApprovalForm({ event }: EventApprovalFormProps) {
       {showRejectForm ? (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-stone mb-1">
+            <label className="block text-sm text-zinc mb-1">
               Reason for Rejection *
             </label>
             <select
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              className="w-full px-3 py-2 border border-sand rounded-lg text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+              className="w-full px-3 py-2 border border-mist rounded-lg text-sm focus:border-coral focus:ring-1 focus:ring-blue outline-none"
             >
               <option value="">Select a reason...</option>
               <option value="duplicate">Duplicate event</option>
@@ -203,14 +203,14 @@ export function EventApprovalForm({ event }: EventApprovalFormProps) {
 
           {rejectReason === 'other' && (
             <div>
-              <label className="block text-sm text-stone mb-1">
+              <label className="block text-sm text-zinc mb-1">
                 Custom Reason *
               </label>
               <textarea
                 value={rejectReason === 'other' ? '' : rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 placeholder="Describe the reason..."
-                className="w-full px-3 py-2 border border-sand rounded-lg text-sm resize-none focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+                className="w-full px-3 py-2 border border-mist rounded-lg text-sm resize-none focus:border-coral focus:ring-1 focus:ring-blue outline-none"
                 rows={2}
               />
             </div>
@@ -258,7 +258,7 @@ export function EventApprovalForm({ event }: EventApprovalFormProps) {
                 <CheckCircle className="w-4 h-4" />
               )
             }
-            className="bg-sage hover:bg-sage/90"
+            className="bg-emerald hover:bg-emerald/90"
           >
             {action === 'approve' ? 'Approving...' : 'Approve & Publish'}
           </Button>
@@ -275,8 +275,8 @@ export function EventApprovalForm({ event }: EventApprovalFormProps) {
       )}
 
       {/* Review tips */}
-      <div className="mt-4 pt-4 border-t border-sand/50">
-        <p className="text-xs text-stone">
+      <div className="mt-4 pt-4 border-t border-mist/50">
+        <p className="text-xs text-zinc">
           <strong>Tip:</strong> Before approving, verify the event details are
           accurate and the content is appropriate for the platform.
         </p>

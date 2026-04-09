@@ -320,7 +320,7 @@ export default async function EventPage({ params }: EventPageProps) {
               style={{ backgroundColor: categoryColor.light }}
             >
               <span
-                className="text-6xl md:text-8xl font-display font-bold opacity-20"
+                className="text-6xl md:text-8xl font-body font-bold opacity-20"
                 style={{ color: categoryColor.accent }}
               >
                 {event.title.charAt(0).toUpperCase()}
@@ -344,7 +344,7 @@ export default async function EventPage({ params }: EventPageProps) {
             </span>
           )}
 
-          <h1 className="font-display text-h1 md:text-display text-charcoal leading-tight">
+          <h1 className="font-body text-h1 md:text-display text-ink leading-tight">
             {event.title}
           </h1>
 
@@ -363,14 +363,14 @@ export default async function EventPage({ params }: EventPageProps) {
 
           {/* Parent group label for child events */}
           {isChildEvent && event.parent_group && (
-            <p className="mt-2 text-sm text-stone">
+            <p className="mt-2 text-sm text-zinc">
               {event.parent_group}
             </p>
           )}
 
           {/* Performer line — from linked entities, or fallback to talent_name */}
           {event.event_performers && event.event_performers.length > 0 ? (
-            <p className="mt-2 text-base md:text-lg text-stone flex items-center gap-2">
+            <p className="mt-2 text-base md:text-lg text-zinc flex items-center gap-2">
               <Mic2 className="w-4 h-4 flex-shrink-0" style={{ color: categoryColor.accent }} />
               <span>
                 ft.{' '}
@@ -379,33 +379,33 @@ export default async function EventPage({ params }: EventPageProps) {
                     {i > 0 && ', '}
                     <Link
                       href={`/performer/${ep.performer.slug}`}
-                      className="font-semibold text-charcoal hover:text-coral transition-colors"
+                      className="font-semibold text-ink hover:text-blue transition-colors"
                     >
                       {ep.performer.name}
                     </Link>
                   </span>
                 ))}
                 {event.event_performers.length > 3 && (
-                  <span className="text-stone"> +{event.event_performers.length - 3} more</span>
+                  <span className="text-zinc"> +{event.event_performers.length - 3} more</span>
                 )}
               </span>
             </p>
           ) : event.talent_name ? (
-            <p className="mt-2 text-base md:text-lg text-stone flex items-center gap-2">
+            <p className="mt-2 text-base md:text-lg text-zinc flex items-center gap-2">
               <Mic2 className="w-4 h-4 flex-shrink-0" style={{ color: categoryColor.accent }} />
-              <span>feat. <span className="font-semibold text-charcoal">{event.talent_name}</span></span>
+              <span>feat. <span className="font-semibold text-ink">{event.talent_name}</span></span>
             </p>
           ) : null}
 
           {/* One-line summary */}
           {event.short_description && (
-            <p className="mt-3 text-lg md:text-xl text-stone leading-relaxed">
+            <p className="mt-3 text-lg md:text-xl text-zinc leading-relaxed">
               {event.short_description}
             </p>
           )}
 
           {/* Prominent date / time / venue line */}
-          <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-base md:text-lg font-medium text-charcoal">
+          <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-base md:text-lg font-medium text-ink">
             <Calendar className="w-5 h-5 flex-shrink-0" style={{ color: categoryColor.accent }} />
             <span>
               {formatDate(event.start_datetime, 'EEEE, MMMM d')}
@@ -420,10 +420,10 @@ export default async function EventPage({ params }: EventPageProps) {
             </span>
             {event.location && (
               <>
-                <span className="text-stone">at</span>
+                <span className="text-zinc">at</span>
                 <Link
                   href={buildVenueUrl(event.location)}
-                  className="underline decoration-1 underline-offset-2 hover:text-coral transition-colors"
+                  className="underline decoration-1 underline-offset-2 hover:text-blue transition-colors"
                 >
                   {event.location.name}
                 </Link>
@@ -461,12 +461,12 @@ export default async function EventPage({ params }: EventPageProps) {
             >
               {/* Price badge */}
               {event.is_free ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-sage text-white">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-emerald text-white">
                   <Ticket className="w-4 h-4" />
                   Free
                 </span>
               ) : (
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-charcoal text-warm-white">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-ink text-pure">
                   <Ticket className="w-4 h-4" />
                   <EventPrice event={event} showDetails />
                 </div>
@@ -474,8 +474,8 @@ export default async function EventPage({ params }: EventPageProps) {
 
               {/* Age / audience */}
               {(event.age_restriction || event.is_family_friendly || event.age_low != null || event.age_high != null) && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-warm-white text-charcoal border border-sand">
-                  <Baby className="w-4 h-4 text-stone" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-pure text-ink border border-mist">
+                  <Baby className="w-4 h-4 text-zinc" />
                   {(() => {
                     const parts: string[] = [];
                     const ageRange = formatAgeRange(event.age_low, event.age_high);
@@ -514,11 +514,11 @@ export default async function EventPage({ params }: EventPageProps) {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles className="w-5 h-5" style={{ color: categoryColor.accent }} />
-                  <h2 className="font-display text-h4 text-charcoal">
+                  <h2 className="font-body text-h4 text-ink">
                     Happenlist Highlights
                   </h2>
                 </div>
-                <div className="prose-event text-charcoal/90 leading-relaxed">
+                <div className="prose-event text-ink/90 leading-relaxed">
                   {event.happenlist_summary}
                 </div>
               </div>
@@ -535,7 +535,7 @@ export default async function EventPage({ params }: EventPageProps) {
               >
                 <div className="flex items-center gap-2 mb-4">
                   <Mic2 className="w-5 h-5" style={{ color: categoryColor.accent }} />
-                  <h2 className="font-display text-h4 text-charcoal">
+                  <h2 className="font-body text-h4 text-ink">
                     {event.event_performers.length === 1 ? 'Featured Artist' : 'Lineup'}
                   </h2>
                 </div>
@@ -578,7 +578,7 @@ export default async function EventPage({ params }: EventPageProps) {
                           <div className="flex items-center gap-2 flex-wrap">
                             <Link
                               href={`/performer/${ep.performer.slug}`}
-                              className={`font-semibold text-charcoal hover:text-coral transition-colors ${
+                              className={`font-semibold text-ink hover:text-blue transition-colors ${
                                 isHeadliner ? 'text-lg' : 'text-base'
                               }`}
                             >
@@ -595,10 +595,10 @@ export default async function EventPage({ params }: EventPageProps) {
                             </span>
                           </div>
                           {ep.performer.genre && (
-                            <p className="text-xs text-stone mt-0.5">{ep.performer.genre}</p>
+                            <p className="text-xs text-zinc mt-0.5">{ep.performer.genre}</p>
                           )}
                           {isHeadliner && ep.performer.bio && (
-                            <p className="text-sm text-charcoal/80 mt-1 leading-relaxed line-clamp-3">
+                            <p className="text-sm text-ink/80 mt-1 leading-relaxed line-clamp-3">
                               {ep.performer.bio}
                             </p>
                           )}
@@ -619,11 +619,11 @@ export default async function EventPage({ params }: EventPageProps) {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <Mic2 className="w-5 h-5" style={{ color: categoryColor.accent }} />
-                  <h2 className="font-display text-h4 text-charcoal">
+                  <h2 className="font-body text-h4 text-ink">
                     Featured: {event.talent_name}
                   </h2>
                 </div>
-                <p className="text-charcoal/80 leading-relaxed">
+                <p className="text-ink/80 leading-relaxed">
                   {event.talent_bio}
                 </p>
               </div>
@@ -634,7 +634,7 @@ export default async function EventPage({ params }: EventPageProps) {
               <div className="p-6 rounded-xl border border-amber-200 bg-amber-50/50">
                 <div className="flex items-center gap-2 mb-4">
                   <CreditCard className="w-5 h-5 text-amber-700" />
-                  <h2 className="font-display text-h4 text-charcoal">
+                  <h2 className="font-body text-h4 text-ink">
                     Member Benefits
                   </h2>
                 </div>
@@ -666,7 +666,7 @@ export default async function EventPage({ params }: EventPageProps) {
                           <div className="flex items-center gap-2 flex-wrap">
                             <Link
                               href={`/membership/${emb.membership_organization.slug}`}
-                              className="font-medium text-charcoal hover:text-coral transition-colors text-sm"
+                              className="font-medium text-ink hover:text-blue transition-colors text-sm"
                             >
                               {emb.membership_organization.name}
                             </Link>
@@ -677,7 +677,7 @@ export default async function EventPage({ params }: EventPageProps) {
                             </span>
                           </div>
                           {emb.benefit_details && (
-                            <p className="text-xs text-stone mt-1">{emb.benefit_details}</p>
+                            <p className="text-xs text-zinc mt-1">{emb.benefit_details}</p>
                           )}
                         </div>
                       </div>
@@ -693,10 +693,10 @@ export default async function EventPage({ params }: EventPageProps) {
             {/* About This Event (editorial description) */}
             {event.description && (
               <div>
-                <h2 className="font-display text-h4 text-charcoal mb-3">
+                <h2 className="font-body text-h4 text-ink mb-3">
                   About This Event
                 </h2>
-                <div className="prose-event text-charcoal/85 leading-relaxed whitespace-pre-wrap">
+                <div className="prose-event text-ink/85 leading-relaxed whitespace-pre-wrap">
                   {event.description}
                 </div>
               </div>
@@ -704,14 +704,14 @@ export default async function EventPage({ params }: EventPageProps) {
 
             {/* Organizer Description (Verbatim) */}
             {event.organizer_description && (
-              <div className="p-6 bg-warm-white rounded-xl border border-sand">
+              <div className="p-6 bg-pure rounded-xl border border-mist">
                 <div className="flex items-center gap-2 mb-3">
-                  <Quote className="w-5 h-5 text-stone" />
-                  <h2 className="font-display text-h4 text-charcoal">
+                  <Quote className="w-5 h-5 text-zinc" />
+                  <h2 className="font-body text-h4 text-ink">
                     From the Organizer
                   </h2>
                 </div>
-                <div className="prose-event whitespace-pre-wrap text-charcoal/80 italic leading-relaxed">
+                <div className="prose-event whitespace-pre-wrap text-ink/80 italic leading-relaxed">
                   {event.organizer_description}
                 </div>
               </div>
@@ -719,29 +719,29 @@ export default async function EventPage({ params }: EventPageProps) {
 
             {/* Access & Practical Info */}
             {(event.access_type || event.attendance_mode || event.membership_required) && (
-              <div className="p-5 bg-warm-white rounded-xl border border-sand">
+              <div className="p-5 bg-pure rounded-xl border border-mist">
                 <div className="flex items-center gap-2 mb-4">
                   <DoorOpen className="w-5 h-5" style={{ color: categoryColor.accent }} />
-                  <h2 className="font-display text-h4 text-charcoal">
+                  <h2 className="font-body text-h4 text-ink">
                     How to Attend
                   </h2>
                 </div>
                 <div className="space-y-3">
                   {event.access_type && (
                     <div className="flex items-start gap-3">
-                      <Shield className="w-4 h-4 mt-0.5 text-stone" />
+                      <Shield className="w-4 h-4 mt-0.5 text-zinc" />
                       <div>
                         <AccessBadge accessType={event.access_type} isFree={event.is_free} />
                         {event.access_type === 'ticketed' && event.ticket_url && (
-                          <p className="text-xs text-stone mt-1">Tickets available online</p>
+                          <p className="text-xs text-zinc mt-1">Tickets available online</p>
                         )}
                       </div>
                     </div>
                   )}
                   {event.attendance_mode && (
                     <div className="flex items-start gap-3">
-                      <Users className="w-4 h-4 mt-0.5 text-stone" />
-                      <p className="text-sm text-charcoal">
+                      <Users className="w-4 h-4 mt-0.5 text-zinc" />
+                      <p className="text-sm text-ink">
                         {event.attendance_mode === 'drop_in' && 'Drop in anytime — no commitment needed'}
                         {event.attendance_mode === 'registered' && 'Registration required — must sign up'}
                         {event.attendance_mode === 'hybrid' && 'Drop-in or register — either works'}
@@ -750,8 +750,8 @@ export default async function EventPage({ params }: EventPageProps) {
                   )}
                   {event.membership_required && event.membership_details && (
                     <div className="flex items-start gap-3">
-                      <Shield className="w-4 h-4 mt-0.5 text-stone" />
-                      <p className="text-sm text-charcoal">{event.membership_details}</p>
+                      <Shield className="w-4 h-4 mt-0.5 text-zinc" />
+                      <p className="text-sm text-ink">{event.membership_details}</p>
                     </div>
                   )}
                 </div>
@@ -763,12 +763,12 @@ export default async function EventPage({ params }: EventPageProps) {
 
             {/* Price Details Section */}
             {event.price_details && (
-              <div className="p-5 bg-sage/10 rounded-xl border border-sage/30">
-                <h3 className="font-display text-h4 text-charcoal mb-2 flex items-center gap-2">
-                  <Ticket className="w-5 h-5 text-sage" />
+              <div className="p-5 bg-emerald/10 rounded-xl border border-sage/30">
+                <h3 className="font-body text-h4 text-ink mb-2 flex items-center gap-2">
+                  <Ticket className="w-5 h-5 text-emerald" />
                   Pricing Details
                 </h3>
-                <p className="text-charcoal/80 leading-relaxed">
+                <p className="text-ink/80 leading-relaxed">
                   {event.price_details}
                 </p>
               </div>
@@ -862,7 +862,7 @@ export default async function EventPage({ params }: EventPageProps) {
                   initialHearted={isHearted}
                   initialCount={event.heart_count ?? 0}
                   size="lg"
-                  className="flex-1 bg-warm-white border border-sand hover:border-coral/30 !rounded-full"
+                  className="flex-1 bg-pure border border-mist hover:border-blue/30 !rounded-full"
                 />
                 <ShareButton
                   title={event.title}
@@ -887,7 +887,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 <div className="flex items-start gap-3 mb-4">
                   <Calendar className="w-5 h-5 mt-0.5" style={{ color: categoryColor.accent }} />
                   <div>
-                    <p className="font-semibold text-charcoal">
+                    <p className="font-semibold text-ink">
                       {formatEventDate(event.start_datetime, { format: 'long', includeTime: false })}
                     </p>
                   </div>
@@ -912,12 +912,12 @@ export default async function EventPage({ params }: EventPageProps) {
                     <div>
                       <Link
                         href={buildVenueUrl(event.location)}
-                        className="font-medium text-charcoal hover:text-coral transition-colors"
+                        className="font-medium text-ink hover:text-blue transition-colors"
                       >
                         {event.location.name}
                       </Link>
                       {fullAddress && (
-                        <p className="text-body-sm text-stone mt-0.5">{fullAddress}</p>
+                        <p className="text-body-sm text-zinc mt-0.5">{fullAddress}</p>
                       )}
                     </div>
                   </div>
@@ -937,13 +937,13 @@ export default async function EventPage({ params }: EventPageProps) {
                       {(() => {
                         const ageRange = formatAgeRange(event.age_low, event.age_high);
                         return ageRange ? (
-                          <p className="font-medium text-charcoal">{ageRange}</p>
+                          <p className="font-medium text-ink">{ageRange}</p>
                         ) : event.age_restriction ? (
-                          <p className="font-medium text-charcoal">{event.age_restriction}</p>
+                          <p className="font-medium text-ink">{event.age_restriction}</p>
                         ) : null;
                       })()}
                       {event.is_family_friendly && (
-                        <p className="text-body-sm text-sage flex items-center gap-1 mt-0.5">
+                        <p className="text-body-sm text-emerald flex items-center gap-1 mt-0.5">
                           <Users className="w-3.5 h-3.5" />
                           Family Friendly
                         </p>
@@ -955,15 +955,15 @@ export default async function EventPage({ params }: EventPageProps) {
 
               {/* Organizer card */}
               {event.organizer && !event.organizer_is_venue && (
-                <div className="p-4 bg-warm-white rounded-xl border border-sand">
-                  <h3 className="text-body-sm font-medium text-stone uppercase tracking-wide mb-3">
+                <div className="p-4 bg-pure rounded-xl border border-mist">
+                  <h3 className="text-body-sm font-medium text-zinc uppercase tracking-wide mb-3">
                     Presented By
                   </h3>
                   <Link
                     href={buildOrganizerUrl(event.organizer)}
                     className="flex items-center gap-3 group"
                   >
-                    <div className="w-10 h-10 rounded-full bg-sand flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-cloud flex items-center justify-center overflow-hidden flex-shrink-0">
                       {event.organizer.logo_url ? (
                         <Image
                           src={event.organizer.logo_url}
@@ -973,14 +973,14 @@ export default async function EventPage({ params }: EventPageProps) {
                           className="object-cover"
                         />
                       ) : (
-                        <User className="w-5 h-5 text-stone" />
+                        <User className="w-5 h-5 text-zinc" />
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-medium text-charcoal group-hover:text-coral transition-colors truncate">
+                      <p className="font-medium text-ink group-hover:text-blue transition-colors truncate">
                         {event.organizer.name}
                       </p>
-                      <p className="text-xs text-stone">View all events</p>
+                      <p className="text-xs text-zinc">View all events</p>
                     </div>
                   </Link>
                 </div>
@@ -988,8 +988,8 @@ export default async function EventPage({ params }: EventPageProps) {
 
               {/* External Links */}
               {(event.website_url || event.instagram_url || event.facebook_url || event.registration_url) && (
-                <div className="p-4 bg-warm-white rounded-xl border border-sand">
-                  <h3 className="text-body-sm font-medium text-stone uppercase tracking-wide mb-3">
+                <div className="p-4 bg-pure rounded-xl border border-mist">
+                  <h3 className="text-body-sm font-medium text-zinc uppercase tracking-wide mb-3">
                     Links & More
                   </h3>
                   <EventLinks

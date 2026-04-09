@@ -110,7 +110,7 @@ export default async function PerformerPage({ params }: PerformerPageProps) {
                   {performer.genre}
                 </span>
               )}
-              <h1 className="font-display text-h1 text-charcoal">
+              <h1 className="font-body text-h1 text-ink">
                 {performer.name}
               </h1>
             </div>
@@ -119,7 +119,7 @@ export default async function PerformerPage({ params }: PerformerPageProps) {
           {/* Bio */}
           {performer.bio && (
             <div className="mb-8">
-              <h2 className="font-display text-h3 text-charcoal mb-4">
+              <h2 className="font-body text-h3 text-ink mb-4">
                 About
               </h2>
               <div className="prose-event whitespace-pre-wrap">
@@ -134,19 +134,19 @@ export default async function PerformerPage({ params }: PerformerPageProps) {
           <div className="sticky top-24 space-y-6">
             {/* Links card */}
             {performer.website_url && (
-              <div className="p-6 bg-warm-white rounded-lg border border-sand">
-                <h3 className="font-display text-h4 text-charcoal mb-4">
+              <div className="p-6 bg-pure rounded-lg border border-mist">
+                <h3 className="font-body text-h4 text-ink mb-4">
                   Links
                 </h3>
                 <div className="flex items-start gap-3 mb-4">
-                  <Globe className="w-5 h-5 text-coral mt-0.5" />
+                  <Globe className="w-5 h-5 text-blue mt-0.5" />
                   <div>
-                    <p className="font-medium text-charcoal">Website</p>
+                    <p className="font-medium text-ink">Website</p>
                     <a
                       href={performer.website_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-body-sm text-coral hover:text-coral-dark transition-colors"
+                      className="text-body-sm text-blue hover:text-orange-dark transition-colors"
                     >
                       Visit website
                     </a>
@@ -164,10 +164,10 @@ export default async function PerformerPage({ params }: PerformerPageProps) {
             )}
 
             {/* Stats card */}
-            <div className="p-6 bg-warm-white rounded-lg border border-sand">
+            <div className="p-6 bg-pure rounded-lg border border-mist">
               <div className="text-center">
-                <p className="font-display text-h2 text-coral">{upcoming.length}</p>
-                <p className="text-body-sm text-stone">
+                <p className="font-body text-h2 text-blue">{upcoming.length}</p>
+                <p className="text-body-sm text-zinc">
                   {upcoming.length === 1 ? 'Upcoming Event' : 'Upcoming Events'}
                 </p>
               </div>
@@ -195,11 +195,11 @@ export default async function PerformerPage({ params }: PerformerPageProps) {
         <section>
           <details className="group">
             <summary className="flex items-center gap-2 cursor-pointer mb-6 list-none">
-              <h2 className="font-display text-h3 text-charcoal">
+              <h2 className="font-body text-h3 text-ink">
                 Past Events
               </h2>
-              <span className="text-body-sm text-stone">({past.length})</span>
-              <ChevronDown className="w-5 h-5 text-stone transition-transform group-open:rotate-180" />
+              <span className="text-body-sm text-zinc">({past.length})</span>
+              <ChevronDown className="w-5 h-5 text-zinc transition-transform group-open:rotate-180" />
             </summary>
             <EventGrid events={past} columns={4} />
           </details>

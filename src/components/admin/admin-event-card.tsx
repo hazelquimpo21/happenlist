@@ -74,9 +74,9 @@ export function AdminEventCard({
   return (
     <div
       className={cn(
-        'bg-warm-white border rounded-lg overflow-hidden',
+        'bg-pure border rounded-lg overflow-hidden',
         'transition-all duration-200',
-        selected ? 'border-coral ring-2 ring-coral/20' : 'border-sand hover:border-stone'
+        selected ? 'border-coral ring-2 ring-blue/20' : 'border-mist hover:border-stone'
       )}
     >
       <div className="flex gap-4 p-4">
@@ -87,13 +87,13 @@ export function AdminEventCard({
               type="checkbox"
               checked={selected}
               onChange={(e) => onSelect(event.id, e.target.checked)}
-              className="w-5 h-5 rounded border-sand text-coral focus:ring-coral"
+              className="w-5 h-5 rounded border-mist text-blue focus:ring-blue"
             />
           </div>
         )}
 
         {/* Event image */}
-        <div className="flex-shrink-0 w-32 h-24 rounded-lg overflow-hidden bg-sand relative">
+        <div className="flex-shrink-0 w-32 h-24 rounded-lg overflow-hidden bg-cloud relative">
           {(() => {
             const validImageUrl = getBestImageUrl(event.thumbnail_url, event.image_url);
             return validImageUrl ? (
@@ -106,7 +106,7 @@ export function AdminEventCard({
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-sand to-stone/20">
-                <Calendar className="w-8 h-8 text-stone/50" />
+                <Calendar className="w-8 h-8 text-zinc/50" />
               </div>
             );
           })()}
@@ -119,13 +119,13 @@ export function AdminEventCard({
               {/* Title */}
               <Link
                 href={`/admin/events/${event.id}`}
-                className="font-display text-lg text-charcoal hover:text-coral transition-colors line-clamp-1"
+                className="font-body text-lg text-ink hover:text-blue transition-colors line-clamp-1"
               >
                 {event.title}
               </Link>
 
               {/* Meta row */}
-              <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-stone">
+              <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-zinc">
                 <span className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
                   {eventDate} at {eventTime}
@@ -180,7 +180,7 @@ export function AdminEventCard({
                 )}
 
                 {scrapedDate && (
-                  <span className="text-xs text-stone">
+                  <span className="text-xs text-zinc">
                     Scraped: {scrapedDate}
                   </span>
                 )}
@@ -191,7 +191,7 @@ export function AdminEventCard({
             <div className="flex items-center gap-2 flex-shrink-0">
               <Link
                 href={`/admin/events/${event.id}`}
-                className="p-2 text-stone hover:text-charcoal hover:bg-sand rounded-lg transition-colors"
+                className="p-2 text-zinc hover:text-ink hover:bg-cloud rounded-lg transition-colors"
                 title="View details"
               >
                 <Eye className="w-5 h-5" />
@@ -202,7 +202,7 @@ export function AdminEventCard({
                   href={event.source_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 text-stone hover:text-charcoal hover:bg-sand rounded-lg transition-colors"
+                  className="p-2 text-zinc hover:text-ink hover:bg-cloud rounded-lg transition-colors"
                   title="View original source"
                 >
                   <ExternalLink className="w-5 h-5" />
@@ -214,7 +214,7 @@ export function AdminEventCard({
                   {onApprove && (
                     <button
                       onClick={() => onApprove(event.id)}
-                      className="p-2 text-sage hover:text-white hover:bg-sage rounded-lg transition-colors"
+                      className="p-2 text-emerald hover:text-white hover:bg-emerald rounded-lg transition-colors"
                       title="Approve"
                     >
                       <CheckCircle className="w-5 h-5" />
@@ -244,15 +244,15 @@ export function AdminEventCard({
  */
 export function AdminEventCardSkeleton() {
   return (
-    <div className="bg-warm-white border border-sand rounded-lg p-4 animate-pulse">
+    <div className="bg-pure border border-mist rounded-lg p-4 animate-pulse">
       <div className="flex gap-4">
-        <div className="w-32 h-24 bg-sand rounded-lg" />
+        <div className="w-32 h-24 bg-cloud rounded-lg" />
         <div className="flex-1 space-y-3">
-          <div className="h-5 bg-sand rounded w-2/3" />
-          <div className="h-4 bg-sand rounded w-1/2" />
+          <div className="h-5 bg-cloud rounded w-2/3" />
+          <div className="h-4 bg-cloud rounded w-1/2" />
           <div className="flex gap-2">
-            <div className="h-5 bg-sand rounded-full w-16" />
-            <div className="h-5 bg-sand rounded-full w-20" />
+            <div className="h-5 bg-cloud rounded-full w-16" />
+            <div className="h-5 bg-cloud rounded-full w-20" />
           </div>
         </div>
       </div>

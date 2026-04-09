@@ -142,22 +142,22 @@ export default async function AdminDashboardPage() {
         {/* Two column layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Pending Events Preview */}
-          <Card padding="lg" className="border border-sand">
+          <Card padding="lg" className="border border-mist">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-xl text-charcoal">
+              <h2 className="font-body text-xl text-ink">
                 Pending Review
               </h2>
               <Link
                 href="/admin/events/pending"
-                className="text-coral text-sm hover:underline flex items-center gap-1"
+                className="text-blue text-sm hover:underline flex items-center gap-1"
               >
                 View all <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
 
             {pendingEvents.events.length === 0 ? (
-              <div className="py-8 text-center text-stone">
-                <CheckCircle className="w-12 h-12 mx-auto mb-2 text-sage" />
+              <div className="py-8 text-center text-zinc">
+                <CheckCircle className="w-12 h-12 mx-auto mb-2 text-emerald" />
                 <p>All caught up! No events pending review.</p>
               </div>
             ) : (
@@ -166,14 +166,14 @@ export default async function AdminDashboardPage() {
                   <Link
                     key={event.id}
                     href={`/admin/events/${event.id}`}
-                    className="block p-3 rounded-lg hover:bg-sand/50 transition-colors group"
+                    className="block p-3 rounded-lg hover:bg-cloud/50 transition-colors group"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
-                        <p className="font-medium text-charcoal group-hover:text-coral transition-colors line-clamp-1">
+                        <p className="font-medium text-ink group-hover:text-blue transition-colors line-clamp-1">
                           {event.title}
                         </p>
-                        <p className="text-sm text-stone mt-0.5">
+                        <p className="text-sm text-zinc mt-0.5">
                           {format(new Date(event.start_datetime), 'MMM d, yyyy')}
                           {event.location_name && ` • ${event.location_name}`}
                         </p>
@@ -188,7 +188,7 @@ export default async function AdminDashboardPage() {
             )}
 
             {pendingEvents.total > 5 && (
-              <div className="mt-4 pt-4 border-t border-sand">
+              <div className="mt-4 pt-4 border-t border-mist">
                 <Button href="/admin/events/pending" variant="secondary" fullWidth>
                   View all {pendingEvents.total} pending events
                 </Button>
@@ -197,22 +197,22 @@ export default async function AdminDashboardPage() {
           </Card>
 
           {/* Recent Activity */}
-          <Card padding="lg" className="border border-sand">
+          <Card padding="lg" className="border border-mist">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-xl text-charcoal">
+              <h2 className="font-body text-xl text-ink">
                 Recent Activity
               </h2>
               <Link
                 href="/admin/activity"
-                className="text-coral text-sm hover:underline flex items-center gap-1"
+                className="text-blue text-sm hover:underline flex items-center gap-1"
               >
                 View all <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
 
             {recentActivity.length === 0 ? (
-              <div className="py-8 text-center text-stone">
-                <FileText className="w-12 h-12 mx-auto mb-2 text-stone/50" />
+              <div className="py-8 text-center text-zinc">
+                <FileText className="w-12 h-12 mx-auto mb-2 text-zinc/50" />
                 <p>No recent activity yet.</p>
               </div>
             ) : (
@@ -220,15 +220,15 @@ export default async function AdminDashboardPage() {
                 {recentActivity.map((activity) => (
                   <div
                     key={activity.id}
-                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-sand/50 transition-colors"
+                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-cloud/50 transition-colors"
                   >
                     <div
                       className={`p-2 rounded-lg flex-shrink-0 ${
                         activity.action.includes('approved')
-                          ? 'bg-sage/10 text-sage'
+                          ? 'bg-emerald/10 text-emerald'
                           : activity.action.includes('rejected')
                           ? 'bg-red-100 text-red-500'
-                          : 'bg-sand text-stone'
+                          : 'bg-cloud text-zinc'
                       }`}
                     >
                       {activity.action.includes('approved') && (
@@ -242,13 +242,13 @@ export default async function AdminDashboardPage() {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm text-charcoal">
+                      <p className="text-sm text-ink">
                         <span className="font-medium">
                           {activity.admin_email || 'Admin'}
                         </span>{' '}
                         {activity.action.replace('_', ' ')}
                       </p>
-                      <p className="text-xs text-stone mt-0.5">
+                      <p className="text-xs text-zinc mt-0.5">
                         {format(new Date(activity.created_at), 'MMM d, h:mm a')}
                       </p>
                     </div>
@@ -260,34 +260,34 @@ export default async function AdminDashboardPage() {
         </div>
 
         {/* Quick Stats Summary */}
-        <Card padding="lg" className="border border-sand">
-          <h2 className="font-display text-xl text-charcoal mb-4">
+        <Card padding="lg" className="border border-mist">
+          <h2 className="font-body text-xl text-ink mb-4">
             Scraped Events Summary
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div>
-              <p className="text-2xl font-display font-semibold text-charcoal">
+              <p className="text-2xl font-body font-semibold text-ink">
                 {stats.scrapedCount}
               </p>
-              <p className="text-sm text-stone">Total scraped</p>
+              <p className="text-sm text-zinc">Total scraped</p>
             </div>
             <div>
-              <p className="text-2xl font-display font-semibold text-coral">
+              <p className="text-2xl font-body font-semibold text-blue">
                 {stats.scrapedPendingCount}
               </p>
-              <p className="text-sm text-stone">Awaiting review</p>
+              <p className="text-sm text-zinc">Awaiting review</p>
             </div>
             <div>
-              <p className="text-2xl font-display font-semibold text-sage">
+              <p className="text-2xl font-body font-semibold text-emerald">
                 {stats.scrapedLast24h}
               </p>
-              <p className="text-sm text-stone">Scraped (24h)</p>
+              <p className="text-sm text-zinc">Scraped (24h)</p>
             </div>
             <div>
-              <p className="text-2xl font-display font-semibold text-charcoal">
+              <p className="text-2xl font-body font-semibold text-ink">
                 {stats.reviewedLast24h}
               </p>
-              <p className="text-sm text-stone">Reviewed (24h)</p>
+              <p className="text-sm text-zinc">Reviewed (24h)</p>
             </div>
           </div>
         </Card>

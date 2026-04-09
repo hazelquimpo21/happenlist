@@ -49,7 +49,7 @@ export function SeriesEventsList({
   if (events.length === 0) {
     return (
       <div className={cn('text-center py-8', className)}>
-        <p className="text-stone">No upcoming sessions</p>
+        <p className="text-zinc">No upcoming sessions</p>
       </div>
     );
   }
@@ -63,7 +63,7 @@ export function SeriesEventsList({
   return (
     <section className={className}>
       {title && (
-        <h2 className="font-display text-h2 text-charcoal mb-6">{title}</h2>
+        <h2 className="font-body text-h2 text-ink mb-6">{title}</h2>
       )}
 
       {/* Upcoming events */}
@@ -83,7 +83,7 @@ export function SeriesEventsList({
       {/* Past events (if shown) */}
       {showPast && past.length > 0 && (
         <div className="mt-8">
-          <h3 className="text-body-sm text-stone uppercase tracking-wide mb-4">
+          <h3 className="text-body-sm text-zinc uppercase tracking-wide mb-4">
             Past Sessions ({past.length})
           </h3>
           <div className="space-y-3 opacity-60">
@@ -125,8 +125,8 @@ function SeriesEventItem({ event, index, isUpcoming }: SeriesEventItemProps) {
   return (
     <Card
       className={cn(
-        'p-4 hover:border-coral/50 transition-colors',
-        !isUpcoming && 'bg-cream'
+        'p-4 hover:border-blue/30 transition-colors',
+        !isUpcoming && 'bg-white'
       )}
     >
       <Link href={eventUrl} className="flex items-start gap-4">
@@ -135,8 +135,8 @@ function SeriesEventItem({ event, index, isUpcoming }: SeriesEventItemProps) {
           className={cn(
             'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0',
             isUpcoming
-              ? 'bg-coral text-warm-white'
-              : 'bg-sand text-stone'
+              ? 'bg-blue text-pure'
+              : 'bg-cloud text-zinc'
           )}
         >
           {!isUpcoming ? (
@@ -149,7 +149,7 @@ function SeriesEventItem({ event, index, isUpcoming }: SeriesEventItemProps) {
         {/* Content */}
         <div className="flex-1 min-w-0">
           {/* Date */}
-          <p className="text-body-sm text-stone flex items-center gap-1.5 mb-1">
+          <p className="text-body-sm text-zinc flex items-center gap-1.5 mb-1">
             <Calendar className="w-3.5 h-3.5" />
             {formatEventDate(event.start_datetime, {
               format: 'long',
@@ -158,13 +158,13 @@ function SeriesEventItem({ event, index, isUpcoming }: SeriesEventItemProps) {
           </p>
 
           {/* Title */}
-          <h3 className="text-body font-medium text-charcoal mb-1 line-clamp-1">
+          <h3 className="text-body font-medium text-ink mb-1 line-clamp-1">
             {event.title}
           </h3>
 
           {/* Location (if different from series location) */}
           {event.location_name && (
-            <p className="text-body-sm text-stone flex items-center gap-1.5">
+            <p className="text-body-sm text-zinc flex items-center gap-1.5">
               <MapPin className="w-3.5 h-3.5" />
               <span className="truncate">{event.location_name}</span>
             </p>
@@ -223,7 +223,7 @@ export function SeriesEventsCompact({
       {events.map((event) => (
         <div
           key={event.id}
-          className="flex items-center gap-2 text-body-sm text-stone"
+          className="flex items-center gap-2 text-body-sm text-zinc"
         >
           <Clock className="w-3.5 h-3.5 flex-shrink-0" />
           <span className="truncate">
@@ -238,7 +238,7 @@ export function SeriesEventsCompact({
       {remaining > 0 && seriesSlug && (
         <Link
           href={`/series/${seriesSlug}`}
-          className="text-body-sm text-coral hover:underline"
+          className="text-body-sm text-blue hover:underline"
         >
           +{remaining} more sessions
         </Link>

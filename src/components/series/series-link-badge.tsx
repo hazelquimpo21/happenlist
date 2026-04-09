@@ -88,8 +88,8 @@ export function SeriesLinkBadge({
       onClick={(e) => e.stopPropagation()}
       className={cn(
         'inline-flex items-center rounded-full font-medium',
-        'bg-sage/10 text-sage border border-sage/20',
-        'hover:bg-sage/20 hover:border-sage/30 transition-colors',
+        'bg-emerald/10 text-emerald border border-sage/20',
+        'hover:bg-emerald/20 hover:border-sage/30 transition-colors',
         sizeClasses[size],
         className
       )}
@@ -135,7 +135,7 @@ export function SeriesIndicator({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 text-sage text-xs',
+        'inline-flex items-center gap-1 text-emerald text-xs',
         className
       )}
       title={`Part of a ${typeInfo.label.toLowerCase()}`}

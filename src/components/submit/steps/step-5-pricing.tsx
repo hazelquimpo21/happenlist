@@ -106,8 +106,8 @@ export function Step5Pricing({
 
       {/* ========== Price Type Selection ========== */}
       <div>
-        <label className="block text-sm font-medium text-charcoal mb-3">
-          Ticket Type <span className="text-coral">*</span>
+        <label className="block text-sm font-medium text-ink mb-3">
+          Ticket Type <span className="text-blue">*</span>
         </label>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {priceOptions.map(({ type, icon, description }) => {
@@ -127,27 +127,27 @@ export function Step5Pricing({
                 }}
                 className={cn(
                   'flex flex-col items-center p-4 rounded-lg border text-center transition-all',
-                  'hover:border-coral hover:bg-coral/5',
+                  'hover:border-blue hover:bg-blue/5',
                   isSelected
-                    ? 'border-coral bg-coral/10'
-                    : 'border-sand bg-warm-white'
+                    ? 'border-blue bg-blue/10'
+                    : 'border-mist bg-pure'
                 )}
               >
                 <div
                   className={cn(
                     'p-2 rounded-lg mb-2',
-                    isSelected ? 'bg-coral text-white' : 'bg-sand text-stone'
+                    isSelected ? 'bg-blue text-white' : 'bg-cloud text-zinc'
                   )}
                 >
                   {icon}
                 </div>
                 <p className={cn(
                   'font-medium',
-                  isSelected ? 'text-coral' : 'text-charcoal'
+                  isSelected ? 'text-blue' : 'text-ink'
                 )}>
                   {PRICE_TYPE_LABELS[type]}
                 </p>
-                <p className="text-xs text-stone mt-1">
+                <p className="text-xs text-zinc mt-1">
                   {description}
                 </p>
               </button>
@@ -158,15 +158,15 @@ export function Step5Pricing({
 
       {/* ========== Price Inputs ========== */}
       {draftData.price_type === 'fixed' && (
-        <div className="p-4 bg-cream rounded-lg border border-sand">
+        <div className="p-4 bg-white rounded-lg border border-mist">
           <label
             htmlFor="price"
-            className="block text-sm font-medium text-charcoal mb-1"
+            className="block text-sm font-medium text-ink mb-1"
           >
-            {isSeriesMode ? 'Series Price' : 'Ticket Price'} <span className="text-coral">*</span>
+            {isSeriesMode ? 'Series Price' : 'Ticket Price'} <span className="text-blue">*</span>
           </label>
           <div className="relative w-40">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc">$</span>
             <Input
               id="price"
               type="number"
@@ -183,7 +183,7 @@ export function Step5Pricing({
             />
           </div>
           {isSeriesMode && (
-            <p className="text-xs text-stone mt-1">
+            <p className="text-xs text-zinc mt-1">
               Full series / registration price
             </p>
           )}
@@ -191,17 +191,17 @@ export function Step5Pricing({
       )}
 
       {draftData.price_type === 'range' && (
-        <div className="p-4 bg-cream rounded-lg border border-sand space-y-4">
+        <div className="p-4 bg-white rounded-lg border border-mist space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label
                 htmlFor="price_low"
-                className="block text-sm font-medium text-charcoal mb-1"
+                className="block text-sm font-medium text-ink mb-1"
               >
-                Minimum Price <span className="text-coral">*</span>
+                Minimum Price <span className="text-blue">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc">$</span>
                 <Input
                   id="price_low"
                   type="number"
@@ -221,12 +221,12 @@ export function Step5Pricing({
             <div>
               <label
                 htmlFor="price_high"
-                className="block text-sm font-medium text-charcoal mb-1"
+                className="block text-sm font-medium text-ink mb-1"
               >
-                Maximum Price <span className="text-coral">*</span>
+                Maximum Price <span className="text-blue">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc">$</span>
                 <Input
                   id="price_high"
                   type="number"
@@ -248,15 +248,15 @@ export function Step5Pricing({
       )}
 
       {draftData.price_type === 'donation' && (
-        <div className="p-4 bg-cream rounded-lg border border-sand">
+        <div className="p-4 bg-white rounded-lg border border-mist">
           <label
             htmlFor="suggested_donation"
-            className="block text-sm font-medium text-charcoal mb-1"
+            className="block text-sm font-medium text-ink mb-1"
           >
             Suggested Donation (optional)
           </label>
           <div className="relative w-40">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc">$</span>
             <Input
               id="suggested_donation"
               type="number"
@@ -272,7 +272,7 @@ export function Step5Pricing({
               className="pl-7"
             />
           </div>
-          <p className="text-xs text-stone mt-1">
+          <p className="text-xs text-zinc mt-1">
             Leave blank for &quot;Pay what you can&quot;
           </p>
         </div>
@@ -283,7 +283,7 @@ export function Step5Pricing({
         <div>
           <label
             htmlFor="price_details"
-            className="block text-sm font-medium text-charcoal mb-1"
+            className="block text-sm font-medium text-ink mb-1"
           >
             Price Details (optional)
           </label>
@@ -294,7 +294,7 @@ export function Step5Pricing({
             onChange={(e) => updateData({ price_details: e.target.value })}
             placeholder="e.g., Early bird $15, Door $25, VIP $50"
           />
-          <p className="text-xs text-stone mt-1">
+          <p className="text-xs text-zinc mt-1">
             Add extra details about pricing tiers or discounts
           </p>
         </div>
@@ -306,19 +306,19 @@ export function Step5Pricing({
 
       {/* Per-session / Drop-in price (only for drop_in or hybrid attendance) */}
       {showPerSessionPrice && (
-        <div className="p-4 bg-cream rounded-lg border border-sand">
+        <div className="p-4 bg-white rounded-lg border border-mist">
           <label
             htmlFor="per_session_price"
-            className="block text-sm font-medium text-charcoal mb-1 flex items-center"
+            className="block text-sm font-medium text-ink mb-1 flex items-center"
           >
             <DollarSign className="w-4 h-4 mr-1.5" />
             Drop-in / Per-Session Price
           </label>
-          <p className="text-xs text-stone mb-2">
+          <p className="text-xs text-zinc mb-2">
             Price for attending a single session without full registration
           </p>
           <div className="relative w-40">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc">$</span>
             <Input
               id="per_session_price"
               type="number"
@@ -339,19 +339,19 @@ export function Step5Pricing({
 
       {/* Materials fee (for any new series) */}
       {showMaterialsFee && (
-        <div className="p-4 bg-cream rounded-lg border border-sand">
+        <div className="p-4 bg-white rounded-lg border border-mist">
           <label
             htmlFor="materials_fee"
-            className="block text-sm font-medium text-charcoal mb-1 flex items-center"
+            className="block text-sm font-medium text-ink mb-1 flex items-center"
           >
             <Package className="w-4 h-4 mr-1.5" />
             Materials / Supply Fee (optional)
           </label>
-          <p className="text-xs text-stone mb-2">
+          <p className="text-xs text-zinc mb-2">
             Separate fee for supplies, materials, or equipment
           </p>
           <div className="relative w-40">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc">$</span>
             <Input
               id="materials_fee"
               type="number"
@@ -375,7 +375,7 @@ export function Step5Pricing({
         <div>
           <label
             htmlFor="pricing_notes"
-            className="block text-sm font-medium text-charcoal mb-1 flex items-center"
+            className="block text-sm font-medium text-ink mb-1 flex items-center"
           >
             <FileText className="w-4 h-4 mr-1.5" />
             Pricing Notes (optional)
@@ -387,7 +387,7 @@ export function Step5Pricing({
             onChange={(e) => mergeSeriesData({ pricing_notes: e.target.value })}
             placeholder="e.g., Early bird: $180 before May 1. Sibling discount: 10%."
           />
-          <p className="text-xs text-stone mt-1">
+          <p className="text-xs text-zinc mt-1">
             Early bird rates, sibling discounts, scholarship info, etc.
           </p>
         </div>
@@ -397,7 +397,7 @@ export function Step5Pricing({
       <div>
         <label
           htmlFor="ticket_url"
-          className="block text-sm font-medium text-charcoal mb-1"
+          className="block text-sm font-medium text-ink mb-1"
         >
           <span className="flex items-center">
             <Ticket className="w-4 h-4 mr-1" />
@@ -411,7 +411,7 @@ export function Step5Pricing({
           onChange={(e) => updateData({ ticket_url: e.target.value })}
           placeholder="https://tickets.example.com/my-event"
         />
-        <p className="text-xs text-stone mt-1">
+        <p className="text-xs text-zinc mt-1">
           Where can people buy tickets? (e.g., Eventbrite, Ticketmaster)
         </p>
       </div>
@@ -420,7 +420,7 @@ export function Step5Pricing({
       <div>
         <label
           htmlFor="registration_url"
-          className="block text-sm font-medium text-charcoal mb-1"
+          className="block text-sm font-medium text-ink mb-1"
         >
           <span className="flex items-center">
             <ClipboardList className="w-4 h-4 mr-1" />
@@ -434,7 +434,7 @@ export function Step5Pricing({
           onChange={(e) => updateData({ registration_url: e.target.value })}
           placeholder="https://rsvp.example.com/my-event"
         />
-        <p className="text-xs text-stone mt-1">
+        <p className="text-xs text-zinc mt-1">
           {draftData.price_type === 'free'
             ? 'Free events often need RSVP — add the link here!'
             : 'For events that require registration separate from ticket purchase'}
@@ -442,12 +442,12 @@ export function Step5Pricing({
       </div>
 
       {/* ========== External Links Section ========== */}
-      <div className="p-4 bg-cream rounded-lg border border-sand">
-        <p className="text-sm font-medium text-charcoal mb-3 flex items-center">
-          <Globe className="w-4 h-4 mr-2 text-coral" />
+      <div className="p-4 bg-white rounded-lg border border-mist">
+        <p className="text-sm font-medium text-ink mb-3 flex items-center">
+          <Globe className="w-4 h-4 mr-2 text-blue" />
           Event Links (optional)
         </p>
-        <p className="text-xs text-stone mb-4">
+        <p className="text-xs text-zinc mb-4">
           Help attendees find more info about your event
         </p>
         <div className="space-y-4">
@@ -455,9 +455,9 @@ export function Step5Pricing({
           <div>
             <label
               htmlFor="website_url"
-              className="block text-sm text-charcoal mb-1 flex items-center"
+              className="block text-sm text-ink mb-1 flex items-center"
             >
-              <Globe className="w-4 h-4 mr-1.5 text-coral" />
+              <Globe className="w-4 h-4 mr-1.5 text-blue" />
               Event Website
             </label>
             <Input
@@ -473,7 +473,7 @@ export function Step5Pricing({
           <div>
             <label
               htmlFor="instagram_url"
-              className="block text-sm text-charcoal mb-1 flex items-center"
+              className="block text-sm text-ink mb-1 flex items-center"
             >
               <Instagram className="w-4 h-4 mr-1.5 text-pink-500" />
               Instagram
@@ -491,7 +491,7 @@ export function Step5Pricing({
           <div>
             <label
               htmlFor="facebook_url"
-              className="block text-sm text-charcoal mb-1 flex items-center"
+              className="block text-sm text-ink mb-1 flex items-center"
             >
               <Facebook className="w-4 h-4 mr-1.5 text-blue-600" />
               Facebook Event
@@ -509,10 +509,10 @@ export function Step5Pricing({
 
       {/* ========== Free Event Message ========== */}
       {draftData.price_type === 'free' && (
-        <div className="p-4 bg-sage/10 border border-sage/30 rounded-lg">
+        <div className="p-4 bg-emerald/10 border border-sage/30 rounded-lg">
           <div className="flex items-center">
-            <Gift className="w-5 h-5 text-sage mr-2" />
-            <p className="text-sm text-charcoal">
+            <Gift className="w-5 h-5 text-emerald mr-2" />
+            <p className="text-sm text-ink">
               <span className="font-medium">Free events</span> are highlighted in search
               results and often get more attendees!
             </p>

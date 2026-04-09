@@ -38,10 +38,11 @@ export function Card({
   className,
 }: CardProps) {
   // Variant styles
+  // v3 palette
   const variantStyles = {
-    default: 'bg-warm-white shadow-card',
-    elevated: 'bg-warm-white shadow-dropdown',
-    bordered: 'bg-warm-white border border-sand',
+    default: 'bg-pure shadow-card',
+    elevated: 'bg-pure shadow-elevated',
+    bordered: 'bg-pure border border-mist',
   };
 
   // Padding styles

@@ -47,10 +47,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
         {/* Page header */}
         <div className="max-w-2xl mx-auto text-center mb-8">
-          <h1 className="font-display text-h1 text-charcoal mb-4">
+          <h1 className="font-body text-h1 text-ink mb-4">
             Search
           </h1>
-          <p className="text-stone text-body mb-8">
+          <p className="text-zinc text-body mb-8">
             Find events, venues, and organizers
           </p>
           <SearchBar size="lg" autoFocus />
@@ -58,13 +58,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
         {/* Popular suggestions */}
         <div className="max-w-2xl mx-auto mt-12 text-center">
-          <p className="text-body-sm text-stone mb-4">Popular searches:</p>
+          <p className="text-body-sm text-zinc mb-4">Popular searches:</p>
           <div className="flex flex-wrap justify-center gap-2">
             {['music', 'art', 'food', 'comedy', 'free events'].map((term) => (
               <a
                 key={term}
                 href={`/search?q=${encodeURIComponent(term)}`}
-                className="px-4 py-2 rounded-full bg-sand text-charcoal text-body-sm hover:bg-coral-light transition-colors"
+                className="px-4 py-2 rounded-full bg-cloud text-ink text-body-sm hover:bg-blue-light transition-colors"
               >
                 {term}
               </a>
@@ -97,7 +97,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       {/* Search header */}
       <div className="max-w-2xl mx-auto mb-12">
         <SearchBar initialValue={query} size="lg" />
-        <p className="text-stone text-body-sm mt-4 text-center">
+        <p className="text-zinc text-body-sm mt-4 text-center">
           {totalResults} {totalResults === 1 ? 'result' : 'results'} for &ldquo;{query}&rdquo;
         </p>
       </div>
@@ -105,16 +105,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       {/* No results */}
       {totalResults === 0 && (
         <div className="text-center py-16">
-          <Calendar className="w-12 h-12 text-stone/40 mx-auto mb-4" />
-          <h2 className="font-display text-h3 text-charcoal mb-2">
+          <Calendar className="w-12 h-12 text-zinc/40 mx-auto mb-4" />
+          <h2 className="font-body text-h3 text-ink mb-2">
             No results found
           </h2>
-          <p className="text-stone mb-6">
+          <p className="text-zinc mb-6">
             Try a different search term or browse our events.
           </p>
           <Link
             href="/events"
-            className="inline-block px-6 py-3 rounded-md bg-coral text-warm-white font-medium hover:bg-coral-dark transition-colors"
+            className="inline-block px-6 py-3 rounded-md bg-blue text-pure font-medium hover:bg-blue-dark transition-colors"
           >
             Browse Events
           </Link>
@@ -131,7 +131,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               eventsResult.total > 12 ? (
                 <a
                   href={`/events?q=${encodeURIComponent(query)}`}
-                  className="text-coral hover:text-coral-dark transition-colors"
+                  className="text-blue hover:text-orange-dark transition-colors"
                 >
                   View all {eventsResult.total} events
                 </a>
@@ -152,7 +152,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               performersResult.total > 6 ? (
                 <a
                   href={`/performers?q=${encodeURIComponent(query)}`}
-                  className="text-coral hover:text-coral-dark transition-colors"
+                  className="text-blue hover:text-orange-dark transition-colors"
                 >
                   View all performers
                 </a>
@@ -164,7 +164,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               <Link
                 key={performer.id}
                 href={`/performer/${performer.slug}`}
-                className="flex items-center gap-3 p-4 rounded-lg bg-warm-white border border-sand hover:shadow-card-hover transition-shadow"
+                className="flex items-center gap-3 p-4 rounded-lg bg-pure border border-mist hover:shadow-card-hover transition-shadow"
               >
                 <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
                   {performer.image_url ? (
@@ -180,9 +180,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   )}
                 </div>
                 <div>
-                  <p className="font-medium text-charcoal">{performer.name}</p>
+                  <p className="font-medium text-ink">{performer.name}</p>
                   {performer.genre && (
-                    <p className="text-body-sm text-stone">{performer.genre}</p>
+                    <p className="text-body-sm text-zinc">{performer.genre}</p>
                   )}
                 </div>
               </Link>
@@ -201,7 +201,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               venuesResult.total > 6 ? (
                 <a
                   href={`/venues?q=${encodeURIComponent(query)}`}
-                  className="text-coral hover:text-coral-dark transition-colors"
+                  className="text-blue hover:text-orange-dark transition-colors"
                 >
                   View all venues
                 </a>
@@ -213,15 +213,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               <Link
                 key={venue.id}
                 href={buildVenueUrl(venue)}
-                className="flex items-center gap-3 p-4 rounded-lg bg-warm-white border border-sand hover:shadow-card-hover transition-shadow"
+                className="flex items-center gap-3 p-4 rounded-lg bg-pure border border-mist hover:shadow-card-hover transition-shadow"
               >
-                <div className="w-10 h-10 rounded-full bg-sage/20 flex items-center justify-center flex-shrink-0">
-                  <MapPin className="w-5 h-5 text-sage" />
+                <div className="w-10 h-10 rounded-full bg-emerald/20 flex items-center justify-center flex-shrink-0">
+                  <MapPin className="w-5 h-5 text-emerald" />
                 </div>
                 <div>
-                  <p className="font-medium text-charcoal">{venue.name}</p>
+                  <p className="font-medium text-ink">{venue.name}</p>
                   {venue.city && (
-                    <p className="text-body-sm text-stone">
+                    <p className="text-body-sm text-zinc">
                       {venue.city}, {venue.state}
                     </p>
                   )}
@@ -242,7 +242,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               organizersResult.total > 6 ? (
                 <a
                   href={`/organizers?q=${encodeURIComponent(query)}`}
-                  className="text-coral hover:text-coral-dark transition-colors"
+                  className="text-blue hover:text-orange-dark transition-colors"
                 >
                   View all organizers
                 </a>
@@ -254,15 +254,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               <Link
                 key={organizer.id}
                 href={buildOrganizerUrl(organizer)}
-                className="flex items-center gap-3 p-4 rounded-lg bg-warm-white border border-sand hover:shadow-card-hover transition-shadow"
+                className="flex items-center gap-3 p-4 rounded-lg bg-pure border border-mist hover:shadow-card-hover transition-shadow"
               >
-                <div className="w-10 h-10 rounded-full bg-coral/20 flex items-center justify-center flex-shrink-0">
-                  <User className="w-5 h-5 text-coral" />
+                <div className="w-10 h-10 rounded-full bg-blue/10 flex items-center justify-center flex-shrink-0">
+                  <User className="w-5 h-5 text-blue" />
                 </div>
                 <div>
-                  <p className="font-medium text-charcoal">{organizer.name}</p>
+                  <p className="font-medium text-ink">{organizer.name}</p>
                   {organizer.description && (
-                    <p className="text-body-sm text-stone line-clamp-1">
+                    <p className="text-body-sm text-zinc line-clamp-1">
                       {organizer.description}
                     </p>
                   )}

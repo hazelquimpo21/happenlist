@@ -173,14 +173,14 @@ export function AdminEventList({
               type="checkbox"
               checked={allSelected}
               onChange={handleSelectAll}
-              className="w-4 h-4 rounded border-sand text-coral focus:ring-coral"
+              className="w-4 h-4 rounded border-mist text-blue focus:ring-blue"
             />
-            <span className="text-sm text-stone">
+            <span className="text-sm text-zinc">
               {allSelected ? 'Deselect all' : 'Select all'}
             </span>
           </label>
           {selectedCount > 0 && (
-            <span className="text-sm text-coral font-medium">
+            <span className="text-sm text-blue font-medium">
               {selectedCount} selected
             </span>
           )}
@@ -202,7 +202,7 @@ export function AdminEventList({
       {/* Floating bulk action bar */}
       {selectedCount > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-          <div className="bg-charcoal text-warm-white rounded-xl shadow-xl px-6 py-3 flex items-center gap-4">
+          <div className="bg-ink text-pure rounded-xl shadow-xl px-6 py-3 flex items-center gap-4">
             <span className="text-sm font-medium whitespace-nowrap">
               {selectedCount} event{selectedCount !== 1 ? 's' : ''} selected
             </span>
@@ -214,7 +214,7 @@ export function AdminEventList({
               <>
                 <button
                   onClick={() => startAction('approve')}
-                  className="flex items-center gap-1.5 text-sm text-sage hover:text-white transition-colors"
+                  className="flex items-center gap-1.5 text-sm text-emerald hover:text-white transition-colors"
                 >
                   <CheckCircle className="w-4 h-4" />
                   Approve
@@ -248,7 +248,7 @@ export function AdminEventList({
                     <ChevronDown className="w-3 h-3" />
                   </button>
                   {showStatusDropdown && (
-                    <div className="absolute bottom-full left-0 mb-2 bg-white rounded-lg shadow-lg border border-sand py-1 min-w-[160px]">
+                    <div className="absolute bottom-full left-0 mb-2 bg-white rounded-lg shadow-lg border border-mist py-1 min-w-[160px]">
                       {STATUS_OPTIONS.map(opt => (
                         <button
                           key={opt.value}
@@ -257,7 +257,7 @@ export function AdminEventList({
                             setShowStatusDropdown(false);
                             startAction('change_status');
                           }}
-                          className="block w-full text-left px-3 py-2 text-sm text-charcoal hover:bg-cream transition-colors"
+                          className="block w-full text-left px-3 py-2 text-sm text-ink hover:bg-white transition-colors"
                         >
                           {opt.label}
                         </button>
@@ -293,7 +293,7 @@ export function AdminEventList({
 
             <button
               onClick={clearSelection}
-              className="text-stone hover:text-white transition-colors"
+              className="text-zinc hover:text-white transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -341,27 +341,27 @@ export function AdminEventList({
 
       {/* Confirmation / result modal */}
       {actionState !== 'idle' && pendingAction && (
-        <div className="fixed inset-0 bg-charcoal/50 flex items-center justify-center z-[60] p-4">
-          <div className="bg-warm-white rounded-xl shadow-xl max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-ink/50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-pure rounded-xl shadow-xl max-w-md w-full p-6">
             {actionState === 'confirming' && (
               <>
                 <div className="flex items-center gap-3 mb-4">
                   <AlertTriangle className="w-6 h-6 text-amber-500" />
-                  <h3 className="font-display text-xl text-charcoal">
+                  <h3 className="font-body text-xl text-ink">
                     {getActionLabel(pendingAction)} {selectedCount} event{selectedCount !== 1 ? 's' : ''}?
                   </h3>
                 </div>
 
                 {(pendingAction === 'reject' || pendingAction === 'delete') && (
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-charcoal mb-1">
+                    <label className="block text-sm font-medium text-ink mb-1">
                       Reason {pendingAction === 'reject' && <span className="text-red-600">*</span>}
                     </label>
                     <textarea
                       value={reason}
                       onChange={(e) => setReason(e.target.value)}
                       rows={2}
-                      className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none resize-none text-sm"
+                      className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none resize-none text-sm"
                       placeholder={pendingAction === 'reject' ? 'Why are these being rejected?' : 'Optional reason for deletion'}
                     />
                   </div>
@@ -374,10 +374,10 @@ export function AdminEventList({
                     disabled={pendingAction === 'reject' && !reason.trim()}
                     className={
                       pendingAction === 'approve'
-                        ? 'bg-sage hover:bg-sage/90 text-white'
+                        ? 'bg-emerald hover:bg-emerald/90 text-white'
                         : pendingAction === 'reject' || pendingAction === 'delete'
                         ? 'bg-red-600 hover:bg-red-700 text-white'
-                        : 'bg-coral hover:bg-coral/90 text-white'
+                        : 'bg-blue hover:bg-blue/90 text-white'
                     }
                   >
                     {getActionLabel(pendingAction)}
@@ -388,8 +388,8 @@ export function AdminEventList({
 
             {actionState === 'executing' && (
               <div className="flex items-center gap-3 py-4">
-                <RefreshCw className="w-5 h-5 text-coral animate-spin" />
-                <span className="text-charcoal">Processing {selectedCount} events...</span>
+                <RefreshCw className="w-5 h-5 text-blue animate-spin" />
+                <span className="text-ink">Processing {selectedCount} events...</span>
               </div>
             )}
 
@@ -398,9 +398,9 @@ export function AdminEventList({
                 {pendingAction === 'delete' ? (
                   <Trash2 className="w-5 h-5 text-red-500" />
                 ) : (
-                  <CheckCircle className="w-5 h-5 text-sage" />
+                  <CheckCircle className="w-5 h-5 text-emerald" />
                 )}
-                <span className={pendingAction === 'delete' ? 'text-red-800 font-medium' : 'text-charcoal'}>
+                <span className={pendingAction === 'delete' ? 'text-red-800 font-medium' : 'text-ink'}>
                   {resultMessage}
                 </span>
               </div>

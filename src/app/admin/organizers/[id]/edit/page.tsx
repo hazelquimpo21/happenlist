@@ -67,7 +67,7 @@ export default async function SuperadminOrganizerEditPage({ params }: PageProps)
 
           <Link
             href={`/organizer/${organizer.slug}`}
-            className="flex items-center gap-2 text-sm text-stone hover:text-charcoal transition-colors"
+            className="flex items-center gap-2 text-sm text-zinc hover:text-ink transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Organizer
@@ -92,24 +92,24 @@ export default async function SuperadminOrganizerEditPage({ params }: PageProps)
 
           {/* Sidebar */}
           <div className="space-y-6">
-            <Card padding="lg" className="border border-sand">
-              <h3 className="font-medium text-charcoal mb-4">Organizer Info</h3>
+            <Card padding="lg" className="border border-mist">
+              <h3 className="font-medium text-ink mb-4">Organizer Info</h3>
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-stone">ID</dt>
-                  <dd className="text-charcoal font-mono text-xs">{organizer.id.slice(0, 8)}...</dd>
+                  <dt className="text-zinc">ID</dt>
+                  <dd className="text-ink font-mono text-xs">{organizer.id.slice(0, 8)}...</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-stone">Slug</dt>
-                  <dd className="text-charcoal">{organizer.slug}</dd>
+                  <dt className="text-zinc">Slug</dt>
+                  <dd className="text-ink">{organizer.slug}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-stone">Active</dt>
-                  <dd className="text-charcoal">{organizer.is_active ? 'Yes' : 'No'}</dd>
+                  <dt className="text-zinc">Active</dt>
+                  <dd className="text-ink">{organizer.is_active ? 'Yes' : 'No'}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-stone">Verified</dt>
-                  <dd className="text-charcoal">{organizer.is_verified ? 'Yes' : 'No'}</dd>
+                  <dt className="text-zinc">Verified</dt>
+                  <dd className="text-ink">{organizer.is_verified ? 'Yes' : 'No'}</dd>
                 </div>
               </dl>
             </Card>

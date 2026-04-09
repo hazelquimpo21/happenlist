@@ -132,10 +132,10 @@ export default async function MonthEventsPage({
       {/* Page header with month navigation */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
         <div>
-          <h1 className="font-display text-h1 text-charcoal">
+          <h1 className="font-body text-h1 text-ink">
             {monthName} {year}
           </h1>
-          <p className="text-stone text-body mt-2">
+          <p className="text-zinc text-body mt-2">
             {total} {total === 1 ? 'event' : 'events'} happening this month
           </p>
         </div>
@@ -199,7 +199,7 @@ export default async function MonthEventsPage({
               Previous
             </Button>
           )}
-          <span className="text-stone text-body-sm">
+          <span className="text-zinc text-body-sm">
             Page {page} of {totalPages}
           </span>
           {page < totalPages && (

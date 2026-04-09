@@ -87,10 +87,10 @@ function VenueRating({
   if (!rating || reviewCount === 0) return null;
 
   return (
-    <div className="flex items-center gap-1 text-xs text-stone">
+    <div className="flex items-center gap-1 text-xs text-zinc">
       <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
       <span>{rating.toFixed(1)}</span>
-      <span className="text-stone/60">({reviewCount})</span>
+      <span className="text-zinc/60">({reviewCount})</span>
     </div>
   );
 }
@@ -100,7 +100,7 @@ function VenueRating({
  */
 function VenueTypeBadge({ type }: { type: string }) {
   return (
-    <span className="text-xs bg-sand text-stone px-2 py-0.5 rounded capitalize">
+    <span className="text-xs bg-cloud text-zinc px-2 py-0.5 rounded capitalize">
       {type}
     </span>
   );
@@ -124,18 +124,18 @@ function VenueCard({
       onClick={onClick}
       className={cn(
         'w-full flex items-start justify-between p-3 rounded-lg border text-left',
-        'hover:border-coral hover:bg-coral/5 transition-all',
-        isSelected ? 'border-coral bg-coral/10' : 'border-sand bg-warm-white'
+        'hover:border-blue hover:bg-blue/5 transition-all',
+        isSelected ? 'border-blue bg-blue/10' : 'border-mist bg-pure'
       )}
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="font-medium text-charcoal truncate">{venue.name}</p>
+          <p className="font-medium text-ink truncate">{venue.name}</p>
           {isSelected && (
-            <CheckCircle className="w-4 h-4 text-coral flex-shrink-0" />
+            <CheckCircle className="w-4 h-4 text-blue flex-shrink-0" />
           )}
         </div>
-        <p className="text-sm text-stone truncate">
+        <p className="text-sm text-zinc truncate">
           {venue.address_line && `${venue.address_line}, `}
           {venue.city}
           {venue.state && `, ${venue.state}`}
@@ -334,16 +334,16 @@ export function Step4Location({
               }}
               className={cn(
                 'flex items-center p-4 rounded-lg border text-left transition-all',
-                'hover:border-coral hover:bg-coral/5',
+                'hover:border-blue hover:bg-blue/5',
                 isSelected
-                  ? 'border-coral bg-coral/10'
-                  : 'border-sand bg-warm-white'
+                  ? 'border-blue bg-blue/10'
+                  : 'border-mist bg-pure'
               )}
             >
               <div
                 className={cn(
                   'flex-shrink-0 p-2 rounded-lg mr-3',
-                  isSelected ? 'bg-coral text-white' : 'bg-sand text-stone'
+                  isSelected ? 'bg-blue text-white' : 'bg-cloud text-zinc'
                 )}
               >
                 {icon}
@@ -352,12 +352,12 @@ export function Step4Location({
                 <p
                   className={cn(
                     'font-medium',
-                    isSelected ? 'text-coral' : 'text-charcoal'
+                    isSelected ? 'text-blue' : 'text-ink'
                   )}
                 >
                   {config.title}
                 </p>
-                <p className="text-xs text-stone mt-0.5">{config.description}</p>
+                <p className="text-xs text-zinc mt-0.5">{config.description}</p>
               </div>
             </button>
           );
@@ -369,16 +369,16 @@ export function Step4Location({
         <div className="space-y-4">
           {/* Selected Venue Display */}
           {selectedVenue && (
-            <div className="p-4 bg-sage/10 border border-sage/30 rounded-lg">
+            <div className="p-4 bg-emerald/10 border border-sage/30 rounded-lg">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-sage" />
-                    <p className="font-medium text-charcoal">
+                    <CheckCircle className="w-5 h-5 text-emerald" />
+                    <p className="font-medium text-ink">
                       {selectedVenue.name}
                     </p>
                   </div>
-                  <p className="text-sm text-stone mt-1 ml-7">
+                  <p className="text-sm text-zinc mt-1 ml-7">
                     {selectedVenue.address_line && `${selectedVenue.address_line}, `}
                     {selectedVenue.city}
                     {selectedVenue.state && `, ${selectedVenue.state}`}
@@ -393,7 +393,7 @@ export function Step4Location({
                 <button
                   type="button"
                   onClick={clearSelection}
-                  className="text-sm text-coral hover:text-coral/80"
+                  className="text-sm text-blue hover:text-blue/80"
                 >
                   Change
                 </button>
@@ -403,12 +403,12 @@ export function Step4Location({
 
           {/* Search Box (hidden when venue selected) */}
           {!selectedVenue && (
-            <div className="p-4 bg-cream rounded-lg border border-sand">
-              <label className="block text-sm font-medium text-charcoal mb-2">
+            <div className="p-4 bg-white rounded-lg border border-mist">
+              <label className="block text-sm font-medium text-ink mb-2">
                 Search Venues
               </label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc" />
                 <Input
                   type="text"
                   value={venueQuery}
@@ -417,7 +417,7 @@ export function Step4Location({
                   className="pl-10"
                 />
                 {isSearching && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone animate-spin" />
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc animate-spin" />
                 )}
               </div>
 
@@ -439,8 +439,8 @@ export function Step4Location({
               {venueQuery.length >= 2 &&
                 !isSearching &&
                 venueResults.length === 0 && (
-                  <div className="mt-3 p-3 bg-sand/30 rounded-lg text-center">
-                    <p className="text-sm text-stone">
+                  <div className="mt-3 p-3 bg-cloud/30 rounded-lg text-center">
+                    <p className="text-sm text-zinc">
                       No venues found for &ldquo;{venueQuery}&rdquo;
                     </p>
                     <button
@@ -448,7 +448,7 @@ export function Step4Location({
                       onClick={() => {
                         updateData({ location_mode: 'new' });
                       }}
-                      className="mt-2 text-sm text-coral hover:text-coral/80 font-medium"
+                      className="mt-2 text-sm text-blue hover:text-blue/80 font-medium"
                     >
                       + Add a new venue instead
                     </button>
@@ -461,10 +461,10 @@ export function Step4Location({
           {!selectedVenue &&
             venueQuery.length < 2 &&
             popularVenues.length > 0 && (
-              <div className="p-4 bg-warm-white rounded-lg border border-sand">
+              <div className="p-4 bg-pure rounded-lg border border-mist">
                 <div className="flex items-center gap-2 mb-3">
-                  <Building className="w-4 h-4 text-coral" />
-                  <h4 className="text-sm font-medium text-charcoal">
+                  <Building className="w-4 h-4 text-blue" />
+                  <h4 className="text-sm font-medium text-ink">
                     Popular Venues
                   </h4>
                 </div>
@@ -482,7 +482,7 @@ export function Step4Location({
                   <button
                     type="button"
                     onClick={() => setShowAllPopular(!showAllPopular)}
-                    className="mt-3 text-sm text-coral hover:text-coral/80 font-medium"
+                    className="mt-3 text-sm text-blue hover:text-blue/80 font-medium"
                   >
                     {showAllPopular
                       ? 'Show less'
@@ -496,16 +496,16 @@ export function Step4Location({
 
       {/* ========== New Venue Form (with Address Autocomplete) ========== */}
       {draftData.location_mode === 'new' && (
-        <div className="p-4 bg-cream rounded-lg border border-sand space-y-4">
-          <h3 className="font-medium text-charcoal">New Venue Details</h3>
+        <div className="p-4 bg-white rounded-lg border border-mist space-y-4">
+          <h3 className="font-medium text-ink">New Venue Details</h3>
 
           {/* Venue Name */}
           <div>
             <label
               htmlFor="venue_name"
-              className="block text-sm font-medium text-charcoal mb-1"
+              className="block text-sm font-medium text-ink mb-1"
             >
-              Venue Name <span className="text-coral">*</span>
+              Venue Name <span className="text-blue">*</span>
             </label>
             <Input
               id="venue_name"
@@ -543,8 +543,8 @@ export function Step4Location({
                       }}
                       className="w-full flex items-center justify-between p-2 rounded text-left text-sm hover:bg-amber-100 transition-colors"
                     >
-                      <span className="text-charcoal font-medium truncate">{venue.name}</span>
-                      <span className="text-stone text-xs flex-shrink-0 ml-2">
+                      <span className="text-ink font-medium truncate">{venue.name}</span>
+                      <span className="text-zinc text-xs flex-shrink-0 ml-2">
                         {venue.city}{venue.state ? `, ${venue.state}` : ''}
                       </span>
                     </button>
@@ -556,21 +556,21 @@ export function Step4Location({
 
           {/* Address Autocomplete */}
           <div>
-            <label className="block text-sm font-medium text-charcoal mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               Search Address
             </label>
             <AddressSearch
               onSelect={handleAddressSelect}
               placeholder="Start typing an address..."
             />
-            <p className="text-xs text-stone mt-1">
+            <p className="text-xs text-zinc mt-1">
               Search for an address to auto-fill the fields below
             </p>
           </div>
 
           {/* Manual Address Fields (pre-filled from autocomplete) */}
-          <div className="pt-2 border-t border-sand">
-            <p className="text-xs text-stone mb-3">
+          <div className="pt-2 border-t border-mist">
+            <p className="text-xs text-zinc mb-3">
               Or enter the address manually:
             </p>
 
@@ -578,7 +578,7 @@ export function Step4Location({
             <div className="mb-3">
               <label
                 htmlFor="address"
-                className="block text-sm font-medium text-charcoal mb-1"
+                className="block text-sm font-medium text-ink mb-1"
               >
                 Street Address
               </label>
@@ -605,9 +605,9 @@ export function Step4Location({
               <div>
                 <label
                   htmlFor="city"
-                  className="block text-sm font-medium text-charcoal mb-1"
+                  className="block text-sm font-medium text-ink mb-1"
                 >
-                  City <span className="text-coral">*</span>
+                  City <span className="text-blue">*</span>
                 </label>
                 <Input
                   id="city"
@@ -628,7 +628,7 @@ export function Step4Location({
               <div>
                 <label
                   htmlFor="state"
-                  className="block text-sm font-medium text-charcoal mb-1"
+                  className="block text-sm font-medium text-ink mb-1"
                 >
                   State
                 </label>
@@ -655,7 +655,7 @@ export function Step4Location({
             <div className="w-1/2">
               <label
                 htmlFor="postal_code"
-                className="block text-sm font-medium text-charcoal mb-1"
+                className="block text-sm font-medium text-ink mb-1"
               >
                 Postal Code
               </label>
@@ -681,7 +681,7 @@ export function Step4Location({
           {/* Coordinates Status */}
           {draftData.new_location?.latitude &&
             draftData.new_location?.longitude && (
-              <div className="flex items-center gap-2 text-sm text-sage">
+              <div className="flex items-center gap-2 text-sm text-emerald">
                 <CheckCircle className="w-4 h-4" />
                 <span>
                   Coordinates captured ({draftData.new_location.latitude.toFixed(4)},{' '}
@@ -694,12 +694,12 @@ export function Step4Location({
 
       {/* ========== Online Event Info ========== */}
       {draftData.location_mode === 'online' && (
-        <div className="p-4 bg-cream rounded-lg border border-sand">
+        <div className="p-4 bg-white rounded-lg border border-mist">
           <div className="flex items-center mb-3">
-            <Globe className="w-5 h-5 text-coral mr-2" />
-            <h3 className="font-medium text-charcoal">Online Event</h3>
+            <Globe className="w-5 h-5 text-blue mr-2" />
+            <h3 className="font-medium text-ink">Online Event</h3>
           </div>
-          <p className="text-sm text-stone mb-4">
+          <p className="text-sm text-zinc mb-4">
             Add the event link or meeting URL in the pricing step (ticket URL
             field).
           </p>
@@ -708,14 +708,14 @@ export function Step4Location({
 
       {/* ========== TBD Info ========== */}
       {draftData.location_mode === 'tbd' && (
-        <div className="p-4 bg-cream rounded-lg border border-sand">
+        <div className="p-4 bg-white rounded-lg border border-mist">
           <div className="flex items-center mb-3">
-            <HelpCircle className="w-5 h-5 text-coral mr-2" />
-            <h3 className="font-medium text-charcoal">
+            <HelpCircle className="w-5 h-5 text-blue mr-2" />
+            <h3 className="font-medium text-ink">
               Location To Be Announced
             </h3>
           </div>
-          <p className="text-sm text-stone">
+          <p className="text-sm text-zinc">
             The event will show as &quot;Location TBD&quot;. You can update this
             later through your submissions page.
           </p>

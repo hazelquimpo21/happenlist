@@ -197,16 +197,16 @@ export function Step2EventType({
               }}
               className={cn(
                 'flex items-start p-4 rounded-lg border text-left transition-all',
-                'hover:border-coral hover:bg-coral/5',
+                'hover:border-blue hover:bg-blue/5',
                 isSelected
-                  ? 'border-coral bg-coral/10'
-                  : 'border-sand bg-warm-white'
+                  ? 'border-blue bg-blue/10'
+                  : 'border-mist bg-pure'
               )}
             >
               <div
                 className={cn(
                   'flex-shrink-0 p-2 rounded-lg mr-3',
-                  isSelected ? 'bg-coral text-white' : 'bg-sand text-stone'
+                  isSelected ? 'bg-blue text-white' : 'bg-cloud text-zinc'
                 )}
               >
                 {icon}
@@ -214,11 +214,11 @@ export function Step2EventType({
               <div>
                 <p className={cn(
                   'font-medium',
-                  isSelected ? 'text-coral' : 'text-charcoal'
+                  isSelected ? 'text-blue' : 'text-ink'
                 )}>
                   {config.title}
                 </p>
-                <p className="text-sm text-stone mt-0.5">
+                <p className="text-sm text-zinc mt-0.5">
                   {config.description}
                 </p>
               </div>
@@ -229,12 +229,12 @@ export function Step2EventType({
 
       {/* ========== Existing Series Search ========== */}
       {draftData.event_mode === 'existing_series' && (
-        <div className="mt-6 p-4 bg-cream rounded-lg border border-sand">
-          <label className="block text-sm font-medium text-charcoal mb-2">
+        <div className="mt-6 p-4 bg-white rounded-lg border border-mist">
+          <label className="block text-sm font-medium text-ink mb-2">
             Search for a Series
           </label>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc" />
             <Input
               type="text"
               value={seriesQuery}
@@ -258,20 +258,20 @@ export function Step2EventType({
                   }}
                   className={cn(
                     'w-full flex items-center justify-between p-3 rounded-lg border text-left',
-                    'hover:border-coral hover:bg-coral/5',
+                    'hover:border-blue hover:bg-blue/5',
                     draftData.series_id === series.id
-                      ? 'border-coral bg-coral/10'
-                      : 'border-sand bg-warm-white'
+                      ? 'border-blue bg-blue/10'
+                      : 'border-mist bg-pure'
                   )}
                 >
                   <div>
-                    <p className="font-medium text-charcoal">{series.title}</p>
-                    <p className="text-sm text-stone">
+                    <p className="font-medium text-ink">{series.title}</p>
+                    <p className="text-sm text-zinc">
                       {series.series_type} • {series.organizer_name || 'Unknown organizer'}
                     </p>
                   </div>
                   {series.upcoming_event_count > 0 && (
-                    <span className="text-xs bg-sage/20 text-sage px-2 py-1 rounded">
+                    <span className="text-xs bg-emerald/20 text-emerald px-2 py-1 rounded">
                       {series.upcoming_event_count} upcoming
                     </span>
                   )}
@@ -281,11 +281,11 @@ export function Step2EventType({
           )}
 
           {isSearching && (
-            <p className="mt-3 text-sm text-stone">Searching...</p>
+            <p className="mt-3 text-sm text-zinc">Searching...</p>
           )}
 
           {seriesQuery.length >= 2 && !isSearching && seriesResults.length === 0 && (
-            <p className="mt-3 text-sm text-stone">
+            <p className="mt-3 text-sm text-zinc">
               No series found. Try a different search or create a new series.
             </p>
           )}
@@ -294,8 +294,8 @@ export function Step2EventType({
 
       {/* ========== New Series Form ========== */}
       {draftData.event_mode === 'new_series' && (
-        <div className="mt-6 p-4 bg-cream rounded-lg border border-sand space-y-4">
-          <h3 className="font-medium text-charcoal flex items-center">
+        <div className="mt-6 p-4 bg-white rounded-lg border border-mist space-y-4">
+          <h3 className="font-medium text-ink flex items-center">
             <Layers className="w-4 h-4 mr-2" />
             New Series Details
           </h3>
@@ -304,9 +304,9 @@ export function Step2EventType({
           <div>
             <label
               htmlFor="series_title"
-              className="block text-sm font-medium text-charcoal mb-1"
+              className="block text-sm font-medium text-ink mb-1"
             >
-              Series Title <span className="text-coral">*</span>
+              Series Title <span className="text-blue">*</span>
             </label>
             <Input
               id="series_title"
@@ -319,8 +319,8 @@ export function Step2EventType({
 
           {/* Series Type */}
           <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">
-              Series Type <span className="text-coral">*</span>
+            <label className="block text-sm font-medium text-ink mb-2">
+              Series Type <span className="text-blue">*</span>
             </label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {SERIES_TYPE_OPTIONS.map((option) => (
@@ -330,10 +330,10 @@ export function Step2EventType({
                   onClick={() => handleSeriesTypeChange(option.value)}
                   className={cn(
                     'px-3 py-2 rounded-lg border text-left transition-all',
-                    'hover:border-coral hover:bg-coral/5',
+                    'hover:border-blue hover:bg-blue/5',
                     seriesDraftData?.series_type === option.value
-                      ? 'border-coral bg-coral/10'
-                      : 'border-sand bg-warm-white'
+                      ? 'border-blue bg-blue/10'
+                      : 'border-mist bg-pure'
                   )}
                 >
                   <span className="mr-2">{option.emoji}</span>
@@ -347,7 +347,7 @@ export function Step2EventType({
           <div>
             <label
               htmlFor="total_sessions"
-              className="block text-sm font-medium text-charcoal mb-1"
+              className="block text-sm font-medium text-ink mb-1"
             >
               Total Sessions (optional)
             </label>
@@ -365,7 +365,7 @@ export function Step2EventType({
               placeholder="e.g., 6"
               className="w-32"
             />
-            <p className="text-xs text-stone mt-1">
+            <p className="text-xs text-zinc mt-1">
               Leave blank if the number of sessions is not fixed
             </p>
           </div>
@@ -373,8 +373,8 @@ export function Step2EventType({
           {/* ====================================================== */}
           {/* PHASE D: Attendance Mode                                */}
           {/* ====================================================== */}
-          <div className="pt-4 border-t border-sand">
-            <label className="block text-sm font-medium text-charcoal mb-2 flex items-center">
+          <div className="pt-4 border-t border-mist">
+            <label className="block text-sm font-medium text-ink mb-2 flex items-center">
               <Users className="w-4 h-4 mr-1.5" />
               Attendance Mode
             </label>
@@ -389,17 +389,17 @@ export function Step2EventType({
                   }}
                   className={cn(
                     'flex flex-col p-3 rounded-lg border text-left transition-all',
-                    'hover:border-coral hover:bg-coral/5',
+                    'hover:border-blue hover:bg-blue/5',
                     seriesDraftData?.attendance_mode === option.value
-                      ? 'border-coral bg-coral/10'
-                      : 'border-sand bg-warm-white'
+                      ? 'border-blue bg-blue/10'
+                      : 'border-mist bg-pure'
                   )}
                 >
                   <span className="text-sm font-medium">
                     <span className="mr-1">{option.emoji}</span>
                     {option.label}
                   </span>
-                  <span className="text-xs text-stone mt-1">{option.description}</span>
+                  <span className="text-xs text-zinc mt-1">{option.description}</span>
                 </button>
               ))}
             </div>
@@ -408,14 +408,14 @@ export function Step2EventType({
           {/* ====================================================== */}
           {/* PHASE D: Age Range                                      */}
           {/* ====================================================== */}
-          <div className="pt-4 border-t border-sand">
-            <label className="block text-sm font-medium text-charcoal mb-2 flex items-center">
+          <div className="pt-4 border-t border-mist">
+            <label className="block text-sm font-medium text-ink mb-2 flex items-center">
               <Baby className="w-4 h-4 mr-1.5" />
               Age Range (optional)
             </label>
             <div className="flex items-center gap-3">
               <div className="w-24">
-                <label htmlFor="age_low" className="text-xs text-stone">Min Age</label>
+                <label htmlFor="age_low" className="text-xs text-zinc">Min Age</label>
                 <Input
                   id="age_low"
                   type="number"
@@ -430,9 +430,9 @@ export function Step2EventType({
                   placeholder="0"
                 />
               </div>
-              <span className="text-stone mt-4">–</span>
+              <span className="text-zinc mt-4">–</span>
               <div className="w-24">
-                <label htmlFor="age_high" className="text-xs text-stone">Max Age</label>
+                <label htmlFor="age_high" className="text-xs text-zinc">Max Age</label>
                 <Input
                   id="age_high"
                   type="number"
@@ -456,7 +456,7 @@ export function Step2EventType({
                 onChange={(e) => mergeSeriesData({ age_details: e.target.value })}
                 placeholder="e.g., Must be potty-trained, parent must attend under 5"
               />
-              <p className="text-xs text-stone mt-1">
+              <p className="text-xs text-zinc mt-1">
                 Additional age-related notes (optional)
               </p>
             </div>
@@ -466,8 +466,8 @@ export function Step2EventType({
           {/* PHASE D: Skill Level (conditional on series type)       */}
           {/* ====================================================== */}
           {seriesConfig?.supportsSkillLevel && (
-            <div className="pt-4 border-t border-sand">
-              <label className="block text-sm font-medium text-charcoal mb-2 flex items-center">
+            <div className="pt-4 border-t border-mist">
+              <label className="block text-sm font-medium text-ink mb-2 flex items-center">
                 <GraduationCap className="w-4 h-4 mr-1.5" />
                 Skill Level (optional)
               </label>
@@ -482,8 +482,8 @@ export function Step2EventType({
                   className={cn(
                     'px-4 py-2 rounded-lg border transition-all',
                     !seriesDraftData?.skill_level
-                      ? 'border-coral bg-coral/10 text-coral'
-                      : 'border-sand bg-warm-white text-charcoal hover:border-coral/50'
+                      ? 'border-blue bg-blue/10 text-blue'
+                      : 'border-mist bg-pure text-ink hover:border-blue/50'
                   )}
                 >
                   Not specified
@@ -499,8 +499,8 @@ export function Step2EventType({
                     className={cn(
                       'px-4 py-2 rounded-lg border transition-all',
                       seriesDraftData?.skill_level === option.value
-                        ? 'border-coral bg-coral/10 text-coral'
-                        : 'border-sand bg-warm-white text-charcoal hover:border-coral/50'
+                        ? 'border-blue bg-blue/10 text-blue'
+                        : 'border-mist bg-pure text-ink hover:border-blue/50'
                     )}
                   >
                     <span className="mr-1">{option.emoji}</span>
@@ -515,17 +515,17 @@ export function Step2EventType({
           {/* PHASE D: Extended Care (conditional on series type)     */}
           {/* ====================================================== */}
           {seriesConfig?.supportsExtendedCare && (
-            <div className="pt-4 border-t border-sand">
-              <label className="block text-sm font-medium text-charcoal mb-2 flex items-center">
+            <div className="pt-4 border-t border-mist">
+              <label className="block text-sm font-medium text-ink mb-2 flex items-center">
                 <Clock className="w-4 h-4 mr-1.5" />
                 Extended Care / Before & After Care (optional)
               </label>
-              <p className="text-xs text-stone mb-3">
+              <p className="text-xs text-zinc mb-3">
                 Does this camp offer before-care or after-care options?
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="core_start_time" className="text-xs text-stone">
+                  <label htmlFor="core_start_time" className="text-xs text-zinc">
                     Core Start Time
                   </label>
                   <Input
@@ -536,7 +536,7 @@ export function Step2EventType({
                   />
                 </div>
                 <div>
-                  <label htmlFor="core_end_time" className="text-xs text-stone">
+                  <label htmlFor="core_end_time" className="text-xs text-zinc">
                     Core End Time
                   </label>
                   <Input
@@ -547,7 +547,7 @@ export function Step2EventType({
                   />
                 </div>
                 <div>
-                  <label htmlFor="extended_start_time" className="text-xs text-stone">
+                  <label htmlFor="extended_start_time" className="text-xs text-zinc">
                     Before Care Starts
                   </label>
                   <Input
@@ -558,7 +558,7 @@ export function Step2EventType({
                   />
                 </div>
                 <div>
-                  <label htmlFor="extended_end_time" className="text-xs text-stone">
+                  <label htmlFor="extended_end_time" className="text-xs text-zinc">
                     After Care Ends
                   </label>
                   <Input
@@ -570,7 +570,7 @@ export function Step2EventType({
                 </div>
               </div>
               <div className="mt-3">
-                <label htmlFor="extended_care_details" className="text-xs text-stone">
+                <label htmlFor="extended_care_details" className="text-xs text-zinc">
                   Care Details & Pricing
                 </label>
                 <Input
@@ -587,10 +587,10 @@ export function Step2EventType({
           {/* ====================================================== */}
           {/* PHASE D: Term / Semester Name (optional)                */}
           {/* ====================================================== */}
-          <div className="pt-4 border-t border-sand">
+          <div className="pt-4 border-t border-mist">
             <label
               htmlFor="term_name"
-              className="block text-sm font-medium text-charcoal mb-1 flex items-center"
+              className="block text-sm font-medium text-ink mb-1 flex items-center"
             >
               <Tag className="w-4 h-4 mr-1.5" />
               Term / Semester (optional)
@@ -603,7 +603,7 @@ export function Step2EventType({
               placeholder="e.g., Fall 2026, Summer Session A"
               className="max-w-xs"
             />
-            <p className="text-xs text-stone mt-1">
+            <p className="text-xs text-zinc mt-1">
               Helps group sessions by academic term or camp session
             </p>
           </div>
@@ -612,12 +612,12 @@ export function Step2EventType({
 
       {/* ========== Recurring Info ========== */}
       {draftData.event_mode === 'recurring' && (
-        <div className="mt-6 p-4 bg-cream rounded-lg border border-sand">
-          <h3 className="font-medium text-charcoal flex items-center mb-2">
+        <div className="mt-6 p-4 bg-white rounded-lg border border-mist">
+          <h3 className="font-medium text-ink flex items-center mb-2">
             <RefreshCw className="w-4 h-4 mr-2" />
             Recurring Pattern
           </h3>
-          <p className="text-sm text-stone">
+          <p className="text-sm text-zinc">
             You&apos;ll set up the recurrence pattern in the next step (Date & Time).
             Recurring events repeat on a schedule (e.g., every Tuesday at 7pm).
           </p>

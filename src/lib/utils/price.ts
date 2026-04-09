@@ -88,5 +88,5 @@ export function getPriceClassName(data: PriceData): string {
   if (isFreeEvent(data)) {
     return 'text-sage font-medium'; // Green for free events
   }
-  return 'text-charcoal';
+  return 'text-ink';
 }

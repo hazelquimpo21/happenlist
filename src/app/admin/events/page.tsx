@@ -82,15 +82,15 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
         description={`${result.total} events total`}
       >
         {/* Status tabs */}
-        <div className="flex items-center gap-1 bg-sand/50 p-1 rounded-lg mr-auto">
+        <div className="flex items-center gap-1 bg-cloud/50 p-1 rounded-lg mr-auto">
           {statusTabs.map((tab) => (
             <Link
               key={tab.value || 'all'}
               href={buildFilterUrl({ status: tab.value, page: undefined })}
               className={`px-4 py-2 text-sm rounded-md transition-colors ${
                 status === tab.value || (!status && !tab.value)
-                  ? 'bg-warm-white text-charcoal font-medium shadow-sm'
-                  : 'text-stone hover:text-charcoal'
+                  ? 'bg-pure text-ink font-medium shadow-sm'
+                  : 'text-zinc hover:text-ink'
               }`}
             >
               {tab.label}
@@ -107,7 +107,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
           <select
             name="series"
             defaultValue={seriesFilter || ''}
-            className="appearance-none bg-warm-white border border-sand rounded-lg px-4 py-2 pr-8 text-sm focus:border-coral outline-none cursor-pointer"
+            className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-8 text-sm focus:border-coral outline-none cursor-pointer"
           >
             <option value="">All Events</option>
             <option value="in_series">In a Series</option>
@@ -117,7 +117,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
           <select
             name="source"
             defaultValue={source || ''}
-            className="appearance-none bg-warm-white border border-sand rounded-lg px-4 py-2 pr-8 text-sm focus:border-coral outline-none cursor-pointer"
+            className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-8 text-sm focus:border-coral outline-none cursor-pointer"
           >
             <option value="">All Sources</option>
             <option value="scraper">Scraped</option>
@@ -129,7 +129,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
           <select
             name="orderBy"
             defaultValue={orderBy}
-            className="appearance-none bg-warm-white border border-sand rounded-lg px-4 py-2 pr-8 text-sm focus:border-coral outline-none cursor-pointer"
+            className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-8 text-sm focus:border-coral outline-none cursor-pointer"
           >
             <option value="created_at">Created Date</option>
             <option value="start_datetime">Event Date</option>
@@ -137,7 +137,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
             <option value="scraped_at">Scraped Date</option>
           </select>
 
-          <noscript><button type="submit" className="px-3 py-2 text-sm bg-coral text-white rounded-lg">Apply</button></noscript>
+          <noscript><button type="submit" className="px-3 py-2 text-sm bg-blue text-white rounded-lg">Apply</button></noscript>
         </form>
         <Script id="admin-filter-autosubmit" strategy="afterInteractive">{`
           document.querySelectorAll('#admin-filters select').forEach(function(s){
@@ -167,10 +167,10 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
               name="q"
               defaultValue={search}
               placeholder="Search events..."
-              className="w-full px-4 py-2 pl-10 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+              className="w-full px-4 py-2 pl-10 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
             />
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -186,14 +186,14 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
         </div>
 
         {result.events.length === 0 ? (
-          <div className="bg-warm-white border border-sand rounded-lg p-12 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-sand flex items-center justify-center">
-              <Filter className="w-8 h-8 text-stone" />
+          <div className="bg-pure border border-mist rounded-lg p-12 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cloud flex items-center justify-center">
+              <Filter className="w-8 h-8 text-zinc" />
             </div>
-            <h2 className="font-display text-xl text-charcoal mb-2">
+            <h2 className="font-body text-xl text-ink mb-2">
               No Events Found
             </h2>
-            <p className="text-stone max-w-md mx-auto">
+            <p className="text-zinc max-w-md mx-auto">
               {search
                 ? `No events match your search "${search}".`
                 : status
@@ -213,8 +213,8 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
 
             {/* Pagination */}
             {result.totalPages > 1 && (
-              <div className="flex items-center justify-between bg-warm-white border border-sand rounded-lg p-4">
-                <p className="text-sm text-stone">
+              <div className="flex items-center justify-between bg-pure border border-mist rounded-lg p-4">
+                <p className="text-sm text-zinc">
                   Showing {(result.page - 1) * result.limit + 1} to{' '}
                   {Math.min(result.page * result.limit, result.total)} of {result.total} events
                 </p>
@@ -222,18 +222,18 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
                   {result.page > 1 && (
                     <Link
                       href={buildFilterUrl({ page: String(result.page - 1) })}
-                      className="px-4 py-2 text-sm border border-sand rounded-lg hover:border-coral transition-colors"
+                      className="px-4 py-2 text-sm border border-mist rounded-lg hover:border-coral transition-colors"
                     >
                       Previous
                     </Link>
                   )}
-                  <span className="px-4 py-2 text-sm text-stone">
+                  <span className="px-4 py-2 text-sm text-zinc">
                     Page {result.page} of {result.totalPages}
                   </span>
                   {result.page < result.totalPages && (
                     <Link
                       href={buildFilterUrl({ page: String(result.page + 1) })}
-                      className="px-4 py-2 text-sm border border-sand rounded-lg hover:border-coral transition-colors"
+                      className="px-4 py-2 text-sm border border-mist rounded-lg hover:border-coral transition-colors"
                     >
                       Next
                     </Link>

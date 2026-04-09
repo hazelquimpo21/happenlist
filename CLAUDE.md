@@ -1,114 +1,113 @@
-# Happenlist — Design System Reference (Visual Overhaul v2)
-
-> Append this to the project's claude.md or ARCHITECTURE.md after running the visual overhaul prompts.
-> This documents the design decisions and conventions introduced by the redesign.
+# Happenlist — Design System Reference (v3)
 
 ## Design Philosophy
 
-Happenlist is a curated local events directory for Milwaukee. The design should feel like a **vibrant city magazine** — editorial, warm, with personality. Not a database. Not a generic Tailwind template. Every visual choice should make Milwaukee feel alive with cool stuff happening.
+Happenlist is a curated local events directory for Milwaukee. The design feels like a **vibrant city festival poster** — bold, multi-chromatic, human-centered. Not a database. Not a generic Tailwind template.
 
 Core principles:
-- **Category colors create identity** — each event type is visually distinct
-- **Day + time over calendar date** — people plan around their schedule
-- **Variable visual hierarchy** — bento grids, mixed card sizes, big numbers
-- **Texture over flatness** — topographic patterns, layered shadows, depth
-- **Fraunces goes BIG** — the display font only works at large sizes
+- **Category colors create identity** — each event type is visually distinct via unique color
+- **Day + time over calendar date** — people plan around their schedule ("Sat · 7pm")
+- **Browse-first UX** — Jamie (primary user) is in discovery mode, low effort, high openness
+- **Mobile-first** — horizontal scroll cards on mobile, grids on desktop
+- **Sans-serif only** — Plus Jakarta Sans everywhere, no serif fonts
 
 ## Color System
 
-### Base Palette
+### Neutral Scale
 | Token | Hex | Usage |
 |-------|-----|-------|
-| `midnight` | #1a1a2e | Dark footer, dark accents |
-| `charcoal` | #2D2A26 | Primary text, headlines |
-| `cream` | #FAF7F2 | Page backgrounds |
-| `warm-white` | #FFFDF9 | Card backgrounds |
-| `sand` | #E8E0D5 | Borders, dividers |
-| `stone` | #9C9487 | Secondary text |
-| `coral` | #E07A5F | Primary accent, CTAs, hearts |
-| `sage` | #87A878 | "Free" badges, success states |
+| `ink` | #020203 | Primary text, headlines |
+| `night` | #141416 | Dark backgrounds (hero, weekend section) |
+| `slate` | #27272A | Heavy text |
+| `zinc` | #71717A | Secondary text, metadata |
+| `silver` | #A1A1AA | Disabled, placeholder |
+| `mist` | #E4E4E7 | Borders, dividers |
+| `cloud` | #F4F4F5 | Subtle backgrounds |
+| `ice` | #e0f0f5 | Cool tint backgrounds |
+| `white` | #FAFAFA | Page background |
+| `pure` | #FFFFFF | Card backgrounds |
 
-### Category Identity Colors
-| Category | Slug | Color | Usage |
-|----------|------|-------|-------|
-| Music | `music` | #7C3AED (purple) | Card top border, badge bg |
-| Arts & Culture | `arts` | #0D9488 (teal) | Card top border, badge bg |
-| Food & Drink | `food` | #EA580C (orange) | Card top border, badge bg |
-| Family | `family` | #F59E0B (amber) | Card top border, badge bg |
-| Sports & Fitness | `sports` | #3B82F6 (blue) | Card top border, badge bg |
-| Community | `community` | #E07A5F (coral) | Card top border, badge bg |
-| Nightlife | `nightlife` | #6366F1 (indigo) | Card top border, badge bg |
-| Classes | `classes` | #059669 (emerald) | Card top border, badge bg |
-| Festivals | `festivals` | #BE185D (pink) | Card top border, badge bg |
-| Workshops | `workshops` | #8B5CF6 (violet) | Card top border, badge bg |
-| Default | — | #E07A5F (coral) | Fallback for unknown categories |
+### Brand Colors
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `blue` | #008bd2 | Primary brand, CTAs, links, selected states |
+| `orange` | #d95927 | Secondary accent |
 
-The color map lives at `src/lib/constants/category-colors.ts`. Use `getCategoryColor(slug)` to get the full color object `{ bg, text, accent, light }`.
+### Category Identity Colors (15 unique)
+| Category | Slug | Hex |
+|----------|------|-----|
+| Music | `music` | #008bd2 |
+| Arts & Culture | `arts` | #008e91 |
+| Food & Drink | `food` | #d95927 |
+| Family | `family` | #e7b746 |
+| Sports | `sports` | #E85D45 |
+| Community | `community` | #D94B7A |
+| Nightlife | `nightlife` | #7B2D8E |
+| Classes | `classes` | #009768 |
+| Festivals | `festivals` | #d48700 |
+| Workshops | `workshops` | #5B4FC4 |
+| Markets | `markets` | #ace671 |
+| Talks | `talks` | #008bd2 |
+| Outdoors | `outdoors` | #6BAD5A |
+| Charity | `charity` | #D94B7A |
+| Holiday | `holiday` | #e7b746 |
+
+Color map: `src/lib/constants/category-colors.ts` — use `getCategoryColor(slug)` → `{ bg, text, accent, light }`.
+
+### Semantic Colors
+- **Selection states**: `border-blue bg-blue/10 text-blue` (forms, toggles, pills)
+- **Hearts**: `text-rose` when hearted, `text-zinc` when not
+- **Free badges**: `bg-emerald-light text-emerald`
+- **Overlays/modals**: `bg-ink/50` backdrop
+- **Hover links**: `text-blue hover:text-blue-dark`
 
 ## Typography
-- **Display/Headlines:** Fraunces (variable, serif). Use BOLD and BIG — hero at 4-5rem, section headers at 2-2.5rem. The font's personality only emerges at large sizes.
-- **Body:** Inter (sans-serif). Clean, readable, stays out of the way.
-- **Stats/Numbers:** Fraunces with `font-variant-numeric: tabular-nums` at `text-stat` (3.5rem) for big display numbers.
+- **Font**: Plus Jakarta Sans (via `next/font/google`), one family for everything
+- **Body class**: `font-body` — resolves to Plus Jakarta Sans
+- **Type scale**: `text-hero` (4.5rem), `text-display` (3rem), `text-h1`–`text-h4`, `text-body`, `text-body-sm`, `text-caption`
+
+## Homepage Flow (User Story)
+Jamie opens Happenlist on a Thursday evening. She doesn't know what she wants — she just wants to discover something cool.
+
+1. **Hero** — full-bleed image slideshow with crossfade, time-aware greeting ("Good evening, Milwaukee"), filter pills
+2. **Editor's Picks** — 3 featured event cards (desktop grid, mobile horizontal scroll)
+3. **Events by Category** — top 3 categories with real event cards, alternating white/cloud backgrounds
+4. **This Weekend** — dark `bg-ink` section, horizontal scroll compact cards
+5. **Just Added** — numbered list rows (01, 02, 03...) with category dots
+6. **CTA** — brand blue block ("Find your next experience")
 
 ## Card Design
 
-### EventCard
-- 3px top border in category accent color
-- Category badge: opaque pill in category bg color, white text, top-left of image
-- Date format: "Sat · 7pm" (day-of-week + time). Today/Tomorrow for near events. Month + day for distant events.
-- Layered shadow: `shadow-card` default, `shadow-card-lifted` on hover with `-translate-y-1.5`
-- "Free" price: sage-colored pill badge
-- **Parent badge**: when `child_event_count > 0`, shows contextual label (e.g., "12 acts", "48 showings") using category accent color at 15% opacity. Not shown on child event cards.
+### EventCard (`src/components/events/event-card.tsx`)
+- No top border — clean edge, shadow-card only
+- Category badge: opaque pill on image (top-left), category bg color
+- Date: `text-blue font-semibold` — "Today · 7pm", "Sat · 7pm", "Apr 12 · 7pm"
+- Shadow: `shadow-card` → `shadow-card-lifted` + `-translate-y-1` on hover
+- Free badge: `bg-emerald-light text-emerald`
+- Parent badge: child count label in category accent @ 15% opacity
 
-### SeriesCard
-- Type badge in bold color (Camp = amber, Class = emerald, etc.)
-- Schedule info: "Wednesdays · 4-5pm"
-- Age range displayed prominently: "Ages 6-12"
-- Attendance mode pill: "Drop-in" vs "Registration Required"
+### CompactEventCard (homepage inline)
+- Narrower (w-64), 3:2 aspect image, time badge overlay, category pill below image
+- Dark variant for "This Weekend" section: `bg-night border-pure/5`
 
-## Layout Patterns
-
-### Bento Grid (Homepage Featured)
-CSS Grid with first item spanning 2 columns and 2 rows. Creates visual hierarchy — one "hero pick" card + standard supporting cards. Use `variant="bento"` on EventGrid.
-
-### Color-Blocked Category Cards
-Each category card has full background in the category's light tint, bold left border in accent color, larger icon in accent color. Not the old tiny-circles-in-a-grid pattern.
-
-## Signature Visual Element
-**Topographic contour line pattern** — applied via `.bg-topo` CSS class. Subtle organic texture on section backgrounds (hero, CTA). Happenlist's visual fingerprint.
+## Custom Icons
+`src/components/icons/category-icons.tsx` — 15 bold geometric SVGs, `currentColor`, 24x24 viewBox.
+Use `getCategoryIcon(iconName)` to get the component.
 
 ## Parent Events
+Events support one level of parent-child nesting (festivals → acts, theatrical runs → performances).
 
-Events can have a parent-child relationship (festivals → screenings, conferences → sessions, theatrical runs → performances). Only one level of nesting is supported.
+- `getChildEvents`, `getParentEventInfo`, `getChildEventCount` in data layer
+- Main feeds filter `WHERE parent_event_id IS NULL` to hide children
+- **ChildEventsSchedule**: date-grouped program view with filter pills, today indicator, auto-scroll
+- Parent detail: shows schedule below description
+- Child detail: shows parent breadcrumb + sibling events
 
-### Data Layer
-- `getChildEvents(parentEventId)` — fetches published children ordered by `start_datetime ASC`, returns events + distinct `parent_group` values for filter pills
-- `getParentEventInfo(parentEventId)` — lightweight fetch for breadcrumbs (title, slug, dates, image, category)
-- `getChildEventCount(parentEventId)` — head-only count query
-- Main event feeds (`getEvents`, `getFeaturedEvents`) filter `WHERE parent_event_id IS NULL` to hide children
-- `getEvent` joins parent title + slug when `parent_event_id` is set
-
-### ChildEventsSchedule Component
-Client component (`src/components/events/child-events-schedule.tsx`) shown on parent event detail pages:
-- Groups children by date with Fraunces date headers (editorial program feel)
-- Filter pills for `parent_group` values (venues, stages) — client-side filter, no page reload
-- "Today" indicator with auto-scroll
-- Each row: time (bold, tabular) + category dot + title (links to child) + venue + price badge
-- Responsive: compact rows on desktop, stacked on mobile
-
-### Event Detail Page Behavior
-- **Parent events**: show child count badge + ChildEventsSchedule below description (replaces "Similar Events")
-- **Child events**: show parent breadcrumb trail + `parent_group` label + "More from [Parent]" sibling events (replaces "Similar Events")
-- **Standalone events**: unchanged, show "Events Like This" similar events
-
-### SEO
-- Parent events add `subEvent` array to JSON-LD (max 50 children)
-- Child events add `superEvent` reference to parent in JSON-LD
-
-## Behavioral Design Notes
-The primary user ("Jamie") is in browse mode — low effort, high openness. They want to be SURPRISED by something cool. Design decisions support this:
-- **Category colors** reduce cognitive load through pattern matching (purple = music)
-- **Bento layout** triggers gallery browsing mode (exploratory) vs. grid processing (systematic)
-- **Big stat number** on homepage creates credibility ("127 events this week" = vibrant city)
-- **Day + time format** serves the planning brain without mental math
-- **Variable visual hierarchy** creates the dopamine of variable reward — each scroll reveals something visually different
+## Key Conventions
+- Tailwind tokens defined in `tailwind.config.ts` — neutrals, brand, category, legacy aliases
+- CSS custom properties in `globals.css` for all color tokens
+- `container-page` utility for consistent max-width + padding
+- Legacy color aliases exist (`coral`, `charcoal`, `sand`, etc.) but prefer new tokens (`blue`, `ink`, `mist`)
+- Selection/active states use `blue` (not coral)
+- Heart icon uses `rose` color
+- Modal/overlay backdrops use `bg-ink/50`

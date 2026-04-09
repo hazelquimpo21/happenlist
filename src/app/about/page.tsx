@@ -26,13 +26,13 @@ export default function AboutPage() {
       {/* ============================================
           HERO SECTION
           ============================================ */}
-      <section className="bg-warm-white py-16 md:py-24 border-b border-sand">
+      <section className="bg-pure py-16 md:py-24 border-b border-mist">
         <Container>
           <div className="max-w-2xl mx-auto text-center">
-            <h1 className="font-display text-display text-charcoal mb-6">
-              About <span className="text-coral">Happenlist</span>
+            <h1 className="font-body text-display text-ink mb-6">
+              About <span className="text-blue">Happenlist</span>
             </h1>
-            <p className="text-body-lg text-stone">
+            <p className="text-body-lg text-zinc">
               We believe everyone deserves to know what&apos;s happening in their
               community. That&apos;s why we built Happenlist - a simple, beautiful
               way to discover local events.
@@ -47,16 +47,16 @@ export default function AboutPage() {
       <section className="py-16">
         <Container>
           <div className="max-w-3xl mx-auto">
-            <h2 className="font-display text-h2 text-charcoal mb-6 text-center">
+            <h2 className="font-body text-h2 text-ink mb-6 text-center">
               Our Mission
             </h2>
-            <p className="text-body text-stone mb-6">
+            <p className="text-body text-zinc mb-6">
               Finding events shouldn&apos;t be hard. You shouldn&apos;t have to check
               a dozen different websites, scroll through endless social media
               feeds, or miss out on amazing experiences just because you
               didn&apos;t hear about them in time.
             </p>
-            <p className="text-body text-stone mb-6">
+            <p className="text-body text-zinc mb-6">
               Happenlist brings together events from across your city into one
               clean, easy-to-browse experience. From live music and art shows
               to workshops, festivals, and community gatherings - we make sure
@@ -69,21 +69,21 @@ export default function AboutPage() {
       {/* ============================================
           VALUES SECTION
           ============================================ */}
-      <section className="py-16 bg-warm-white">
+      <section className="py-16 bg-pure">
         <Container>
-          <h2 className="font-display text-h2 text-charcoal mb-12 text-center">
+          <h2 className="font-body text-h2 text-ink mb-12 text-center">
             What We Value
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Local First */}
             <div className="text-center">
-              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-coral/10 flex items-center justify-center">
-                <MapPin className="w-7 h-7 text-coral" />
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-blue/10 flex items-center justify-center">
+                <MapPin className="w-7 h-7 text-blue" />
               </div>
-              <h3 className="font-display text-h4 text-charcoal mb-2">
+              <h3 className="font-body text-h4 text-ink mb-2">
                 Local First
               </h3>
-              <p className="text-small text-stone">
+              <p className="text-small text-zinc">
                 We focus on what&apos;s happening in your neighborhood, not
                 across the globe.
               </p>
@@ -91,13 +91,13 @@ export default function AboutPage() {
 
             {/* Community */}
             <div className="text-center">
-              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-coral/10 flex items-center justify-center">
-                <Users className="w-7 h-7 text-coral" />
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-blue/10 flex items-center justify-center">
+                <Users className="w-7 h-7 text-blue" />
               </div>
-              <h3 className="font-display text-h4 text-charcoal mb-2">
+              <h3 className="font-body text-h4 text-ink mb-2">
                 Community
               </h3>
-              <p className="text-small text-stone">
+              <p className="text-small text-zinc">
                 Events bring people together. We&apos;re here to help those
                 connections happen.
               </p>
@@ -105,13 +105,13 @@ export default function AboutPage() {
 
             {/* Simplicity */}
             <div className="text-center">
-              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-coral/10 flex items-center justify-center">
-                <Calendar className="w-7 h-7 text-coral" />
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-blue/10 flex items-center justify-center">
+                <Calendar className="w-7 h-7 text-blue" />
               </div>
-              <h3 className="font-display text-h4 text-charcoal mb-2">
+              <h3 className="font-body text-h4 text-ink mb-2">
                 Simplicity
               </h3>
-              <p className="text-small text-stone">
+              <p className="text-small text-zinc">
                 No clutter, no noise. Just the events you care about, easy to
                 find and browse.
               </p>
@@ -119,13 +119,13 @@ export default function AboutPage() {
 
             {/* Passion */}
             <div className="text-center">
-              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-coral/10 flex items-center justify-center">
-                <Heart className="w-7 h-7 text-coral" />
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-blue/10 flex items-center justify-center">
+                <Heart className="w-7 h-7 text-blue" />
               </div>
-              <h3 className="font-display text-h4 text-charcoal mb-2">
+              <h3 className="font-body text-h4 text-ink mb-2">
                 Passion
               </h3>
-              <p className="text-small text-stone">
+              <p className="text-small text-zinc">
                 Built by people who love discovering new experiences and
                 supporting local creators.
               </p>
@@ -140,10 +140,10 @@ export default function AboutPage() {
       <section className="py-16">
         <Container>
           <div className="text-center">
-            <h2 className="font-display text-h2 text-charcoal mb-4">
+            <h2 className="font-body text-h2 text-ink mb-4">
               Ready to explore?
             </h2>
-            <p className="text-body text-stone mb-8 max-w-lg mx-auto">
+            <p className="text-body text-zinc mb-8 max-w-lg mx-auto">
               Start discovering events happening in your area today.
             </p>
             <div className="flex flex-wrap justify-center gap-4">

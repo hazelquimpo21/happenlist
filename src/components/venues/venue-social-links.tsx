@@ -107,7 +107,7 @@ export function VenueSocialLinks({ socialLinks, className }: VenueSocialLinksPro
 
   return (
     <div className={cn('space-y-2', className)}>
-      <p className="font-medium text-charcoal text-body-sm">Follow</p>
+      <p className="font-medium text-ink text-body-sm">Follow</p>
       <div className="flex items-center gap-1">
         {availableLinks.map((config) => {
           const url = socialLinks[config.key]!;

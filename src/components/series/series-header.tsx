@@ -82,7 +82,7 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
   return (
     <section className={cn('grid lg:grid-cols-2 gap-8', className)}>
       {/* Image */}
-      <div className="relative aspect-video lg:aspect-[4/3] rounded-lg overflow-hidden bg-sand">
+      <div className="relative aspect-video lg:aspect-[4/3] rounded-lg overflow-hidden bg-cloud">
         {imageUrl ? (
           <Image
             src={imageUrl}
@@ -94,8 +94,8 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
           />
         ) : (
           // Placeholder with gradient
-          <div className="w-full h-full bg-gradient-to-br from-sage/20 to-coral/20 flex items-center justify-center">
-            <span className="text-stone/30 text-display font-display">
+          <div className="w-full h-full bg-gradient-to-br from-blue/10 to-orange/10 flex items-center justify-center">
+            <span className="text-zinc/30 text-display font-body">
               {series.title.charAt(0).toUpperCase()}
             </span>
           </div>
@@ -113,14 +113,14 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
         {series.category && (
           <Link
             href={`/events/${series.category.slug}`}
-            className="text-body-sm text-coral hover:underline mb-2"
+            className="text-body-sm text-blue hover:underline mb-2"
           >
             {series.category.name}
           </Link>
         )}
 
         {/* Title */}
-        <h1 className="font-display text-h1 text-charcoal mb-2">
+        <h1 className="font-body text-h1 text-ink mb-2">
           {series.title}
         </h1>
 
@@ -131,12 +131,12 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
         <div className="space-y-3 mb-6">
           {/* Date range or recurrence */}
           {(dateDisplay || recurrenceDisplay) && (
-            <div className="flex items-start gap-3 text-body text-stone">
+            <div className="flex items-start gap-3 text-body text-zinc">
               <Calendar className="w-5 h-5 mt-0.5 flex-shrink-0" />
               <div>
                 {dateDisplay && <p>{dateDisplay}</p>}
                 {recurrenceDisplay && (
-                  <p className="text-sage">{recurrenceDisplay}</p>
+                  <p className="text-emerald">{recurrenceDisplay}</p>
                 )}
               </div>
             </div>
@@ -144,7 +144,7 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
 
           {/* Phase C: Core hours (for camps/classes with structured times) */}
           {(series.core_start_time || series.core_end_time) && (
-            <div className="flex items-center gap-3 text-body text-stone">
+            <div className="flex items-center gap-3 text-body text-zinc">
               <Clock className="w-5 h-5 flex-shrink-0" />
               <span>
                 {formatTimeDisplay(series.core_start_time)}
@@ -156,7 +156,7 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
 
           {/* Phase C: Days of week (for camps: Mon-Fri display) */}
           {series.days_of_week && series.days_of_week.length > 0 && (
-            <div className="flex items-center gap-3 text-body text-stone">
+            <div className="flex items-center gap-3 text-body text-zinc">
               <CalendarDays className="w-5 h-5 flex-shrink-0" />
               <span>{formatDaysOfWeek(series.days_of_week)}</span>
             </div>
@@ -164,12 +164,12 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
 
           {/* Location */}
           {series.location && (
-            <div className="flex items-start gap-3 text-body text-stone">
+            <div className="flex items-start gap-3 text-body text-zinc">
               <MapPin className="w-5 h-5 mt-0.5 flex-shrink-0" />
               <div>
                 <Link
                   href={`/venue/${series.location.slug}`}
-                  className="text-charcoal hover:text-coral transition-colors"
+                  className="text-ink hover:text-blue transition-colors"
                 >
                   {series.location.name}
                 </Link>
@@ -182,7 +182,7 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
 
           {/* Sessions */}
           {sessionDisplay && (
-            <div className="flex items-center gap-3 text-body text-stone">
+            <div className="flex items-center gap-3 text-body text-zinc">
               <Users className="w-5 h-5 flex-shrink-0" />
               <span>{sessionDisplay}</span>
             </div>
@@ -190,7 +190,7 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
 
           {/* Duration (if set in recurrence and no core times) */}
           {series.recurrence_rule?.duration_minutes && !series.core_start_time && (
-            <div className="flex items-center gap-3 text-body text-stone">
+            <div className="flex items-center gap-3 text-body text-zinc">
               <Clock className="w-5 h-5 flex-shrink-0" />
               <span>{formatDuration(series.recurrence_rule.duration_minutes)}</span>
             </div>
@@ -198,12 +198,12 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
 
           {/* Phase C: Age range (if set) */}
           {(series.age_low != null || series.age_high != null) && (
-            <div className="flex items-start gap-3 text-body text-stone">
+            <div className="flex items-start gap-3 text-body text-zinc">
               <Baby className="w-5 h-5 mt-0.5 flex-shrink-0" />
               <div>
                 <p>{formatAgeRange(series.age_low, series.age_high)}</p>
                 {series.age_details && (
-                  <p className="text-body-sm text-stone/70">{series.age_details}</p>
+                  <p className="text-body-sm text-zinc/70">{series.age_details}</p>
                 )}
               </div>
             </div>
@@ -211,7 +211,7 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
 
           {/* Phase C: Skill level (if set) */}
           {series.skill_level && (
-            <div className="flex items-center gap-3 text-body text-stone">
+            <div className="flex items-center gap-3 text-body text-zinc">
               <GraduationCap className="w-5 h-5 flex-shrink-0" />
               <span>{SKILL_LEVEL_INFO[series.skill_level as SkillLevel]?.label ?? series.skill_level}</span>
             </div>
@@ -227,26 +227,26 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
 
           {/* Phase C: Per-session / drop-in price */}
           {series.per_session_price != null && series.per_session_price > 0 && (
-            <p className="text-body text-stone mt-1">
+            <p className="text-body text-zinc mt-1">
               Drop-in: ${series.per_session_price % 1 === 0 ? series.per_session_price : series.per_session_price.toFixed(2)}/session
             </p>
           )}
 
           {/* Phase C: Materials fee */}
           {series.materials_fee != null && series.materials_fee > 0 && (
-            <p className="text-body-sm text-stone mt-1">
+            <p className="text-body-sm text-zinc mt-1">
               Materials fee: ${series.materials_fee % 1 === 0 ? series.materials_fee : series.materials_fee.toFixed(2)}
             </p>
           )}
 
           {/* Existing price_details */}
           {series.price_details && (
-            <p className="text-body-sm text-stone mt-1">{series.price_details}</p>
+            <p className="text-body-sm text-zinc mt-1">{series.price_details}</p>
           )}
 
           {/* Phase C: Pricing notes (early bird, discounts, etc.) */}
           {series.pricing_notes && (
-            <p className="text-body-sm text-stone/80 mt-1 italic">{series.pricing_notes}</p>
+            <p className="text-body-sm text-zinc/80 mt-1 italic">{series.pricing_notes}</p>
           )}
         </div>
 
@@ -265,18 +265,18 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
 
         {/* Phase C: Term/semester label */}
         {series.term_name && (
-          <p className="text-body-sm text-stone mt-3">
-            Term: <span className="font-medium text-charcoal">{series.term_name}</span>
+          <p className="text-body-sm text-zinc mt-3">
+            Term: <span className="font-medium text-ink">{series.term_name}</span>
           </p>
         )}
 
         {/* Organizer link */}
         {series.organizer && (
-          <div className="mt-6 pt-6 border-t border-sand">
-            <p className="text-body-sm text-stone mb-1">Presented by</p>
+          <div className="mt-6 pt-6 border-t border-mist">
+            <p className="text-body-sm text-zinc mb-1">Presented by</p>
             <Link
               href={`/organizer/${series.organizer.slug}`}
-              className="text-body font-medium text-charcoal hover:text-coral transition-colors"
+              className="text-body font-medium text-ink hover:text-blue transition-colors"
             >
               {series.organizer.name}
             </Link>

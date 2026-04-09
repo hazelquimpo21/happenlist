@@ -159,7 +159,7 @@ export function AdminSeriesGrid({ series }: AdminSeriesGridProps) {
     <div>
       {/* Bulk action bar */}
       {selected.size > 0 && (
-        <div className="sticky top-0 z-20 bg-charcoal text-warm-white rounded-xl p-3 mb-4 flex items-center gap-3 shadow-lg">
+        <div className="sticky top-0 z-20 bg-ink text-pure rounded-xl p-3 mb-4 flex items-center gap-3 shadow-lg">
           <span className="text-sm font-medium">
             {selected.size} selected
           </span>
@@ -264,7 +264,7 @@ export function AdminSeriesGrid({ series }: AdminSeriesGridProps) {
       {actionMessage && (
         <div className={`flex items-center gap-2 p-3 mb-4 rounded-lg text-sm ${
           actionMessage.type === 'success'
-            ? 'bg-sage/10 text-sage border border-sage/20'
+            ? 'bg-emerald/10 text-emerald border border-sage/20'
             : 'bg-red-50 text-red-700 border border-red-200'
         }`}>
           {actionMessage.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
@@ -284,12 +284,12 @@ export function AdminSeriesGrid({ series }: AdminSeriesGridProps) {
           return (
             <div
               key={s.id}
-              className={`relative bg-warm-white border rounded-xl p-4 transition-all ${
+              className={`relative bg-pure border rounded-xl p-4 transition-all ${
                 isMergeTarget
                   ? 'border-indigo-400 ring-2 ring-indigo-200 shadow-lg'
                   : isSelected
-                  ? 'border-coral ring-1 ring-coral/30'
-                  : 'border-sand hover:shadow-card-lifted hover:-translate-y-0.5'
+                  ? 'border-blue ring-1 ring-blue/30'
+                  : 'border-mist hover:shadow-card-lifted hover:-translate-y-0.5'
               }`}
             >
               {/* Selection checkbox */}
@@ -307,8 +307,8 @@ export function AdminSeriesGrid({ series }: AdminSeriesGridProps) {
                   isMergeTarget
                     ? 'bg-indigo-500 border-indigo-500 text-white'
                     : isSelected
-                    ? 'bg-coral border-coral text-white'
-                    : 'border-sand hover:border-stone bg-white'
+                    ? 'bg-blue border-blue text-white'
+                    : 'border-mist hover:border-stone bg-white'
                 }`}
               >
                 {isMergeTarget ? (
@@ -329,16 +329,16 @@ export function AdminSeriesGrid({ series }: AdminSeriesGridProps) {
               <Link href={`/admin/series/${s.id}/edit`} className="block group">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-2 pr-8">
-                  <h3 className="font-medium text-charcoal group-hover:text-coral transition-colors line-clamp-2 flex-1 mr-2">
+                  <h3 className="font-medium text-ink group-hover:text-blue transition-colors line-clamp-2 flex-1 mr-2">
                     {s.title}
                   </h3>
-                  <Badge className={TYPE_COLORS[s.series_type] || 'bg-stone/10 text-stone'}>
+                  <Badge className={TYPE_COLORS[s.series_type] || 'bg-stone/10 text-zinc'}>
                     {s.series_type}
                   </Badge>
                 </div>
 
                 {/* Meta row */}
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-stone mb-3">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc mb-3">
                   {s.organizer_name && (
                     <span className="flex items-center gap-1">
                       <Users className="w-3 h-3" />
@@ -358,7 +358,7 @@ export function AdminSeriesGrid({ series }: AdminSeriesGridProps) {
 
                 {/* Date range */}
                 {(s.start_date || s.end_date) && (
-                  <div className="flex items-center gap-1.5 text-xs text-stone mb-3">
+                  <div className="flex items-center gap-1.5 text-xs text-zinc mb-3">
                     <Calendar className="w-3 h-3" />
                     {formatDate(s.start_date)}
                     {s.end_date && s.start_date !== s.end_date && (
@@ -368,28 +368,28 @@ export function AdminSeriesGrid({ series }: AdminSeriesGridProps) {
                 )}
 
                 {/* Stats row */}
-                <div className="flex items-center gap-3 pt-2 border-t border-sand/50">
+                <div className="flex items-center gap-3 pt-2 border-t border-mist/50">
                   <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
                     s.status === 'published'
-                      ? 'bg-sage/10 text-sage'
+                      ? 'bg-emerald/10 text-emerald'
                       : s.status === 'pending_review'
                       ? 'bg-amber-50 text-amber-600'
                       : s.status === 'cancelled'
                       ? 'bg-red-50 text-red-600'
-                      : 'bg-stone/10 text-stone'
+                      : 'bg-stone/10 text-zinc'
                   }`}>
                     {s.status}
                   </span>
-                  <span className="text-[11px] text-stone">
+                  <span className="text-[11px] text-zinc">
                     {s.event_count} event{s.event_count !== 1 ? 's' : ''}
                   </span>
                   {s.total_sessions && (
-                    <span className="text-[11px] text-stone">
+                    <span className="text-[11px] text-zinc">
                       {s.total_sessions} sessions
                     </span>
                   )}
                   {(s.age_low != null || s.age_high != null) && (
-                    <span className="text-[11px] text-stone ml-auto">
+                    <span className="text-[11px] text-zinc ml-auto">
                       Ages {s.age_low ?? '?'}&ndash;{s.age_high ?? '?'}
                     </span>
                   )}

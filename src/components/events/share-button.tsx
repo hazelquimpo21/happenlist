@@ -44,15 +44,15 @@ export function ShareButton({ title, text, className }: ShareButtonProps) {
       className={cn(
         'inline-flex items-center justify-center gap-2',
         'font-body font-medium rounded-md transition-all duration-base',
-        'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coral-light',
-        'bg-transparent text-stone hover:text-charcoal hover:bg-sand',
+        'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-light',
+        'bg-transparent text-zinc hover:text-ink hover:bg-cloud',
         'px-6 py-2.5 text-body h-11',
         className,
       )}
     >
       {copied ? (
         <>
-          <Check className="w-4 h-4 text-sage" />
+          <Check className="w-4 h-4 text-emerald" />
           Copied!
         </>
       ) : (

@@ -126,7 +126,7 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
           {/* Organizer profile */}
           <div className="flex items-start gap-6 mb-8">
             {/* Logo */}
-            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-coral/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-blue/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
               {organizer.logo_url ? (
                 <Image
                   src={organizer.logo_url}
@@ -136,7 +136,7 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
                   className="object-cover"
                 />
               ) : (
-                <User className="w-12 h-12 text-coral" />
+                <User className="w-12 h-12 text-blue" />
               )}
             </div>
 
@@ -145,7 +145,7 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
               <Badge variant="secondary" className="mb-3">
                 Organizer
               </Badge>
-              <h1 className="font-display text-h1 text-charcoal">
+              <h1 className="font-body text-h1 text-ink">
                 {organizer.name}
               </h1>
             </div>
@@ -154,7 +154,7 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
           {/* Description */}
           {organizer.description && (
             <div className="mb-8">
-              <h2 className="font-display text-h3 text-charcoal mb-4">
+              <h2 className="font-body text-h3 text-ink mb-4">
                 About
               </h2>
               <div className="prose-event whitespace-pre-wrap">
@@ -168,22 +168,22 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
         <div className="lg:col-span-1">
           <div className="sticky top-24 space-y-6">
             {/* Contact info card */}
-            <div className="p-6 bg-warm-white rounded-lg border border-sand">
-              <h3 className="font-display text-h4 text-charcoal mb-4">
+            <div className="p-6 bg-pure rounded-lg border border-mist">
+              <h3 className="font-body text-h4 text-ink mb-4">
                 Contact
               </h3>
 
               {/* Website */}
               {organizer.website_url && (
                 <div className="flex items-start gap-3 mb-4">
-                  <Globe className="w-5 h-5 text-coral mt-0.5" />
+                  <Globe className="w-5 h-5 text-blue mt-0.5" />
                   <div>
-                    <p className="font-medium text-charcoal">Website</p>
+                    <p className="font-medium text-ink">Website</p>
                     <a
                       href={organizer.website_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-body-sm text-coral hover:text-coral-dark transition-colors"
+                      className="text-body-sm text-blue hover:text-orange-dark transition-colors"
                     >
                       Visit website
                     </a>
@@ -194,12 +194,12 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
               {/* Email */}
               {organizer.email && (
                 <div className="flex items-start gap-3 mb-4">
-                  <Mail className="w-5 h-5 text-coral mt-0.5" />
+                  <Mail className="w-5 h-5 text-blue mt-0.5" />
                   <div>
-                    <p className="font-medium text-charcoal">Email</p>
+                    <p className="font-medium text-ink">Email</p>
                     <a
                       href={`mailto:${organizer.email}`}
-                      className="text-body-sm text-coral hover:text-coral-dark transition-colors"
+                      className="text-body-sm text-blue hover:text-orange-dark transition-colors"
                     >
                       {organizer.email}
                     </a>
@@ -210,12 +210,12 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
               {/* Phone */}
               {organizer.phone && (
                 <div className="flex items-start gap-3 mb-6">
-                  <Phone className="w-5 h-5 text-coral mt-0.5" />
+                  <Phone className="w-5 h-5 text-blue mt-0.5" />
                   <div>
-                    <p className="font-medium text-charcoal">Phone</p>
+                    <p className="font-medium text-ink">Phone</p>
                     <a
                       href={`tel:${organizer.phone}`}
-                      className="text-body-sm text-coral hover:text-coral-dark transition-colors"
+                      className="text-body-sm text-blue hover:text-orange-dark transition-colors"
                     >
                       {organizer.phone}
                     </a>
@@ -237,10 +237,10 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
             </div>
 
             {/* Stats */}
-            <div className="p-6 bg-warm-white rounded-lg border border-sand">
+            <div className="p-6 bg-pure rounded-lg border border-mist">
               <div className="text-center">
-                <p className="font-display text-h2 text-coral">{total}</p>
-                <p className="text-body-sm text-stone">
+                <p className="font-body text-h2 text-blue">{total}</p>
+                <p className="text-body-sm text-zinc">
                   {total === 1 ? 'Upcoming Event' : 'Upcoming Events'}
                 </p>
               </div>

@@ -161,10 +161,14 @@ export function useHeart(options: UseHeartOptions): UseHeartReturn {
       setIsHearted(data.hearted);
       setHeartCount(data.heartCount);
 
-      // Show success feedback for adding (not removing)
+      // Show success feedback for both adding and removing
       if (data.hearted) {
         toast.success('Event saved!', {
           description: 'View all your saved events in My Hearts.',
+          duration: 2000,
+        });
+      } else {
+        toast('Event removed from saved', {
           duration: 2000,
         });
       }

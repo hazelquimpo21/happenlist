@@ -75,12 +75,12 @@ function MenuItem({ href, onClick, icon, label, destructive }: MenuItemProps) {
     'transition-colors duration-fast',
     destructive
       ? 'text-red-600 hover:bg-red-50 focus:bg-red-50'
-      : 'text-charcoal hover:bg-sand/50 focus:bg-sand/50'
+      : 'text-ink hover:bg-cloud/50 focus:bg-cloud/50'
   );
 
   const content = (
     <>
-      <span className={cn('w-5 h-5', destructive ? 'text-red-500' : 'text-stone')}>
+      <span className={cn('w-5 h-5', destructive ? 'text-red-500' : 'text-zinc')}>
         {icon}
       </span>
       <span>{label}</span>
@@ -129,7 +129,7 @@ function RoleBadge({ isAdmin, organizerId }: RoleBadgeProps) {
 
   if (organizerId) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-coral-light text-coral-dark text-xs font-medium">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange/10 text-orange text-xs font-medium">
         <Megaphone className="w-3 h-3" />
         Organizer
       </span>
@@ -157,8 +157,8 @@ export function UserMenu({ session, onSignOut }: UserMenuProps) {
         <button
           className={cn(
             'flex items-center gap-1.5 p-1 rounded-lg',
-            'hover:bg-sand/50 transition-colors duration-fast',
-            'focus:outline-none focus:ring-2 focus:ring-coral-light focus:ring-offset-2'
+            'hover:bg-cloud/50 transition-colors duration-fast',
+            'focus:outline-none focus:ring-2 focus:ring-blue-light focus:ring-offset-2'
           )}
           aria-label="Open user menu"
         >
@@ -168,7 +168,7 @@ export function UserMenu({ session, onSignOut }: UserMenuProps) {
             avatarUrl={session.avatarUrl}
             size="sm"
           />
-          <ChevronDown className="w-4 h-4 text-stone hidden sm:block" />
+          <ChevronDown className="w-4 h-4 text-zinc hidden sm:block" />
         </button>
       </DropdownMenu.Trigger>
 
@@ -177,7 +177,7 @@ export function UserMenu({ session, onSignOut }: UserMenuProps) {
         <DropdownMenu.Content
           className={cn(
             'min-w-[240px] p-2 rounded-xl',
-            'bg-white shadow-lg border border-sand',
+            'bg-white shadow-lg border border-mist',
             'animate-in fade-in-0 zoom-in-95',
             'z-dropdown'
           )}
@@ -194,10 +194,10 @@ export function UserMenu({ session, onSignOut }: UserMenuProps) {
                 size="md"
               />
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-charcoal truncate">
+                <p className="font-medium text-ink truncate">
                   {session.name || 'User'}
                 </p>
-                <p className="text-body-sm text-stone truncate">
+                <p className="text-body-sm text-zinc truncate">
                   {session.email}
                 </p>
               </div>
@@ -213,7 +213,7 @@ export function UserMenu({ session, onSignOut }: UserMenuProps) {
             </div>
           </div>
 
-          <DropdownMenu.Separator className="h-px bg-sand my-1" />
+          <DropdownMenu.Separator className="h-px bg-cloud my-1" />
 
           {/* Main Menu Items */}
           <DropdownMenu.Group>
@@ -242,7 +242,7 @@ export function UserMenu({ session, onSignOut }: UserMenuProps) {
           {/* Admin Section */}
           {session.isAdmin && (
             <>
-              <DropdownMenu.Separator className="h-px bg-sand my-1" />
+              <DropdownMenu.Separator className="h-px bg-cloud my-1" />
               <DropdownMenu.Group>
                 <MenuItem
                   href="/admin"
@@ -253,7 +253,7 @@ export function UserMenu({ session, onSignOut }: UserMenuProps) {
             </>
           )}
 
-          <DropdownMenu.Separator className="h-px bg-sand my-1" />
+          <DropdownMenu.Separator className="h-px bg-cloud my-1" />
 
           {/* Settings & Sign Out */}
           <DropdownMenu.Group>

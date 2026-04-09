@@ -307,7 +307,7 @@ The event detail page displays three description fields:
 | Field | Purpose | Display Location |
 |-------|---------|-----------------|
 | `short_description` | Brief tagline | Italic text directly under the event title |
-| `happenlist_summary` | AI-generated editorial highlights | Highlighted "Happenlist Highlights" box (coral background) |
+| `happenlist_summary` | AI-generated editorial highlights | Highlighted "Happenlist Highlights" box (blue accent) |
 | `organizer_description` | Verbatim text from the event organizer | Quoted "From the Organizer" section |
 
 The `description` field is not displayed on the detail page but is retained for SEO fallback purposes.

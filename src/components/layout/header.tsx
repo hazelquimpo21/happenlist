@@ -1,16 +1,7 @@
 /**
- * HEADER COMPONENT
- * ================
- * Site navigation header with logo, nav links, search, and auth.
- *
- * The header shows:
- * - Logo (links to home)
- * - Navigation links (desktop only)
- * - Search button
- * - Auth controls (login button or user menu)
- * - Mobile menu button (mobile only)
- *
- * Auth state is handled by the HeaderAuth client component.
+ * HEADER COMPONENT — v3 Redesign
+ * ==============================
+ * Clean sans-serif header. Blue brand accent. Search in nav.
  */
 
 import Link from 'next/link';
@@ -21,28 +12,10 @@ import { MobileMenu } from './mobile-menu';
 import { NAV_ITEMS, ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 interface HeaderProps {
-  /** Transparent header for hero overlays */
   transparent?: boolean;
 }
 
-// ============================================================================
-// COMPONENT
-// ============================================================================
-
-/**
- * Site header with navigation.
- *
- * @example
- * <Header />
- *
- * @example
- * <Header transparent />
- */
 export function Header({ transparent = false }: HeaderProps) {
   return (
     <header
@@ -51,25 +24,21 @@ export function Header({ transparent = false }: HeaderProps) {
         'transition-all duration-base',
         transparent
           ? 'bg-transparent'
-          : 'bg-cream/95 backdrop-blur-sm border-b border-sand'
+          : 'bg-white/95 backdrop-blur-sm border-b border-mist'
       )}
     >
       <Container>
         <nav className="flex items-center justify-between h-16 md:h-18">
-          {/* ---------------------------------------------------------------- */}
-          {/* LOGO                                                            */}
-          {/* ---------------------------------------------------------------- */}
+          {/* LOGO */}
           <Link
             href={ROUTES.home}
-            className="flex items-center gap-1 font-display text-h3 text-charcoal hover:text-coral transition-colors"
+            className="flex items-center gap-1 font-body text-h3 font-bold text-ink hover:text-blue transition-colors"
           >
-            <span className="text-coral">H</span>
+            <span className="text-blue">H</span>
             <span className="hidden sm:inline -ml-0.5">appenlist</span>
           </Link>
 
-          {/* ---------------------------------------------------------------- */}
-          {/* DESKTOP NAVIGATION                                              */}
-          {/* ---------------------------------------------------------------- */}
+          {/* DESKTOP NAV */}
           <div className="hidden md:flex items-center gap-1">
             {NAV_ITEMS.map((item) => (
               <Link
@@ -77,8 +46,8 @@ export function Header({ transparent = false }: HeaderProps) {
                 href={item.href}
                 className={cn(
                   'px-4 py-2 rounded-md',
-                  'text-body-sm font-medium text-stone',
-                  'hover:text-charcoal hover:bg-sand/50',
+                  'text-body-sm font-medium text-zinc',
+                  'hover:text-ink hover:bg-cloud',
                   'transition-colors duration-fast'
                 )}
               >
@@ -87,16 +56,14 @@ export function Header({ transparent = false }: HeaderProps) {
             ))}
           </div>
 
-          {/* ---------------------------------------------------------------- */}
-          {/* RIGHT SIDE ACTIONS                                              */}
-          {/* ---------------------------------------------------------------- */}
+          {/* RIGHT SIDE */}
           <div className="flex items-center gap-2">
-            {/* Search button */}
+            {/* Search */}
             <Link
               href={ROUTES.search}
               className={cn(
                 'p-2 rounded-md',
-                'text-stone hover:text-charcoal hover:bg-sand/50',
+                'text-zinc hover:text-ink hover:bg-cloud',
                 'transition-colors duration-fast'
               )}
               aria-label="Search events"
@@ -104,12 +71,12 @@ export function Header({ transparent = false }: HeaderProps) {
               <Search className="w-5 h-5" />
             </Link>
 
-            {/* Auth controls (login/user menu) - desktop */}
+            {/* Auth — desktop */}
             <div className="hidden md:block">
               <HeaderAuth />
             </div>
 
-            {/* Mobile menu (includes auth on mobile) */}
+            {/* Mobile menu */}
             <div className="md:hidden">
               <MobileMenu />
             </div>

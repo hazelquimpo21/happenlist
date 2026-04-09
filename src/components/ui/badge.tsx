@@ -39,14 +39,15 @@ export function Badge({
   className,
 }: BadgeProps) {
   // Variant styles
+  // v3 palette
   const variantStyles = {
-    default: 'bg-sand text-charcoal',
-    category: 'bg-sand text-charcoal',
-    free: 'bg-sage-light text-charcoal',
-    date: 'bg-coral-light text-coral-dark',
-    status: 'bg-sand text-stone',
-    secondary: 'bg-sage/20 text-sage',
-    outline: 'bg-transparent border border-sand text-stone',
+    default: 'bg-cloud text-ink',
+    category: 'bg-cloud text-ink',
+    free: 'bg-emerald-light text-emerald',
+    date: 'bg-blue-muted text-blue',
+    status: 'bg-cloud text-zinc',
+    secondary: 'bg-emerald/10 text-emerald',
+    outline: 'bg-transparent border border-mist text-zinc',
   };
 
   // Size styles

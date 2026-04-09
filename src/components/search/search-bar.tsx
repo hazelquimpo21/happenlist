@@ -100,7 +100,7 @@ export function SearchBar({
       {/* Search icon */}
       <Search
         className={cn(
-          'absolute top-1/2 -translate-y-1/2 text-stone pointer-events-none',
+          'absolute top-1/2 -translate-y-1/2 text-zinc pointer-events-none',
           iconSizes[size],
           iconPositions[size]
         )}
@@ -114,9 +114,9 @@ export function SearchBar({
         placeholder={placeholder}
         autoFocus={autoFocus}
         className={cn(
-          'w-full rounded-lg border border-sand bg-warm-white',
-          'text-charcoal placeholder:text-stone',
-          'focus:outline-none focus:ring-2 focus:ring-coral focus:border-transparent',
+          'w-full rounded-lg border border-mist bg-pure',
+          'text-ink placeholder:text-zinc',
+          'focus:outline-none focus:ring-2 focus:ring-blue focus:border-transparent',
           'transition-all duration-fast',
           sizeStyles[size]
         )}
@@ -129,7 +129,7 @@ export function SearchBar({
           onClick={handleClear}
           className={cn(
             'absolute top-1/2 -translate-y-1/2 p-1 rounded-full',
-            'text-stone hover:text-charcoal hover:bg-sand',
+            'text-zinc hover:text-ink hover:bg-cloud',
             'transition-colors duration-fast',
             clearPositions[size]
           )}

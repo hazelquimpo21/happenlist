@@ -69,15 +69,15 @@ export default async function AdminSeriesPage({ searchParams }: PageProps) {
         description={`${result.total} series total`}
       >
         {/* Status tabs */}
-        <div className="flex items-center gap-1 bg-sand/50 p-1 rounded-lg mr-auto">
+        <div className="flex items-center gap-1 bg-cloud/50 p-1 rounded-lg mr-auto">
           {STATUS_TABS.map(tab => (
             <Link
               key={tab.value || 'all'}
               href={buildUrl({ status: tab.value, page: undefined })}
               className={`px-4 py-2 text-sm rounded-md transition-colors ${
                 status === tab.value || (!status && !tab.value)
-                  ? 'bg-warm-white text-charcoal font-medium shadow-sm'
-                  : 'text-stone hover:text-charcoal'
+                  ? 'bg-pure text-ink font-medium shadow-sm'
+                  : 'text-zinc hover:text-ink'
               }`}
             >
               {tab.label}
@@ -88,7 +88,7 @@ export default async function AdminSeriesPage({ searchParams }: PageProps) {
         {/* Sort */}
         <Link
           href={buildUrl({ orderBy: orderBy === 'created_at' ? 'title' : orderBy === 'title' ? 'start_date' : 'created_at', page: undefined })}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm border border-sand rounded-lg hover:border-coral transition-colors text-stone hover:text-charcoal"
+          className="flex items-center gap-1.5 px-3 py-2 text-sm border border-mist rounded-lg hover:border-coral transition-colors text-zinc hover:text-ink"
         >
           <Filter className="w-4 h-4" />
           Sort: {orderBy === 'title' ? 'Title' : orderBy === 'start_date' ? 'Start Date' : 'Created'}
@@ -111,10 +111,10 @@ export default async function AdminSeriesPage({ searchParams }: PageProps) {
               name="q"
               defaultValue={search}
               placeholder="Search series..."
-              className="w-full px-4 py-2 pl-10 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+              className="w-full px-4 py-2 pl-10 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
             />
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc"
               fill="none" stroke="currentColor" viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -126,15 +126,15 @@ export default async function AdminSeriesPage({ searchParams }: PageProps) {
 
         {/* Type filter pills */}
         <div className="flex flex-wrap items-center gap-2 mb-6">
-          <span className="text-xs text-stone uppercase tracking-wider font-medium mr-1">Type:</span>
+          <span className="text-xs text-zinc uppercase tracking-wider font-medium mr-1">Type:</span>
           {SERIES_TYPES.map(t => (
             <Link
               key={t.value || 'all'}
               href={buildUrl({ type: t.value, page: undefined })}
               className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
                 seriesType === t.value || (!seriesType && !t.value)
-                  ? 'bg-coral text-white font-medium'
-                  : 'bg-sand/50 text-stone hover:text-charcoal hover:bg-sand'
+                  ? 'bg-blue text-white font-medium'
+                  : 'bg-cloud/50 text-zinc hover:text-ink hover:bg-cloud'
               }`}
             >
               {t.label}
@@ -143,12 +143,12 @@ export default async function AdminSeriesPage({ searchParams }: PageProps) {
         </div>
 
         {result.series.length === 0 ? (
-          <div className="bg-warm-white border border-sand rounded-lg p-12 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-sand flex items-center justify-center">
-              <Repeat className="w-8 h-8 text-stone" />
+          <div className="bg-pure border border-mist rounded-lg p-12 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cloud flex items-center justify-center">
+              <Repeat className="w-8 h-8 text-zinc" />
             </div>
-            <h2 className="font-display text-xl text-charcoal mb-2">No Series Found</h2>
-            <p className="text-stone max-w-md mx-auto">
+            <h2 className="font-body text-xl text-ink mb-2">No Series Found</h2>
+            <p className="text-zinc max-w-md mx-auto">
               {search
                 ? `No series match "${search}".`
                 : 'No series found with the current filters.'}
@@ -165,8 +165,8 @@ export default async function AdminSeriesPage({ searchParams }: PageProps) {
 
             {/* Pagination */}
             {result.totalPages > 1 && (
-              <div className="flex items-center justify-between bg-warm-white border border-sand rounded-lg p-4">
-                <p className="text-sm text-stone">
+              <div className="flex items-center justify-between bg-pure border border-mist rounded-lg p-4">
+                <p className="text-sm text-zinc">
                   Showing {(result.page - 1) * result.limit + 1} to{' '}
                   {Math.min(result.page * result.limit, result.total)} of {result.total} series
                 </p>
@@ -174,18 +174,18 @@ export default async function AdminSeriesPage({ searchParams }: PageProps) {
                   {result.page > 1 && (
                     <Link
                       href={buildUrl({ page: String(result.page - 1) })}
-                      className="px-4 py-2 text-sm border border-sand rounded-lg hover:border-coral transition-colors"
+                      className="px-4 py-2 text-sm border border-mist rounded-lg hover:border-coral transition-colors"
                     >
                       Previous
                     </Link>
                   )}
-                  <span className="px-4 py-2 text-sm text-stone">
+                  <span className="px-4 py-2 text-sm text-zinc">
                     Page {result.page} of {result.totalPages}
                   </span>
                   {result.page < result.totalPages && (
                     <Link
                       href={buildUrl({ page: String(result.page + 1) })}
-                      className="px-4 py-2 text-sm border border-sand rounded-lg hover:border-coral transition-colors"
+                      className="px-4 py-2 text-sm border border-mist rounded-lg hover:border-coral transition-colors"
                     >
                       Next
                     </Link>

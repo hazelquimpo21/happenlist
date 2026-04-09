@@ -207,7 +207,7 @@ export function SeriesFilters({
       {/* ========== Search bar + Sort ========== */}
       <div className="flex gap-4 items-center">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc" />
           <input
             type="search"
             placeholder="Search classes & series..."
@@ -223,9 +223,9 @@ export function SeriesFilters({
             }}
             className={cn(
               'w-full h-11 pl-10 pr-4 rounded-full',
-              'bg-warm-white border border-sand',
-              'text-charcoal placeholder:text-stone',
-              'focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral-light',
+              'bg-pure border border-mist',
+              'text-ink placeholder:text-zinc',
+              'focus:outline-none focus:border-blue focus:ring-2 focus:ring-blue-light',
               'transition-colors'
             )}
           />
@@ -237,9 +237,9 @@ export function SeriesFilters({
           onChange={(e) => updateFilter('sort', e.target.value)}
           className={cn(
             'h-11 px-4 rounded-full',
-            'bg-warm-white border border-sand',
-            'text-charcoal',
-            'focus:outline-none focus:border-coral',
+            'bg-pure border border-mist',
+            'text-ink',
+            'focus:outline-none focus:border-blue',
             'cursor-pointer'
           )}
         >
@@ -258,8 +258,8 @@ export function SeriesFilters({
           className={cn(
             'px-4 py-2 rounded-full text-body-sm font-medium transition-colors',
             !currentType
-              ? 'bg-coral text-warm-white'
-              : 'bg-sand text-charcoal hover:bg-coral-light'
+              ? 'bg-blue text-pure'
+              : 'bg-cloud text-ink hover:bg-blue-light'
           )}
         >
           All Types
@@ -272,8 +272,8 @@ export function SeriesFilters({
             className={cn(
               'px-4 py-2 rounded-full text-body-sm font-medium transition-colors',
               currentType === type
-                ? 'bg-coral text-warm-white'
-                : 'bg-sand text-charcoal hover:bg-coral-light'
+                ? 'bg-blue text-pure'
+                : 'bg-cloud text-ink hover:bg-blue-light'
             )}
           >
             {info.labelPlural}
@@ -289,9 +289,9 @@ export function SeriesFilters({
           onChange={(e) => updateFilter('category', e.target.value || null)}
           className={cn(
             'h-10 px-4 rounded-full',
-            'bg-warm-white border border-sand',
-            'text-charcoal',
-            'focus:outline-none focus:border-coral',
+            'bg-pure border border-mist',
+            'text-ink',
+            'focus:outline-none focus:border-blue',
             'cursor-pointer'
           )}
         >
@@ -309,8 +309,8 @@ export function SeriesFilters({
           className={cn(
             'h-10 px-4 rounded-full text-body-sm font-medium transition-colors',
             isFree
-              ? 'bg-sage text-warm-white'
-              : 'bg-sand text-charcoal hover:bg-sage/20'
+              ? 'bg-emerald text-pure'
+              : 'bg-cloud text-ink hover:bg-emerald/20'
           )}
         >
           Free Only
@@ -322,13 +322,13 @@ export function SeriesFilters({
           className={cn(
             'h-10 px-4 rounded-full text-body-sm font-medium transition-colors flex items-center gap-1.5',
             showAdvanced || advancedFilterCount > 0
-              ? 'bg-coral/10 text-coral border border-coral/30'
-              : 'bg-sand text-charcoal hover:bg-coral-light'
+              ? 'bg-blue/10 text-blue border border-blue/30'
+              : 'bg-cloud text-ink hover:bg-blue-light'
           )}
         >
           More Filters
           {advancedFilterCount > 0 && (
-            <span className="bg-coral text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+            <span className="bg-blue text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
               {advancedFilterCount}
             </span>
           )}
@@ -343,7 +343,7 @@ export function SeriesFilters({
         {hasActiveFilters && (
           <button
             onClick={clearFilters}
-            className="h-10 px-4 text-coral hover:underline text-body-sm flex items-center gap-1"
+            className="h-10 px-4 text-blue hover:underline text-body-sm flex items-center gap-1"
           >
             <X className="w-4 h-4" />
             Clear filters
@@ -355,13 +355,13 @@ export function SeriesFilters({
       {/* PHASE E: Advanced Filters Panel                         */}
       {/* ====================================================== */}
       {showAdvanced && (
-        <div className="p-4 bg-cream rounded-lg border border-sand space-y-4">
-          <p className="text-sm font-medium text-charcoal">Advanced Filters</p>
+        <div className="p-4 bg-white rounded-lg border border-mist space-y-4">
+          <p className="text-sm font-medium text-ink">Advanced Filters</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* -- Attendance Mode -- */}
             <div>
-              <label className="block text-xs font-medium text-stone mb-1.5">
+              <label className="block text-xs font-medium text-zinc mb-1.5">
                 Attendance
               </label>
               <select
@@ -369,9 +369,9 @@ export function SeriesFilters({
                 onChange={(e) => updateFilter('attendance', e.target.value || null)}
                 className={cn(
                   'w-full h-9 px-3 rounded-lg text-sm',
-                  'bg-warm-white border border-sand',
-                  'text-charcoal',
-                  'focus:outline-none focus:border-coral',
+                  'bg-pure border border-mist',
+                  'text-ink',
+                  'focus:outline-none focus:border-blue',
                   'cursor-pointer'
                 )}
               >
@@ -386,7 +386,7 @@ export function SeriesFilters({
 
             {/* -- Age Group -- */}
             <div>
-              <label className="block text-xs font-medium text-stone mb-1.5">
+              <label className="block text-xs font-medium text-zinc mb-1.5">
                 Age Group
               </label>
               <select
@@ -394,9 +394,9 @@ export function SeriesFilters({
                 onChange={(e) => updateFilter('age', e.target.value || null)}
                 className={cn(
                   'w-full h-9 px-3 rounded-lg text-sm',
-                  'bg-warm-white border border-sand',
-                  'text-charcoal',
-                  'focus:outline-none focus:border-coral',
+                  'bg-pure border border-mist',
+                  'text-ink',
+                  'focus:outline-none focus:border-blue',
                   'cursor-pointer'
                 )}
               >
@@ -411,7 +411,7 @@ export function SeriesFilters({
 
             {/* -- Skill Level -- */}
             <div>
-              <label className="block text-xs font-medium text-stone mb-1.5">
+              <label className="block text-xs font-medium text-zinc mb-1.5">
                 Skill Level
               </label>
               <select
@@ -419,9 +419,9 @@ export function SeriesFilters({
                 onChange={(e) => updateFilter('skill', e.target.value || null)}
                 className={cn(
                   'w-full h-9 px-3 rounded-lg text-sm',
-                  'bg-warm-white border border-sand',
-                  'text-charcoal',
-                  'focus:outline-none focus:border-coral',
+                  'bg-pure border border-mist',
+                  'text-ink',
+                  'focus:outline-none focus:border-blue',
                   'cursor-pointer'
                 )}
               >
@@ -436,7 +436,7 @@ export function SeriesFilters({
 
             {/* -- Day of Week -- */}
             <div>
-              <label className="block text-xs font-medium text-stone mb-1.5">
+              <label className="block text-xs font-medium text-zinc mb-1.5">
                 Day of Week
               </label>
               <div className="flex gap-1">
@@ -453,8 +453,8 @@ export function SeriesFilters({
                     className={cn(
                       'w-9 h-9 rounded-lg text-xs font-medium transition-colors',
                       currentDayOfWeek === option.value
-                        ? 'bg-coral text-white'
-                        : 'bg-warm-white border border-sand text-charcoal hover:border-coral/50'
+                        ? 'bg-blue text-white'
+                        : 'bg-pure border border-mist text-ink hover:border-blue/30'
                     )}
                   >
                     {option.label}
@@ -465,7 +465,7 @@ export function SeriesFilters({
 
             {/* -- Has After Care Toggle (camp-specific) -- */}
             <div>
-              <label className="block text-xs font-medium text-stone mb-1.5">
+              <label className="block text-xs font-medium text-zinc mb-1.5">
                 Camp Options
               </label>
               <button
@@ -473,8 +473,8 @@ export function SeriesFilters({
                 className={cn(
                   'h-9 px-3 rounded-lg text-sm font-medium transition-colors',
                   hasExtendedCare
-                    ? 'bg-sage text-warm-white'
-                    : 'bg-warm-white border border-sand text-charcoal hover:bg-sage/10'
+                    ? 'bg-emerald text-pure'
+                    : 'bg-pure border border-mist text-ink hover:bg-emerald/10'
                 )}
               >
                 Has After Care
@@ -486,8 +486,8 @@ export function SeriesFilters({
 
       {/* ========== Active filter summary ========== */}
       {hasActiveFilters && (
-        <div className="flex flex-wrap gap-2 items-center pt-2 border-t border-sand">
-          <span className="text-body-sm text-stone">Active filters:</span>
+        <div className="flex flex-wrap gap-2 items-center pt-2 border-t border-mist">
+          <span className="text-body-sm text-zinc">Active filters:</span>
 
           {currentType && (
             <Badge variant="outline" className="gap-1">

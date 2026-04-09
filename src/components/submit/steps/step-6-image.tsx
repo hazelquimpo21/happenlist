@@ -91,8 +91,8 @@ export function Step6Image({ draftData, updateData }: Step6Props) {
           className={cn(
             'flex items-center px-4 py-2 rounded-lg border transition-all',
             imageMode === 'url'
-              ? 'border-coral bg-coral/10 text-coral'
-              : 'border-sand bg-warm-white text-charcoal hover:border-coral/50'
+              ? 'border-blue bg-blue/10 text-blue'
+              : 'border-mist bg-pure text-ink hover:border-blue/50'
           )}
         >
           <Link className="w-4 h-4 mr-2" />
@@ -104,8 +104,8 @@ export function Step6Image({ draftData, updateData }: Step6Props) {
           className={cn(
             'flex items-center px-4 py-2 rounded-lg border transition-all',
             imageMode === 'upload'
-              ? 'border-coral bg-coral/10 text-coral'
-              : 'border-sand bg-warm-white text-charcoal hover:border-coral/50'
+              ? 'border-blue bg-blue/10 text-blue'
+              : 'border-mist bg-pure text-ink hover:border-blue/50'
           )}
         >
           <Upload className="w-4 h-4 mr-2" />
@@ -118,7 +118,7 @@ export function Step6Image({ draftData, updateData }: Step6Props) {
         <div>
           <label
             htmlFor="image_url"
-            className="block text-sm font-medium text-charcoal mb-1"
+            className="block text-sm font-medium text-ink mb-1"
           >
             Image URL
           </label>
@@ -140,9 +140,9 @@ export function Step6Image({ draftData, updateData }: Step6Props) {
             <p className="text-sm text-red-600 mt-1">{imageError}</p>
           )}
           {isValidating && (
-            <p className="text-sm text-stone mt-1">Validating image...</p>
+            <p className="text-sm text-zinc mt-1">Validating image...</p>
           )}
-          <p className="text-xs text-stone mt-1">
+          <p className="text-xs text-zinc mt-1">
             Paste a direct link to your event image (from your website, social media, etc.)
           </p>
         </div>
@@ -150,10 +150,10 @@ export function Step6Image({ draftData, updateData }: Step6Props) {
 
       {/* ========== Upload (coming soon) ========== */}
       {imageMode === 'upload' && (
-        <div className="p-8 border-2 border-dashed border-sand rounded-lg text-center bg-cream">
-          <Upload className="w-10 h-10 text-stone mx-auto mb-3" />
-          <p className="text-charcoal font-medium">Upload coming soon!</p>
-          <p className="text-sm text-stone mt-1">
+        <div className="p-8 border-2 border-dashed border-mist rounded-lg text-center bg-white">
+          <Upload className="w-10 h-10 text-zinc mx-auto mb-3" />
+          <p className="text-ink font-medium">Upload coming soon!</p>
+          <p className="text-sm text-zinc mt-1">
             For now, please use an image URL from your website or social media.
           </p>
         </div>
@@ -162,10 +162,10 @@ export function Step6Image({ draftData, updateData }: Step6Props) {
       {/* ========== Image Preview ========== */}
       {draftData.image_url && !imageError && (
         <div className="relative">
-          <label className="block text-sm font-medium text-charcoal mb-2">
+          <label className="block text-sm font-medium text-ink mb-2">
             Preview
           </label>
-          <div className="relative aspect-video rounded-lg overflow-hidden bg-sand">
+          <div className="relative aspect-video rounded-lg overflow-hidden bg-cloud">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={draftData.image_url}
@@ -187,22 +187,22 @@ export function Step6Image({ draftData, updateData }: Step6Props) {
 
       {/* ========== No Image Placeholder ========== */}
       {!draftData.image_url && (
-        <div className="aspect-video rounded-lg bg-sand flex flex-col items-center justify-center">
-          <ImageIcon className="w-12 h-12 text-stone mb-2" />
-          <p className="text-stone font-medium">No image selected</p>
-          <p className="text-sm text-stone/70">
+        <div className="aspect-video rounded-lg bg-cloud flex flex-col items-center justify-center">
+          <ImageIcon className="w-12 h-12 text-zinc mb-2" />
+          <p className="text-zinc font-medium">No image selected</p>
+          <p className="text-sm text-zinc/70">
             A default category image will be used
           </p>
         </div>
       )}
 
       {/* ========== Image Tips ========== */}
-      <div className="p-4 bg-cream rounded-lg border border-sand">
-        <h4 className="font-medium text-charcoal mb-2 flex items-center">
+      <div className="p-4 bg-white rounded-lg border border-mist">
+        <h4 className="font-medium text-ink mb-2 flex items-center">
           <ImageIcon className="w-4 h-4 mr-2" />
           Image Tips
         </h4>
-        <ul className="text-sm text-stone space-y-1">
+        <ul className="text-sm text-zinc space-y-1">
           <li>• Use a landscape (horizontal) image for best results</li>
           <li>• Recommended size: 1200 x 630 pixels</li>
           <li>• High-quality photos of your event work best</li>

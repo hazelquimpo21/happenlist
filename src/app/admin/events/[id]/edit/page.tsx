@@ -112,7 +112,7 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
           {/* Back link */}
           <Link
             href={`/admin/events/${eventId}`}
-            className="flex items-center gap-2 text-sm text-stone hover:text-charcoal transition-colors"
+            className="flex items-center gap-2 text-sm text-zinc hover:text-ink transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Review
@@ -139,28 +139,28 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
           {/* Sidebar - Event info and history */}
           <div className="space-y-6">
             {/* Quick info */}
-            <Card padding="lg" className="border border-sand">
-              <h3 className="font-medium text-charcoal mb-4 flex items-center gap-2">
+            <Card padding="lg" className="border border-mist">
+              <h3 className="font-medium text-ink mb-4 flex items-center gap-2">
                 📋 Event Summary
               </h3>
 
               <div className="space-y-3 text-sm">
                 {/* Date & Time */}
                 <div className="flex items-start gap-3">
-                  <Calendar className="w-4 h-4 text-coral mt-0.5" />
+                  <Calendar className="w-4 h-4 text-blue mt-0.5" />
                   <div>
-                    <p className="text-charcoal font-medium">{eventDate}</p>
-                    <p className="text-stone">{eventTime}</p>
+                    <p className="text-ink font-medium">{eventDate}</p>
+                    <p className="text-zinc">{eventTime}</p>
                   </div>
                 </div>
 
                 {/* Location */}
                 {event.location && (
                   <div className="flex items-start gap-3">
-                    <MapPin className="w-4 h-4 text-sage mt-0.5" />
+                    <MapPin className="w-4 h-4 text-emerald mt-0.5" />
                     <div>
-                      <p className="text-charcoal font-medium">{event.location.name}</p>
-                      <p className="text-stone">
+                      <p className="text-ink font-medium">{event.location.name}</p>
+                      <p className="text-zinc">
                         {event.location.city}
                         {event.location.state && `, ${event.location.state}`}
                       </p>
@@ -171,46 +171,46 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
                 {/* Organizer */}
                 {event.organizer && (
                   <div className="flex items-start gap-3">
-                    <UserIcon className="w-4 h-4 text-stone mt-0.5" />
-                    <p className="text-charcoal">{event.organizer.name}</p>
+                    <UserIcon className="w-4 h-4 text-zinc mt-0.5" />
+                    <p className="text-ink">{event.organizer.name}</p>
                   </div>
                 )}
               </div>
             </Card>
 
             {/* Event metadata */}
-            <Card padding="lg" className="border border-sand">
-              <h3 className="font-medium text-charcoal mb-4 flex items-center gap-2">
+            <Card padding="lg" className="border border-mist">
+              <h3 className="font-medium text-ink mb-4 flex items-center gap-2">
                 🔧 Metadata
               </h3>
 
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-stone">Event ID</dt>
-                  <dd className="text-charcoal font-mono text-xs">
+                  <dt className="text-zinc">Event ID</dt>
+                  <dd className="text-ink font-mono text-xs">
                     {event.id.slice(0, 8)}...
                   </dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-stone">Source</dt>
-                  <dd className="text-charcoal capitalize">{event.source}</dd>
+                  <dt className="text-zinc">Source</dt>
+                  <dd className="text-ink capitalize">{event.source}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-stone">Created</dt>
-                  <dd className="text-charcoal">
+                  <dt className="text-zinc">Created</dt>
+                  <dd className="text-ink">
                     {format(new Date(event.created_at), 'MMM d, yyyy')}
                   </dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-stone">Updated</dt>
-                  <dd className="text-charcoal">
+                  <dt className="text-zinc">Updated</dt>
+                  <dd className="text-ink">
                     {format(new Date(event.updated_at), 'MMM d, yyyy')}
                   </dd>
                 </div>
                 {event.reviewed_by && (
                   <div className="flex justify-between">
-                    <dt className="text-stone">Reviewed by</dt>
-                    <dd className="text-charcoal text-right truncate max-w-[150px]">
+                    <dt className="text-zinc">Reviewed by</dt>
+                    <dd className="text-ink text-right truncate max-w-[150px]">
                       {event.reviewed_by}
                     </dd>
                   </div>
@@ -220,8 +220,8 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
 
             {/* Audit history */}
             {auditHistory.length > 0 && (
-              <Card padding="lg" className="border border-sand">
-                <h3 className="font-medium text-charcoal mb-4 flex items-center gap-2">
+              <Card padding="lg" className="border border-mist">
+                <h3 className="font-medium text-ink mb-4 flex items-center gap-2">
                   📜 Recent Activity
                 </h3>
 
@@ -229,21 +229,21 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
                   {auditHistory.slice(0, 10).map((entry) => (
                     <div
                       key={entry.id}
-                      className="flex items-start gap-3 text-sm pb-3 border-b border-sand/50 last:border-0"
+                      className="flex items-start gap-3 text-sm pb-3 border-b border-mist/50 last:border-0"
                     >
-                      <Clock className="w-4 h-4 text-stone mt-0.5 flex-shrink-0" />
+                      <Clock className="w-4 h-4 text-zinc mt-0.5 flex-shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-charcoal">
+                        <p className="text-ink">
                           <span className="font-medium">
                             {formatActionName(entry.action)}
                           </span>
                         </p>
                         {entry.notes && (
-                          <p className="text-stone text-xs mt-0.5 truncate">
+                          <p className="text-zinc text-xs mt-0.5 truncate">
                             {entry.notes}
                           </p>
                         )}
-                        <p className="text-stone/70 text-xs mt-1">
+                        <p className="text-zinc/70 text-xs mt-1">
                           {format(new Date(entry.created_at), 'MMM d, h:mm a')}
                         </p>
                       </div>
@@ -252,7 +252,7 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
                 </div>
 
                 {auditHistory.length > 10 && (
-                  <p className="text-xs text-stone mt-3 text-center">
+                  <p className="text-xs text-zinc mt-3 text-center">
                     + {auditHistory.length - 10} more entries
                   </p>
                 )}
@@ -283,12 +283,12 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
 
 function getStatusClassName(status: string): string {
   const classes: Record<string, string> = {
-    draft: 'bg-stone/20 text-stone',
+    draft: 'bg-stone/20 text-zinc',
     pending_review: 'bg-amber-100 text-amber-800',
     changes_requested: 'bg-orange-100 text-orange-800',
-    published: 'bg-sage/20 text-sage',
+    published: 'bg-emerald/20 text-emerald',
     rejected: 'bg-red-100 text-red-800',
-    cancelled: 'bg-stone/30 text-stone',
+    cancelled: 'bg-stone/30 text-zinc',
   };
   return classes[status] || classes.draft;
 }

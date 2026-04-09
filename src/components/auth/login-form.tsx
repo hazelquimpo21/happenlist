@@ -173,19 +173,19 @@ export function LoginForm({
         </div>
 
         {/* Success Message */}
-        <h3 className={cn('font-display text-charcoal mb-2', compact ? 'text-lg' : 'text-xl')}>
+        <h3 className={cn('font-body text-ink mb-2', compact ? 'text-lg' : 'text-xl')}>
           ✉️ Check your email!
         </h3>
 
-        <p className="text-stone mb-2">
+        <p className="text-zinc mb-2">
           We sent a sign-in link to:
         </p>
 
-        <p className="font-medium text-charcoal mb-6">
+        <p className="font-medium text-ink mb-6">
           {email}
         </p>
 
-        <p className="text-body-sm text-stone mb-6">
+        <p className="text-body-sm text-zinc mb-6">
           Click the link in your email to continue.
           <br />
           The link expires in 1 hour.
@@ -220,7 +220,7 @@ export function LoginForm({
       {/* Title */}
       <h2
         className={cn(
-          'font-display text-charcoal mb-2',
+          'font-body text-ink mb-2',
           compact ? 'text-lg' : 'text-xl md:text-2xl'
         )}
       >
@@ -228,7 +228,7 @@ export function LoginForm({
       </h2>
 
       {/* Description */}
-      <p className="text-stone mb-6">
+      <p className="text-zinc mb-6">
         {description || "We'll email you a magic link. No password needed!"}
       </p>
 
@@ -236,11 +236,11 @@ export function LoginForm({
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Email Input */}
         <div>
-          <label htmlFor="email" className="block text-body-sm font-medium text-charcoal mb-1.5">
+          <label htmlFor="email" className="block text-body-sm font-medium text-ink mb-1.5">
             Email address
           </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc" />
             <input
               id="email"
               type="email"
@@ -252,9 +252,9 @@ export function LoginForm({
               autoFocus
               className={cn(
                 'w-full pl-10 pr-4 py-3 rounded-lg',
-                'border border-sand bg-white',
-                'text-charcoal placeholder:text-stone',
-                'focus:outline-none focus:ring-2 focus:ring-coral-light focus:border-coral',
+                'border border-mist bg-white',
+                'text-ink placeholder:text-zinc',
+                'focus:outline-none focus:ring-2 focus:ring-blue-light focus:border-coral',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 'transition-all duration-base',
                 state === 'error' && 'border-red-400 focus:ring-red-200'
@@ -284,9 +284,9 @@ export function LoginForm({
       </form>
 
       {/* Info Text */}
-      <p className="mt-4 text-body-sm text-stone text-center">
+      <p className="mt-4 text-body-sm text-zinc text-center">
         By signing in, you agree to our{' '}
-        <a href="/about" className="text-coral hover:underline">
+        <a href="/about" className="text-blue hover:underline">
           Terms of Service
         </a>
         .

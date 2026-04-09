@@ -187,13 +187,13 @@ export function VenueMap({
     return (
       <div
         className={cn(
-          'flex flex-col items-center justify-center bg-sand/50 rounded-lg border border-sand',
+          'flex flex-col items-center justify-center bg-cloud/50 rounded-lg border border-mist',
           className
         )}
         style={{ height }}
       >
-        <AlertCircle className="w-8 h-8 text-stone mb-2" />
-        <p className="text-sm text-stone text-center px-4">{error}</p>
+        <AlertCircle className="w-8 h-8 text-zinc mb-2" />
+        <p className="text-sm text-zinc text-center px-4">{error}</p>
       </div>
     );
   }
@@ -210,10 +210,10 @@ export function VenueMap({
       {/* Loading overlay */}
       {!mapLoaded && (
         <div
-          className="absolute inset-0 flex items-center justify-center bg-cream rounded-lg"
+          className="absolute inset-0 flex items-center justify-center bg-white rounded-lg"
           style={{ height }}
         >
-          <div className="flex items-center text-stone">
+          <div className="flex items-center text-zinc">
             <MapPin className="w-5 h-5 mr-2 animate-pulse" />
             <span className="text-sm">Loading map...</span>
           </div>
@@ -230,11 +230,11 @@ export function VenueMap({
             'absolute bottom-3 left-3 z-10',
             'flex items-center gap-2 px-3 py-2',
             'bg-white rounded-lg shadow-md',
-            'text-sm font-medium text-charcoal',
-            'hover:bg-cream transition-colors'
+            'text-sm font-medium text-ink',
+            'hover:bg-white transition-colors'
           )}
         >
-          <Navigation className="w-4 h-4 text-coral" />
+          <Navigation className="w-4 h-4 text-blue" />
           Get Directions
         </a>
       )}

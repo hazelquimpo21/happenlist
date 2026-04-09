@@ -144,7 +144,7 @@ export function HeartButton({
         // Base styles
         'inline-flex items-center justify-center rounded-full',
         'transition-all duration-200 ease-out',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2',
         'disabled:opacity-50 disabled:cursor-not-allowed',
 
         // Size styles
@@ -152,8 +152,8 @@ export function HeartButton({
 
         // State styles
         isHearted
-          ? 'bg-coral/10 text-coral hover:bg-coral/20'
-          : 'bg-white/80 text-stone hover:text-coral hover:bg-coral/10',
+          ? 'bg-rose-light text-rose hover:bg-rose/20'
+          : 'bg-white/80 text-zinc hover:text-rose hover:bg-rose-light',
 
         // Loading animation
         isLoading && 'animate-pulse',
@@ -185,7 +185,7 @@ export function HeartButton({
           className={cn(
             sizeStyles.text,
             'font-medium tabular-nums',
-            isHearted ? 'text-coral' : 'text-stone'
+            isHearted ? 'text-rose' : 'text-zinc'
           )}
         >
           {formatHeartCount(heartCount)}
@@ -252,7 +252,7 @@ export function HeartButtonCompact({
       aria-pressed={isHearted}
       className={cn(
         'p-1 rounded-full transition-colors',
-        isHearted ? 'text-coral' : 'text-stone hover:text-coral',
+        isHearted ? 'text-rose' : 'text-zinc hover:text-rose',
         isLoading && 'opacity-50',
         className
       )}

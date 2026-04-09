@@ -143,7 +143,7 @@ export function AdminEventFilters({
       {/* Series filter */}
       <div className="relative">
         <select
-          className="appearance-none bg-warm-white border border-sand rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none cursor-pointer"
+          className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-blue outline-none cursor-pointer"
           value={currentSeriesFilter || 'all'}
           onChange={handleSeriesFilterChange}
         >
@@ -151,13 +151,13 @@ export function AdminEventFilters({
           <option value="in_series">In a Series</option>
           <option value="no_series">Not in Series</option>
         </select>
-        <Repeat className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone pointer-events-none" />
+        <Repeat className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc pointer-events-none" />
       </div>
 
       {/* Source filter */}
       <div className="relative">
         <select
-          className="appearance-none bg-warm-white border border-sand rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none cursor-pointer"
+          className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-blue outline-none cursor-pointer"
           value={currentSource || 'all'}
           onChange={handleSourceChange}
         >
@@ -167,13 +167,13 @@ export function AdminEventFilters({
           <option value="api">API</option>
           <option value="import">Import</option>
         </select>
-        <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone pointer-events-none" />
+        <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc pointer-events-none" />
       </div>
 
       {/* Sort */}
       <div className="relative">
         <select
-          className="appearance-none bg-warm-white border border-sand rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none cursor-pointer"
+          className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-blue outline-none cursor-pointer"
           value={currentOrderBy}
           onChange={handleOrderChange}
         >
@@ -182,14 +182,14 @@ export function AdminEventFilters({
           <option value="title">Title</option>
           <option value="scraped_at">Scraped Date</option>
         </select>
-        <ArrowUpDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone pointer-events-none" />
+        <ArrowUpDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc pointer-events-none" />
       </div>
 
       {/* Migrate Images Button */}
       <button
         onClick={handleMigrateImages}
         disabled={isMigrating}
-        className="flex items-center gap-2 px-4 py-2 text-sm bg-coral text-warm-white rounded-lg hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="flex items-center gap-2 px-4 py-2 text-sm bg-blue text-pure rounded-lg hover:bg-blue/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         title="Upload external images to Supabase Storage"
       >
         {isMigrating ? (

@@ -61,20 +61,20 @@ export default async function PendingEventsPage({ searchParams }: PageProps) {
           {/* Filter dropdown - simplified for now */}
           <div className="relative">
             <select
-              className="appearance-none bg-warm-white border border-sand rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+              className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-blue outline-none"
               defaultValue={source || 'all'}
             >
               <option value="all">All Sources</option>
               <option value="scraper">Scraped</option>
               <option value="manual">Manual</option>
             </select>
-            <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone pointer-events-none" />
+            <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc pointer-events-none" />
           </div>
 
           {/* Sort dropdown */}
           <div className="relative">
             <select
-              className="appearance-none bg-warm-white border border-sand rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-coral outline-none"
+              className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-blue outline-none"
               defaultValue={orderBy}
             >
               <option value="scraped_at">Scraped Date</option>
@@ -82,7 +82,7 @@ export default async function PendingEventsPage({ searchParams }: PageProps) {
               <option value="title">Title</option>
               <option value="created_at">Created Date</option>
             </select>
-            <ArrowUpDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone pointer-events-none" />
+            <ArrowUpDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc pointer-events-none" />
           </div>
 
         </div>
@@ -98,12 +98,12 @@ export default async function PendingEventsPage({ searchParams }: PageProps) {
         />
 
         {result.events.length === 0 ? (
-          <div className="bg-warm-white border border-sand rounded-lg p-12 text-center">
-            <CheckCircle className="w-16 h-16 mx-auto mb-4 text-sage" />
-            <h2 className="font-display text-xl text-charcoal mb-2">
+          <div className="bg-pure border border-mist rounded-lg p-12 text-center">
+            <CheckCircle className="w-16 h-16 mx-auto mb-4 text-emerald" />
+            <h2 className="font-body text-xl text-ink mb-2">
               All Caught Up!
             </h2>
-            <p className="text-stone max-w-md mx-auto">
+            <p className="text-zinc max-w-md mx-auto">
               There are no events pending review. New scraped events will appear here
               when they need to be approved.
             </p>
@@ -120,8 +120,8 @@ export default async function PendingEventsPage({ searchParams }: PageProps) {
 
             {/* Pagination */}
             {result.totalPages > 1 && (
-              <div className="flex items-center justify-between bg-warm-white border border-sand rounded-lg p-4">
-                <p className="text-sm text-stone">
+              <div className="flex items-center justify-between bg-pure border border-mist rounded-lg p-4">
+                <p className="text-sm text-zinc">
                   Showing {(result.page - 1) * result.limit + 1} to{' '}
                   {Math.min(result.page * result.limit, result.total)} of {result.total} events
                 </p>
@@ -129,18 +129,18 @@ export default async function PendingEventsPage({ searchParams }: PageProps) {
                   {result.page > 1 && (
                     <Link
                       href={`/admin/events/pending?page=${result.page - 1}`}
-                      className="px-4 py-2 text-sm border border-sand rounded-lg hover:border-coral transition-colors"
+                      className="px-4 py-2 text-sm border border-mist rounded-lg hover:border-coral transition-colors"
                     >
                       Previous
                     </Link>
                   )}
-                  <span className="px-4 py-2 text-sm text-stone">
+                  <span className="px-4 py-2 text-sm text-zinc">
                     Page {result.page} of {result.totalPages}
                   </span>
                   {result.page < result.totalPages && (
                     <Link
                       href={`/admin/events/pending?page=${result.page + 1}`}
-                      className="px-4 py-2 text-sm border border-sand rounded-lg hover:border-coral transition-colors"
+                      className="px-4 py-2 text-sm border border-mist rounded-lg hover:border-coral transition-colors"
                     >
                       Next
                     </Link>

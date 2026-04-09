@@ -324,23 +324,23 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
   }, [allEventIds, createMode, selectedExistingId, seriesTitle, seriesType, onClose, onSeriesComplete, router]);
 
   const confidenceColor = {
-    high: 'text-sage',
+    high: 'text-emerald',
     medium: 'text-amber-600',
     low: 'text-red-600',
   };
 
   return (
-    <div className="fixed inset-0 bg-charcoal/50 flex items-center justify-center z-[60] p-4">
-      <div className="bg-warm-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-ink/50 flex items-center justify-center z-[60] p-4">
+      <div className="bg-pure rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-sand">
+        <div className="flex items-center justify-between p-5 border-b border-mist">
           <div className="flex items-center gap-2">
-            <Repeat className="w-5 h-5 text-coral" />
-            <h2 className="font-display text-xl text-charcoal">
+            <Repeat className="w-5 h-5 text-blue" />
+            <h2 className="font-body text-xl text-ink">
               Make Series from {allEventIds.length} Event{allEventIds.length !== 1 ? 's' : ''}
             </h2>
           </div>
-          <button onClick={onClose} className="text-stone hover:text-charcoal">
+          <button onClick={onClose} className="text-zinc hover:text-ink">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -348,15 +348,15 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
         {/* Done / Creating states */}
         {phase === 'done' && (
           <div className="p-8 flex items-center gap-3 justify-center">
-            <CheckCircle className="w-5 h-5 text-sage" />
-            <span className="text-charcoal">{resultMessage}</span>
+            <CheckCircle className="w-5 h-5 text-emerald" />
+            <span className="text-ink">{resultMessage}</span>
           </div>
         )}
 
         {phase === 'creating' && (
           <div className="p-8 flex items-center gap-3 justify-center">
-            <RefreshCw className="w-5 h-5 text-coral animate-spin" />
-            <span className="text-charcoal">Creating series...</span>
+            <RefreshCw className="w-5 h-5 text-blue animate-spin" />
+            <span className="text-ink">Creating series...</span>
           </div>
         )}
 
@@ -364,13 +364,13 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
         {phase !== 'done' && phase !== 'creating' && (
           <>
             {/* Tabs */}
-            <div className="flex border-b border-sand">
+            <div className="flex border-b border-mist">
               <button
                 onClick={() => { setTab('detect'); setPhase('idle'); setErrorMessage(''); }}
                 className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                   tab === 'detect'
-                    ? 'text-coral border-b-2 border-coral'
-                    : 'text-stone hover:text-charcoal'
+                    ? 'text-blue border-b-2 border-blue'
+                    : 'text-zinc hover:text-ink'
                 }`}
               >
                 <Sparkles className="w-4 h-4 inline mr-1.5" />
@@ -380,8 +380,8 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
                 onClick={() => { setTab('manual'); setPhase('idle'); setErrorMessage(''); }}
                 className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                   tab === 'manual'
-                    ? 'text-coral border-b-2 border-coral'
-                    : 'text-stone hover:text-charcoal'
+                    ? 'text-blue border-b-2 border-blue'
+                    : 'text-zinc hover:text-ink'
                 }`}
               >
                 <Plus className="w-4 h-4 inline mr-1.5" />
@@ -414,7 +414,7 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
                           <Link
                             href={`/admin/series/${sg.id}/edit`}
                             target="_blank"
-                            className="text-xs font-medium underline underline-offset-2 hover:text-coral transition-colors"
+                            className="text-xs font-medium underline underline-offset-2 hover:text-blue transition-colors"
                           >
                             {sg.title}
                           </Link>
@@ -429,7 +429,7 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
                         <Link
                           href={`/admin/series/${seriesGroups[0].id}/edit`}
                           target="_blank"
-                          className="underline font-medium hover:text-coral"
+                          className="underline font-medium hover:text-blue"
                         >
                           edit the existing series
                         </Link>{' '}
@@ -449,9 +449,9 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
                 {[...events]
                   .sort((a, b) => (a.start_datetime || '').localeCompare(b.start_datetime || ''))
                   .map((event) => (
-                  <div key={event.id} className="flex items-center gap-2 px-2 py-1.5 text-xs bg-cream rounded">
-                    <span className="text-stone w-28 shrink-0">{formatDate(event.start_datetime)}</span>
-                    <span className="text-charcoal truncate">{event.title}</span>
+                  <div key={event.id} className="flex items-center gap-2 px-2 py-1.5 text-xs bg-white rounded">
+                    <span className="text-zinc w-28 shrink-0">{formatDate(event.start_datetime)}</span>
+                    <span className="text-ink truncate">{event.title}</span>
                     {event.series_id && (
                       <Link
                         href={`/admin/series/${event.series_id}/edit`}
@@ -473,7 +473,7 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
               {!suggestionsLoaded && !suggestionsLoading && (
                 <button
                   onClick={loadSuggestions}
-                  className="w-full mb-4 p-3 border border-dashed border-sand rounded-lg text-sm text-stone hover:text-charcoal hover:border-coral/50 transition-colors flex items-center justify-center gap-2"
+                  className="w-full mb-4 p-3 border border-dashed border-mist rounded-lg text-sm text-zinc hover:text-ink hover:border-blue/50 transition-colors flex items-center justify-center gap-2"
                 >
                   <Lightbulb className="w-4 h-4" />
                   Find similar events in the database
@@ -481,7 +481,7 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
               )}
 
               {suggestionsLoading && (
-                <div className="flex items-center gap-2 mb-4 p-3 bg-cream rounded-lg text-sm text-stone">
+                <div className="flex items-center gap-2 mb-4 p-3 bg-white rounded-lg text-sm text-zinc">
                   <RefreshCw className="w-4 h-4 animate-spin" />
                   Searching for similar events...
                 </div>
@@ -491,25 +491,25 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
                 <div className="mb-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Lightbulb className="w-4 h-4 text-amber-500" />
-                    <span className="text-sm font-medium text-charcoal">
+                    <span className="text-sm font-medium text-ink">
                       {suggestions.length} similar event{suggestions.length !== 1 ? 's' : ''} found
                     </span>
                     {addedSuggestionIds.size > 0 && (
-                      <span className="text-xs text-coral font-medium">
+                      <span className="text-xs text-blue font-medium">
                         +{addedSuggestionIds.size} added
                       </span>
                     )}
                     <span className="ml-auto flex items-center gap-1.5">
                       <button
                         onClick={selectAllSuggestions}
-                        className="text-[11px] text-stone hover:text-coral transition-colors underline underline-offset-2"
+                        className="text-[11px] text-zinc hover:text-blue transition-colors underline underline-offset-2"
                       >
                         Select all
                       </button>
-                      <span className="text-stone text-[10px]">·</span>
+                      <span className="text-zinc text-[10px]">·</span>
                       <button
                         onClick={selectNoneSuggestions}
-                        className="text-[11px] text-stone hover:text-coral transition-colors underline underline-offset-2"
+                        className="text-[11px] text-zinc hover:text-blue transition-colors underline underline-offset-2"
                       >
                         Select none
                       </button>
@@ -524,20 +524,20 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
                           onClick={() => toggleSuggestion(s.id)}
                           className={`w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded transition-colors text-left ${
                             isAdded
-                              ? 'bg-coral/10 border border-coral/30'
-                              : 'bg-cream border border-transparent hover:border-sand'
+                              ? 'bg-blue/10 border border-blue/30'
+                              : 'bg-white border border-transparent hover:border-mist'
                           }`}
                         >
                           {isAdded ? (
-                            <Check className="w-3.5 h-3.5 text-coral shrink-0" />
+                            <Check className="w-3.5 h-3.5 text-blue shrink-0" />
                           ) : (
-                            <PlusCircle className="w-3.5 h-3.5 text-stone shrink-0" />
+                            <PlusCircle className="w-3.5 h-3.5 text-zinc shrink-0" />
                           )}
-                          <span className="text-stone w-24 shrink-0">
+                          <span className="text-zinc w-24 shrink-0">
                             {formatDate(s.start_datetime)}
                           </span>
-                          <span className="text-charcoal truncate flex-1">{s.title}</span>
-                          <span className="text-[10px] text-stone shrink-0 max-w-[140px] truncate" title={s.match_reasons.join(', ')}>
+                          <span className="text-ink truncate flex-1">{s.title}</span>
+                          <span className="text-[10px] text-zinc shrink-0 max-w-[140px] truncate" title={s.match_reasons.join(', ')}>
                             {s.match_reasons.slice(0, 2).join(', ')}
                           </span>
                           {s.series_id && (
@@ -553,7 +553,7 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
               )}
 
               {suggestionsLoaded && suggestions.length === 0 && (
-                <p className="text-xs text-stone mb-4">No similar events found in the database.</p>
+                <p className="text-xs text-zinc mb-4">No similar events found in the database.</p>
               )}
 
               {/* Error banner */}
@@ -569,12 +569,12 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
                 <>
                   {phase === 'idle' && (
                     <div className="text-center py-4">
-                      <p className="text-sm text-stone mb-4">
+                      <p className="text-sm text-zinc mb-4">
                         AI will analyze the dates and times to find a recurrence pattern.
                       </p>
                       <Button
                         onClick={runDetection}
-                        className="bg-coral hover:bg-coral/90 text-white"
+                        className="bg-blue hover:bg-blue/90 text-white"
                       >
                         <Sparkles className="w-4 h-4 mr-2" />
                         Detect Pattern
@@ -584,45 +584,45 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
 
                   {phase === 'loading' && (
                     <div className="flex items-center gap-3 py-8 justify-center">
-                      <RefreshCw className="w-5 h-5 text-coral animate-spin" />
-                      <span className="text-charcoal">Analyzing dates...</span>
+                      <RefreshCw className="w-5 h-5 text-blue animate-spin" />
+                      <span className="text-ink">Analyzing dates...</span>
                     </div>
                   )}
 
                   {phase === 'result' && pattern && (
                     <>
                       {/* Pattern result */}
-                      <div className="p-4 bg-cream rounded-lg border border-sand mb-4">
+                      <div className="p-4 bg-white rounded-lg border border-mist mb-4">
                         <div className="flex items-center gap-2 mb-2">
-                          <Sparkles className="w-4 h-4 text-coral" />
-                          <span className="font-medium text-charcoal">Detected Pattern</span>
+                          <Sparkles className="w-4 h-4 text-blue" />
+                          <span className="font-medium text-ink">Detected Pattern</span>
                           <span className={`text-xs font-medium ${confidenceColor[pattern.confidence]}`}>
                             {pattern.confidence} confidence
                           </span>
                         </div>
-                        <p className="text-sm text-charcoal mb-1 capitalize">
+                        <p className="text-sm text-ink mb-1 capitalize">
                           {formatPattern(pattern)}
                         </p>
-                        <p className="text-xs text-stone">{pattern.reasoning}</p>
+                        <p className="text-xs text-zinc">{pattern.reasoning}</p>
                       </div>
 
                       {/* Editable series fields */}
                       <div className="space-y-3 mb-4">
                         <div>
-                          <label className="block text-sm font-medium text-charcoal mb-1">Series Title</label>
+                          <label className="block text-sm font-medium text-ink mb-1">Series Title</label>
                           <input
                             type="text"
                             value={seriesTitle}
                             onChange={(e) => setSeriesTitle(e.target.value)}
-                            className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+                            className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none text-sm"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-charcoal mb-1">Series Type</label>
+                          <label className="block text-sm font-medium text-ink mb-1">Series Type</label>
                           <select
                             value={seriesType}
                             onChange={(e) => setSeriesType(e.target.value)}
-                            className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm bg-white"
+                            className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none text-sm bg-white"
                           >
                             {SERIES_TYPE_OPTIONS.map(opt => (
                               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -638,7 +638,7 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
                         <Button
                           onClick={createFromPattern}
                           disabled={!seriesTitle.trim()}
-                          className="bg-coral hover:bg-coral/90 text-white"
+                          className="bg-blue hover:bg-blue/90 text-white"
                         >
                           Create Series & Attach
                         </Button>
@@ -660,13 +660,13 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
               {tab === 'manual' && (
                 <>
                   {/* Toggle: new vs existing */}
-                  <div className="flex items-center gap-1 bg-sand/50 p-1 rounded-lg mb-4">
+                  <div className="flex items-center gap-1 bg-cloud/50 p-1 rounded-lg mb-4">
                     <button
                       onClick={() => setCreateMode('new')}
                       className={`flex-1 px-3 py-2 text-sm rounded-md transition-colors ${
                         createMode === 'new'
-                          ? 'bg-warm-white text-charcoal font-medium shadow-sm'
-                          : 'text-stone hover:text-charcoal'
+                          ? 'bg-pure text-ink font-medium shadow-sm'
+                          : 'text-zinc hover:text-ink'
                       }`}
                     >
                       New Series
@@ -675,8 +675,8 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
                       onClick={() => setCreateMode('existing')}
                       className={`flex-1 px-3 py-2 text-sm rounded-md transition-colors ${
                         createMode === 'existing'
-                          ? 'bg-warm-white text-charcoal font-medium shadow-sm'
-                          : 'text-stone hover:text-charcoal'
+                          ? 'bg-pure text-ink font-medium shadow-sm'
+                          : 'text-zinc hover:text-ink'
                       }`}
                     >
                       Existing Series
@@ -686,21 +686,21 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
                   {createMode === 'new' && (
                     <div className="space-y-3 mb-4">
                       <div>
-                        <label className="block text-sm font-medium text-charcoal mb-1">Series Title</label>
+                        <label className="block text-sm font-medium text-ink mb-1">Series Title</label>
                         <input
                           type="text"
                           value={seriesTitle}
                           onChange={(e) => setSeriesTitle(e.target.value)}
                           placeholder={events[0]?.title || 'Series name'}
-                          className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+                          className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none text-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-charcoal mb-1">Series Type</label>
+                        <label className="block text-sm font-medium text-ink mb-1">Series Type</label>
                         <select
                           value={seriesType}
                           onChange={(e) => setSeriesType(e.target.value)}
-                          className="w-full px-3 py-2 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm bg-white"
+                          className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none text-sm bg-white"
                         >
                           {SERIES_TYPE_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -712,7 +712,7 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
 
                   {createMode === 'existing' && (
                     <div className="mb-4">
-                      <label className="block text-sm font-medium text-charcoal mb-1">Search Series</label>
+                      <label className="block text-sm font-medium text-ink mb-1">Search Series</label>
                       <div className="flex gap-2">
                         <div className="relative flex-1">
                           <input
@@ -721,9 +721,9 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
                             onChange={(e) => setSeriesSearch(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && searchSeries()}
                             placeholder="Search by name..."
-                            className="w-full px-3 py-2 pl-9 border border-sand rounded-lg focus:border-coral focus:ring-1 focus:ring-coral outline-none text-sm"
+                            className="w-full px-3 py-2 pl-9 border border-mist rounded-lg focus:border-blue focus:ring-1 focus:ring-blue outline-none text-sm"
                           />
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc" />
                         </div>
                         <Button
                           variant="secondary"
@@ -741,8 +741,8 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
                               key={s.id}
                               className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
                                 selectedExistingId === s.id
-                                  ? 'bg-coral/10 border border-coral'
-                                  : 'bg-cream border border-transparent hover:border-sand'
+                                  ? 'bg-blue/10 border border-blue'
+                                  : 'bg-white border border-transparent hover:border-mist'
                               }`}
                             >
                               <input
@@ -751,17 +751,17 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
                                 value={s.id}
                                 checked={selectedExistingId === s.id}
                                 onChange={() => setSelectedExistingId(s.id)}
-                                className="text-coral focus:ring-coral"
+                                className="text-blue focus:ring-blue"
                               />
-                              <span className="text-sm text-charcoal">{s.title}</span>
-                              <span className="text-xs text-stone ml-auto">{s.series_type}</span>
+                              <span className="text-sm text-ink">{s.title}</span>
+                              <span className="text-xs text-zinc ml-auto">{s.series_type}</span>
                             </label>
                           ))}
                         </div>
                       )}
 
                       {searchResults.length === 0 && seriesSearch && !searchLoading && (
-                        <p className="text-xs text-stone mt-2">No series found. Try a different search.</p>
+                        <p className="text-xs text-zinc mt-2">No series found. Try a different search.</p>
                       )}
                     </div>
                   )}
@@ -775,7 +775,7 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
                         (createMode === 'new' && !seriesTitle.trim()) ||
                         (createMode === 'existing' && !selectedExistingId)
                       }
-                      className="bg-coral hover:bg-coral/90 text-white"
+                      className="bg-blue hover:bg-blue/90 text-white"
                     >
                       {createMode === 'existing' ? 'Attach to Series' : 'Create Series & Attach'}
                     </Button>

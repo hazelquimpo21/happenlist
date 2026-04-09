@@ -88,8 +88,7 @@ export function EventCardSkeleton({ index = 0 }: { index?: number }) {
 
   return (
     <div
-      className="bg-warm-white rounded-lg overflow-hidden shadow-card border border-sand/50"
-      style={{ borderTopWidth: '3px', borderTopColor: accentColor }}
+      className="bg-pure rounded-lg overflow-hidden shadow-card"
     >
       {/* Image placeholder with badge skeleton */}
       <div className="relative">

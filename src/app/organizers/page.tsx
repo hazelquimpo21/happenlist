@@ -55,8 +55,8 @@ export default async function OrganizersPage({ searchParams }: OrganizersPagePro
 
       {/* Page header */}
       <div className="mb-8">
-        <h1 className="font-display text-h1 text-charcoal">Organizers</h1>
-        <p className="text-stone text-body mt-2">
+        <h1 className="font-body text-h1 text-ink">Organizers</h1>
+        <p className="text-zinc text-body mt-2">
           {total} {total === 1 ? 'organizer' : 'organizers'} hosting events
         </p>
       </div>
@@ -72,7 +72,7 @@ export default async function OrganizersPage({ searchParams }: OrganizersPagePro
               >
                 <div className="flex items-start gap-4">
                   {/* Organizer logo */}
-                  <div className="w-16 h-16 rounded-full bg-coral/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <div className="w-16 h-16 rounded-full bg-blue/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {organizer.logo_url ? (
                       <Image
                         src={organizer.logo_url}
@@ -82,15 +82,15 @@ export default async function OrganizersPage({ searchParams }: OrganizersPagePro
                         className="object-cover"
                       />
                     ) : (
-                      <User className="w-8 h-8 text-coral" />
+                      <User className="w-8 h-8 text-blue" />
                     )}
                   </div>
                   <div>
-                    <h2 className="font-display text-h4 text-charcoal group-hover:text-coral transition-colors">
+                    <h2 className="font-body text-h4 text-ink group-hover:text-blue transition-colors">
                       {organizer.name}
                     </h2>
                     {organizer.description && (
-                      <p className="text-body-sm text-stone mt-1 line-clamp-2">
+                      <p className="text-body-sm text-zinc mt-1 line-clamp-2">
                         {organizer.description}
                       </p>
                     )}
@@ -102,11 +102,11 @@ export default async function OrganizersPage({ searchParams }: OrganizersPagePro
         </div>
       ) : (
         <div className="text-center py-16">
-          <User className="w-12 h-12 text-stone/40 mx-auto mb-4" />
-          <h2 className="font-display text-h3 text-charcoal mb-2">
+          <User className="w-12 h-12 text-zinc/40 mx-auto mb-4" />
+          <h2 className="font-body text-h3 text-ink mb-2">
             No organizers found
           </h2>
-          <p className="text-stone">
+          <p className="text-zinc">
             Check back soon for organizer listings!
           </p>
         </div>
@@ -118,18 +118,18 @@ export default async function OrganizersPage({ searchParams }: OrganizersPagePro
           {page > 1 && (
             <a
               href={`/organizers?page=${page - 1}`}
-              className="px-4 py-2 rounded-md bg-sand text-charcoal hover:bg-coral-light transition-colors"
+              className="px-4 py-2 rounded-md bg-cloud text-ink hover:bg-blue-light transition-colors"
             >
               Previous
             </a>
           )}
-          <span className="px-4 py-2 text-stone">
+          <span className="px-4 py-2 text-zinc">
             Page {page} of {Math.ceil(total / 24)}
           </span>
           {page * 24 < total && (
             <a
               href={`/organizers?page=${page + 1}`}
-              className="px-4 py-2 rounded-md bg-sand text-charcoal hover:bg-coral-light transition-colors"
+              className="px-4 py-2 rounded-md bg-cloud text-ink hover:bg-blue-light transition-colors"
             >
               Next
             </a>

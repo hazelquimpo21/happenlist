@@ -4,8 +4,32 @@
  * Fetches a list of events with filtering and pagination.
  */
 
+import { unstable_cache } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import type { EventCard, EventQueryParams } from '@/types';
+
+/**
+ * Cached category slug → ID resolver.
+ * Categories are a static lookup table (~15 rows), so we cache indefinitely
+ * and revalidate every 24 hours to avoid a waterfall query on every getEvents call.
+ */
+const getCategoryIdBySlug = unstable_cache(
+  async (slug: string): Promise<string | null> => {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('slug', slug)
+      .single();
+
+    if (data && typeof data === 'object' && 'id' in data) {
+      return (data as { id: string }).id;
+    }
+    return null;
+  },
+  ['category-slug-to-id'],
+  { revalidate: 86400, tags: ['categories'] }
+);
 
 /**
  * Transform raw database row to EventCard format.
@@ -169,17 +193,11 @@ export async function getEvents(
     query = query.textSearch('title', search, { type: 'websearch' });
   }
 
-  // Filter by category using the foreign key relationship
+  // Filter by category (cached slug→ID lookup avoids a waterfall query)
   if (categorySlug) {
-    // First get the category ID, then filter
-    const { data: categoryData } = await supabase
-      .from('categories')
-      .select('id')
-      .eq('slug', categorySlug)
-      .single();
-
-    if (categoryData && typeof categoryData === 'object' && 'id' in categoryData) {
-      query = query.eq('category_id', (categoryData as { id: string }).id);
+    const categoryId = await getCategoryIdBySlug(categorySlug);
+    if (categoryId) {
+      query = query.eq('category_id', categoryId);
     }
   }
 

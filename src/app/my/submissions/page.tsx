@@ -89,10 +89,10 @@ export default async function MySubmissionsPage() {
         {/* ========== Header ========== */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-display font-bold text-charcoal">
+            <h1 className="text-3xl font-body font-bold text-ink">
               My Submissions
             </h1>
-            <p className="text-stone mt-1">
+            <p className="text-zinc mt-1">
               Events you&apos;ve submitted to Happenlist
             </p>
           </div>
@@ -107,21 +107,21 @@ export default async function MySubmissionsPage() {
 
         {/* ========== Stats ========== */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-warm-white border border-sand rounded-lg p-4">
-            <div className="text-2xl font-bold text-charcoal">{counts.published}</div>
-            <div className="text-sm text-stone">Published</div>
+          <div className="bg-pure border border-mist rounded-lg p-4">
+            <div className="text-2xl font-bold text-ink">{counts.published}</div>
+            <div className="text-sm text-zinc">Published</div>
           </div>
-          <div className="bg-warm-white border border-sand rounded-lg p-4">
-            <div className="text-2xl font-bold text-charcoal">{counts.pending_review}</div>
-            <div className="text-sm text-stone">Pending Review</div>
+          <div className="bg-pure border border-mist rounded-lg p-4">
+            <div className="text-2xl font-bold text-ink">{counts.pending_review}</div>
+            <div className="text-sm text-zinc">Pending Review</div>
           </div>
-          <div className="bg-warm-white border border-sand rounded-lg p-4">
-            <div className="text-2xl font-bold text-charcoal">{counts.changes_requested}</div>
-            <div className="text-sm text-stone">Needs Changes</div>
+          <div className="bg-pure border border-mist rounded-lg p-4">
+            <div className="text-2xl font-bold text-ink">{counts.changes_requested}</div>
+            <div className="text-sm text-zinc">Needs Changes</div>
           </div>
-          <div className="bg-warm-white border border-sand rounded-lg p-4">
-            <div className="text-2xl font-bold text-charcoal">{counts.draft}</div>
-            <div className="text-sm text-stone">Drafts</div>
+          <div className="bg-pure border border-mist rounded-lg p-4">
+            <div className="text-2xl font-bold text-ink">{counts.draft}</div>
+            <div className="text-sm text-zinc">Drafts</div>
           </div>
         </div>
 
@@ -144,14 +144,14 @@ export default async function MySubmissionsPage() {
 
         {/* ========== Submissions List ========== */}
         {submissions.length === 0 ? (
-          <div className="text-center py-16 bg-warm-white border border-sand rounded-lg">
-            <div className="w-16 h-16 bg-sand rounded-full flex items-center justify-center mx-auto mb-4">
-              <PlusCircle className="w-8 h-8 text-stone" />
+          <div className="text-center py-16 bg-pure border border-mist rounded-lg">
+            <div className="w-16 h-16 bg-cloud rounded-full flex items-center justify-center mx-auto mb-4">
+              <PlusCircle className="w-8 h-8 text-zinc" />
             </div>
-            <h2 className="text-xl font-semibold text-charcoal mb-2">
+            <h2 className="text-xl font-semibold text-ink mb-2">
               No submissions yet
             </h2>
-            <p className="text-stone mb-6">
+            <p className="text-zinc mb-6">
               Share your events with the Milwaukee community!
             </p>
             <Link href="/submit/new">
@@ -163,7 +163,7 @@ export default async function MySubmissionsPage() {
             {submissions.map((submission) => (
               <div
                 key={submission.id}
-                className="bg-warm-white border border-sand rounded-lg p-4 hover:border-coral/30 transition-colors"
+                className="bg-pure border border-mist rounded-lg p-4 hover:border-blue/30 transition-colors"
               >
                 <div className="flex items-start justify-between">
                   {/* Event Info */}
@@ -180,17 +180,17 @@ export default async function MySubmissionsPage() {
                       </Badge>
 
                       {submission.category_name && (
-                        <span className="text-sm text-stone">
+                        <span className="text-sm text-zinc">
                           {submission.category_name}
                         </span>
                       )}
                     </div>
 
-                    <h3 className="font-semibold text-charcoal truncate">
+                    <h3 className="font-semibold text-ink truncate">
                       {submission.title}
                     </h3>
 
-                    <div className="flex items-center space-x-4 mt-1 text-sm text-stone">
+                    <div className="flex items-center space-x-4 mt-1 text-sm text-zinc">
                       <span>
                         {format(new Date(submission.instance_date), 'MMM d, yyyy')}
                       </span>
@@ -227,7 +227,7 @@ export default async function MySubmissionsPage() {
 
                   {/* Image */}
                   {submission.image_url && (
-                    <div className="ml-4 flex-shrink-0 w-24 h-16 rounded overflow-hidden bg-sand">
+                    <div className="ml-4 flex-shrink-0 w-24 h-16 rounded overflow-hidden bg-cloud">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={submission.image_url}
@@ -239,7 +239,7 @@ export default async function MySubmissionsPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center space-x-3 mt-4 pt-4 border-t border-sand">
+                <div className="flex items-center space-x-3 mt-4 pt-4 border-t border-mist">
                   {submission.status === 'published' && (
                     <Link href={`/event/${submission.slug}`}>
                       <Button variant="outline" size="sm">
@@ -265,7 +265,7 @@ export default async function MySubmissionsPage() {
                     </Link>
                   )}
 
-                  <span className="text-xs text-stone ml-auto">
+                  <span className="text-xs text-zinc ml-auto">
                     Submitted {format(new Date(submission.created_at), 'MMM d, yyyy')}
                   </span>
                 </div>

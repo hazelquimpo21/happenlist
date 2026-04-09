@@ -55,8 +55,8 @@ export default async function VenuesPage({ searchParams }: VenuesPageProps) {
 
       {/* Page header */}
       <div className="mb-8">
-        <h1 className="font-display text-h1 text-charcoal">Venues</h1>
-        <p className="text-stone text-body mt-2">
+        <h1 className="font-body text-h1 text-ink">Venues</h1>
+        <p className="text-zinc text-body mt-2">
           {total} {total === 1 ? 'venue' : 'venues'} to explore
         </p>
       </div>
@@ -83,22 +83,22 @@ export default async function VenuesPage({ searchParams }: VenuesPageProps) {
                       />
                     </div>
                   ) : (
-                    <div className="h-32 w-full bg-sage/10 flex items-center justify-center">
-                      <MapPin className="w-8 h-8 text-sage/40" />
+                    <div className="h-32 w-full bg-emerald/10 flex items-center justify-center">
+                      <MapPin className="w-8 h-8 text-emerald/40" />
                     </div>
                   );
                 })()}
                 <div className="p-4">
-                  <h2 className="font-display text-h4 text-charcoal group-hover:text-coral transition-colors">
+                  <h2 className="font-body text-h4 text-ink group-hover:text-blue transition-colors">
                     {venue.name}
                   </h2>
                   {venue.address_line && (
-                    <p className="text-body-sm text-stone mt-1">
+                    <p className="text-body-sm text-zinc mt-1">
                       {venue.address_line}
                     </p>
                   )}
                   {venue.city && (
-                    <p className="text-body-sm text-stone">
+                    <p className="text-body-sm text-zinc">
                       {venue.city}, {venue.state}
                     </p>
                   )}
@@ -109,11 +109,11 @@ export default async function VenuesPage({ searchParams }: VenuesPageProps) {
         </div>
       ) : (
         <div className="text-center py-16">
-          <MapPin className="w-12 h-12 text-stone/40 mx-auto mb-4" />
-          <h2 className="font-display text-h3 text-charcoal mb-2">
+          <MapPin className="w-12 h-12 text-zinc/40 mx-auto mb-4" />
+          <h2 className="font-body text-h3 text-ink mb-2">
             No venues found
           </h2>
-          <p className="text-stone">
+          <p className="text-zinc">
             Check back soon for venue listings!
           </p>
         </div>
@@ -125,18 +125,18 @@ export default async function VenuesPage({ searchParams }: VenuesPageProps) {
           {page > 1 && (
             <a
               href={`/venues?page=${page - 1}`}
-              className="px-4 py-2 rounded-md bg-sand text-charcoal hover:bg-coral-light transition-colors"
+              className="px-4 py-2 rounded-md bg-cloud text-ink hover:bg-blue-light transition-colors"
             >
               Previous
             </a>
           )}
-          <span className="px-4 py-2 text-stone">
+          <span className="px-4 py-2 text-zinc">
             Page {page} of {Math.ceil(total / 24)}
           </span>
           {page * 24 < total && (
             <a
               href={`/venues?page=${page + 1}`}
-              className="px-4 py-2 rounded-md bg-sand text-charcoal hover:bg-coral-light transition-colors"
+              className="px-4 py-2 rounded-md bg-cloud text-ink hover:bg-blue-light transition-colors"
             >
               Next
             </a>

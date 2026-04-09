@@ -127,13 +127,13 @@ export default async function MembershipPage({ params }: MembershipPageProps) {
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 mb-3">
                 Membership Organization
               </span>
-              <h1 className="font-display text-h1 text-charcoal">
+              <h1 className="font-body text-h1 text-ink">
                 {org.name}
               </h1>
               {linkedOrganizer && 'slug' in linkedOrganizer && (
                 <Link
                   href={`/organizer/${linkedOrganizer.slug}`}
-                  className="text-sm text-coral hover:text-coral-dark transition-colors mt-1 inline-block"
+                  className="text-sm text-blue hover:text-orange-dark transition-colors mt-1 inline-block"
                 >
                   View organizer page &rarr;
                 </Link>
@@ -144,7 +144,7 @@ export default async function MembershipPage({ params }: MembershipPageProps) {
           {/* Description */}
           {org.description && (
             <div className="mb-8">
-              <h2 className="font-display text-h3 text-charcoal mb-4">
+              <h2 className="font-body text-h3 text-ink mb-4">
                 About
               </h2>
               <div className="prose-event whitespace-pre-wrap">
@@ -159,19 +159,19 @@ export default async function MembershipPage({ params }: MembershipPageProps) {
           <div className="sticky top-24 space-y-6">
             {/* Website */}
             {org.website_url && (
-              <div className="p-6 bg-warm-white rounded-lg border border-sand">
-                <h3 className="font-display text-h4 text-charcoal mb-4">
+              <div className="p-6 bg-pure rounded-lg border border-mist">
+                <h3 className="font-body text-h4 text-ink mb-4">
                   Links
                 </h3>
                 <div className="flex items-start gap-3 mb-4">
                   <Globe className="w-5 h-5 text-amber-600 mt-0.5" />
                   <div>
-                    <p className="font-medium text-charcoal">Website</p>
+                    <p className="font-medium text-ink">Website</p>
                     <a
                       href={org.website_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-body-sm text-coral hover:text-coral-dark transition-colors"
+                      className="text-body-sm text-blue hover:text-orange-dark transition-colors"
                     >
                       Visit website
                     </a>
@@ -189,10 +189,10 @@ export default async function MembershipPage({ params }: MembershipPageProps) {
             )}
 
             {/* Stats */}
-            <div className="p-6 bg-warm-white rounded-lg border border-sand">
+            <div className="p-6 bg-pure rounded-lg border border-mist">
               <div className="text-center">
-                <p className="font-display text-h2 text-amber-600">{events.length}</p>
-                <p className="text-body-sm text-stone">
+                <p className="font-body text-h2 text-amber-600">{events.length}</p>
+                <p className="text-body-sm text-zinc">
                   {events.length === 1 ? 'Event with Benefits' : 'Events with Benefits'}
                 </p>
               </div>
@@ -210,8 +210,8 @@ export default async function MembershipPage({ params }: MembershipPageProps) {
 
         {events.length === 0 ? (
           <div className="text-center py-12">
-            <Ticket className="w-10 h-10 text-stone/40 mx-auto mb-3" />
-            <p className="text-stone">No upcoming events with member benefits right now.</p>
+            <Ticket className="w-10 h-10 text-zinc/40 mx-auto mb-3" />
+            <p className="text-zinc">No upcoming events with member benefits right now.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -221,22 +221,22 @@ export default async function MembershipPage({ params }: MembershipPageProps) {
                 <Link
                   key={event.id}
                   href={buildEventUrl(event)}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-warm-white border border-sand hover:shadow-card-lifted hover:-translate-y-0.5 transition-all"
+                  className="flex items-center gap-4 p-4 rounded-xl bg-pure border border-mist hover:shadow-card-lifted hover:-translate-y-0.5 transition-all"
                 >
                   {/* Date column */}
                   <div className="flex-shrink-0 text-center w-14">
-                    <p className="text-xs text-stone uppercase">
+                    <p className="text-xs text-zinc uppercase">
                       {formatDate(event.start_datetime, 'MMM')}
                     </p>
-                    <p className="font-display text-h3 text-charcoal leading-tight">
+                    <p className="font-body text-h3 text-ink leading-tight">
                       {formatDate(event.start_datetime, 'd')}
                     </p>
                   </div>
 
                   {/* Event info */}
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-charcoal truncate">{event.title}</p>
-                    <div className="flex items-center gap-3 text-xs text-stone mt-0.5">
+                    <p className="font-semibold text-ink truncate">{event.title}</p>
+                    <div className="flex items-center gap-3 text-xs text-zinc mt-0.5">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         {formatTime(event.start_datetime)}

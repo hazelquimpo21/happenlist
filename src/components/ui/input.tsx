@@ -56,7 +56,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       <div className={cn(fullWidth && 'w-full')}>
         {/* Label */}
         {label && (
-          <label className="block text-body-sm font-medium text-charcoal mb-1.5">
+          <label className="block text-body-sm font-medium text-ink mb-1.5">
             {label}
           </label>
         )}
@@ -65,7 +65,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <div className="relative">
           {/* Left icon */}
           {leftIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-stone">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc">
               {leftIcon}
             </div>
           )}
@@ -75,11 +75,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             className={cn(
               'w-full h-11',
-              'bg-warm-white text-charcoal',
-              'border border-sand rounded-md',
-              'placeholder:text-stone',
+              'bg-pure text-ink',
+              'border border-mist rounded-md',
+              'placeholder:text-zinc',
               'transition-all duration-fast',
-              'focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral-light',
+              'focus:outline-none focus:border-blue focus:ring-2 focus:ring-blue/20',
               leftIcon ? 'pl-10' : 'pl-4',
               rightIcon ? 'pr-10' : 'pr-4',
               error && 'border-red-500 focus:border-red-500 focus:ring-red-200',
@@ -91,7 +91,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
           {/* Right icon */}
           {rightIcon && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-stone">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc">
               {rightIcon}
             </div>
           )}
