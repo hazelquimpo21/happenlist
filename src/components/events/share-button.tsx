@@ -41,6 +41,7 @@ export function ShareButton({ title, text, className }: ShareButtonProps) {
     <button
       type="button"
       onClick={handleShare}
+      aria-label={copied ? 'Link copied to clipboard' : 'Share this event'}
       className={cn(
         'inline-flex items-center justify-center gap-2',
         'font-body font-medium rounded-md transition-all duration-base',

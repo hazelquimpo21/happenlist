@@ -99,22 +99,30 @@ function VibeDimensionBar({
   // Convert 1-5 to 0-100 percentage
   const pct = ((value - 1) / 4) * 100;
 
+  // Derive a human-readable description for screen readers
+  const srDescription = `${label}: ${value} out of 5, between ${lowLabel} and ${highLabel}`;
+
   return (
-    <div className="space-y-1">
+    <div className="space-y-1" role="meter" aria-label={label} aria-valuenow={value} aria-valuemin={1} aria-valuemax={5} aria-valuetext={srDescription}>
       <div className="flex items-center justify-between text-xs text-zinc">
         <span className="font-medium text-ink">{label}</span>
-        <span className="text-[11px]">{value}/5</span>
+        <span className="text-[11px] text-zinc">{value}/5</span>
       </div>
-      <div className="relative h-1.5 bg-cloud/60 rounded-full">
+      <div className="relative h-2 bg-cloud rounded-full">
+        {/* Filled track for better visual cue */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full shadow-sm border-2 border-white"
+          className="absolute inset-y-0 left-0 rounded-full opacity-20"
+          style={{ width: `${pct}%`, backgroundColor: accentColor }}
+        />
+        <div
+          className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full shadow-sm border-2 border-white"
           style={{
-            left: `calc(${pct}% - 6px)`,
+            left: `calc(${pct}% - 7px)`,
             backgroundColor: accentColor,
           }}
         />
       </div>
-      <div className="flex justify-between text-[10px] text-zinc/70">
+      <div className="flex justify-between text-[10px] text-zinc">
         <span>{lowLabel}</span>
         <span>{highLabel}</span>
       </div>
@@ -352,7 +360,7 @@ export function VibeProfileSection({
               <p className="text-xs font-medium text-zinc uppercase tracking-wide mb-1">
                 Who&apos;ll Be There
               </p>
-              <p className="text-sm text-ink/80 italic leading-relaxed">
+              <p className="text-sm text-zinc italic leading-relaxed">
                 {event.expected_crowd}
               </p>
             </div>
@@ -362,7 +370,7 @@ export function VibeProfileSection({
               <p className="text-xs font-medium text-zinc uppercase tracking-wide mb-1">
                 What to Wear
               </p>
-              <p className="text-sm text-ink/80 italic leading-relaxed">
+              <p className="text-sm text-zinc italic leading-relaxed">
                 {event.dress_vibe}
               </p>
             </div>

@@ -100,10 +100,11 @@ export function ChildEventsSchedule({
     return (
       <div className="space-y-6">
         {groups.length > 1 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Filter schedule by group">
             <button
               onClick={() => setActiveGroup(null)}
-              className="px-3 py-1.5 rounded-full text-sm font-medium bg-cloud/60 text-zinc hover:bg-cloud transition-colors"
+              aria-pressed={activeGroup === null}
+              className="px-3 py-1.5 rounded-full text-sm font-medium bg-cloud/60 text-zinc hover:bg-cloud transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-light"
             >
               All
             </button>
@@ -111,8 +112,9 @@ export function ChildEventsSchedule({
               <button
                 key={group}
                 onClick={() => setActiveGroup(group)}
+                aria-pressed={activeGroup === group}
                 className={cn(
-                  'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+                  'px-3 py-1.5 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-light',
                   activeGroup === group
                     ? 'text-white'
                     : 'bg-cloud/60 text-zinc hover:bg-cloud'
@@ -137,11 +139,12 @@ export function ChildEventsSchedule({
     <div className="space-y-6">
       {/* Filter pills (only if there are groups) */}
       {groups.length > 1 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter schedule by group">
           <button
             onClick={() => setActiveGroup(null)}
+            aria-pressed={activeGroup === null}
             className={cn(
-              'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+              'px-3 py-1.5 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-light',
               activeGroup === null
                 ? 'text-white'
                 : 'bg-cloud/60 text-zinc hover:bg-cloud'
@@ -158,8 +161,9 @@ export function ChildEventsSchedule({
             <button
               key={group}
               onClick={() => setActiveGroup(group)}
+              aria-pressed={activeGroup === group}
               className={cn(
-                'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+                'px-3 py-1.5 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-light',
                 activeGroup === group
                   ? 'text-white'
                   : 'bg-cloud/60 text-zinc hover:bg-cloud'

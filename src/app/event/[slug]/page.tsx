@@ -18,6 +18,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   Calendar,
+  CalendarPlus,
   MapPin,
   Ticket,
   ExternalLink,
@@ -30,6 +31,7 @@ import {
   Shield,
   DoorOpen,
   CreditCard,
+  Zap,
 } from 'lucide-react';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { Button } from '@/components/ui';
@@ -47,6 +49,78 @@ import { parseEventSlug, buildVenueUrl, buildOrganizerUrl, getBestImageUrl, getC
 import { formatAgeRange, getGoodForTags, getPerformerRoleLabel, getBenefitConfig } from '@/types';
 import { formatEventDate, formatDate, formatTime } from '@/lib/utils/dates';
 import { getCategoryColor } from '@/lib/constants/category-colors';
+
+/**
+ * Returns a human-friendly urgency label for events happening soon.
+ * Drives a small badge that creates temporal anchoring for the user.
+ */
+function getTimingBadge(startDatetime: string): { label: string; color: string } | null {
+  const now = new Date();
+  const start = new Date(startDatetime);
+  const diffMs = start.getTime() - now.getTime();
+  const diffHours = diffMs / (1000 * 60 * 60);
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+  // Already started today or starts within the next few hours
+  if (diffHours <= 0 && diffHours > -12) {
+    return { label: 'Happening Now', color: 'bg-rose-100 text-rose-800' };
+  }
+  if (diffHours > 0 && diffHours <= 6) {
+    return { label: 'Starting Soon', color: 'bg-amber-100 text-amber-800' };
+  }
+  // Same calendar day
+  if (start.toDateString() === now.toDateString()) {
+    return { label: 'Today', color: 'bg-blue/10 text-blue' };
+  }
+  // Tomorrow
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  if (start.toDateString() === tomorrow.toDateString()) {
+    return { label: 'Tomorrow', color: 'bg-violet-100 text-violet-800' };
+  }
+  // This weekend (if today is Mon–Fri and event is Sat/Sun of the same week)
+  if (diffDays > 0 && diffDays <= 6) {
+    const startDay = start.getDay(); // 0=Sun, 6=Sat
+    if (startDay === 0 || startDay === 6) {
+      return { label: 'This Weekend', color: 'bg-emerald-50 text-emerald-800' };
+    }
+  }
+  return null;
+}
+
+/**
+ * Generates an "Add to Calendar" Google Calendar URL.
+ */
+function buildGoogleCalendarUrl(event: {
+  title: string;
+  start_datetime: string;
+  end_datetime?: string | null;
+  is_all_day?: boolean;
+  short_description?: string | null;
+  location?: { name: string; address_line?: string | null; city?: string | null } | null;
+}): string {
+  const params = new URLSearchParams();
+  params.set('action', 'TEMPLATE');
+  params.set('text', event.title);
+  if (event.short_description) params.set('details', event.short_description);
+  if (event.location) {
+    const loc = [event.location.name, event.location.address_line, event.location.city].filter(Boolean).join(', ');
+    params.set('location', loc);
+  }
+  // Format dates for Google Calendar
+  const formatGCal = (iso: string) => iso.replace(/[-:]/g, '').replace(/\.\d+/, '').slice(0, 15) + 'Z';
+  if (event.is_all_day) {
+    const dateOnly = event.start_datetime.slice(0, 10).replace(/-/g, '');
+    params.set('dates', `${dateOnly}/${dateOnly}`);
+  } else {
+    const start = formatGCal(new Date(event.start_datetime).toISOString());
+    const end = event.end_datetime
+      ? formatGCal(new Date(event.end_datetime).toISOString())
+      : formatGCal(new Date(new Date(event.start_datetime).getTime() + 2 * 60 * 60 * 1000).toISOString());
+    params.set('dates', `${start}/${end}`);
+  }
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
 
 interface EventPageProps {
   params: Promise<{ slug: string }>;
@@ -243,6 +317,12 @@ export default async function EventPage({ params }: EventPageProps) {
   // Get category color for accent theming
   const categoryColor = getCategoryColor(event.category?.slug ?? null);
 
+  // Timing badge for urgency anchoring (Today, Tomorrow, This Weekend, etc.)
+  const timingBadge = getTimingBadge(event.start_datetime);
+
+  // Google Calendar link
+  const calendarUrl = buildGoogleCalendarUrl(event);
+
   return (
     <>
       {/* Structured data for SEO */}
@@ -371,7 +451,7 @@ export default async function EventPage({ params }: EventPageProps) {
           {/* Performer line — from linked entities, or fallback to talent_name */}
           {event.event_performers && event.event_performers.length > 0 ? (
             <p className="mt-2 text-base md:text-lg text-zinc flex items-center gap-2">
-              <Mic2 className="w-4 h-4 flex-shrink-0" style={{ color: categoryColor.accent }} />
+              <Mic2 className="w-4 h-4 flex-shrink-0" style={{ color: categoryColor.accent }} aria-hidden="true" />
               <span>
                 ft.{' '}
                 {event.event_performers.slice(0, 3).map((ep, i) => (
@@ -392,7 +472,7 @@ export default async function EventPage({ params }: EventPageProps) {
             </p>
           ) : event.talent_name ? (
             <p className="mt-2 text-base md:text-lg text-zinc flex items-center gap-2">
-              <Mic2 className="w-4 h-4 flex-shrink-0" style={{ color: categoryColor.accent }} />
+              <Mic2 className="w-4 h-4 flex-shrink-0" style={{ color: categoryColor.accent }} aria-hidden="true" />
               <span>feat. <span className="font-semibold text-ink">{event.talent_name}</span></span>
             </p>
           ) : null}
@@ -406,8 +486,8 @@ export default async function EventPage({ params }: EventPageProps) {
 
           {/* Prominent date / time / venue line */}
           <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-base md:text-lg font-medium text-ink">
-            <Calendar className="w-5 h-5 flex-shrink-0" style={{ color: categoryColor.accent }} />
-            <span>
+            <Calendar className="w-5 h-5 flex-shrink-0" style={{ color: categoryColor.accent }} aria-hidden="true" />
+            <time dateTime={event.start_datetime}>
               {formatDate(event.start_datetime, 'EEEE, MMMM d')}
               {!event.is_all_day && (
                 <>
@@ -417,7 +497,13 @@ export default async function EventPage({ params }: EventPageProps) {
                 </>
               )}
               {event.is_all_day && ' · All Day'}
-            </span>
+            </time>
+            {timingBadge && (
+              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${timingBadge.color}`}>
+                <Zap className="w-3 h-3" aria-hidden="true" />
+                {timingBadge.label}
+              </span>
+            )}
             {event.location && (
               <>
                 <span className="text-zinc">at</span>
@@ -462,12 +548,12 @@ export default async function EventPage({ params }: EventPageProps) {
               {/* Price badge */}
               {event.is_free ? (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-emerald text-white">
-                  <Ticket className="w-4 h-4" />
+                  <Ticket className="w-4 h-4" aria-hidden="true" />
                   Free
                 </span>
               ) : (
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-ink text-pure">
-                  <Ticket className="w-4 h-4" />
+                  <Ticket className="w-4 h-4" aria-hidden="true" />
                   <EventPrice event={event} showDetails />
                 </div>
               )}
@@ -475,7 +561,7 @@ export default async function EventPage({ params }: EventPageProps) {
               {/* Age / audience */}
               {(event.age_restriction || event.is_family_friendly || event.age_low != null || event.age_high != null) && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-pure text-ink border border-mist">
-                  <Baby className="w-4 h-4 text-zinc" />
+                  <Baby className="w-4 h-4 text-zinc" aria-hidden="true" />
                   {(() => {
                     const parts: string[] = [];
                     const ageRange = formatAgeRange(event.age_low, event.age_high);
@@ -513,12 +599,12 @@ export default async function EventPage({ params }: EventPageProps) {
                 }}
               >
                 <div className="flex items-center gap-2 mb-3">
-                  <Sparkles className="w-5 h-5" style={{ color: categoryColor.accent }} />
+                  <Sparkles className="w-5 h-5" style={{ color: categoryColor.accent }} aria-hidden="true" />
                   <h2 className="font-body text-h4 text-ink">
                     Happenlist Highlights
                   </h2>
                 </div>
-                <div className="prose-event text-ink/90 leading-relaxed">
+                <div className="prose-event text-slate leading-relaxed">
                   {event.happenlist_summary}
                 </div>
               </div>
@@ -534,7 +620,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 }}
               >
                 <div className="flex items-center gap-2 mb-4">
-                  <Mic2 className="w-5 h-5" style={{ color: categoryColor.accent }} />
+                  <Mic2 className="w-5 h-5" style={{ color: categoryColor.accent }} aria-hidden="true" />
                   <h2 className="font-body text-h4 text-ink">
                     {event.event_performers.length === 1 ? 'Featured Artist' : 'Lineup'}
                   </h2>
@@ -598,7 +684,7 @@ export default async function EventPage({ params }: EventPageProps) {
                             <p className="text-xs text-zinc mt-0.5">{ep.performer.genre}</p>
                           )}
                           {isHeadliner && ep.performer.bio && (
-                            <p className="text-sm text-ink/80 mt-1 leading-relaxed line-clamp-3">
+                            <p className="text-sm text-zinc mt-1 leading-relaxed line-clamp-3">
                               {ep.performer.bio}
                             </p>
                           )}
@@ -618,12 +704,12 @@ export default async function EventPage({ params }: EventPageProps) {
                 }}
               >
                 <div className="flex items-center gap-2 mb-3">
-                  <Mic2 className="w-5 h-5" style={{ color: categoryColor.accent }} />
+                  <Mic2 className="w-5 h-5" style={{ color: categoryColor.accent }} aria-hidden="true" />
                   <h2 className="font-body text-h4 text-ink">
                     Featured: {event.talent_name}
                   </h2>
                 </div>
-                <p className="text-ink/80 leading-relaxed">
+                <p className="text-zinc leading-relaxed">
                   {event.talent_bio}
                 </p>
               </div>
@@ -633,7 +719,7 @@ export default async function EventPage({ params }: EventPageProps) {
             {event.event_membership_benefits && event.event_membership_benefits.length > 0 ? (
               <div className="p-6 rounded-xl border border-amber-200 bg-amber-50/50">
                 <div className="flex items-center gap-2 mb-4">
-                  <CreditCard className="w-5 h-5 text-amber-700" />
+                  <CreditCard className="w-5 h-5 text-amber-700" aria-hidden="true" />
                   <h2 className="font-body text-h4 text-ink">
                     Member Benefits
                   </h2>
@@ -696,32 +782,47 @@ export default async function EventPage({ params }: EventPageProps) {
                 <h2 className="font-body text-h4 text-ink mb-3">
                   About This Event
                 </h2>
-                <div className="prose-event text-ink/85 leading-relaxed whitespace-pre-wrap">
+                <div className="prose-event text-slate leading-relaxed whitespace-pre-wrap">
                   {event.description}
                 </div>
               </div>
             )}
 
-            {/* Organizer Description (Verbatim) */}
+            {/* Organizer Description (Verbatim) — styled as a pull-quote */}
             {event.organizer_description && (
-              <div className="p-6 bg-pure rounded-xl border border-mist">
-                <div className="flex items-center gap-2 mb-3">
-                  <Quote className="w-5 h-5 text-zinc" />
-                  <h2 className="font-body text-h4 text-ink">
-                    From the Organizer
-                  </h2>
+              <figure
+                className="relative p-6 bg-pure rounded-xl border border-mist"
+                aria-label="Message from the event organizer"
+              >
+                <div
+                  className="absolute left-0 top-6 bottom-6 w-1 rounded-full"
+                  style={{ backgroundColor: categoryColor.accent }}
+                  aria-hidden="true"
+                />
+                <div className="pl-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Quote className="w-5 h-5" style={{ color: categoryColor.accent }} aria-hidden="true" />
+                    <h2 className="font-body text-h4 text-ink">
+                      From the Organizer
+                    </h2>
+                  </div>
+                  <blockquote className="prose-event whitespace-pre-wrap text-zinc italic leading-relaxed">
+                    {event.organizer_description}
+                  </blockquote>
+                  {event.organizer && !event.organizer_is_venue && (
+                    <figcaption className="mt-3 text-sm font-medium text-ink">
+                      — {event.organizer.name}
+                    </figcaption>
+                  )}
                 </div>
-                <div className="prose-event whitespace-pre-wrap text-ink/80 italic leading-relaxed">
-                  {event.organizer_description}
-                </div>
-              </div>
+              </figure>
             )}
 
             {/* Access & Practical Info */}
             {(event.access_type || event.attendance_mode || event.membership_required) && (
               <div className="p-5 bg-pure rounded-xl border border-mist">
                 <div className="flex items-center gap-2 mb-4">
-                  <DoorOpen className="w-5 h-5" style={{ color: categoryColor.accent }} />
+                  <DoorOpen className="w-5 h-5" style={{ color: categoryColor.accent }} aria-hidden="true" />
                   <h2 className="font-body text-h4 text-ink">
                     How to Attend
                   </h2>
@@ -729,7 +830,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 <div className="space-y-3">
                   {event.access_type && (
                     <div className="flex items-start gap-3">
-                      <Shield className="w-4 h-4 mt-0.5 text-zinc" />
+                      <Shield className="w-4 h-4 mt-0.5 text-zinc" aria-hidden="true" />
                       <div>
                         <AccessBadge accessType={event.access_type} isFree={event.is_free} />
                         {event.access_type === 'ticketed' && event.ticket_url && (
@@ -740,7 +841,7 @@ export default async function EventPage({ params }: EventPageProps) {
                   )}
                   {event.attendance_mode && (
                     <div className="flex items-start gap-3">
-                      <Users className="w-4 h-4 mt-0.5 text-zinc" />
+                      <Users className="w-4 h-4 mt-0.5 text-zinc" aria-hidden="true" />
                       <p className="text-sm text-ink">
                         {event.attendance_mode === 'drop_in' && 'Drop in anytime — no commitment needed'}
                         {event.attendance_mode === 'registered' && 'Registration required — must sign up'}
@@ -750,7 +851,7 @@ export default async function EventPage({ params }: EventPageProps) {
                   )}
                   {event.membership_required && event.membership_details && (
                     <div className="flex items-start gap-3">
-                      <Shield className="w-4 h-4 mt-0.5 text-zinc" />
+                      <Shield className="w-4 h-4 mt-0.5 text-zinc" aria-hidden="true" />
                       <p className="text-sm text-ink">{event.membership_details}</p>
                     </div>
                   )}
@@ -765,10 +866,10 @@ export default async function EventPage({ params }: EventPageProps) {
             {event.price_details && (
               <div className="p-5 bg-emerald/10 rounded-xl border border-sage/30">
                 <h3 className="font-body text-h4 text-ink mb-2 flex items-center gap-2">
-                  <Ticket className="w-5 h-5 text-emerald" />
+                  <Ticket className="w-5 h-5 text-emerald" aria-hidden="true" />
                   Pricing Details
                 </h3>
-                <p className="text-ink/80 leading-relaxed">
+                <p className="text-zinc leading-relaxed">
                   {event.price_details}
                 </p>
               </div>
@@ -855,20 +956,40 @@ export default async function EventPage({ params }: EventPageProps) {
                 )}
               </div>
 
-              {/* Heart + Share side by side */}
-              <div className="flex gap-3">
-                <HeartButton
-                  eventId={event.id}
-                  initialHearted={isHearted}
-                  initialCount={event.heart_count ?? 0}
-                  size="lg"
-                  className="flex-1 bg-pure border border-mist hover:border-blue/30 !rounded-full"
-                />
-                <ShareButton
-                  title={event.title}
-                  text={event.short_description || undefined}
-                  className="flex-1 !rounded-full"
-                />
+              {/* Heart + Share + Calendar */}
+              <div className="space-y-2">
+                <div className="flex gap-3">
+                  <HeartButton
+                    eventId={event.id}
+                    initialHearted={isHearted}
+                    initialCount={event.heart_count ?? 0}
+                    size="lg"
+                    className="flex-1 bg-pure border border-mist hover:border-blue/30 !rounded-full"
+                  />
+                  <ShareButton
+                    title={event.title}
+                    text={event.short_description || undefined}
+                    className="flex-1 !rounded-full"
+                  />
+                </div>
+                {/* Add to Calendar — reduces decision friction */}
+                <a
+                  href={calendarUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full px-4 py-2 text-sm font-medium text-zinc hover:text-ink hover:bg-cloud rounded-full border border-mist transition-colors"
+                >
+                  <CalendarPlus className="w-4 h-4" aria-hidden="true" />
+                  Add to Calendar
+                </a>
+                {/* Social proof — people are interested */}
+                {(event.heart_count ?? 0) > 0 && (
+                  <p className="text-center text-xs text-zinc">
+                    {event.heart_count === 1
+                      ? '1 person saved this event'
+                      : `${event.heart_count} people saved this event`}
+                  </p>
+                )}
               </div>
 
               {/* Event details card */}
@@ -885,11 +1006,11 @@ export default async function EventPage({ params }: EventPageProps) {
 
                 {/* Date */}
                 <div className="flex items-start gap-3 mb-4">
-                  <Calendar className="w-5 h-5 mt-0.5" style={{ color: categoryColor.accent }} />
+                  <Calendar className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: categoryColor.accent }} aria-hidden="true" />
                   <div>
-                    <p className="font-semibold text-ink">
+                    <time dateTime={event.start_datetime} className="font-semibold text-ink block">
                       {formatEventDate(event.start_datetime, { format: 'long', includeTime: false })}
-                    </p>
+                    </time>
                   </div>
                 </div>
 
@@ -908,7 +1029,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 {/* Location */}
                 {event.location && (
                   <div className="flex items-start gap-3 mb-4">
-                    <MapPin className="w-5 h-5 mt-0.5" style={{ color: categoryColor.accent }} />
+                    <MapPin className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: categoryColor.accent }} aria-hidden="true" />
                     <div>
                       <Link
                         href={buildVenueUrl(event.location)}
@@ -925,14 +1046,14 @@ export default async function EventPage({ params }: EventPageProps) {
 
                 {/* Price */}
                 <div className="flex items-start gap-3 mb-4">
-                  <Ticket className="w-5 h-5 mt-0.5" style={{ color: categoryColor.accent }} />
+                  <Ticket className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: categoryColor.accent }} aria-hidden="true" />
                   <EventPrice event={event} showDetails />
                 </div>
 
                 {/* Age / audience info */}
                 {(event.age_restriction || event.is_family_friendly || event.age_low != null || event.age_high != null) && (
                   <div className="flex items-start gap-3">
-                    <Baby className="w-5 h-5 mt-0.5" style={{ color: categoryColor.accent }} />
+                    <Baby className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: categoryColor.accent }} aria-hidden="true" />
                     <div>
                       {(() => {
                         const ageRange = formatAgeRange(event.age_low, event.age_high);
