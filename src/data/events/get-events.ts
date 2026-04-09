@@ -5,17 +5,20 @@
  */
 
 import { unstable_cache } from 'next/cache';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import type { EventCard, EventQueryParams } from '@/types';
 
 /**
  * Cached category slug → ID resolver.
- * Categories are a static lookup table (~15 rows), so we cache indefinitely
- * and revalidate every 24 hours to avoid a waterfall query on every getEvents call.
+ * Uses a plain Supabase client (no cookies/request context) so it works
+ * inside unstable_cache which runs outside the request lifecycle.
  */
 const getCategoryIdBySlug = unstable_cache(
   async (slug: string): Promise<string | null> => {
-    const supabase = await createClient();
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const supabase = createSupabaseClient(url, key);
     const { data } = await supabase
       .from('categories')
       .select('id')

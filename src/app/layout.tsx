@@ -102,10 +102,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="en" className={jakarta.variable}>
       <head />
       <body className="min-h-screen flex flex-col">
-        {/* Skip to content — visible only on keyboard focus */}
+        {/* Skip to content — off-screen until keyboard-focused */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-blue focus:text-pure focus:px-4 focus:py-2 focus:rounded-lg focus:font-semibold focus:shadow-lg focus:outline-none"
+          className="absolute -top-full left-4 z-[100] bg-blue text-pure px-4 py-2 rounded-lg font-semibold shadow-lg focus:top-4 transition-[top]"
         >
           Skip to main content
         </a>
