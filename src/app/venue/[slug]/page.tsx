@@ -87,6 +87,7 @@ export default async function VenuePage({ params }: VenuePageProps) {
   const { events } = await getEvents({
     locationId: venue.id,
     limit: 12,
+    collapseSeries: true,
   });
 
   console.log('✅ [VenuePage] Venue loaded:', venue.name);

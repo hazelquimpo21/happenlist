@@ -2,6 +2,10 @@
  * GET EVENTS
  * ==========
  * Fetches a list of events with filtering and pagination.
+ *
+ * Supports series collapsing: when `collapseSeries` is true, recurring
+ * event instances are grouped so only the next upcoming date appears in the
+ * feed, with a human-readable recurrence label and count of remaining dates.
  */
 
 import { unstable_cache } from 'next/cache';
@@ -34,6 +38,115 @@ const getCategoryIdBySlug = unstable_cache(
   { revalidate: 86400, tags: ['categories'] }
 );
 
+// =============================================================================
+// SERIES COLLAPSING TYPES & HELPERS
+// =============================================================================
+
+/** Day of week labels (0 = Sunday) for recurrence display. */
+const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
+
+/** Frequency labels for recurrence display. */
+const FREQUENCY_LABELS: Record<string, string> = {
+  daily: 'Every day',
+  weekly: 'Every week',
+  biweekly: 'Every 2 weeks',
+  monthly: 'Every month',
+  yearly: 'Every year',
+};
+
+/** Series types that should be collapsed (repeating content). */
+const COLLAPSIBLE_SERIES_TYPES = new Set(['recurring', 'class', 'workshop']);
+
+/**
+ * Build a human-readable recurrence label from a series recurrence_rule JSON.
+ * Examples: "Every Tuesday", "Every other Friday", "Monthly on the 15th"
+ */
+function buildRecurrenceLabel(rule: Record<string, unknown> | null, seriesType: string | null): string | null {
+  if (!rule) {
+    // Fallback: if no rule but it's a known collapsible type, return a generic label
+    if (seriesType === 'class') return 'Ongoing class';
+    if (seriesType === 'workshop') return 'Ongoing workshop';
+    return 'Recurring';
+  }
+
+  const frequency = rule.frequency as string | undefined;
+  const daysOfWeek = rule.days_of_week as number[] | undefined;
+  const dayOfMonth = rule.day_of_month as number | undefined;
+
+  if (frequency === 'weekly' && daysOfWeek?.length === 1) {
+    return `Every ${DAY_LABELS[daysOfWeek[0]]}`;
+  }
+  if (frequency === 'weekly' && daysOfWeek && daysOfWeek.length > 1) {
+    const dayNames = daysOfWeek.map((d) => DAY_LABELS[d]);
+    return `Every ${dayNames.slice(0, -1).join(', ')} & ${dayNames[dayNames.length - 1]}`;
+  }
+  if (frequency === 'biweekly' && daysOfWeek?.length === 1) {
+    return `Every other ${DAY_LABELS[daysOfWeek[0]]}`;
+  }
+  if (frequency === 'monthly' && dayOfMonth) {
+    const suffix = ['th', 'st', 'nd', 'rd'];
+    const v = dayOfMonth % 100;
+    const ord = dayOfMonth + (suffix[(v - 20) % 10] || suffix[v] || suffix[0]);
+    return `Monthly on the ${ord}`;
+  }
+
+  return FREQUENCY_LABELS[frequency ?? ''] || 'Recurring';
+}
+
+/**
+ * Collapse series instances: keep only the soonest event per series,
+ * annotating it with the recurrence label and count of remaining dates.
+ *
+ * Events without a series_id pass through unchanged. Festivals and
+ * seasons are never collapsed (each date is distinct content).
+ */
+function collapseSeriesInstances(events: EventCard[]): EventCard[] {
+  // Group by series_id (null series_id events go straight to output)
+  const seriesGroups = new Map<string, EventCard[]>();
+  const standalone: EventCard[] = [];
+
+  for (const event of events) {
+    const sid = event.series_id;
+    const stype = event.series_type;
+
+    // Don't collapse festivals/seasons or non-series events
+    if (!sid || !stype || !COLLAPSIBLE_SERIES_TYPES.has(stype)) {
+      standalone.push(event);
+      continue;
+    }
+
+    const group = seriesGroups.get(sid);
+    if (group) {
+      group.push(event);
+    } else {
+      seriesGroups.set(sid, [event]);
+    }
+  }
+
+  // For each series group, keep earliest and annotate
+  const collapsed: EventCard[] = [];
+  for (const [, group] of seriesGroups) {
+    // Already sorted by date from the query, so first is soonest
+    const representative = { ...group[0] };
+    representative.upcoming_count = group.length - 1;
+    collapsed.push(representative);
+  }
+
+  // Merge standalone + collapsed, then re-sort by instance_date to maintain order
+  const merged = [...standalone, ...collapsed];
+  merged.sort((a, b) => {
+    const da = a.instance_date || a.start_datetime;
+    const db = b.instance_date || b.start_datetime;
+    return da.localeCompare(db);
+  });
+
+  return merged;
+}
+
+// =============================================================================
+// TRANSFORM
+// =============================================================================
+
 /**
  * Transform raw database row to EventCard format.
  */
@@ -43,6 +156,12 @@ function transformToEventCard(row: Record<string, unknown>): EventCard {
   // PostgREST returns embedded count as [{ count: N }]
   const children = row.children as { count: number }[] | null;
   const childCount = children?.[0]?.count ?? 0;
+
+  // Series info
+  const series = row.series as Record<string, unknown> | null;
+  const seriesType = series?.series_type as string | null ?? null;
+  const recurrenceRule = series?.recurrence_rule as Record<string, unknown> | null ?? null;
+  const recurrenceLabel = buildRecurrenceLabel(recurrenceRule, seriesType);
 
   // Performers: extract top 2 by billing_order
   const rawPerformers = row.event_performers as { role: string; billing_order: number; performer: { name: string } }[] | null;
@@ -87,7 +206,7 @@ function transformToEventCard(row: Record<string, unknown>): EventCard {
     location_slug: location?.slug as string | null ?? null,
     age_restriction: row.age_restriction as string | null ?? null,
     is_family_friendly: row.is_family_friendly as boolean | null ?? null,
-    // New fields (migrations 00010, 00011)
+    // Descriptions & talent
     short_description: row.short_description as string | null ?? null,
     tagline: row.tagline as string | null ?? null,
     talent_name: row.talent_name as string | null ?? null,
@@ -99,6 +218,16 @@ function transformToEventCard(row: Record<string, unknown>): EventCard {
     // Parent event fields
     parent_event_id: row.parent_event_id as string | null ?? null,
     child_event_count: childCount > 0 ? childCount : undefined,
+    // Series fields
+    series_id: row.series_id as string | null ?? null,
+    series_title: series?.title as string | null ?? null,
+    series_slug: series?.slug as string | null ?? null,
+    series_type: seriesType,
+    series_sequence: row.series_sequence as number | null ?? null,
+    is_series_instance: !!(row.series_id),
+    recurrence_label: (row.series_id && COLLAPSIBLE_SERIES_TYPES.has(seriesType ?? ''))
+      ? recurrenceLabel
+      : null,
     // Performers (top 2 for card display)
     performers: performers.length > 0 ? performers : undefined,
     // Membership benefit info for card badges
@@ -150,6 +279,7 @@ export async function getEvents(
     orderBy = 'date-asc',
     page = 1,
     limit = 24,
+    collapseSeries = false,
   } = params;
 
   console.log('📋 [getEvents] Fetching events with params:', {
@@ -160,12 +290,18 @@ export async function getEvents(
     goodFor,
     page,
     limit,
+    collapseSeries,
   });
 
   const supabase = await createClient();
   const offset = (page - 1) * limit;
 
-  // Build query
+  // When collapsing series, over-fetch to compensate for duplicates being removed.
+  // We fetch 3x the limit so that after collapsing we still have enough cards.
+  const fetchLimit = collapseSeries ? limit * 3 : limit;
+  const fetchOffset = collapseSeries ? 0 : offset;
+
+  // Build query — joins series table for recurrence info
   let query = supabase
     .from('events')
     .select(
@@ -178,8 +314,10 @@ export async function getEvents(
       organizer_name, organizer_is_venue,
       age_restriction, is_family_friendly,
       parent_event_id,
+      series_id, series_sequence,
       category:categories(name, slug),
       location:locations(name, slug),
+      series(title, slug, series_type, recurrence_rule),
       children:events!parent_event_id(count),
       event_performers(role, billing_order, performer:performers(name)),
       event_membership_benefits(benefit_type, member_price, benefit_details)
@@ -322,7 +460,7 @@ export async function getEvents(
   }
 
   // Apply pagination
-  query = query.range(offset, offset + limit - 1);
+  query = query.range(fetchOffset, fetchOffset + fetchLimit - 1);
 
   const { data, error, count } = await query;
 
@@ -331,7 +469,25 @@ export async function getEvents(
     throw error;
   }
 
-  const events = (data || []).map(transformToEventCard);
+  let events = (data || []).map(transformToEventCard);
+
+  // Series collapsing: group recurring instances, keep only the soonest per series
+  if (collapseSeries) {
+    events = collapseSeriesInstances(events);
+
+    // Apply manual pagination after collapsing
+    const totalCollapsed = events.length;
+    events = events.slice(offset, offset + limit);
+
+    console.log(`✅ [getEvents] Found ${events.length} events after collapsing (${totalCollapsed} unique, ${count} raw)`);
+
+    return {
+      events,
+      // Use collapsed count for pagination when possible, but if we hit the
+      // over-fetch ceiling the real total is unknown — use raw count as upper bound
+      total: totalCollapsed < fetchLimit ? totalCollapsed : (count || 0),
+    };
+  }
 
   console.log(`✅ [getEvents] Found ${events.length} events (total: ${count})`);
 

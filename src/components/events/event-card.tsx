@@ -22,7 +22,7 @@
 
 import { memo } from 'react';
 import Link from 'next/link';
-import { MapPin, Baby, Users } from 'lucide-react';
+import { MapPin, Baby, Users, Repeat } from 'lucide-react';
 import {
   isToday,
   isTomorrow,
@@ -258,6 +258,21 @@ function EventCardComponent({
           <p className="text-body-sm font-semibold text-blue mb-1">
             {formatEventDate(event.start_datetime)}
           </p>
+
+          {/* Recurrence line — "Every Tuesday · 28 more dates" */}
+          {event.recurrence_label && (
+            <p className="flex items-center gap-1 text-[11px] text-zinc mb-1.5">
+              <Repeat className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+              <span>
+                {event.recurrence_label}
+                {event.upcoming_count != null && event.upcoming_count > 0 && (
+                  <span className="text-zinc/70">
+                    {' '}&middot; {event.upcoming_count} more {event.upcoming_count === 1 ? 'date' : 'dates'}
+                  </span>
+                )}
+              </span>
+            </p>
+          )}
 
           {/* Parent event badge — shows child count for parent events */}
           {event.child_event_count && event.child_event_count > 0 && !event.parent_event_id && (

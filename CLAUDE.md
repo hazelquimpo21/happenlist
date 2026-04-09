@@ -103,6 +103,44 @@ Events support one level of parent-child nesting (festivals → acts, theatrical
 - Parent detail: shows schedule below description
 - Child detail: shows parent breadcrumb + sibling events
 
+## Recurring Event Collapsing (Series)
+
+Events can belong to a **series** (linked via `series_id` → `series` table). Series have a `series_type` (`recurring`, `class`, `workshop`, `camp`, `festival`, `season`) and an optional `recurrence_rule` JSON with frequency, days_of_week, etc.
+
+### How collapsing works
+When `collapseSeries: true` is passed to `getEvents()`, recurring series instances are grouped so only the **next upcoming date** appears in the feed. The card shows a recurrence line:
+
+> **Story Time at the Library**
+> Sat · 10am
+> *Every Saturday · 28 more dates*
+
+- **Collapsible types**: `recurring`, `class`, `workshop` — repeating content, same event
+- **Never collapsed**: `festival`, `season` — each date is distinct content
+- **Implementation**: Post-processing in `src/data/events/get-events.ts` — over-fetches 3x, deduplicates by `series_id`, re-sorts by date
+- **Recurrence label**: Built from `series.recurrence_rule` JSON via `buildRecurrenceLabel()` — e.g. "Every Tuesday", "Every other Friday", "Monthly on the 15th"
+- **EventCard fields**: `recurrence_label` (human-readable string) and `upcoming_count` (remaining dates)
+
+### Where collapsing is enabled
+| Page / Section | `collapseSeries` | Reason |
+|---|---|---|
+| `/events` (main listing) | `true` | Primary browse feed — avoid clutter |
+| `/events/[slug]` (category) | `true` | Category browse feed |
+| `/search` | `true` | Search results |
+| `/organizer/[slug]` | `true` | Organizer profile |
+| `/venue/[slug]` | `true` | Venue profile |
+| Homepage "Events by Category" | `true` | Browse sections |
+| Homepage "This Weekend" | `false` | Day-specific planning context |
+| Homepage "Editor's Picks" | `false` | Curated selection |
+| Homepage "Just Added" | `false` | Chronological newness |
+| `/events/today` | `false` | Day-specific |
+| `/events/this-weekend` | `false` | Day-specific |
+| `/events/archive` | `false` | Historical |
+
+### UI treatment
+- **EventCard** (`src/components/events/event-card.tsx`): Repeat icon + label + "N more dates" below the date line, `text-[11px] text-zinc`
+- **HomepageEventCard** (inline in `page.tsx`): Same treatment below location/time line
+- **CompactEventCard** (inline in `page.tsx`): Smaller variant `text-[10px]`
+
 ## Key Conventions
 - Tailwind tokens defined in `tailwind.config.ts` — neutrals, brand, category, legacy aliases
 - CSS custom properties in `globals.css` for all color tokens

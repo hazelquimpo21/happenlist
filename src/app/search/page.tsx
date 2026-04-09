@@ -77,7 +77,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   // Fetch results from all sources in parallel
   const [eventsResult, venuesResult, organizersResult, performersResult] = await Promise.all([
-    getEvents({ search: query, limit: 12 }),
+    getEvents({ search: query, limit: 12, collapseSeries: true }),
     getVenues({ search: query, limit: 6 }),
     getOrganizers({ search: query, limit: 6 }),
     getPerformers({ search: query, limit: 6 }),

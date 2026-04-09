@@ -17,7 +17,7 @@ export const revalidate = 60; // ISR: rebuild homepage every 60 seconds
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronRight, ArrowRight } from 'lucide-react';
+import { ChevronRight, ArrowRight, Repeat } from 'lucide-react';
 import { Container } from '@/components/layout';
 import {
   HeroSlideshow,
@@ -108,6 +108,17 @@ function HomepageEventCard({ event }: { event: EventCardType }) {
             <p className="text-body-sm text-zinc mt-1 truncate">
               {event.location_name && `${event.location_name} · `}{time}
             </p>
+            {event.recurrence_label && (
+              <p className="flex items-center gap-1 text-[11px] text-zinc/80 mt-0.5">
+                <Repeat className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+                <span>
+                  {event.recurrence_label}
+                  {event.upcoming_count != null && event.upcoming_count > 0 && (
+                    <span className="text-zinc/60"> &middot; {event.upcoming_count} more</span>
+                  )}
+                </span>
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -174,6 +185,17 @@ function CompactEventCard({ event, dark = false }: { event: EventCardType; dark?
         <p className={`text-caption mt-1 truncate ${dark ? 'text-silver' : 'text-zinc'}`}>
           {event.location_name}
         </p>
+        {event.recurrence_label && (
+          <p className={`flex items-center gap-1 text-[10px] mt-1 ${dark ? 'text-silver/70' : 'text-zinc/70'}`}>
+            <Repeat className="w-2.5 h-2.5 flex-shrink-0" aria-hidden="true" />
+            <span>
+              {event.recurrence_label}
+              {event.upcoming_count != null && event.upcoming_count > 0 && (
+                <> &middot; {event.upcoming_count} more</>
+              )}
+            </span>
+          </p>
+        )}
       </div>
     </Link>
   );
@@ -201,7 +223,7 @@ export default async function HomePage() {
   const topCategories = categories.slice(0, 3);
   const categoryEventsResults = await Promise.all(
     topCategories.map(cat =>
-      getEvents({ categorySlug: cat.slug, limit: 4 })
+      getEvents({ categorySlug: cat.slug, limit: 4, collapseSeries: true })
     )
   );
   const categoryEvents = topCategories.map((cat, i) => ({

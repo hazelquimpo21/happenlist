@@ -82,7 +82,7 @@ export default async function OrganizerPage({ params }: OrganizerPageProps) {
 
   // Fetch events by this organizer + check if linked membership org exists
   const [{ events, total }, membershipOrgsResult] = await Promise.all([
-    getEvents({ organizerId: organizer.id, limit: 12 }),
+    getEvents({ organizerId: organizer.id, limit: 12, collapseSeries: true }),
     organizer.is_membership_org
       ? getMembershipOrgs({ limit: 100 })
       : Promise.resolve({ orgs: [], total: 0 }),

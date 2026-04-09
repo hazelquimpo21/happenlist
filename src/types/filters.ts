@@ -86,4 +86,14 @@ export type SortOption = 'date-asc' | 'date-desc' | 'name-asc' | 'popular';
  */
 export interface EventQueryParams extends EventFilters, PaginationParams {
   orderBy?: SortOption;
+  /**
+   * Collapse recurring series instances to show only the next upcoming date.
+   * When true, events belonging to a recurring or class series are grouped —
+   * only the soonest instance is returned, with `recurrence_label` and
+   * `upcoming_count` populated on the resulting EventCard.
+   *
+   * Festivals and seasons are NOT collapsed (each date is distinct content).
+   * Use false for contexts like "This Weekend" where day-specific listing matters.
+   */
+  collapseSeries?: boolean;
 }

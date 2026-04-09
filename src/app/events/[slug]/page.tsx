@@ -70,6 +70,7 @@ export default async function CategoryEventsPage({
       categorySlug: slug,
       page,
       limit,
+      collapseSeries: true,
     }),
     getCategories(),
   ]);

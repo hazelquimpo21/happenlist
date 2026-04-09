@@ -93,6 +93,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       membershipOrgId: membershipOrg || undefined,
       page,
       limit: 24,
+      collapseSeries: true,
     }),
     getCategories(),
     getMembershipOrgs({ limit: 20 }),

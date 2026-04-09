@@ -72,13 +72,18 @@ export interface EventCard {
   // Audience / age
   age_restriction?: string | null;
   is_family_friendly?: boolean | null;
-  // Series info (Phase 2)
+  // Series info
   series_id?: string | null;
   series_slug?: string | null;
   series_title?: string | null;
   series_type?: string | null;
   series_sequence?: number | null;
   is_series_instance?: boolean;
+  // Recurring event collapsing (populated when collapseSeries is enabled)
+  /** Human-readable recurrence label, e.g. "Every Tuesday" */
+  recurrence_label?: string | null;
+  /** Number of additional upcoming dates beyond this one */
+  upcoming_count?: number;
   // Descriptions
   short_description?: string | null;
   tagline?: string | null;
