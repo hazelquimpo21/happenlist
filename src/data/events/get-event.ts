@@ -8,9 +8,9 @@ import { createClient } from '@/lib/supabase/server';
 import type { EventWithDetails } from '@/types';
 
 interface GetEventParams {
-  /** Event slug */
+  /** Event slug (may or may not include date suffix) */
   slug: string;
-  /** Instance date (YYYY-MM-DD) */
+  /** Instance date (YYYY-MM-DD) — used as fallback filter if slug alone doesn't match */
   instanceDate: string;
 }
 
@@ -31,6 +31,10 @@ export async function getEvent(
   console.log('📋 [getEvent] Fetching event:', { slug, instanceDate });
 
   const supabase = await createClient();
+
+  // Slugs in the DB include the date suffix (e.g. "jazz-at-the-lake-2026-04-10").
+  // Reconstruct the full slug if parseEventSlug stripped the date off.
+  const fullSlug = slug.endsWith(instanceDate) ? slug : `${slug}-${instanceDate}`;
 
   const { data, error } = await supabase
     .from('events')
@@ -53,8 +57,7 @@ export async function getEvent(
       )
     `
     )
-    .eq('slug', slug)
-    .eq('instance_date', instanceDate)
+    .eq('slug', fullSlug)
     .eq('status', 'published')
     .is('deleted_at', null)
     .single();
