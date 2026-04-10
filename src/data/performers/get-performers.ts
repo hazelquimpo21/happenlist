@@ -56,7 +56,7 @@ export async function getPerformers(
   // For each performer, count upcoming events
   const performers: PerformerCard[] = [];
   if (data && data.length > 0) {
-    const performerIds = data.map((p) => p.id);
+    const performerIds = (data as Record<string, unknown>[]).map((p) => p.id as string);
 
     // Batch count: get event_performers for these performers where event is upcoming
     const { data: eventLinks } = await supabase
@@ -76,14 +76,14 @@ export async function getPerformers(
       }
     }
 
-    for (const p of data) {
+    for (const p of data as Record<string, unknown>[]) {
       performers.push({
-        id: p.id,
-        name: p.name,
-        slug: p.slug,
-        genre: p.genre,
-        image_url: p.image_url,
-        upcoming_event_count: countMap.get(p.id) || 0,
+        id: p.id as string,
+        name: p.name as string,
+        slug: p.slug as string,
+        genre: p.genre as string | null,
+        image_url: p.image_url as string | null,
+        upcoming_event_count: countMap.get(p.id as string) || 0,
       });
     }
 
@@ -114,8 +114,8 @@ export async function getPerformerGenres(): Promise<string[]> {
   if (!data) return [];
 
   const genres = new Set<string>();
-  for (const row of data) {
-    if (row.genre) genres.add(row.genre);
+  for (const row of data as Record<string, unknown>[]) {
+    if (row.genre) genres.add(row.genre as string);
   }
 
   return Array.from(genres);

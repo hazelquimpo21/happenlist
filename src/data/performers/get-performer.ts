@@ -32,9 +32,9 @@ export async function getPerformer(
     throw error;
   }
 
-  console.log('✅ [getPerformer] Found performer:', data?.name);
+  console.log('✅ [getPerformer] Found performer:', (data as Record<string, unknown>)?.name);
 
-  return data as Performer;
+  return data as unknown as Performer;
 }
 
 /**
@@ -78,7 +78,7 @@ export async function getPerformerEvents(
   const upcoming: EventCard[] = [];
   const past: EventCard[] = [];
 
-  for (const row of data || []) {
+  for (const row of (data || []) as Record<string, unknown>[]) {
     const e = row.event as Record<string, unknown>;
     if (!e) continue;
 

@@ -92,11 +92,11 @@ export default async function EventReviewPage({ params }: PageProps) {
     },
   };
 
-  const statusStyle = statusStyles[event.status] || statusStyles.draft;
+  const statusStyle = statusStyles[event.status ?? 'draft'] || statusStyles.draft;
 
   // Format dates
-  const eventDate = format(new Date(event.start_datetime), 'EEEE, MMMM d, yyyy');
-  const eventTime = format(new Date(event.start_datetime), 'h:mm a');
+  const eventDate = format(new Date(event.start_datetime!), 'EEEE, MMMM d, yyyy');
+  const eventTime = format(new Date(event.start_datetime!), 'h:mm a');
   const scrapedDate = event.scraped_at
     ? format(new Date(event.scraped_at), 'MMM d, yyyy h:mm a')
     : null;
@@ -356,7 +356,7 @@ export default async function EventReviewPage({ params }: PageProps) {
                           <p className="text-zinc mt-0.5">{entry.notes}</p>
                         )}
                         <p className="text-zinc/70 text-xs mt-1">
-                          {format(new Date(entry.created_at), 'MMM d, yyyy h:mm a')}
+                          {format(new Date(entry.created_at!), 'MMM d, yyyy h:mm a')}
                         </p>
                       </div>
                     </div>
@@ -392,13 +392,13 @@ export default async function EventReviewPage({ params }: PageProps) {
                 <div className="flex justify-between">
                   <dt className="text-zinc">Created</dt>
                   <dd className="text-ink">
-                    {format(new Date(event.created_at), 'MMM d, yyyy')}
+                    {format(new Date(event.created_at!), 'MMM d, yyyy')}
                   </dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-zinc">Updated</dt>
                   <dd className="text-ink">
-                    {format(new Date(event.updated_at), 'MMM d, yyyy')}
+                    {format(new Date(event.updated_at!), 'MMM d, yyyy')}
                   </dd>
                 </div>
                 {event.reviewed_by && (

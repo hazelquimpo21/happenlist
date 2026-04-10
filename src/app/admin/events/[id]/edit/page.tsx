@@ -103,8 +103,8 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
           </Badge>
 
           {/* Status badge */}
-          <Badge className={getStatusClassName(event.status)}>
-            {getStatusLabel(event.status)}
+          <Badge className={getStatusClassName(event.status ?? 'draft')}>
+            {getStatusLabel(event.status ?? 'draft')}
           </Badge>
 
           <div className="flex-1" />
@@ -198,13 +198,13 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
                 <div className="flex justify-between">
                   <dt className="text-zinc">Created</dt>
                   <dd className="text-ink">
-                    {format(new Date(event.created_at), 'MMM d, yyyy')}
+                    {format(new Date(event.created_at!), 'MMM d, yyyy')}
                   </dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-zinc">Updated</dt>
                   <dd className="text-ink">
-                    {format(new Date(event.updated_at), 'MMM d, yyyy')}
+                    {format(new Date(event.updated_at!), 'MMM d, yyyy')}
                   </dd>
                 </div>
                 {event.reviewed_by && (
@@ -244,7 +244,7 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
                           </p>
                         )}
                         <p className="text-zinc/70 text-xs mt-1">
-                          {format(new Date(entry.created_at), 'MMM d, h:mm a')}
+                          {format(new Date(entry.created_at!), 'MMM d, h:mm a')}
                         </p>
                       </div>
                     </div>

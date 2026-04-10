@@ -13,6 +13,9 @@ import {
   Repeat,
   PartyPopper,
   Calendar,
+  Sparkles,
+  Clock,
+  Frame,
   LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -28,13 +31,16 @@ import type { SeriesType } from '@/lib/supabase/types';
  * Camp = amber, Class = emerald, Workshop = purple, Recurring = blue,
  * Festival = pink, Season = indigo.
  */
-const SERIES_TYPE_BADGE_COLORS: Record<SeriesType, { bg: string; text: string }> = {
+const SERIES_TYPE_BADGE_COLORS: Record<string, { bg: string; text: string }> = {
   camp: { bg: 'bg-amber-500', text: 'text-amber-950' },
   class: { bg: 'bg-emerald-600', text: 'text-white' },
   workshop: { bg: 'bg-purple-600', text: 'text-white' },
   recurring: { bg: 'bg-blue-600', text: 'text-white' },
   festival: { bg: 'bg-pink-600', text: 'text-white' },
   season: { bg: 'bg-indigo-600', text: 'text-white' },
+  lifestyle: { bg: 'bg-teal-600', text: 'text-white' },
+  ongoing: { bg: 'bg-cyan-600', text: 'text-white' },
+  exhibit: { bg: 'bg-rose-600', text: 'text-white' },
 };
 
 // ============================================================================
@@ -44,13 +50,16 @@ const SERIES_TYPE_BADGE_COLORS: Record<SeriesType, { bg: string; text: string }>
 /**
  * Maps series type to Lucide icon component.
  */
-const SERIES_TYPE_ICONS: Record<SeriesType, LucideIcon> = {
+const SERIES_TYPE_ICONS: Record<string, LucideIcon> = {
   class: GraduationCap,
   camp: Tent,
   workshop: Wrench,
   recurring: Repeat,
   festival: PartyPopper,
   season: Calendar,
+  lifestyle: Sparkles,
+  ongoing: Clock,
+  exhibit: Frame,
 };
 
 // ============================================================================

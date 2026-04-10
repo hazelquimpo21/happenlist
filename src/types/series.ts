@@ -256,6 +256,30 @@ export const SERIES_TYPE_INFO: Record<SeriesType, SeriesTypeInfo> = {
     icon: 'Calendar',
     badgeColor: 'bg-indigo-100 text-indigo-800',
   },
+  lifestyle: {
+    type: 'lifestyle',
+    label: 'Lifestyle',
+    labelPlural: 'Lifestyle Events',
+    description: 'Recurring lifestyle event (yoga, trivia, happy hour)',
+    icon: 'Sparkles',
+    badgeColor: 'bg-teal-100 text-teal-800',
+  },
+  ongoing: {
+    type: 'ongoing',
+    label: 'Ongoing',
+    labelPlural: 'Ongoing Events',
+    description: 'Long-running event (brunch specials, daily deals)',
+    icon: 'Clock',
+    badgeColor: 'bg-cyan-100 text-cyan-800',
+  },
+  exhibit: {
+    type: 'exhibit',
+    label: 'Exhibit',
+    labelPlural: 'Exhibits',
+    description: 'Gallery or museum exhibit on display for weeks or months',
+    icon: 'Frame',
+    badgeColor: 'bg-rose-100 text-rose-800',
+  },
 };
 
 // ============================================================================

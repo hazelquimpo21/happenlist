@@ -114,7 +114,7 @@ When `collapseSeries: true` is passed to `getEvents()`, recurring series instanc
 > Sat · 10am
 > *Every Saturday · 28 more dates*
 
-- **Collapsible types**: `recurring`, `class`, `workshop` — repeating content, same event
+- **Collapsible types**: `recurring`, `class`, `workshop`, `lifestyle`, `ongoing`, `exhibit` — repeating content, same event
 - **Never collapsed**: `festival`, `season` — each date is distinct content
 - **Implementation**: Post-processing in `src/data/events/get-events.ts` — over-fetches 3x, deduplicates by `series_id`, re-sorts by date
 - **Recurrence label**: Built from `series.recurrence_rule` JSON via `buildRecurrenceLabel()` — e.g. "Every Tuesday", "Every other Friday", "Monthly on the 15th"
@@ -135,6 +135,27 @@ When `collapseSeries: true` is passed to `getEvents()`, recurring series instanc
 | `/events/today` | `false` | Day-specific |
 | `/events/this-weekend` | `false` | Day-specific |
 | `/events/archive` | `false` | Historical |
+| `/events/lifestyle` | `true` | Lifestyle-only feed |
+
+### Lifestyle / Ongoing Events (v3.1)
+
+Three new series types for low-urgency, always-around events:
+
+| Type | Slug | Examples |
+|------|------|----------|
+| Lifestyle | `lifestyle` | Yoga class, trivia night, happy hour |
+| Ongoing | `ongoing` | Brunch specials, daily deals |
+| Exhibit | `exhibit` | Museum/gallery exhibits |
+
+**Feed behavior**: These are **excluded from the main event feed by default**. They appear:
+- On `/events/lifestyle` ("Things to Do Anytime") dedicated page
+- When explicitly requested via `includeLifestyle: true` or `includeLifestyle: 'only'` in `getEvents()`
+- On event detail pages (always accessible by direct URL)
+
+**Filter param**: `includeLifestyle` on `EventQueryParams`:
+- `undefined` / `false` — exclude lifestyle events (default for all browse feeds)
+- `true` — include everything
+- `'only'` — show only lifestyle events
 
 ### UI treatment
 - **EventCard** (`src/components/events/event-card.tsx`): Repeat icon + label + "N more dates" below the date line, `text-[11px] text-zinc`

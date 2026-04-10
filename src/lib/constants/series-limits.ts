@@ -105,6 +105,38 @@ export const SERIES_LIMITS: Record<string, SeriesTypeConfig> = {
     supportsSkillLevel: false,
     defaultAttendanceMode: 'registered',
   },
+  lifestyle: {
+    minSessions: 1,
+    maxSessions: null,
+    dateSelection: 'pattern',
+    generationWindow: 12,
+    description: 'Recurring lifestyle event (yoga, trivia, happy hour)',
+    emoji: '✨',
+    supportsExtendedCare: false,
+    supportsSkillLevel: true,
+    defaultAttendanceMode: 'drop_in',
+  },
+  ongoing: {
+    minSessions: 1,
+    maxSessions: null,
+    dateSelection: 'pattern',
+    generationWindow: 12,
+    description: 'Long-running event (brunch specials, daily deals)',
+    emoji: '🔄',
+    supportsExtendedCare: false,
+    supportsSkillLevel: false,
+    defaultAttendanceMode: 'drop_in',
+  },
+  exhibit: {
+    minSessions: 1,
+    maxSessions: null,
+    dateSelection: 'manual',
+    description: 'Gallery or museum exhibit (weeks or months)',
+    emoji: '🖼️',
+    supportsExtendedCare: false,
+    supportsSkillLevel: false,
+    defaultAttendanceMode: 'drop_in',
+  },
 };
 
 /**

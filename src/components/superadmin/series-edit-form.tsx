@@ -66,7 +66,7 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
     image_url: series.image_url || '',
     meta_title: series.meta_title || '',
     meta_description: series.meta_description || '',
-    is_featured: series.is_featured,
+    is_featured: series.is_featured ?? false,
   });
 
   const [status, setStatus] = useState<FormStatus>('idle');

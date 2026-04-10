@@ -46,7 +46,7 @@ import { getSeriesById } from '@/data/series';
 import { checkSingleHeart } from '@/data/user';
 import { getSession, isSuperAdmin } from '@/lib/auth';
 import { parseEventSlug, buildVenueUrl, buildOrganizerUrl, getBestImageUrl, getChildEventLabel } from '@/lib/utils';
-import { formatAgeRange, getGoodForTags, getPerformerRoleLabel, getBenefitConfig } from '@/types';
+import { formatAgeRange, formatTimeDisplay, getGoodForTags, getPerformerRoleLabel, getBenefitConfig, getSeriesTypeInfo, getAttendanceModeLabel, getSkillLevelLabel } from '@/types';
 import { formatEventDate, formatDate, formatTime } from '@/lib/utils/dates';
 import { getCategoryColor } from '@/lib/constants/category-colors';
 
@@ -250,7 +250,7 @@ export default async function EventPage({ params }: EventPageProps) {
         id: event.id,
         title: event.title,
         slug: event.slug,
-        status: event.status,
+        status: event.status ?? 'draft',
         instance_date: event.instance_date,
         start_datetime: event.start_datetime,
         end_datetime: event.end_datetime,
@@ -259,9 +259,9 @@ export default async function EventPage({ params }: EventPageProps) {
         price_type: event.price_type,
         price_low: event.price_low,
         price_high: event.price_high,
-        is_free: event.is_free,
+        is_free: event.is_free ?? false,
         ticket_url: event.ticket_url,
-        is_all_day: event.is_all_day,
+        is_all_day: event.is_all_day ?? false,
         // External links
         website_url: event.website_url,
         instagram_url: event.instagram_url,
@@ -277,7 +277,7 @@ export default async function EventPage({ params }: EventPageProps) {
           address_line: event.location.address_line,
           city: event.location.city,
           state: event.location.state,
-          venue_type: event.location.venue_type,
+          venue_type: event.location.venue_type ?? '',
         } : null,
         organizer: event.organizer ? {
           id: event.organizer.id,
@@ -321,7 +321,7 @@ export default async function EventPage({ params }: EventPageProps) {
   const timingBadge = getTimingBadge(event.start_datetime);
 
   // Google Calendar link
-  const calendarUrl = buildGoogleCalendarUrl(event);
+  const calendarUrl = buildGoogleCalendarUrl(event as Parameters<typeof buildGoogleCalendarUrl>[0]);
 
   return (
     <>
@@ -554,7 +554,7 @@ export default async function EventPage({ params }: EventPageProps) {
               ) : (
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-ink text-pure">
                   <Ticket className="w-4 h-4" aria-hidden="true" />
-                  <EventPrice event={event} showDetails />
+                  <EventPrice event={event as { price_type: string; price_low: number | null; price_high: number | null; is_free: boolean; price_details?: string | null }} showDetails />
                 </div>
               )}
 
@@ -832,7 +832,7 @@ export default async function EventPage({ params }: EventPageProps) {
                     <div className="flex items-start gap-3">
                       <Shield className="w-4 h-4 mt-0.5 text-zinc" aria-hidden="true" />
                       <div>
-                        <AccessBadge accessType={event.access_type} isFree={event.is_free} />
+                        <AccessBadge accessType={event.access_type} isFree={event.is_free ?? undefined} />
                         {event.access_type === 'ticketed' && event.ticket_url && (
                           <p className="text-xs text-zinc mt-1">Tickets available online</p>
                         )}
@@ -853,6 +853,100 @@ export default async function EventPage({ params }: EventPageProps) {
                     <div className="flex items-start gap-3">
                       <Shield className="w-4 h-4 mt-0.5 text-zinc" aria-hidden="true" />
                       <p className="text-sm text-ink">{event.membership_details}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Series Details — enriched info from the parent series */}
+            {seriesInfo && (seriesInfo.skill_level || seriesInfo.per_session_price != null || seriesInfo.materials_fee != null || seriesInfo.pricing_notes || seriesInfo.age_details || seriesInfo.extended_care_details || seriesInfo.days_of_week?.length) && (
+              <div
+                className="p-5 rounded-xl border"
+                style={{
+                  borderColor: `${categoryColor.accent}25`,
+                  backgroundColor: `${categoryColor.accent}06`,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <Calendar className="w-5 h-5" style={{ color: categoryColor.accent }} aria-hidden="true" />
+                  <h2 className="font-body text-h4 text-ink">
+                    {getSeriesTypeInfo(seriesInfo.series_type).label} Details
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                  {seriesInfo.skill_level && (
+                    <div>
+                      <p className="font-medium text-zinc text-xs uppercase tracking-wide mb-1">Skill Level</p>
+                      <p className="text-ink">{getSkillLevelLabel(seriesInfo.skill_level)}</p>
+                    </div>
+                  )}
+                  {seriesInfo.attendance_mode && (
+                    <div>
+                      <p className="font-medium text-zinc text-xs uppercase tracking-wide mb-1">Attendance</p>
+                      <p className="text-ink">{getAttendanceModeLabel(seriesInfo.attendance_mode)}</p>
+                    </div>
+                  )}
+                  {seriesInfo.per_session_price != null && (
+                    <div>
+                      <p className="font-medium text-zinc text-xs uppercase tracking-wide mb-1">Drop-in Price</p>
+                      <p className="text-ink">${seriesInfo.per_session_price} per session</p>
+                    </div>
+                  )}
+                  {seriesInfo.materials_fee != null && (
+                    <div>
+                      <p className="font-medium text-zinc text-xs uppercase tracking-wide mb-1">Materials Fee</p>
+                      <p className="text-ink">${seriesInfo.materials_fee}</p>
+                    </div>
+                  )}
+                  {seriesInfo.pricing_notes && (
+                    <div className="sm:col-span-2">
+                      <p className="font-medium text-zinc text-xs uppercase tracking-wide mb-1">Pricing Notes</p>
+                      <p className="text-ink">{seriesInfo.pricing_notes}</p>
+                    </div>
+                  )}
+                  {(seriesInfo.age_low != null || seriesInfo.age_high != null) && (
+                    <div>
+                      <p className="font-medium text-zinc text-xs uppercase tracking-wide mb-1">Age Range</p>
+                      <p className="text-ink">{formatAgeRange(seriesInfo.age_low, seriesInfo.age_high)}</p>
+                      {seriesInfo.age_details && (
+                        <p className="text-zinc text-xs mt-0.5">{seriesInfo.age_details}</p>
+                      )}
+                    </div>
+                  )}
+                  {seriesInfo.days_of_week && seriesInfo.days_of_week.length > 0 && (
+                    <div>
+                      <p className="font-medium text-zinc text-xs uppercase tracking-wide mb-1">Schedule</p>
+                      <p className="text-ink">
+                        {seriesInfo.days_of_week
+                          .map((d: number) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d])
+                          .join(', ')}
+                        {seriesInfo.core_start_time && seriesInfo.core_end_time && (
+                          <span className="text-zinc"> · {formatTimeDisplay(seriesInfo.core_start_time)} – {formatTimeDisplay(seriesInfo.core_end_time)}</span>
+                        )}
+                      </p>
+                    </div>
+                  )}
+                  {seriesInfo.total_sessions && (
+                    <div>
+                      <p className="font-medium text-zinc text-xs uppercase tracking-wide mb-1">Sessions</p>
+                      <p className="text-ink">
+                        {seriesInfo.total_sessions} total
+                        {seriesInfo.sessions_remaining != null && seriesInfo.sessions_remaining < seriesInfo.total_sessions && (
+                          <span className="text-zinc"> · {seriesInfo.sessions_remaining} remaining</span>
+                        )}
+                      </p>
+                    </div>
+                  )}
+                  {seriesInfo.extended_care_details && (
+                    <div className="sm:col-span-2">
+                      <p className="font-medium text-zinc text-xs uppercase tracking-wide mb-1">Extended Care</p>
+                      <p className="text-ink">{seriesInfo.extended_care_details}</p>
+                      {seriesInfo.extended_start_time && seriesInfo.extended_end_time && (
+                        <p className="text-zinc text-xs mt-0.5">
+                          {formatTimeDisplay(seriesInfo.extended_start_time)} – {formatTimeDisplay(seriesInfo.extended_end_time)}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -983,11 +1077,21 @@ export default async function EventPage({ params }: EventPageProps) {
                   Add to Calendar
                 </a>
                 {/* Social proof — people are interested */}
-                {(event.heart_count ?? 0) > 0 && (
+                {((event.heart_count ?? 0) > 0 || (event.view_count ?? 0) > 0) && (
                   <p className="text-center text-xs text-zinc">
-                    {event.heart_count === 1
-                      ? '1 person saved this event'
-                      : `${event.heart_count} people saved this event`}
+                    {(event.heart_count ?? 0) > 0 && (
+                      <span>
+                        {event.heart_count === 1
+                          ? '1 person saved this event'
+                          : `${event.heart_count} people saved this event`}
+                      </span>
+                    )}
+                    {(event.heart_count ?? 0) > 0 && (event.view_count ?? 0) > 0 && (
+                      <span> · </span>
+                    )}
+                    {(event.view_count ?? 0) > 0 && (
+                      <span>{event.view_count?.toLocaleString()} views</span>
+                    )}
                   </p>
                 )}
               </div>
@@ -1019,8 +1123,8 @@ export default async function EventPage({ params }: EventPageProps) {
                   <EventDateTime
                     startDatetime={event.start_datetime}
                     endDatetime={event.end_datetime}
-                    isAllDay={event.is_all_day}
-                    timezone={event.timezone}
+                    isAllDay={event.is_all_day ?? undefined}
+                    timezone={event.timezone ?? undefined}
                     variant="full"
                     showIcon
                   />
@@ -1047,7 +1151,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 {/* Price */}
                 <div className="flex items-start gap-3 mb-4">
                   <Ticket className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: categoryColor.accent }} aria-hidden="true" />
-                  <EventPrice event={event} showDetails />
+                  <EventPrice event={event as { price_type: string; price_low: number | null; price_high: number | null; is_free: boolean; price_details?: string | null }} showDetails />
                 </div>
 
                 {/* Age / audience info */}
@@ -1131,7 +1235,7 @@ export default async function EventPage({ params }: EventPageProps) {
                     longitude={Number(event.location.longitude)}
                     venueName={event.location.name}
                     address={fullAddress || undefined}
-                    venueType={event.location.venue_type}
+                    venueType={event.location.venue_type ?? undefined}
                     height="180px"
                     zoom={15}
                   />

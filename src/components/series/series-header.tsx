@@ -33,7 +33,7 @@ import {
 } from '@/types';
 import { cn, getBestImageUrl } from '@/lib/utils';
 import type { SeriesWithDetails } from '@/types';
-import type { AttendanceMode, SkillLevel } from '@/lib/supabase/types';
+import type { AttendanceMode, SkillLevel, RecurrenceRule } from '@/lib/supabase/types';
 
 // ============================================================================
 // COMPONENT PROPS
@@ -69,7 +69,7 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
 
   // Format recurrence for recurring series
   const recurrenceDisplay = series.recurrence_rule
-    ? formatRecurrence(series.recurrence_rule)
+    ? formatRecurrence(series.recurrence_rule as unknown as RecurrenceRule)
     : null;
 
   // Session count display
@@ -189,10 +189,10 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
           )}
 
           {/* Duration (if set in recurrence and no core times) */}
-          {series.recurrence_rule?.duration_minutes && !series.core_start_time && (
+          {(series.recurrence_rule as RecurrenceRule | null)?.duration_minutes && !series.core_start_time && (
             <div className="flex items-center gap-3 text-body text-zinc">
               <Clock className="w-5 h-5 flex-shrink-0" />
-              <span>{formatDuration(series.recurrence_rule.duration_minutes)}</span>
+              <span>{formatDuration((series.recurrence_rule as unknown as RecurrenceRule).duration_minutes!)}</span>
             </div>
           )}
 
@@ -223,7 +223,7 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
 
         {/* Price section (enhanced for Phase C) */}
         <div className="mb-6">
-          <SeriesPrice series={series} size="lg" />
+          <SeriesPrice series={series as unknown as { price_type: string; price_low: number | null; price_high: number | null; is_free: boolean }} size="lg" />
 
           {/* Phase C: Per-session / drop-in price */}
           {series.per_session_price != null && series.per_session_price > 0 && (

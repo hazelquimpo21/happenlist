@@ -33,9 +33,9 @@ export async function getMembershipOrg(
     throw error;
   }
 
-  console.log('✅ [getMembershipOrg] Found org:', data?.name);
+  console.log('✅ [getMembershipOrg] Found org:', (data as Record<string, unknown>)?.name);
 
-  return data as MembershipOrganization;
+  return data as unknown as MembershipOrganization;
 }
 
 /**
@@ -86,7 +86,7 @@ export async function getMembershipOrgEvents(
 
   const events: EventWithBenefit[] = [];
 
-  for (const row of data || []) {
+  for (const row of (data || []) as Record<string, unknown>[]) {
     const e = row.event as Record<string, unknown>;
     if (!e) continue;
 
@@ -120,9 +120,9 @@ export async function getMembershipOrgEvents(
       age_restriction: e.age_restriction as string | null,
       is_family_friendly: e.is_family_friendly as boolean | null,
       parent_event_id: e.parent_event_id as string | null,
-      benefit_type: row.benefit_type,
-      benefit_details: row.benefit_details,
-      member_price: row.member_price,
+      benefit_type: row.benefit_type as string,
+      benefit_details: row.benefit_details as string | null,
+      member_price: row.member_price as number | null,
     });
   }
 

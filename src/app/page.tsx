@@ -212,7 +212,7 @@ export default async function HomePage() {
     getCategories(),
     getEvents({ dateRange: getThisWeekendRange(), limit: 8 }),
     getEvents({ dateRange: getTodayRange(), limit: 4 }),
-    getEvents({ limit: 6, sortBy: 'created_at' }),
+    getEvents({ limit: 6, orderBy: 'date-desc' }),
   ]);
 
   const weekendEvents = weekendData.events;

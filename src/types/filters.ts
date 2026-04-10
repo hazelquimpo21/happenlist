@@ -66,6 +66,13 @@ export interface EventFilters {
   hasMemberBenefits?: boolean;
   /** Filter to events with benefits from a specific membership org. */
   membershipOrgId?: string;
+  /**
+   * Include lifestyle/ongoing/exhibit series events in results.
+   * These low-urgency recurring events (yoga, trivia, happy hour, exhibits)
+   * are excluded from the main feed by default to prevent clutter.
+   * Set to true to include them, or 'only' to show ONLY lifestyle events.
+   */
+  includeLifestyle?: boolean | 'only';
 }
 
 /**

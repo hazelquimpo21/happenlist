@@ -39,7 +39,7 @@ export default async function PendingEventsPage({ searchParams }: PageProps) {
   // Fetch pending events
   const result = await getPendingEvents({
     status: 'pending_review',
-    source: source as 'scraper' | 'manual' | 'api' | 'import' | undefined,
+    source: source as 'scraper' | 'manual' | 'submission' | 'import' | undefined,
     search,
     page,
     limit: 20,

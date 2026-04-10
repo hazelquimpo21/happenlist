@@ -249,7 +249,7 @@ export default async function AdminDashboardPage() {
                         {activity.action.replace('_', ' ')}
                       </p>
                       <p className="text-xs text-zinc mt-0.5">
-                        {format(new Date(activity.created_at), 'MMM d, h:mm a')}
+                        {format(new Date(activity.created_at!), 'MMM d, h:mm a')}
                       </p>
                     </div>
                   </div>

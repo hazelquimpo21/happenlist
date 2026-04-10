@@ -28,6 +28,7 @@ export const ROUTES = {
   eventsWeekend: '/events/this-weekend',
   eventDetail: (slug: string, date: string) => `/event/${slug}-${date}`,
   eventsCategory: (categorySlug: string) => `/events/${categorySlug}`,
+  eventsLifestyle: '/events/lifestyle',
   eventsMonth: (year: number, month: string) => `/events/archive/${year}/${month}`,
 
   // -------------------------------------------------------------------------
@@ -150,6 +151,7 @@ export const NAV_ITEMS = [
 export const FOOTER_NAV = {
   discover: [
     { label: 'Events', href: ROUTES.events },
+    { label: 'Things to Do Anytime', href: ROUTES.eventsLifestyle },
     { label: 'Classes & Series', href: ROUTES.series },
     { label: 'Performers', href: ROUTES.performers },
     { label: 'Venues', href: ROUTES.venues },

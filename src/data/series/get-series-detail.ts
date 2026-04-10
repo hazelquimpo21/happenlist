@@ -83,16 +83,34 @@ export async function getSeriesBySlug(
 // GET SERIES BY ID (lightweight)
 // ============================================================================
 
-interface SeriesSummary {
+export interface SeriesSummary {
   id: string;
   title: string;
   slug: string;
   series_type: string;
+  // Enriched fields for event detail page display
+  attendance_mode: string | null;
+  skill_level: string | null;
+  per_session_price: number | null;
+  materials_fee: number | null;
+  pricing_notes: string | null;
+  age_low: number | null;
+  age_high: number | null;
+  age_details: string | null;
+  recurrence_rule: Record<string, unknown> | null;
+  core_start_time: string | null;
+  core_end_time: string | null;
+  extended_start_time: string | null;
+  extended_end_time: string | null;
+  extended_care_details: string | null;
+  days_of_week: number[] | null;
+  total_sessions: number | null;
+  sessions_remaining: number | null;
 }
 
 /**
- * Fetches minimal series info by ID.
- * Used by the event detail page to show a series badge without a join.
+ * Fetches series info by ID with enriched fields for the event detail page.
+ * Includes schedule, pricing, age, skill, and attendance details from the series.
  */
 export async function getSeriesById(
   id: string
@@ -101,7 +119,16 @@ export async function getSeriesById(
 
   const { data, error } = await supabase
     .from('series')
-    .select('id, title, slug, series_type')
+    .select(`
+      id, title, slug, series_type,
+      attendance_mode, skill_level,
+      per_session_price, materials_fee, pricing_notes,
+      age_low, age_high, age_details,
+      recurrence_rule,
+      core_start_time, core_end_time,
+      extended_start_time, extended_end_time, extended_care_details,
+      days_of_week, total_sessions, sessions_remaining
+    `)
     .eq('id', id)
     .single();
 
@@ -111,7 +138,7 @@ export async function getSeriesById(
     return null;
   }
 
-  return data;
+  return data as SeriesSummary;
 }
 
 // ============================================================================

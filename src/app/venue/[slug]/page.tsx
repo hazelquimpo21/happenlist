@@ -252,7 +252,7 @@ export default async function VenuePage({ params }: VenuePageProps) {
                 longitude={Number(venue.longitude)}
                 venueName={venue.name}
                 address={fullAddress || undefined}
-                venueType={venue.venue_type}
+                venueType={venue.venue_type ?? undefined}
                 height="200px"
                 zoom={15}
               />

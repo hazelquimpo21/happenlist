@@ -74,7 +74,7 @@ export default async function MembershipPage({ params }: MembershipPageProps) {
   ]);
 
   // If has organizer_id, fetch by ID instead
-  let linkedOrganizer = parentOrganizer;
+  let linkedOrganizer: { id: string; name: string; slug: string } | null = parentOrganizer;
   if (org.organizer_id && !linkedOrganizer) {
     // We need to fetch by ID — let's use a direct query
     const { createClient } = await import('@/lib/supabase/server');
@@ -86,7 +86,7 @@ export default async function MembershipPage({ params }: MembershipPageProps) {
       .eq('is_active', true)
       .single();
     if (data) {
-      linkedOrganizer = data as { id: string; name: string; slug: string } & Record<string, unknown>;
+      linkedOrganizer = data as unknown as { id: string; name: string; slug: string };
     }
   }
 

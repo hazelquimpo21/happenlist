@@ -50,7 +50,7 @@ export async function getMembershipOrgs(
   // Count upcoming events per org
   const orgs: MembershipOrgCard[] = [];
   if (data && data.length > 0) {
-    const orgIds = data.map((o) => o.id);
+    const orgIds = (data as Record<string, unknown>[]).map((o) => o.id as string);
 
     const { data: benefitLinks } = await supabase
       .from('event_membership_benefits')
@@ -68,14 +68,14 @@ export async function getMembershipOrgs(
       }
     }
 
-    for (const o of data) {
+    for (const o of data as Record<string, unknown>[]) {
       orgs.push({
-        id: o.id,
-        name: o.name,
-        slug: o.slug,
-        logo_url: o.logo_url,
-        description: o.description,
-        event_count: countMap.get(o.id) || 0,
+        id: o.id as string,
+        name: o.name as string,
+        slug: o.slug as string,
+        logo_url: o.logo_url as string | null,
+        description: o.description as string | null,
+        event_count: countMap.get(o.id as string) || 0,
       });
     }
 

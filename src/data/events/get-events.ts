@@ -55,7 +55,14 @@ const FREQUENCY_LABELS: Record<string, string> = {
 };
 
 /** Series types that should be collapsed (repeating content). */
-const COLLAPSIBLE_SERIES_TYPES = new Set(['recurring', 'class', 'workshop']);
+const COLLAPSIBLE_SERIES_TYPES = new Set(['recurring', 'class', 'workshop', 'lifestyle', 'ongoing', 'exhibit']);
+
+/**
+ * Series types considered "lifestyle" — recurring low-urgency events that
+ * should be hidden from the main browse feed by default (yoga, trivia,
+ * happy hour, exhibits, etc.) but discoverable via filters or dedicated pages.
+ */
+const LIFESTYLE_SERIES_TYPES = new Set(['lifestyle', 'ongoing', 'exhibit']);
 
 /**
  * Build a human-readable recurrence label from a series recurrence_rule JSON.
@@ -66,6 +73,9 @@ function buildRecurrenceLabel(rule: Record<string, unknown> | null, seriesType: 
     // Fallback: if no rule but it's a known collapsible type, return a generic label
     if (seriesType === 'class') return 'Ongoing class';
     if (seriesType === 'workshop') return 'Ongoing workshop';
+    if (seriesType === 'lifestyle') return 'Recurring';
+    if (seriesType === 'ongoing') return 'Ongoing';
+    if (seriesType === 'exhibit') return 'On view';
     return 'Recurring';
   }
 
@@ -276,6 +286,7 @@ export async function getEvents(
     noTicketsNeeded,
     dropInOk,
     familyFriendly,
+    includeLifestyle,
     orderBy = 'date-asc',
     page = 1,
     limit = 24,
@@ -470,6 +481,18 @@ export async function getEvents(
   }
 
   let events = (data || []).map(transformToEventCard);
+
+  // Lifestyle filtering: exclude lifestyle/ongoing/exhibit series from main feeds
+  // unless explicitly included. This is post-fetch because we can't easily express
+  // "series IS NULL OR series.series_type NOT IN (...)" in a single PostgREST filter.
+  if (includeLifestyle === 'only') {
+    // Show ONLY lifestyle events
+    events = events.filter((e) => e.series_type && LIFESTYLE_SERIES_TYPES.has(e.series_type));
+  } else if (!includeLifestyle) {
+    // Default: exclude lifestyle events from feed
+    events = events.filter((e) => !e.series_type || !LIFESTYLE_SERIES_TYPES.has(e.series_type));
+  }
+  // includeLifestyle === true: no filtering, show everything
 
   // Series collapsing: group recurring instances, keep only the soonest per series
   if (collapseSeries) {
