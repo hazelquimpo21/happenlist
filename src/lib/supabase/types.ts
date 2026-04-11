@@ -896,6 +896,41 @@ export type Database = {
           },
         ]
       }
+      event_views: {
+        Row: {
+          id: number
+          event_id: string
+          viewed_at: string
+          session_id: string
+          user_id: string | null
+          view_date: string
+        }
+        Insert: {
+          id?: number
+          event_id: string
+          viewed_at?: string
+          session_id: string
+          user_id?: string | null
+          view_date?: never
+        }
+        Update: {
+          id?: number
+          event_id?: string
+          viewed_at?: string
+          session_id?: string
+          user_id?: string | null
+          view_date?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_views_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hearts: {
         Row: {
           created_at: string | null
@@ -3218,6 +3253,14 @@ export type Database = {
       is_current_user_superadmin: { Args: never; Returns: boolean }
       is_superadmin_by_email: {
         Args: { check_email: string }
+        Returns: boolean
+      }
+      record_event_view: {
+        Args: {
+          p_event_id: string
+          p_session_id: string
+          p_user_id?: string | null
+        }
         Returns: boolean
       }
       log_admin_action: {

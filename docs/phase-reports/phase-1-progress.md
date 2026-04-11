@@ -397,6 +397,152 @@ The `series_id` guard ensures the component is only mounted when there's a serie
 
 ---
 
-## Session B3 — _(pending)_
+## Session B3 — View tracking infrastructure (✓ shipped)
+
+**Repo**: `happenlist`
+**Date completed**: 2026-04-11
+
+### What shipped
+
+#### 1. Migration — `supabase/migrations/20260411_1900_event_views.sql`
+
+New `event_views` table + `record_event_view` Postgres function. Applied to remote DB via the Supabase MCP `apply_migration` tool (no Supabase branching workaround needed this time — the API was healthy).
+
+**Schema:**
+- `id          bigserial pk`
+- `event_id    uuid not null fk → events(id) on delete cascade`
+- `viewed_at   timestamptz not null default now()`
+- `session_id  text not null` — anonymous client session id from the `hl_sid` cookie
+- `user_id     uuid nullable` — set when an authenticated user is viewing (Phase 3+ may use this)
+- `view_date   date generated always as ((viewed_at AT TIME ZONE 'America/Chicago')::date) stored` — Chicago-local calendar date
+
+**Indexes:**
+- `event_views_event_session_day_uidx` UNIQUE on `(event_id, session_id, view_date)` — enforces "1 view per session per event per day". Reload spam = 1 row, not 50.
+- `event_views_event_viewed_at_idx` on `(event_id, viewed_at DESC)` — for the future Phase 3 trending query "rows for event X in the last 7 days".
+
+**RLS:**
+- INSERT granted to `anon` + `authenticated` (anyone visiting an event page records a view). The unique index is the dedup safety net.
+- SELECT / UPDATE / DELETE NOT granted. The `/admin/views` dashboard goes through `createAdminClient()` (service role) which bypasses RLS, matching the existing admin pattern in the project.
+
+**Function:**
+- `record_event_view(p_event_id uuid, p_session_id text, p_user_id uuid default null) → boolean`
+- `SECURITY DEFINER`, `search_path = public` (Supabase advisor hygiene)
+- Defensive bail on null/empty inputs
+- `INSERT … ON CONFLICT (event_id, session_id, view_date) DO NOTHING RETURNING id` — returns `true` if a row was inserted, `false` if a duplicate was silently skipped
+- Owner: `postgres`. EXECUTE granted to `anon` + `authenticated`. PUBLIC revoked.
+
+**Smoke test (production DB, via execute_sql):**
+- 1st call → `true`, row appears
+- 2nd call (same args) → `false`, count remains 1
+- After cleanup, table is empty
+
+#### 2. Server action — `src/data/events/record-view.ts`
+
+`'use server'` action `recordEventView(eventId)`. Handles three things in one place:
+
+1. **Anonymous session id**: reads the `hl_sid` cookie via `cookies()`, generates a fresh `sess_<16 hex>` id if absent, sets the cookie with `path=/`, `maxAge=1y`, `sameSite=lax`, `httpOnly=false`, `secure` only in production. Server actions CAN set cookies (unlike server components), so this works.
+
+2. **Idempotent reuse**: if the cookie already exists, the action reuses it — same browser session = same id across navigations.
+
+3. **Failure isolation**: a try/catch wraps the entire body. View tracking failures NEVER throw — the function returns `false` and logs `[event-views]` lines per the CLAUDE.md convention.
+
+The session id generator uses `crypto.getRandomValues(new Uint8Array(8))` (Web Crypto, available in the Next.js Node 18+ runtime) — no Node `crypto` shim needed.
+
+Logging: success → `[event-views] inserted view event=<id> session=<short>…`; duplicate → `[event-views] duplicate (skipped) …`; error → `[event-views] rpc error …` or `[event-views] unexpected failure …`. Session id is truncated to 12 chars in logs to avoid filling log lines with cookie material.
+
+#### 3. Client component — `src/components/events/view-tracker.tsx`
+
+`'use client'` component `<ViewTracker eventId={...} />`. Returns `null` — exists purely for its side effect.
+
+- `useEffect` fires `recordEventView(eventId)` on mount
+- `useRef` sentinel suppresses the React 18+ strict-mode double-mount in dev (the DB unique index would catch the duplicate, but the round-trip is wasteful)
+- `void` on the action call to suppress lint about unawaited promise — fire and forget, action does its own logging
+
+Header comment marks this as "the ONLY mounting point for view tracking. If you add new event detail surfaces, mount this there too." Exported via `src/components/events/index.ts`.
+
+#### 4. Wiring — `src/app/event/[slug]/page.tsx`
+
+Mounted `<ViewTracker eventId={event.id} />` immediately inside the top-level fragment, right above `<EventJsonLd>`. Zero visual impact. Works on every detail page render. Comment block explains the mount point convention.
+
+#### 5. Sanity dashboard — `src/app/admin/views/page.tsx`
+
+Server component, gated by `requireSuperadminAuth()` (throws if not authenticated as superadmin — matches the rest of the admin pages).
+
+Uses `createAdminClient()` (service role) since RLS denies SELECT to anon/authenticated. Loads four pieces in one server render:
+- Total rows (via `head: true` count query)
+- Rows in last 24h (`viewed_at >= now() - 24h`)
+- Rows in last 7d
+- Top 10 events by view count over the last 7d (fetched with `event_id` only and aggregated in JS — Supabase JS doesn't expose GROUP BY directly, and during the bake the row volume is small enough that JS aggregation is fine. Sorts by count descending, then resolves event titles via a single follow-up query)
+
+Renders three top-line stat blocks + the top events list + a footer reminder of the Phase 3 pre-flight target (>1000 rows across >50 events). Pure sanity dashboard — no styling beyond the existing admin pattern.
+
+Try/catches the load so if anything fails it renders zero counts rather than crashing the whole admin shell.
+
+#### 6. Types — `src/lib/supabase/types.ts`
+
+Manually patched to add the `event_views` Tables block (Row/Insert/Update/Relationships) and the `record_event_view` Functions entry. **Did NOT regenerate the full types file** — it's 3.4k lines and the Supabase MCP `generate_typescript_types` output exceeded the token budget. Surgical edit was 50 lines and keeps the typed RPC call working in `record-view.ts`.
+
+R1 should re-verify the manual patch matches what `generate_typescript_types` would produce when convenient (e.g. by saving the output to a file and diffing).
+
+### Verification
+
+- **Migration applied**: confirmed via `apply_migration` returning `{success:true}`. Smoke-tested the function end-to-end: insert→duplicate→count returns the expected `(true, false, 1)` sequence.
+- **`tsc --noEmit`**: clean (filtered Finder duplicates).
+- **Browser preview**: visited `/event/deray-davis-…` and `/event/milwaukee-makers-market-…` against `localhost:3000`. Cookie verified via `document.cookie` — `hl_sid=sess_ce3e56d4a84732aa` set as expected. DB query confirmed:
+  - 1st event load → 1 row inserted (id 3)
+  - Reload of same event → still 1 row (idempotent)
+  - 2nd event load → 2 rows total (id 3 + id 5), same session_id, distinct event_id
+- **Server logs**: confirmed three structured log lines:
+  - `[event-views] inserted view event=fbc8e0dd… session=sess_ce3e56d…`
+  - `[event-views] duplicate (skipped) event=fbc8e0dd… session=sess_ce3e56d…`
+  - `[event-views] inserted view event=f89f7b9f… session=sess_ce3e56d…`
+- **Cleanup**: deleted all `sess_*` rows. Table is empty going into B3 commit.
+- **/admin/views**: not visually verified end-to-end since the preview isn't logged in as superadmin. The route compiles, gating works, and the queries are straightforward — R1 will hit it with auth.
+
+### Bugs found and fixed mid-session
+
+1. **SELECT-list evaluation order in the smoke test**: my first verification query was `SELECT record_event_view(...) AS first_call, record_event_view(...) AS second_call, (SELECT count(*) ...) AS row_count`. The count subquery returned 0 because Postgres doesn't guarantee left-to-right evaluation of SELECT-list expressions — the planner ran the subquery before the function calls. Re-ran the count as a separate statement and got the expected 1. **Not a bug in the migration**, but a process gotcha for future smoke testing: always run mutating function calls and follow-up SELECTs in separate statements.
+
+2. **bigserial gap allocation under ON CONFLICT**: noticed during cleanup that ids 2 and 4 were "missing" — the table had rows 1, 3, 5 only (after various smoke tests). This is normal Postgres behavior: `bigserial` advances even when `ON CONFLICT DO NOTHING` rejects the row. The sequence is gappy by design and that's fine. Documented here so R1 doesn't get confused if they audit ids.
+
+### Things noted but NOT fixed (deferred to R1 or beyond)
+
+- **No view tracking on parent/child distinction**: the event detail page mounts ViewTracker once per render, so a child event page records a view of the child (correct). If R1 wants the parent to also count when a child is viewed, that's a Phase 3 product decision — current behavior is "view = the page that was loaded", which is the simplest model.
+- **No view tracking on lifestyle event detail surfaces**: the only event detail surface today is `src/app/event/[slug]/page.tsx`. There's no lifestyle-only detail variant. If one is added in the future, mount ViewTracker there.
+- **No deduping at the action layer for back-to-back identical requests within milliseconds**: if a user double-clicks a Link that re-navigates to the same event, the client component remounts and the action fires again. The DB unique index suppresses the duplicate; the cost is a wasted RPC round-trip. Not worth a per-action throttle.
+- **`user_id` always null**: B3 doesn't read the auth session. When Phase 3 cares about authenticated trending personalization, the action should pull the user id from the supabase server client and pass it through. Schema is ready; the wiring is the only missing piece.
+- **No cookie-set retry on cross-component re-render**: server actions invoked from client components can set cookies, but if the action is invoked during a server render (e.g. from a server component) the `cookies().set()` call would throw. The current call site is exclusively a client component, so this is fine. The action wraps the set in try/catch with a warn-level log so R1 catches the assumption breaking.
+- **No rate limiting on `record_event_view` RPC**: anonymous public endpoint. Worst case is a script slamming the function — the unique index keeps the table size bounded per (session, event, day). Phase 3 can add IP rate limiting if abuse is observed. Documented for R1.
+- **`/admin/views` JS-side aggregation has a 10000-row safety limit**: for the bake period (~4 weeks @ low volume) this is wildly overkill. Phase 3 will need a proper SQL `GROUP BY` aggregator (RPC or generated view). Documented inline.
+- **Migration name uses 1900 for the timestamp HHMM**: 19:00 UTC = 14:00 Chicago, which is when the migration was authored. Chronologically after the cleanup migration `20260411_1220_…`. Both today.
+- **Types regeneration deferred**: manually patched 50 lines into types.ts instead of regenerating the full 3484-line file. Documented above.
+
+### Files touched
+
+| File | Status |
+|---|---|
+| `supabase/migrations/20260411_1900_event_views.sql` | NEW (applied to remote) |
+| `src/data/events/record-view.ts` | NEW |
+| `src/components/events/view-tracker.tsx` | NEW |
+| `src/components/events/index.ts` | added ViewTracker export |
+| `src/app/event/[slug]/page.tsx` | mounted `<ViewTracker>` above EventJsonLd |
+| `src/app/admin/views/page.tsx` | NEW (sanity dashboard) |
+| `src/lib/supabase/types.ts` | manually patched event_views Tables + record_event_view Functions |
+
+### Session R1 checklist additions (from B3 work)
+
+- [ ] Verify the manual `types.ts` patch matches `generate_typescript_types` output. Simplest: dump the MCP output to a file and diff the event_views + record_event_view sections.
+- [ ] Hit `/admin/views` with a real superadmin login. Confirm the auth gate works, the queries don't crash, and the top-events list renders.
+- [ ] Confirm the `hl_sid` cookie persists across a hard refresh + a navigation between two different event pages (already verified during B3, but R1 should re-confirm in a clean browser).
+- [ ] Confirm the `view_date` generated column flips correctly across the Chicago midnight boundary. Easiest test: insert rows manually with `viewed_at = '2026-04-12 04:30:00+00'` (which is Apr 11 at 23:30 Chicago) and `viewed_at = '2026-04-12 05:30:00+00'` (Apr 12 at 00:30 Chicago) and verify the view_date column is `2026-04-11` and `2026-04-12` respectively.
+- [ ] Verify the unique index actually allows the same (event_id, session_id) on a different day. Insert a row with `viewed_at - interval '1 day'` and confirm the second insert succeeds.
+- [ ] Audit the RLS: as anon, attempt `SELECT * FROM event_views` and confirm 0 rows are returned (RLS denies).
+- [ ] Audit the SECURITY DEFINER function for search-path injection. Already locked to `public`, but worth a re-read.
+- [ ] Verify `requireSuperadminAuth()` is the right gate for `/admin/views` (vs a softer `requireAuth()`). I picked superadmin to match the rest of the admin shell, but R1 should sanity-check.
+- [ ] Confirm `/admin/views` is reachable from the admin sidebar nav (it currently isn't — would need a sidebar entry added). Decide whether to add a link or leave the page as a known direct-URL shortcut.
+- [ ] Spot-check that the JS-side top-events aggregator agrees with a SQL `GROUP BY event_id ORDER BY count DESC` query on a real dataset. (Trivial diff; mostly defensive.)
+- [ ] Verify `recordEventView` doesn't cause hydration mismatches or extra layout shifts when fired from useEffect on a heavy event detail page.
+
+---
 
 ## Session R1 — _(pending, deliverable: phase-1-report.md compiled from this log)_

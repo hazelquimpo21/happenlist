@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { Button } from '@/components/ui';
-import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox, ShareButton, VibeProfileSection, AccessBadge, ChildEventsSchedule, PastInstances } from '@/components/events';
+import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox, ShareButton, VibeProfileSection, AccessBadge, ChildEventsSchedule, PastInstances, ViewTracker } from '@/components/events';
 import { HeartButton } from '@/components/hearts';
 import { SeriesLinkBadge } from '@/components/series';
 import { EventJsonLd } from '@/components/seo';
@@ -325,6 +325,11 @@ export default async function EventPage({ params }: EventPageProps) {
 
   return (
     <>
+      {/* B3 view tracking — invisible client component, mounts once per
+          render and fires the recordEventView server action. The single
+          mounting point: see src/components/events/view-tracker.tsx. */}
+      <ViewTracker eventId={event.id} />
+
       {/* Structured data for SEO */}
       <EventJsonLd
         event={event}
