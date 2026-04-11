@@ -24,7 +24,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { EventGrid } from '@/components/events';
-import { FilterBar, EmptyFilterState, type FilterDrawerCategory, type FilterDrawerMembershipOrg } from '@/components/events/filters';
+import {
+  FilterBar,
+  EmptyFilterState,
+  countActiveFilters,
+  parseFiltersFromParams,
+  type FilterDrawerCategory,
+  type FilterDrawerMembershipOrg,
+} from '@/components/events/filters';
 import { getEvents } from '@/data/events';
 import { getCategories, getCategoryBySlug } from '@/data/categories';
 import { getMembershipOrgs } from '@/data/membership';
@@ -150,23 +157,24 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   if (isFree) title = 'Free Events';
   if (params.q) title = `Search: "${params.q}"`;
 
-  // Total active filter count for the header badge (excludes search query)
-  const activeFilterCount =
-    (categorySlug ? 1 : 0) +
-    (interestPreset ? 1 : 0) +
-    goodForArray.length +
-    timeOfDayArray.length +
-    (isFree ? 1 : 0) +
-    (vibeTag ? 1 : 0) +
-    (noiseLevel ? 1 : 0) +
-    (accessType ? 1 : 0) +
-    (soloFriendly ? 1 : 0) +
-    (beginnerFriendly ? 1 : 0) +
-    (noTicketsNeeded ? 1 : 0) +
-    (dropInOk ? 1 : 0) +
-    (familyFriendly ? 1 : 0) +
-    (memberBenefits ? 1 : 0) +
-    (membershipOrg ? 1 : 0);
+  // Total active filter count for the header badge (excludes search query).
+  // Single source of truth: build a URLSearchParams from `params`, parse it
+  // through the same `parseFiltersFromParams` the client filter UI uses, and
+  // count via the same `countActiveFilters` helper. Keeps the badge that the
+  // server renders byte-identical with the badge the client FilterBar renders
+  // — adding a new filter only requires updating one site, not two.
+  const activeFilterCount = (() => {
+    const usp = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (value === undefined) continue;
+      if (Array.isArray(value)) {
+        for (const v of value) usp.append(key, v);
+      } else {
+        usp.set(key, value);
+      }
+    }
+    return countActiveFilters(parseFiltersFromParams(usp));
+  })();
 
   // Project the heavier categories/orgs results down to the props the filter
   // UI actually needs. Keeps the client bundle small (no full row payloads).

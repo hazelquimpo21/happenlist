@@ -39,7 +39,8 @@ import { createClient } from '@/lib/supabase/server';
 
 /**
  * Cookie name for the anonymous session id. The format is
- * `sess_<16 hex chars>` and is generated server-side on first call.
+ * `sess_<32 hex chars>` (16 random bytes = 128 bits of entropy) and is
+ * generated server-side on first call.
  *
  * Not httpOnly: client analytics scripts may read it in the future. Today
  * the cookie is only consumed server-side, but flipping httpOnly off costs
@@ -51,13 +52,25 @@ const SESSION_COOKIE_NAME = 'hl_sid';
 const SESSION_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 /**
- * Generate a fresh session id. Format `sess_` + 16 hex chars (8 bytes).
+ * 16 bytes of randomness → 32 hex chars. 128 bits is comfortably beyond
+ * collision risk for the visitor population we'll ever see, and gives a
+ * cleaner safety margin than the original 64-bit version. The session id
+ * is not a security secret (it only de-duplicates view inserts), but the
+ * extra bytes cost nothing.
+ *
+ * Cookie format: `sess_` (5 chars) + 32 hex chars = 37 chars total.
+ */
+const SESSION_ID_BYTES = 16;
+const SESSION_ID_LENGTH = 'sess_'.length + SESSION_ID_BYTES * 2; // 37
+
+/**
+ * Generate a fresh session id. Format `sess_` + 32 hex chars (16 bytes).
  *
  * Uses Web Crypto (`crypto.getRandomValues`) which exists in the Next.js
  * Node 18+ runtime — no need for the Node `crypto` module shim.
  */
 function generateSessionId(): string {
-  const bytes = new Uint8Array(8);
+  const bytes = new Uint8Array(SESSION_ID_BYTES);
   crypto.getRandomValues(bytes);
   let hex = '';
   for (const b of bytes) hex += b.toString(16).padStart(2, '0');
@@ -75,7 +88,14 @@ function generateSessionId(): string {
 async function getOrCreateSessionId(): Promise<string> {
   const store = await cookies();
   const existing = store.get(SESSION_COOKIE_NAME)?.value;
-  if (existing && existing.startsWith('sess_') && existing.length >= 8) {
+  // Accept legacy 8-byte ids (length 21) so visitors who already have a
+  // cookie from the original B3 build don't get reset to a new session and
+  // double-counted. New ids are minted at SESSION_ID_LENGTH (37).
+  if (
+    existing &&
+    existing.startsWith('sess_') &&
+    (existing.length === SESSION_ID_LENGTH || existing.length === 21)
+  ) {
     return existing;
   }
 

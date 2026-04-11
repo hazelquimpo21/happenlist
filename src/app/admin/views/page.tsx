@@ -13,17 +13,24 @@
  * Why service-role: event_views has RLS that denies SELECT to anon and
  * authenticated. The /admin pages already use the service role for
  * superadmin operations, so this page does the same via createAdminClient().
- * Auth is gated at the page level via requireSuperadminAuth().
+ *
+ * Auth is gated at the page level via the same `getSession + isSuperAdmin
+ * + redirect` pattern every other /admin page uses (see /admin/series/[id]
+ * /edit/page.tsx). Throwing on denial is a worse UX than redirecting to the
+ * login page or to /admin, and pattern consistency keeps the admin shell
+ * from acting differently across pages.
  *
  * Cross-file coupling:
  *   - supabase/migrations/20260411_1900_event_views.sql — schema
  *   - src/lib/supabase/admin.ts                          — service-role client
- *   - src/lib/auth/session.ts                            — superadmin gate
+ *   - src/lib/auth/session.ts                            — getSession()
+ *   - src/lib/auth/is-superadmin.ts                      — isSuperAdmin()
  * =============================================================================
  */
 
+import { redirect } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { requireSuperadminAuth } from '@/lib/auth';
+import { getSession, isSuperAdmin } from '@/lib/auth';
 import { AdminHeader } from '@/components/admin';
 
 export const metadata = { title: 'Event Views' };
@@ -100,8 +107,12 @@ async function loadViewStats(): Promise<ViewStats> {
 }
 
 export default async function AdminViewsPage() {
-  // Gate: superadmin only. Throws if not authenticated.
-  await requireSuperadminAuth();
+  // Gate: same getSession + isSuperAdmin + redirect pattern as the rest of
+  // /admin (see /admin/series/[id]/edit/page.tsx). Anonymous → login,
+  // non-superadmin → /admin landing.
+  const { session } = await getSession();
+  if (!session) redirect('/auth/login?redirect=/admin/views');
+  if (!isSuperAdmin(session.email)) redirect('/admin');
 
   let stats: ViewStats;
   try {

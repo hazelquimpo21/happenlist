@@ -236,13 +236,21 @@ This avoids monorepo coupling while keeping each repo self-contained. Drift gets
 
 # Smart Filters Roadmap
 
-In progress — see `docs/filter-roadmap.md` for the complete three-phase plan, current data audit findings, and per-session task lists.
+**Phase 1 — DONE (2026-04-11).** All sessions A1, A2, B1, B2, B3, R1 shipped. See `docs/phase-reports/phase-1-report.md` for the full review report; `docs/filter-roadmap.md` is the canonical three-phase plan.
 
-**Key constraints learned from data audit (2026-04-11)**:
-- `vibe_tags` and `subcultures` taxonomies are currently hallucinated (~80–100 free-text values, not following the 18/23 controlled vocab). Phase 1 fixes the scraper + cleans existing data.
+**What Phase 1 shipped**:
+- A1 — scraper taxonomy lockdown (strict enums + post-validation in atmosphere/event-meta analyzers, vocabularies source-of-truth)
+- A2 — cleanup migration (dropped hallucinated vibe/subculture tags, logged to `tag_cleanup_log`) + atmosphere backfill on 86 NULL events
+- B1 — `getEvents()` extended with `goodFor[]`, `timeOfDay[]`, `interestPreset`; time-of-day filter uses Chicago-local SQL extraction; constants in `interest-presets.ts`, `time-of-day.ts`, `vocabularies.ts`
+- B2 — Filter UI v1: `FilterBar` (sticky), `FilterDrawer` (Radix Dialog bottom-sheet/right-panel), `FilterChip`, `EmptyFilterState`, `PastInstances` on event detail
+- B3 — `event_views` table + `record_event_view()` SECURITY DEFINER function, `recordEventView` server action, `<ViewTracker />` mounted on `/event/[slug]`, `/admin/views` sanity dashboard. **Will bake unused for ~4 weeks before Phase 3 trending sort consumes it.**
+- R1 — review pass: bumped session ID entropy 64→128 bits, hardened ViewTracker sentinel, single source of truth for filter count badge (server + client both go through `countActiveFilters`), aligned `/admin/views` auth pattern, made FilterBar sticky, fixed a server/client boundary bug introduced mid-R1 (parsers moved to pure `types.ts`)
+
+**Key constraints learned from data audit (2026-04-11)** — still relevant for Phase 2/3:
+- `vibe_tags`/`subcultures` cleaned in A1+A2; future scraper drift caught by post-validation log
 - `age_high` is empty (3 of 238 events). All age-group filtering must use `age_low` only.
-- `price_low`/`price_high` populated on ~20% of events. Cost-tier filter shipped only after Phase 2 backfill.
-- `attendance_mode` populated on 9% of events. Drop-in filter waits for backfill.
-- `hearts` table has 5 rows; `view_count` is 0 across the board. Trending/popularity sorts wait for view tracking (Phase 1) to bake (~4 weeks).
-- Locations are 99% geocoded — distance is fully viable.
+- `price_low`/`price_high` populated on ~20% of events. Cost-tier filter waits for Phase 2 backfill (Session A3).
+- `attendance_mode` populated on 9% of events. Drop-in filter waits for A3 backfill.
+- `hearts` table has 5 rows; `view_count` was 0 (now `event_views` is populating — needs ~4 weeks of bake before Phase 3 trending sort can use it).
+- Locations are 99% geocoded — distance fully viable in Phase 2 Session B4.
 - Storage footprint is ~17 MB for 288 events. Storage is **not** a current concern. Past-event lifecycle uses partial indexes for query speed, not deletion.

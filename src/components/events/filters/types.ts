@@ -1,36 +1,49 @@
 /**
  * =============================================================================
- * FILTER STATE TYPES — shared shape for the /events filter UI
+ * FILTER STATE TYPES + PURE PARSERS — shared shape for the /events filter UI
  * =============================================================================
  *
- * One source of truth for what a "filter selection" looks like in memory.
- * Used by `use-filter-state.ts` (URL <-> object), the FilterBar/FilterDrawer
- * components, and EmptyFilterState (which renders chips for each active key).
+ * One source of truth for what a "filter selection" looks like in memory,
+ * AND the pure URL <-> FilterState parsers used by both sides of the
+ * server/client boundary.
  *
- * NB: This is intentionally an in-memory shape — string arrays, booleans,
- * undefined-when-absent. Conversion to/from URLSearchParams happens in the
- * hook. The events page server component reads URL search params directly
- * and passes them to getEvents() — these types are NOT consumed by the
- * server, only by the client filter UI.
+ * IMPORTANT: This file MUST remain free of `'use client'` and any imports
+ * from React or `next/navigation` runtime code. Both the server (via
+ * /events/page.tsx) and the client (via use-filter-state.ts) import from
+ * this module — adding a 'use client' boundary here would break the
+ * server-side import with "Attempted to call X from the server but X is
+ * on the client". The parsers therefore use a structural `SearchParamsLike`
+ * type that both `URLSearchParams` and Next's `ReadonlyURLSearchParams`
+ * satisfy.
  *
  * Cross-file coupling:
- *   - src/components/events/filters/use-filter-state.ts — parses URL into
- *     FilterState and writes FilterState back to URL via router.replace
+ *   - src/components/events/filters/use-filter-state.ts — wraps the parser
+ *     in a React hook, owns router.replace
  *   - src/components/events/filters/filter-bar.tsx — top sticky bar
  *   - src/components/events/filters/filter-drawer.tsx — advanced drawer
  *   - src/components/events/filters/empty-filter-state.tsx — shown when 0 results
- *   - src/app/events/page.tsx — passes initial state via props
+ *   - src/app/events/page.tsx — server-side import (count badge); MUST go
+ *     through this file, NOT use-filter-state.ts
  *
  * If you add a new filter:
- *   1. Add the field here
- *   2. Update parseFiltersFromParams + serializeFiltersToParams in
- *      use-filter-state.ts
+ *   1. Add the field to FilterState
+ *   2. Update parseFiltersFromParams + serializeFiltersToParams (this file)
  *   3. Update countActiveFilters / hasAnyActive
  *   4. Wire it into either FilterBar (high-frequency) or FilterDrawer
  *      (long tail), and add a chip to EmptyFilterState
  *   5. Make sure src/app/events/page.tsx forwards the URL param to getEvents
  * =============================================================================
  */
+
+/**
+ * Structural type that both `URLSearchParams` and Next's
+ * `ReadonlyURLSearchParams` satisfy. Avoids importing from `next/navigation`
+ * here (which would risk pulling client-only code into the server bundle).
+ */
+export interface SearchParamsLike {
+  get(key: string): string | null;
+  getAll(key: string): string[];
+}
 
 /**
  * In-memory filter state. All optional/empty by default.
@@ -117,4 +130,76 @@ export function countActiveFilters(state: FilterState): number {
 /** True if ANY filter is active (excludes search query). */
 export function hasAnyActive(state: FilterState): boolean {
   return countActiveFilters(state) > 0;
+}
+
+// -----------------------------------------------------------------------------
+// PURE URL <-> FilterState parsers
+// -----------------------------------------------------------------------------
+//
+// These live here (not in use-filter-state.ts) so the server component
+// /events/page.tsx can import them without crossing a 'use client' boundary.
+// See the file header for why this matters.
+
+/**
+ * Parse URL search params into a typed FilterState. Unknown keys are ignored,
+ * multi-value keys use getAll(). Defensive — never throws; stale or unknown
+ * params yield empty defaults rather than crashing.
+ */
+export function parseFiltersFromParams(params: SearchParamsLike): FilterState {
+  return {
+    q: params.get('q') ?? undefined,
+    category: params.get('category') ?? undefined,
+    interestPreset: params.get('interestPreset') ?? undefined,
+    goodFor: params.getAll('goodFor'),
+    timeOfDay: params.getAll('timeOfDay'),
+    isFree: params.get('free') === 'true',
+    vibeTag: params.get('vibeTag') ?? undefined,
+    noiseLevel: params.get('noiseLevel') ?? undefined,
+    accessType: params.get('accessType') ?? undefined,
+    soloFriendly: params.get('soloFriendly') === 'true',
+    beginnerFriendly: params.get('beginnerFriendly') === 'true',
+    noTicketsNeeded: params.get('noTicketsNeeded') === 'true',
+    dropInOk: params.get('dropInOk') === 'true',
+    familyFriendly: params.get('familyFriendly') === 'true',
+    hasMemberBenefits: params.get('memberBenefits') === 'true',
+    membershipOrgId: params.get('membershipOrg') ?? undefined,
+  };
+}
+
+/**
+ * Build a fresh URLSearchParams from a FilterState. Resets pagination
+ * implicitly (the caller never forwards `page`). `extras` lets the caller
+ * preserve unrelated keys like `sort` while still rewriting the filter set.
+ */
+export function serializeFiltersToParams(
+  state: FilterState,
+  extras?: Record<string, string | null>,
+): URLSearchParams {
+  const params = new URLSearchParams();
+
+  if (state.q) params.set('q', state.q);
+  if (state.category) params.set('category', state.category);
+  if (state.interestPreset) params.set('interestPreset', state.interestPreset);
+  for (const slug of state.goodFor) params.append('goodFor', slug);
+  for (const bucket of state.timeOfDay) params.append('timeOfDay', bucket);
+  if (state.isFree) params.set('free', 'true');
+  if (state.vibeTag) params.set('vibeTag', state.vibeTag);
+  if (state.noiseLevel) params.set('noiseLevel', state.noiseLevel);
+  if (state.accessType) params.set('accessType', state.accessType);
+  if (state.soloFriendly) params.set('soloFriendly', 'true');
+  if (state.beginnerFriendly) params.set('beginnerFriendly', 'true');
+  if (state.noTicketsNeeded) params.set('noTicketsNeeded', 'true');
+  if (state.dropInOk) params.set('dropInOk', 'true');
+  if (state.familyFriendly) params.set('familyFriendly', 'true');
+  if (state.hasMemberBenefits) params.set('memberBenefits', 'true');
+  if (state.membershipOrgId) params.set('membershipOrg', state.membershipOrgId);
+
+  if (extras) {
+    for (const [k, v] of Object.entries(extras)) {
+      if (v === null) params.delete(k);
+      else params.set(k, v);
+    }
+  }
+
+  return params;
 }

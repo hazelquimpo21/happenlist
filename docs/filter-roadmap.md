@@ -1,9 +1,9 @@
 # Smart Filters Roadmap
 
-**Status**: planning complete, ready for Phase 1 Session A1
+**Status**: Phase 1 complete (A1, A2, B1, B2, B3, R1 all shipped). Phase 2 next — earliest session is A3 (pricing + access aggressiveness, scraper repo).
 **Last updated**: 2026-04-11
 **Owner**: Hazel
-**Related**: `CLAUDE.md` Engineering Standards section
+**Related**: `CLAUDE.md` Engineering Standards section, `docs/phase-reports/phase-1-report.md`
 
 This is the canonical reference for the filter/sort/lifecycle work happening across `happenlist` and `happenlist_scraper`. It's organized as three phases with concrete sessions. Future AI sessions should read this top-to-bottom before starting work.
 

@@ -21,8 +21,12 @@
  *   - This component returns null. It exists purely for its side effect.
  *
  * Idempotency:
- *   - Layer 1: useRef sentinel prevents the action from firing twice
- *     during React 18+ strict-mode double-mount in development.
+ *   - Layer 1: useRef sentinel keyed by eventId prevents the action from
+ *     firing twice during React 18+ strict-mode double-mount in dev.
+ *     Keying by eventId (rather than a plain boolean) means that if some
+ *     future caller reuses the same component instance for a different
+ *     event (e.g. an SPA modal that swaps eventId without remount), the
+ *     new event still records — only the *same* eventId is suppressed.
  *   - Layer 2: the recordEventView server action reuses the existing
  *     hl_sid cookie, so navigations within the same browser session
  *     don't pick up new session ids.
@@ -51,15 +55,16 @@ interface ViewTrackerProps {
 }
 
 export function ViewTracker({ eventId }: ViewTrackerProps) {
-  // useRef sentinel: in dev, React 18+ strict mode mounts components
-  // twice on purpose to surface effect-cleanup bugs. We don't want both
-  // mounts to fire the server action — the unique index would suppress
-  // the duplicate, but the wasted round-trip is avoidable.
-  const firedRef = useRef(false);
+  // Sentinel keyed by the eventId we already fired for. In dev, React 18+
+  // strict mode runs the effect twice for the same instance — the second
+  // run sees firedForRef.current === eventId and skips. If a parent ever
+  // swaps the eventId on a live instance, the ref no longer matches and
+  // the new event records correctly.
+  const firedForRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (firedRef.current) return;
-    firedRef.current = true;
+    if (firedForRef.current === eventId) return;
+    firedForRef.current = eventId;
 
     // Fire and forget. recordEventView never throws — it returns false
     // on error. We don't await/log the result here because the action

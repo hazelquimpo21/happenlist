@@ -57,7 +57,7 @@ export function FilterBar({ categories, membershipOrgs }: FilterBarProps) {
   };
 
   return (
-    <div className="border-b border-mist bg-pure">
+    <div className="sticky top-16 md:top-18 z-10 border-b border-mist bg-pure">
       <div className="max-w-7xl mx-auto px-4 py-4 space-y-3">
         {/* ── Row 1: Search + Drawer trigger ──────────────────────────────── */}
         <div className="flex items-center gap-3">

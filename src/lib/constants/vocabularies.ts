@@ -5,6 +5,7 @@
  *
  * MIRROR OF: happenlist_scraper/backend/lib/vocabularies.js
  * If you change this, change BOTH. Sync verified manually during phase reviews.
+ * Last byte-for-byte verification: 2026-04-11 (Phase 1 R1) — clean.
  *
  * This file holds the canonical TypeScript vocabularies for the four
  * controlled lists the scraper writes into the events table:

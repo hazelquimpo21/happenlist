@@ -34,87 +34,19 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
-import { usePathname, useRouter, useSearchParams, type ReadonlyURLSearchParams } from 'next/navigation';
-import { EMPTY_FILTER_STATE, type FilterState } from './types';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import {
+  EMPTY_FILTER_STATE,
+  parseFiltersFromParams,
+  serializeFiltersToParams,
+  type FilterState,
+} from './types';
 
-// -----------------------------------------------------------------------------
-// PARSE — URL search params -> FilterState
-// -----------------------------------------------------------------------------
-
-/**
- * Parse a ReadonlyURLSearchParams (or URLSearchParams) into a typed
- * FilterState. Unknown keys are ignored. Multi-value keys use getAll().
- *
- * Defensive: never throws. URL params from older app versions or shared
- * links may be stale — return the empty defaults rather than crashing.
- */
-export function parseFiltersFromParams(
-  params: ReadonlyURLSearchParams | URLSearchParams
-): FilterState {
-  return {
-    q: params.get('q') ?? undefined,
-    category: params.get('category') ?? undefined,
-    interestPreset: params.get('interestPreset') ?? undefined,
-    goodFor: params.getAll('goodFor'),
-    timeOfDay: params.getAll('timeOfDay'),
-    isFree: params.get('free') === 'true',
-    vibeTag: params.get('vibeTag') ?? undefined,
-    noiseLevel: params.get('noiseLevel') ?? undefined,
-    accessType: params.get('accessType') ?? undefined,
-    soloFriendly: params.get('soloFriendly') === 'true',
-    beginnerFriendly: params.get('beginnerFriendly') === 'true',
-    noTicketsNeeded: params.get('noTicketsNeeded') === 'true',
-    dropInOk: params.get('dropInOk') === 'true',
-    familyFriendly: params.get('familyFriendly') === 'true',
-    hasMemberBenefits: params.get('memberBenefits') === 'true',
-    membershipOrgId: params.get('membershipOrg') ?? undefined,
-  };
-}
-
-// -----------------------------------------------------------------------------
-// SERIALIZE — FilterState -> URLSearchParams
-// -----------------------------------------------------------------------------
-
-/**
- * Build a fresh URLSearchParams from a FilterState.
- *
- * Resets pagination (`page`) automatically — when filters change the user is
- * back on page 1. Pre-existing non-filter params (other than `page`) are
- * preserved by the caller via `extras`.
- */
-export function serializeFiltersToParams(
-  state: FilterState,
-  extras?: Record<string, string | null>
-): URLSearchParams {
-  const params = new URLSearchParams();
-
-  if (state.q) params.set('q', state.q);
-  if (state.category) params.set('category', state.category);
-  if (state.interestPreset) params.set('interestPreset', state.interestPreset);
-  for (const slug of state.goodFor) params.append('goodFor', slug);
-  for (const bucket of state.timeOfDay) params.append('timeOfDay', bucket);
-  if (state.isFree) params.set('free', 'true');
-  if (state.vibeTag) params.set('vibeTag', state.vibeTag);
-  if (state.noiseLevel) params.set('noiseLevel', state.noiseLevel);
-  if (state.accessType) params.set('accessType', state.accessType);
-  if (state.soloFriendly) params.set('soloFriendly', 'true');
-  if (state.beginnerFriendly) params.set('beginnerFriendly', 'true');
-  if (state.noTicketsNeeded) params.set('noTicketsNeeded', 'true');
-  if (state.dropInOk) params.set('dropInOk', 'true');
-  if (state.familyFriendly) params.set('familyFriendly', 'true');
-  if (state.hasMemberBenefits) params.set('memberBenefits', 'true');
-  if (state.membershipOrgId) params.set('membershipOrg', state.membershipOrgId);
-
-  // Forward / strip extras (used to preserve unrelated keys, never `page`)
-  if (extras) {
-    for (const [k, v] of Object.entries(extras)) {
-      if (v === null) params.delete(k);
-      else params.set(k, v);
-    }
-  }
-
-  return params;
-}
+// Re-export the pure parsers so existing imports from this module keep
+// working. The canonical definitions live in `./types` (a non-client module
+// the server component /events/page.tsx can also import) — see the header
+// comment in types.ts for why.
+export { parseFiltersFromParams, serializeFiltersToParams };
 
 // -----------------------------------------------------------------------------
 // HOOK
