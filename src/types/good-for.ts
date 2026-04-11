@@ -1,20 +1,33 @@
 /**
  * GOOD FOR TAGS
  * =============
- * Audience/vibe tags for events.
+ * Audience/vibe tags for events — UI metadata layer.
  *
  * These answer "who would enjoy this?" — orthogonal to categories
  * which answer "what kind of event is this?"
  *
  * Events can have multiple good_for tags (TEXT[] in the database).
- * Valid slugs are defined here as the single source of truth.
+ *
+ * SOURCE OF TRUTH for the slug list lives in:
+ *   src/lib/constants/vocabularies.ts (mirrors the scraper)
+ *
+ * This file owns the rich UI metadata (label, description, icon, color) and
+ * imports the slug union type so any mismatch fails compilation. If you add
+ * a new slug, add it to vocabularies.ts FIRST, then add the matching entry
+ * here — TypeScript will tell you if you forget.
  */
+
+import { GOOD_FOR_SLUGS, type GoodForSlug } from '@/lib/constants/vocabularies';
+
+// Re-export so existing imports from `@/types` keep working without churn.
+export { GOOD_FOR_SLUGS };
+export type { GoodForSlug };
 
 /**
  * A single "Good For" tag definition.
  */
 export interface GoodForTag {
-  slug: string;
+  slug: GoodForSlug;
   label: string;
   description: string;
   icon: string; // Lucide icon name
@@ -127,11 +140,6 @@ export const GOOD_FOR_TAGS: GoodForTag[] = [
     color: 'bg-lime-100 text-lime-800',
   },
 ];
-
-/**
- * Valid good_for slugs (for validation).
- */
-export const GOOD_FOR_SLUGS = GOOD_FOR_TAGS.map((t) => t.slug);
 
 /**
  * Look up a tag by slug.

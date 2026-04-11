@@ -2,7 +2,23 @@
  * FILTER TYPES
  * ============
  * Type definitions for filtering and pagination.
+ *
+ * Cross-file coupling:
+ *   - src/data/events/get-events.ts consumes EventQueryParams.
+ *   - src/lib/constants/vocabularies.ts owns the GoodForSlug union.
+ *   - src/lib/constants/time-of-day.ts owns the TimeOfDay union.
+ *   - src/lib/constants/interest-presets.ts owns the InterestPresetId union.
+ *
+ * If you add a new filter param, update get-events.ts AND any UI surface
+ * that builds query params (URL search params on /events, search forms).
  */
+
+// Note: GoodForSlug / TimeOfDay union types intentionally NOT imported here.
+// These params accept loose `string | string[]` so URL search params and form
+// data flow in without coercion. Runtime validation against the canonical
+// vocabularies happens in src/data/events/get-events.ts via the
+// `isGoodForSlug` / `isTimeOfDay` type guards from
+// src/lib/constants/{vocabularies,time-of-day}.ts.
 
 /**
  * Date range for filtering events.
@@ -34,8 +50,48 @@ export interface EventFilters {
   organizerId?: string;
   locationId?: string;
   excludeEventId?: string;
-  /** Filter by "Good For" audience tag slug (e.g., "date_night"). */
-  goodFor?: string;
+  /**
+   * Filter by "Good For" audience tag slug(s) — e.g. "date_night".
+   *
+   * Accepts a single slug (backward compat with original API) or an array
+   * of slugs. Multi-value semantics: ANY-match (an event passes if its
+   * good_for column overlaps the requested set).
+   *
+   * Type is intentionally `string | string[]` (not the GoodForSlug union)
+   * so URL search params and form data can flow in without coercion at
+   * the call site. get-events.ts validates against the canonical slug
+   * list at runtime via `isGoodForSlug` and silently drops unknowns —
+   * stale shared URLs from older deploys must not crash the page.
+   *
+   * Use either raw slugs OR `interestPreset` (which expands to a slug
+   * union). If both are set, they are MERGED into a single ANY-match.
+   */
+  goodFor?: string | string[];
+
+  /**
+   * Filter by time-of-day bucket(s). Each bucket is a hour range in
+   * America/Chicago local time — see src/lib/constants/time-of-day.ts.
+   *
+   * Multi-value semantics: ANY-match. Implemented as a post-fetch JS
+   * filter in B1 because PostgREST cannot filter on a computed expression
+   * without an RPC. May move to a generated column in a later phase.
+   *
+   * Loose `string | string[]` type lets URL params flow in directly;
+   * get-events.ts validates each value via `isTimeOfDay` and drops
+   * unknowns. Valid values are 'morning' | 'afternoon' | 'evening' |
+   * 'late_night'.
+   */
+  timeOfDay?: string | string[];
+
+  /**
+   * Apply a predefined interest preset by id (e.g. "date-night",
+   * "family-chaos"). Resolves to a goodFor union via
+   * src/lib/constants/interest-presets.ts before query build.
+   *
+   * Stale or unknown ids are silently ignored — saved/shared URLs from
+   * older versions of the app must not crash the page.
+   */
+  interestPreset?: string;
   /** Filter by vibe tag (e.g., "cozy", "hype"). Uses GIN array containment. */
   vibeTag?: string;
   /** Filter by subculture tag (e.g., "jazz", "craft-beer"). */

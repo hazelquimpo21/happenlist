@@ -12,6 +12,58 @@ import { unstable_cache } from 'next/cache';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import type { EventCard, EventQueryParams } from '@/types';
+import {
+  isGoodForSlug,
+  type GoodForSlug,
+} from '@/lib/constants/vocabularies';
+import {
+  isTimeOfDay,
+  matchesTimeOfDay,
+  type TimeOfDay,
+} from '@/lib/constants/time-of-day';
+import { resolveInterestPresetGoodFor } from '@/lib/constants/interest-presets';
+
+/**
+ * Coerce a loose `string | string[] | undefined` param into a deduped,
+ * type-narrowed array using a vocabulary guard. Drops any value that
+ * fails the guard — defensive against stale URL params, typos, and
+ * vocab values that have since been removed.
+ */
+function normalizeStringArray<T extends string>(
+  value: string | readonly string[] | undefined,
+  guard: (v: string) => v is T
+): T[] {
+  if (value === undefined) return [];
+  const raw = Array.isArray(value) ? value : [value];
+  const filtered: T[] = [];
+  const seen = new Set<string>();
+  for (const v of raw) {
+    if (typeof v !== 'string' || seen.has(v) || !guard(v)) continue;
+    seen.add(v);
+    filtered.push(v);
+  }
+  return filtered;
+}
+
+/**
+ * Resolve goodFor + interestPreset params into a single deduped slug array.
+ *
+ * Both inputs are optional. If both are provided they MERGE (any-match).
+ * Stale preset ids resolve to an empty union (silently ignored).
+ */
+function resolveGoodForFilter(
+  goodFor: string | string[] | undefined,
+  interestPreset: string | undefined
+): GoodForSlug[] {
+  const direct = normalizeStringArray<GoodForSlug>(goodFor, isGoodForSlug);
+  const fromPreset = interestPreset
+    ? resolveInterestPresetGoodFor(interestPreset)
+    : [];
+
+  if (fromPreset.length === 0) return direct;
+  const merged = new Set<GoodForSlug>([...direct, ...fromPreset]);
+  return [...merged];
+}
 
 /**
  * Cached category slug → ID resolver.
@@ -268,6 +320,8 @@ export async function getEvents(
     dateRange,
     isFree,
     goodFor,
+    interestPreset,
+    timeOfDay,
     locationId,
     organizerId,
     excludeEventId,
@@ -293,24 +347,46 @@ export async function getEvents(
     collapseSeries = false,
   } = params;
 
-  console.log('📋 [getEvents] Fetching events with params:', {
-    search,
-    categorySlug,
-    dateRange,
-    isFree,
-    goodFor,
-    page,
-    limit,
-    collapseSeries,
-  });
+  // Normalize the new multi-value params up front so the rest of the function
+  // works against typed, deduped, validated arrays.
+  const goodForSlugs = resolveGoodForFilter(goodFor, interestPreset);
+  const timeOfDayBuckets = normalizeStringArray<TimeOfDay>(timeOfDay, isTimeOfDay);
+
+  // Single structured log line — only emit non-default filters so the noise
+  // floor stays low. Convention: [scope:action] prefix per CLAUDE.md.
+  const activeFilters: Record<string, unknown> = {};
+  if (search) activeFilters.search = search;
+  if (categorySlug) activeFilters.categorySlug = categorySlug;
+  if (dateRange) activeFilters.dateRange = dateRange;
+  if (isFree) activeFilters.isFree = isFree;
+  if (goodForSlugs.length > 0) activeFilters.goodFor = goodForSlugs;
+  if (interestPreset) activeFilters.interestPreset = interestPreset;
+  if (timeOfDayBuckets.length > 0) activeFilters.timeOfDay = timeOfDayBuckets;
+  if (locationId) activeFilters.locationId = locationId;
+  if (organizerId) activeFilters.organizerId = organizerId;
+  if (vibeTag) activeFilters.vibeTag = vibeTag;
+  if (subculture) activeFilters.subculture = subculture;
+  if (noiseLevel) activeFilters.noiseLevel = noiseLevel;
+  if (accessType) activeFilters.accessType = accessType;
+  if (familyFriendly) activeFilters.familyFriendly = familyFriendly;
+  if (includeLifestyle !== undefined) activeFilters.includeLifestyle = includeLifestyle;
+  if (collapseSeries) activeFilters.collapseSeries = collapseSeries;
+  if (orderBy && orderBy !== 'date-asc') activeFilters.orderBy = orderBy;
+  console.log('[get-events] applied filters:', activeFilters, `page=${page} limit=${limit}`);
 
   const supabase = await createClient();
   const offset = (page - 1) * limit;
 
-  // When collapsing series, over-fetch to compensate for duplicates being removed.
-  // We fetch 3x the limit so that after collapsing we still have enough cards.
-  const fetchLimit = collapseSeries ? limit * 3 : limit;
-  const fetchOffset = collapseSeries ? 0 : offset;
+  // Over-fetch when ANY post-fetch filter is active so we still have enough
+  // cards after JS-side filtering. Both `collapseSeries` and `timeOfDay`
+  // shrink the result set after the DB fetch — without over-fetch the page
+  // would be sparse or empty.
+  //
+  // 3x is a heuristic, not a proof. If you add another post-fetch filter,
+  // bump this multiplier OR move the filter into a real DB predicate.
+  const needsOverFetch = collapseSeries || timeOfDayBuckets.length > 0;
+  const fetchLimit = needsOverFetch ? limit * 3 : limit;
+  const fetchOffset = needsOverFetch ? 0 : offset;
 
   // Build query — joins series table for recurrence info
   let query = supabase
@@ -365,8 +441,12 @@ export async function getEvents(
     query = query.eq('is_free', true);
   }
 
-  if (goodFor) {
-    query = query.contains('good_for', [goodFor]);
+  // good_for: ANY-match. PostgREST `.overlaps()` maps to PG's `&&` operator
+  // on text[] — returns rows where good_for shares at least one element with
+  // the requested set. Single-value calls produce a 1-element array, which
+  // behaves identically to the old `.contains([slug])` form.
+  if (goodForSlugs.length > 0) {
+    query = query.overlaps('good_for', goodForSlugs);
   }
 
   if (locationId) {
@@ -494,25 +574,44 @@ export async function getEvents(
   }
   // includeLifestyle === true: no filtering, show everything
 
-  // Series collapsing: group recurring instances, keep only the soonest per series
+  // Time-of-day post-fetch filter. See src/lib/constants/time-of-day.ts header
+  // for why this runs in JS rather than as a DB predicate (no PostgREST support
+  // for computed expressions; would require an RPC + migration). Runs BEFORE
+  // collapseSeries so the collapse step sees a pre-filtered set — otherwise
+  // the "next upcoming date" picked by collapse could be a date that doesn't
+  // match the time-of-day filter.
+  if (timeOfDayBuckets.length > 0) {
+    events = events.filter((e) => matchesTimeOfDay(e.start_datetime, timeOfDayBuckets));
+  }
+
+  // Series collapsing: group recurring instances, keep only the soonest per series.
   if (collapseSeries) {
     events = collapseSeriesInstances(events);
+  }
 
-    // Apply manual pagination after collapsing
-    const totalCollapsed = events.length;
+  // Manual pagination when ANY post-fetch filter shrunk the result set.
+  // The DB-level .range() can't account for events removed by the JS filters
+  // above, so we re-paginate the filtered list here. Without this, an
+  // over-fetched call would return 3x the requested limit.
+  if (needsOverFetch) {
+    const totalAfterFilters = events.length;
     events = events.slice(offset, offset + limit);
 
-    console.log(`✅ [getEvents] Found ${events.length} events after collapsing (${totalCollapsed} unique, ${count} raw)`);
+    console.log(
+      `[get-events] returning ${events.length} events ` +
+      `(${totalAfterFilters} after post-fetch filters, ${count ?? 0} raw)`
+    );
 
     return {
       events,
-      // Use collapsed count for pagination when possible, but if we hit the
-      // over-fetch ceiling the real total is unknown — use raw count as upper bound
-      total: totalCollapsed < fetchLimit ? totalCollapsed : (count || 0),
+      // If we exhausted the over-fetch we can't trust totalAfterFilters as a
+      // true total — fall back to the raw DB count as an upper bound. Real
+      // pagination accuracy needs a DB-side predicate (future migration).
+      total: totalAfterFilters < fetchLimit ? totalAfterFilters : (count || 0),
     };
   }
 
-  console.log(`✅ [getEvents] Found ${events.length} events (total: ${count})`);
+  console.log(`[get-events] returning ${events.length} events (total: ${count ?? 0})`);
 
   return {
     events,

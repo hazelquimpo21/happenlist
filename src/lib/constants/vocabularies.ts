@@ -1,0 +1,182 @@
+/**
+ * =============================================================================
+ * CONTROLLED VOCABULARIES — TS MIRROR
+ * =============================================================================
+ *
+ * MIRROR OF: happenlist_scraper/backend/lib/vocabularies.js
+ * If you change this, change BOTH. Sync verified manually during phase reviews.
+ *
+ * This file holds the canonical TypeScript vocabularies for the four
+ * controlled lists the scraper writes into the events table:
+ *
+ *   - VIBE_TAGS        (atmosphere analyzer → events.vibe_tags TEXT[])
+ *   - SUBCULTURES      (atmosphere analyzer → events.subcultures TEXT[])
+ *   - NOISE_LEVELS     (atmosphere analyzer → events.noise_level TEXT)
+ *   - GOOD_FOR_SLUGS   (event-meta analyzer → events.good_for TEXT[])
+ *
+ * Why a separate TS file at all?
+ *   - The scraper repo is JS/CommonJS. TypeScript needs proper `as const`
+ *     readonly tuples to derive union types for filter UIs and query params.
+ *   - Centralizing here means filter components, query builders, validators,
+ *     and type guards all import from one place — never inline a magic string.
+ *
+ * Why post-validation in addition to OpenAI function-calling enums?
+ *   - GPT-4o-mini does not strictly enforce `enum` constraints. Prior audit
+ *     (2026-04-11) found 80+ free-text vibe values despite the schema using
+ *     `enum: VIBE_TAGS`. Phase 1 / Sessions A1+A2 fixed the scraper and
+ *     cleaned the existing data — see docs/phase-reports/phase-1-progress.md.
+ *
+ * Cross-file coupling notes:
+ *   - src/types/good-for.ts imports `GOOD_FOR_SLUGS` and `GoodForSlug` from
+ *     here so the slug list has a single source of truth. The rich UI metadata
+ *     (label, icon, color) lives in good-for.ts, but the slug list is here.
+ *   - src/lib/constants/interest-presets.ts imports `GoodForSlug` to type its
+ *     preset → tag mappings.
+ *   - src/data/events/get-events.ts imports the union types for filter param
+ *     validation in EventQueryParams.
+ *
+ * If you add or remove a value:
+ *   1. Update happenlist_scraper/backend/lib/vocabularies.js (the source).
+ *   2. Update this file to match byte-for-byte.
+ *   3. Update tag_cleanup_log expectations if removing a value that's in the
+ *      DB — a migration may be needed to drop or remap existing rows.
+ *   4. Run the type-checker — interest-presets.ts and any consumer using
+ *      union types will fail loudly if a slug is removed.
+ * =============================================================================
+ */
+
+// -----------------------------------------------------------------------------
+// VIBE TAGS (atmosphere analyzer)
+// -----------------------------------------------------------------------------
+// Short adjectives that capture the social/emotional flavor of an event.
+// Pick 1–4 per event. Used by the "vibe" filter in Happenlist.
+export const VIBE_TAGS = [
+  'cozy',
+  'rowdy',
+  'artsy',
+  'underground',
+  'bougie',
+  'family-chaos',
+  'chill',
+  'hype',
+  'intimate',
+  'festival-energy',
+  'nerdy',
+  'spiritual',
+  'competitive',
+  'romantic',
+  'diy',
+  'corporate',
+  'nostalgic',
+  'experimental',
+] as const;
+
+export type VibeTag = (typeof VIBE_TAGS)[number];
+
+// -----------------------------------------------------------------------------
+// SUBCULTURES (atmosphere analyzer)
+// -----------------------------------------------------------------------------
+// Cultural affiliations / scenes the event speaks to. Pick 0–3 per event.
+// Used by the "interest" filter in Happenlist (e.g. "crafty artsy folks").
+export const SUBCULTURES = [
+  'indie-music',
+  'hip-hop',
+  'edm',
+  'punk-diy',
+  'jazz',
+  'country',
+  'craft-beer',
+  'wine',
+  'foodie',
+  'fitness',
+  'yoga-wellness',
+  'tech',
+  'startup',
+  'queer',
+  'latinx',
+  'art-scene',
+  'theater-kids',
+  'outdoorsy',
+  'gaming',
+  'sneakerhead',
+  'vintage',
+  'academia',
+  'maker',
+] as const;
+
+export type Subculture = (typeof SUBCULTURES)[number];
+
+// -----------------------------------------------------------------------------
+// NOISE LEVELS (atmosphere analyzer)
+// -----------------------------------------------------------------------------
+// Single-value enum describing how loud the room will be.
+export const NOISE_LEVELS = ['quiet', 'conversational', 'loud', 'deafening'] as const;
+
+export type NoiseLevel = (typeof NOISE_LEVELS)[number];
+
+// -----------------------------------------------------------------------------
+// GOOD FOR SLUGS (event-meta analyzer)
+// -----------------------------------------------------------------------------
+// Audience-fit slugs. Stored in events.good_for TEXT[].
+//
+// The rich UI metadata (label, icon, color, description) for each slug lives
+// in src/types/good-for.ts — that file imports the union type from here so
+// the slug field stays type-safe and any drift between this list and the UI
+// metadata file fails compilation.
+export const GOOD_FOR_SLUGS = [
+  'date_night',
+  'families_young_kids',
+  'families_older_kids',
+  'pet_friendly',
+  'foodies',
+  'girls_night',
+  'guys_night',
+  'solo_friendly',
+  'outdoorsy',
+  'creatives',
+  'music_lovers',
+  'active_seniors',
+  'college_crowd',
+  'first_timers',
+] as const;
+
+export type GoodForSlug = (typeof GOOD_FOR_SLUGS)[number];
+
+// -----------------------------------------------------------------------------
+// VALIDATION HELPERS
+// -----------------------------------------------------------------------------
+// Use these at system boundaries (URL params, form input, API payloads) to
+// drop unknown values defensively. Internal code that already has a typed
+// union doesn't need them.
+
+const VIBE_TAG_SET = new Set<string>(VIBE_TAGS);
+const SUBCULTURE_SET = new Set<string>(SUBCULTURES);
+const NOISE_LEVEL_SET = new Set<string>(NOISE_LEVELS);
+const GOOD_FOR_SLUG_SET = new Set<string>(GOOD_FOR_SLUGS);
+
+export function isVibeTag(value: string): value is VibeTag {
+  return VIBE_TAG_SET.has(value);
+}
+
+export function isSubculture(value: string): value is Subculture {
+  return SUBCULTURE_SET.has(value);
+}
+
+export function isNoiseLevel(value: string): value is NoiseLevel {
+  return NOISE_LEVEL_SET.has(value);
+}
+
+export function isGoodForSlug(value: string): value is GoodForSlug {
+  return GOOD_FOR_SLUG_SET.has(value);
+}
+
+/**
+ * Filter an array of free-text values down to those that match a vocabulary.
+ * Used to defensively clean URL params or external data before querying.
+ */
+export function filterToVocab<T extends string>(
+  values: readonly string[],
+  guard: (v: string) => v is T
+): T[] {
+  return values.filter(guard);
+}

@@ -170,3 +170,79 @@ Three new series types for low-urgency, always-around events:
 - Selection/active states use `blue` (not coral)
 - Heart icon uses `rose` color
 - Modal/overlay backdrops use `bg-ink/50`
+
+---
+
+# Engineering Standards
+
+These rules apply to **every** code change, in this repo and in `happenlist_scraper`. Future AI sessions: read this section before writing any code.
+
+## Code quality (non-negotiable)
+
+1. **Modular** — small focused functions, single responsibility, no files >200 lines without strong justification. Split UI into composable components, data layer into per-concern files. Pieces should be individually testable and replaceable.
+
+2. **Centralized data** — every controlled vocabulary, enum, magic value, color, label lives in **one** constants file and is imported everywhere it's needed. Never duplicate. Existing examples to follow:
+   - `src/lib/constants/category-colors.ts`
+   - `src/lib/constants/series-limits.ts`
+   - `src/types/good-for.ts`
+   - `src/lib/constants/routes.ts`
+
+   **Exception**: type definitions tightly bound to one domain can co-locate with that domain (e.g. `src/types/good-for.ts`). The rule is one source of truth, not one folder.
+
+3. **AI-dev-friendly comments** — future Claude reads this code with zero conversation context. Required:
+   - Header comment on every non-trivial file: purpose + key dependencies + cross-file coupling notes
+   - Inline comments explain *why*, not *what*
+   - Note "if you change this, also update X" wherever cross-file coupling exists
+   - Document non-obvious business rules
+
+4. **Troubleshooting logging** — especially in scrapers, backfills, AI calls, async flows. Log inputs, outputs, errors with context, retry attempts, counts. Never silently swallow errors.
+
+   **Logging convention**: structured prefix `[<scope>:<action>]`. Examples:
+   - `[scraper:atmosphere] dropped tag "casual" — not in vocab`
+   - `[backfill:atmosphere] event abc-123 — success (energy=3, formality=2)`
+   - `[get-events] applied filters: goodFor=[creatives,foodies] timeOfDay=evening`
+   - `[event-views] inserted view event=xyz session=s_abc`
+   - `[migration:cleanup-vibe-tags] dropped 47 tags across 152 events`
+
+## Phase review ritual
+
+Multi-session work happens in **phases**. Every phase ends with a dedicated **Review & Harden** session before shipping:
+
+1. **Bug hunt** — re-read every changed file: type errors, NULL handling, off-by-ones, wrong defaults, broken imports, mismatched signatures, dead branches, race conditions
+2. **Connection audit** — verify everything new is wired end-to-end: new table → consumed by query? new query param → exposed in UI? new constant → imported where needed? new migration → applied to remote DB?
+3. **Conflict check** — duplicate utilities, two sources of truth, conflicting Tailwind classes, type drift, inconsistent naming
+4. **Gotcha brainstorm** — actively ask "what did I not consider?" Categories: timezones, pagination, RLS/auth, mobile viewport, empty states, server vs client component boundaries, hydration, caching/staleness, error states, accessibility, SEO, missing-data fallbacks
+5. **Fix everything found** — no parking, no TODO comments
+6. **Documentation update** — CLAUDE.md, README, inline comments, type docs all current. New decisions get a short writeup.
+
+**Deliverable**: a written phase report at `docs/phase-reports/phase-N-report.md` capturing what was found, fixed, deferred, and the gotchas surfaced. The report briefs the next phase.
+
+## Migration naming
+
+`YYYYMMDD_HHMM_short_description.sql`. Use timestamps from now on. (Existing numbered migrations stay as-is — don't rename.)
+
+## Cross-repo controlled vocabularies
+
+**Source of truth**: `happenlist_scraper/backend/lib/vocabularies.js` (CommonJS export).
+**Mirror**: `happenlist/src/lib/constants/vocabularies.ts` (TypeScript) with header comment:
+```ts
+// MIRROR OF: happenlist_scraper/backend/lib/vocabularies.js
+// If you change this, change BOTH. Sync verified manually during phase reviews.
+```
+
+This avoids monorepo coupling while keeping each repo self-contained. Drift gets caught during phase review.
+
+---
+
+# Smart Filters Roadmap
+
+In progress — see `docs/filter-roadmap.md` for the complete three-phase plan, current data audit findings, and per-session task lists.
+
+**Key constraints learned from data audit (2026-04-11)**:
+- `vibe_tags` and `subcultures` taxonomies are currently hallucinated (~80–100 free-text values, not following the 18/23 controlled vocab). Phase 1 fixes the scraper + cleans existing data.
+- `age_high` is empty (3 of 238 events). All age-group filtering must use `age_low` only.
+- `price_low`/`price_high` populated on ~20% of events. Cost-tier filter shipped only after Phase 2 backfill.
+- `attendance_mode` populated on 9% of events. Drop-in filter waits for backfill.
+- `hearts` table has 5 rows; `view_count` is 0 across the board. Trending/popularity sorts wait for view tracking (Phase 1) to bake (~4 weeks).
+- Locations are 99% geocoded — distance is fully viable.
+- Storage footprint is ~17 MB for 288 events. Storage is **not** a current concern. Past-event lifecycle uses partial indexes for query speed, not deletion.
