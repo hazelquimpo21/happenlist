@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { Button } from '@/components/ui';
-import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox, ShareButton, VibeProfileSection, AccessBadge, ChildEventsSchedule } from '@/components/events';
+import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox, ShareButton, VibeProfileSection, AccessBadge, ChildEventsSchedule, PastInstances } from '@/components/events';
 import { HeartButton } from '@/components/hearts';
 import { SeriesLinkBadge } from '@/components/series';
 import { EventJsonLd } from '@/components/seo';
@@ -951,6 +951,12 @@ export default async function EventPage({ params }: EventPageProps) {
                   )}
                 </div>
               </div>
+            )}
+
+            {/* Past instances — historical sibling events from the same series.
+                Only renders when there are past dates to show; returns null otherwise. */}
+            {event.series_id && (
+              <PastInstances seriesId={event.series_id} excludeEventId={event.id} />
             )}
 
             {/* Vibe Profile — "What's It Actually Like?" */}

@@ -21,9 +21,11 @@ export {
   getSeriesBySlug,
   getSeriesById,
   getSeriesEvents,
+  getPastSeriesInstances,
   getRelatedSeries,
   getSeriesStats,
 } from './get-series-detail';
+export type { PastSeriesInstance } from './get-series-detail';
 
 // Event generation functions
 export {

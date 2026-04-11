@@ -221,6 +221,75 @@ export async function getSeriesEvents(
 }
 
 // ============================================================================
+// GET PAST SERIES INSTANCES
+// ============================================================================
+
+/**
+ * Lightweight shape for the "Past instances" section on the event detail page.
+ *
+ * Why a separate type instead of reusing SeriesEvent?
+ *   - Past-instances rendering only needs the bare minimum: title, slug,
+ *     instance_date, start_datetime — no location, no series_sequence.
+ *   - Keeping the projection narrow keeps the SELECT cheap and the type
+ *     surface obvious to the consumer (PastInstances component).
+ *
+ * Cross-file coupling:
+ *   - src/components/events/past-instances.tsx — sole consumer
+ *   - src/app/event/[slug]/page.tsx — mounts PastInstances when series_id is set
+ */
+export interface PastSeriesInstance {
+  id: string;
+  title: string;
+  slug: string;
+  instance_date: string | null;
+  start_datetime: string;
+}
+
+/**
+ * Fetch past instances of a series for display on a sibling event detail page.
+ *
+ * Excludes the currently-viewed event (so the page never lists itself).
+ * Past = `instance_date < today` (UTC date — close enough for display ordering;
+ * we're not making scheduling decisions here, just showing history).
+ *
+ * Returns at most `limit` rows, ordered most-recent-first.
+ *
+ * Returns [] (not null) on error so the caller can render unconditionally.
+ */
+export async function getPastSeriesInstances(
+  seriesId: string,
+  excludeEventId: string,
+  limit = 6
+): Promise<PastSeriesInstance[]> {
+  console.log(
+    `[getPastSeriesInstances] series=${seriesId} exclude=${excludeEventId} limit=${limit}`
+  );
+
+  const supabase = await createClient();
+  const today = new Date().toISOString().split('T')[0];
+
+  const { data, error } = await supabase
+    .from('events')
+    .select('id, title, slug, instance_date, start_datetime')
+    .eq('series_id', seriesId)
+    .eq('status', 'published')
+    .is('deleted_at', null)
+    .neq('id', excludeEventId)
+    .lt('instance_date', today)
+    .order('instance_date', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('[getPastSeriesInstances] error:', error);
+    return [];
+  }
+
+  const rows = (data ?? []) as PastSeriesInstance[];
+  console.log(`[getPastSeriesInstances] found ${rows.length} past instances`);
+  return rows;
+}
+
+// ============================================================================
 // GET RELATED SERIES
 // ============================================================================
 
