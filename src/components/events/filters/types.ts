@@ -86,6 +86,10 @@ export interface FilterState {
   hasMemberBenefits: boolean;
   membershipOrgId?: string;
 
+  // Price tier + age group (Phase 2 B5) — multi-value, ANY-match
+  priceTier: string[];
+  ageGroup: string[];
+
   // Geo / distance (Phase 2 B4)
   neighborhood?: string;   // neighborhood slug from milwaukee-neighborhoods.ts, or 'my-location'
   nearLat?: number;        // anchor latitude (from neighborhood or browser geolocation)
@@ -97,6 +101,8 @@ export interface FilterState {
 export const EMPTY_FILTER_STATE: FilterState = {
   goodFor: [],
   timeOfDay: [],
+  priceTier: [],
+  ageGroup: [],
   isFree: false,
   soloFriendly: false,
   beginnerFriendly: false,
@@ -128,6 +134,8 @@ export function countActiveFilters(state: FilterState): number {
   if (state.noTicketsNeeded) n++;
   if (state.dropInOk) n++;
   if (state.familyFriendly) n++;
+  n += state.priceTier.length;
+  n += state.ageGroup.length;
   if (state.hasMemberBenefits) n++;
   if (state.membershipOrgId) n++;
   // Geo counts as a single filter (neighborhood or custom location)
@@ -174,6 +182,8 @@ export function parseFiltersFromParams(params: SearchParamsLike): FilterState {
     interestPreset: params.get('interestPreset') ?? undefined,
     goodFor: params.getAll('goodFor'),
     timeOfDay: params.getAll('timeOfDay'),
+    priceTier: params.getAll('priceTier'),
+    ageGroup: params.getAll('ageGroup'),
     isFree: params.get('free') === 'true',
     vibeTag: params.get('vibeTag') ?? undefined,
     noiseLevel: params.get('noiseLevel') ?? undefined,
@@ -208,6 +218,8 @@ export function serializeFiltersToParams(
   if (state.interestPreset) params.set('interestPreset', state.interestPreset);
   for (const slug of state.goodFor) params.append('goodFor', slug);
   for (const bucket of state.timeOfDay) params.append('timeOfDay', bucket);
+  for (const slug of state.priceTier) params.append('priceTier', slug);
+  for (const slug of state.ageGroup) params.append('ageGroup', slug);
   if (state.isFree) params.set('free', 'true');
   if (state.vibeTag) params.set('vibeTag', state.vibeTag);
   if (state.noiseLevel) params.set('noiseLevel', state.noiseLevel);

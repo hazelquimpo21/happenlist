@@ -26,6 +26,8 @@ import {
   DEFAULT_RADIUS_MILES,
   MAX_RADIUS_MILES,
 } from '@/lib/constants/milwaukee-neighborhoods';
+import { isPriceTierSlug } from '@/lib/constants/price-tiers';
+import { isAgeGroupSlug } from '@/lib/constants/age-groups';
 
 /**
  * Coerce a loose `string | string[] | undefined` param into a deduped,
@@ -345,6 +347,8 @@ export async function getEvents(
     dropInOk,
     familyFriendly,
     includeLifestyle,
+    priceTier,
+    ageGroup,
     nearLat,
     nearLng,
     radiusMiles,
@@ -358,6 +362,8 @@ export async function getEvents(
   // works against typed, deduped, validated arrays.
   const goodForSlugs = resolveGoodForFilter(goodFor, interestPreset);
   const timeOfDayBuckets = normalizeStringArray<TimeOfDay>(timeOfDay, isTimeOfDay);
+  const priceTierSlugs = normalizeStringArray(priceTier, isPriceTierSlug as (v: string) => v is string);
+  const ageGroupSlugs = normalizeStringArray(ageGroup, isAgeGroupSlug as (v: string) => v is string);
 
   // Single structured log line — only emit non-default filters so the noise
   // floor stays low. Convention: [scope:action] prefix per CLAUDE.md.
@@ -376,6 +382,8 @@ export async function getEvents(
   if (noiseLevel) activeFilters.noiseLevel = noiseLevel;
   if (accessType) activeFilters.accessType = accessType;
   if (familyFriendly) activeFilters.familyFriendly = familyFriendly;
+  if (priceTierSlugs.length > 0) activeFilters.priceTier = priceTierSlugs;
+  if (ageGroupSlugs.length > 0) activeFilters.ageGroup = ageGroupSlugs;
   if (nearLat != null && nearLng != null) activeFilters.geo = { nearLat, nearLng, radiusMiles: radiusMiles ?? DEFAULT_RADIUS_MILES };
   if (includeLifestyle !== undefined) activeFilters.includeLifestyle = includeLifestyle;
   if (collapseSeries) activeFilters.collapseSeries = collapseSeries;
@@ -556,6 +564,80 @@ export async function getEvents(
 
   if (familyFriendly) {
     query = query.eq('is_family_friendly', true);
+  }
+
+  // Price tier: each tier maps to a specific predicate. Multi-select = OR.
+  // Built as a single .or() clause combining all selected tier predicates.
+  if (priceTierSlugs.length > 0) {
+    const priceClauses: string[] = [];
+    for (const tier of priceTierSlugs) {
+      switch (tier) {
+        case 'free':
+          priceClauses.push('is_free.eq.true');
+          break;
+        case 'under_10':
+          // Inclusive of free events — people searching cheap stuff want free too
+          priceClauses.push('is_free.eq.true');
+          priceClauses.push('price_low.lte.10');
+          break;
+        case '10_to_25':
+          priceClauses.push('and(price_low.gte.10,price_low.lte.25)');
+          break;
+        case '25_to_50':
+          priceClauses.push('and(price_low.gte.25,price_low.lte.50)');
+          break;
+        case 'over_50':
+          priceClauses.push('price_low.gt.50');
+          break;
+        case 'donation':
+          priceClauses.push('price_type.eq.donation');
+          break;
+      }
+    }
+    if (priceClauses.length > 0) {
+      // Dedupe in case multiple tiers produce the same clause (e.g. free + under_10)
+      const uniqueClauses = [...new Set(priceClauses)];
+      query = query.or(uniqueClauses.join(','));
+    }
+  }
+
+  // Age group: each group maps to a predicate using age_low only.
+  // age_high is empty in the DB — see age-groups.ts header comment.
+  // Multi-select = OR, built as a single .or() clause.
+  if (ageGroupSlugs.length > 0) {
+    const ageClauses: string[] = [];
+    for (const group of ageGroupSlugs) {
+      switch (group) {
+        case 'all_ages':
+          // NULL age_low = organizer didn't specify = assumed all-ages
+          ageClauses.push('age_low.is.null');
+          ageClauses.push('age_low.eq.0');
+          break;
+        case 'families_young_kids':
+          // age_low <= 5 OR NULL (unspecified = presumed accessible)
+          ageClauses.push('age_low.lte.5');
+          ageClauses.push('age_low.is.null');
+          break;
+        case 'elementary':
+          ageClauses.push('and(age_low.gte.6,age_low.lte.11)');
+          break;
+        case 'teens':
+          ageClauses.push('and(age_low.gte.12,age_low.lte.17)');
+          break;
+        case 'college':
+          // age_low 18-25 OR tagged as college_crowd in good_for
+          ageClauses.push('and(age_low.gte.18,age_low.lte.25)');
+          ageClauses.push('good_for.cs.{college_crowd}');
+          break;
+        case 'twenty_one_plus':
+          ageClauses.push('age_low.gte.21');
+          break;
+      }
+    }
+    if (ageClauses.length > 0) {
+      const uniqueClauses = [...new Set(ageClauses)];
+      query = query.or(uniqueClauses.join(','));
+    }
   }
 
   // Geo filter: restrict to event IDs returned by the RPC

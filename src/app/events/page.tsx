@@ -65,6 +65,9 @@ interface EventsPageProps {
     familyFriendly?: string;
     memberBenefits?: string;
     membershipOrg?: string;
+    // Price + age (B5)
+    priceTier?: string | string[];
+    ageGroup?: string | string[];
     // Geo (B4)
     neighborhood?: string;
     nearLat?: string;
@@ -97,6 +100,8 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const categorySlug = params.category;
   const goodForArray = toArray(params.goodFor);
   const timeOfDayArray = toArray(params.timeOfDay);
+  const priceTierArray = toArray(params.priceTier);
+  const ageGroupArray = toArray(params.ageGroup);
   const interestPreset = params.interestPreset;
   const vibeTag = params.vibeTag;
   const noiseLevel = params.noiseLevel;
@@ -128,6 +133,8 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       goodFor: goodForArray.length > 0 ? goodForArray : undefined,
       timeOfDay: timeOfDayArray.length > 0 ? timeOfDayArray : undefined,
       interestPreset,
+      priceTier: priceTierArray.length > 0 ? priceTierArray : undefined,
+      ageGroup: ageGroupArray.length > 0 ? ageGroupArray : undefined,
       vibeTag,
       noiseLevel,
       accessType,

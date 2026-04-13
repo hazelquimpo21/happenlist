@@ -31,6 +31,8 @@
 import { SearchX } from 'lucide-react';
 import { getInterestPreset } from '@/lib/constants/interest-presets';
 import { getNeighborhood } from '@/lib/constants/milwaukee-neighborhoods';
+import { getPriceTier } from '@/lib/constants/price-tiers';
+import { getAgeGroup } from '@/lib/constants/age-groups';
 import { TIME_OF_DAY_LABELS, type TimeOfDay } from '@/lib/constants/time-of-day';
 import { getGoodForTag } from '@/types/good-for';
 import { useFilterState } from './use-filter-state';
@@ -102,6 +104,24 @@ function buildActiveChips(
       key: `tod-${bucket}`,
       label: TIME_OF_DAY_LABELS[bucket as TimeOfDay] ?? bucket,
       onRemove: () => removeOne('timeOfDay', bucket),
+    });
+  }
+
+  for (const slug of state.priceTier) {
+    const tier = getPriceTier(slug);
+    chips.push({
+      key: `price-${slug}`,
+      label: tier?.label ?? slug,
+      onRemove: () => removeOne('priceTier', slug),
+    });
+  }
+
+  for (const slug of state.ageGroup) {
+    const group = getAgeGroup(slug);
+    chips.push({
+      key: `age-${slug}`,
+      label: group?.label ?? slug,
+      onRemove: () => removeOne('ageGroup', slug),
     });
   }
 

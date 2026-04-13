@@ -59,8 +59,8 @@ interface UseFilterStateApi {
   /** Replace the entire state. Used by "Apply" buttons and clear-all. */
   setState: (next: FilterState) => void;
 
-  /** Toggle a single string in a multi-value field (goodFor / timeOfDay). */
-  toggleArrayValue: (field: 'goodFor' | 'timeOfDay', value: string) => void;
+  /** Toggle a single string in a multi-value field (goodFor / timeOfDay / priceTier / ageGroup). */
+  toggleArrayValue: (field: 'goodFor' | 'timeOfDay' | 'priceTier' | 'ageGroup', value: string) => void;
 
   /** Set or clear a single-value field. Pass undefined to clear. */
   setSingle: <K extends keyof FilterState>(field: K, value: FilterState[K]) => void;
@@ -99,7 +99,7 @@ export function useFilterState(): UseFilterStateApi {
   );
 
   const toggleArrayValue = useCallback(
-    (field: 'goodFor' | 'timeOfDay', value: string) => {
+    (field: 'goodFor' | 'timeOfDay' | 'priceTier' | 'ageGroup', value: string) => {
       const current = state[field];
       const next = current.includes(value)
         ? current.filter((v) => v !== value)

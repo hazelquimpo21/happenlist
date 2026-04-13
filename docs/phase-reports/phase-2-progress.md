@@ -116,7 +116,132 @@
 | Sort dropdown UI for distance-asc | FilterBar doesn't have a sort control yet — that's a B6 or R2 item |
 | Geolocation "Use my location" persistence across sessions | Cookie-based persistence can come later; current flow re-prompts per session which is fine for MVP |
 
+---
+
+## Session B5 — Cost Tiers + Age Groups — shipped (2026-04-13)
+
+### What shipped
+
+#### 1. Constants: `src/lib/constants/price-tiers.ts` (NEW)
+
+- 6 tiers: `free`, `under_10`, `10_to_25`, `25_to_50`, `over_50`, `donation`
+- Each with slug, label, description, icon (Lucide name), range
+- `free` uses `is_free = true` (not `price_low = 0`)
+- `under_10` is **inclusive** of free events
+- `donation` matches `price_type = 'donation'`
+- Exports: `PRICE_TIERS` array, `isPriceTierSlug()`, `getPriceTier()`, `getPriceTiers()`
+
+#### 2. Constants: `src/lib/constants/age-groups.ts` (NEW)
+
+- 6 groups: `all_ages`, `families_young_kids`, `elementary`, `teens`, `college`, `twenty_one_plus`
+- Each with slug, label, description, icon, ageFloor/ageCeiling
+- **Key constraint**: `age_high` is empty in the DB — all predicates use `age_low` only
+- `all_ages` matches NULL or 0 age_low
+- `families_young_kids` includes NULL (unspecified = presumed accessible)
+- `college` also checks `good_for @> {college_crowd}` as OR condition
+- Exports: `AGE_GROUPS` array, `isAgeGroupSlug()`, `getAgeGroup()`, `getAgeGroups()`
+
+#### 3. Query layer: `src/data/events/get-events.ts` (EXTENDED)
+
+- New `EventQueryParams` fields: `priceTier`, `ageGroup` (both `string | string[]`)
+- Normalization via `normalizeStringArray` with `isPriceTierSlug`/`isAgeGroupSlug` guards
+- Price tier predicates built as a single `.or()` clause:
+  - `free` → `is_free.eq.true`
+  - `under_10` → `is_free.eq.true,price_low.lte.10`
+  - `10_to_25` → `and(price_low.gte.10,price_low.lte.25)`
+  - `25_to_50` → `and(price_low.gte.25,price_low.lte.50)`
+  - `over_50` → `price_low.gt.50`
+  - `donation` → `price_type.eq.donation`
+- Age group predicates built as a single `.or()` clause:
+  - `all_ages` → `age_low.is.null,age_low.eq.0`
+  - `families_young_kids` → `age_low.lte.5,age_low.is.null`
+  - `elementary` → `and(age_low.gte.6,age_low.lte.11)`
+  - `teens` → `and(age_low.gte.12,age_low.lte.17)`
+  - `college` → `and(age_low.gte.18,age_low.lte.25),good_for.cs.{college_crowd}`
+  - `twenty_one_plus` → `age_low.gte.21`
+- Multi-select = OR (any tier/group matches)
+- Dedupe of clauses when overlapping tiers are selected (e.g. free + under_10)
+- Both logged in `[get-events]` filter line
+
+#### 4. Filter state: `src/components/events/filters/types.ts` (EXTENDED)
+
+- Added `priceTier: string[]` and `ageGroup: string[]` to `FilterState`
+- Both are multi-value arrays (same pattern as `goodFor`, `timeOfDay`)
+- Updated: `EMPTY_FILTER_STATE`, `countActiveFilters`, `parseFiltersFromParams`, `serializeFiltersToParams`
+- URL params: `?priceTier=free&priceTier=under_10&ageGroup=twenty_one_plus`
+- Each selected tier/group counts individually in the badge
+
+#### 5. Filter UI: `src/components/events/filters/filter-drawer.tsx` (EXTENDED)
+
+- Two new `FilterSection` blocks: "Price" and "Ages"
+- Placed after "Good for", before "Vibe" (natural information hierarchy)
+- Multi-select via `toggleArrayValue('priceTier', slug)` / `toggleArrayValue('ageGroup', slug)`
+- Section "Clear" button resets to empty array
+- Hint text explains multi-select semantics
+
+#### 6. Hook: `src/components/events/filters/use-filter-state.ts` (EXTENDED)
+
+- `toggleArrayValue` union type expanded to include `'priceTier' | 'ageGroup'`
+
+#### 7. Empty state: `src/components/events/filters/empty-filter-state.tsx` (EXTENDED)
+
+- Removable chips for active price tiers and age groups
+- Label lookup via `getPriceTier()` / `getAgeGroup()`
+
+#### 8. Events page: `src/app/events/page.tsx` (EXTENDED)
+
+- Parses `priceTier` and `ageGroup` from searchParams via `toArray()`
+- Forwards to `getEvents()` (empty arrays become undefined)
+
+### Files touched
+
+| File | Change |
+|---|---|
+| `src/lib/constants/price-tiers.ts` | NEW — 6 tiers + helpers |
+| `src/lib/constants/age-groups.ts` | NEW — 6 groups + helpers |
+| `src/types/filters.ts` | Added `priceTier`, `ageGroup` to EventFilters |
+| `src/data/events/get-events.ts` | Price/age predicates, normalization, logging |
+| `src/components/events/filters/types.ts` | FilterState + parsers + counter |
+| `src/components/events/filters/use-filter-state.ts` | toggleArrayValue union |
+| `src/components/events/filters/filter-drawer.tsx` | Price + Ages sections |
+| `src/components/events/filters/empty-filter-state.tsx` | Price/age chips |
+| `src/app/events/page.tsx` | Parses + forwards priceTier, ageGroup |
+
+### QA pass — verified in browser
+
+| Test | Result |
+|---|---|
+| `?priceTier=free` | 67 events (down from 71 unfiltered) |
+| `?priceTier=10_to_25` | 29 events (PostgREST `and()` syntax works) |
+| `?priceTier=free&priceTier=donation` | 67 events (multi-select OR) |
+| `?ageGroup=college` | 85 events (`good_for.cs.{college_crowd}` pulling in tagged events) |
+| `?priceTier=free&ageGroup=twenty_one_plus` | 36 events (cross-filter AND) |
+| `?ageGroup=elementary` | 0 events (expected — age_low data is sparse) |
+| Badge shows "2 filters" for combined price+age | Correct |
+| Drawer shows Price + Ages sections with correct chips | Correct |
+| No console errors, no server errors | Clean |
+
+### Gotchas surfaced
+
+| Gotcha | Assessment |
+|---|---|
+| `isFree` toggle + `priceTier: ['free']` overlap | Not a bug — they AND together (redundant but correct). Two different UI controls, counted separately. |
+| `filter-drawer.tsx` now 375 lines (guideline is 200) | Was already 335 pre-B5. All sections follow same inline pattern. Splitting would be churn — flag for R2. |
+| `age_low` data sparsity | Elementary/teens filters return very few or zero results. Expected per data audit. Will improve as A3 backfill enriches age data. |
+| `under_10` includes events with `price_low = 0` but `is_free = false` | By design — $0 events should show as budget-friendly. |
+
 ### R2 checklist additions
+
+- [ ] Verify PostgREST `and()` nested in `.or()` produces correct SQL via `EXPLAIN`
+- [ ] Test stale URL with invalid tier slug (e.g. `?priceTier=bogus`) — should silently ignore
+- [ ] Test "Clear all" properly resets priceTier and ageGroup arrays
+- [ ] Test empty state chip × removal for each filter type
+- [ ] Consider splitting filter-drawer.tsx if it grows past 400 lines
+- [ ] Monitor age group filter utility — if data remains too sparse, consider hiding low-match groups
+
+---
+
+### R2 checklist additions (B4)
 
 - [ ] Verify GiST index is used: `EXPLAIN ANALYZE SELECT * FROM events_within_radius(43.0389, -87.9065, 5.0, 50)`
 - [ ] Test with NULL coords on a location (should be silently skipped)

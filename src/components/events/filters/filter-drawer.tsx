@@ -35,6 +35,8 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { SlidersHorizontal, X } from 'lucide-react';
 import { GOOD_FOR_TAGS } from '@/types/good-for';
+import { PRICE_TIERS } from '@/lib/constants/price-tiers';
+import { AGE_GROUPS } from '@/lib/constants/age-groups';
 import { VIBE_TAGS, NOISE_LEVELS } from '@/lib/constants/vocabularies';
 import { FilterChip } from './filter-chip';
 import { FilterSection } from './filter-section';
@@ -196,6 +198,44 @@ export function FilterDrawer({
                   active={state.goodFor.includes(tag.slug)}
                   size="sm"
                   onClick={() => toggleArrayValue('goodFor', tag.slug)}
+                />
+              ))}
+            </FilterSection>
+
+            {/* Price tier (B5) */}
+            <FilterSection
+              label="Price"
+              hint="Multi-select — events match if they fit any selected tier"
+              showClear={state.priceTier.length > 0}
+              onClear={() => setSingle('priceTier', [])}
+            >
+              {PRICE_TIERS.map((tier) => (
+                <FilterChip
+                  key={tier.slug}
+                  label={tier.label}
+                  title={tier.description}
+                  active={state.priceTier.includes(tier.slug)}
+                  size="sm"
+                  onClick={() => toggleArrayValue('priceTier', tier.slug)}
+                />
+              ))}
+            </FilterSection>
+
+            {/* Age group (B5) */}
+            <FilterSection
+              label="Ages"
+              hint="Multi-select — events match if they fit any selected age group"
+              showClear={state.ageGroup.length > 0}
+              onClear={() => setSingle('ageGroup', [])}
+            >
+              {AGE_GROUPS.map((group) => (
+                <FilterChip
+                  key={group.slug}
+                  label={group.label}
+                  title={group.description}
+                  active={state.ageGroup.includes(group.slug)}
+                  size="sm"
+                  onClick={() => toggleArrayValue('ageGroup', group.slug)}
                 />
               ))}
             </FilterSection>

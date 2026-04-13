@@ -130,6 +130,27 @@ export interface EventFilters {
    */
   includeLifestyle?: boolean | 'only';
 
+  // ── Price tier filter (Phase 2 B5) ────────────────────────────────
+  /**
+   * Filter by price tier slug(s) — e.g. "free", "under_10", "10_to_25".
+   * Multi-value semantics: ANY-match (event passes if it matches any
+   * selected tier). See src/lib/constants/price-tiers.ts for tier
+   * definitions and predicate logic.
+   *
+   * Loose `string | string[]` type lets URL params flow in directly;
+   * get-events.ts validates each value via `isPriceTierSlug` and drops
+   * unknowns.
+   */
+  priceTier?: string | string[];
+
+  /**
+   * Filter by age group slug(s) — e.g. "all_ages", "teens", "twenty_one_plus".
+   * Multi-value semantics: ANY-match. See src/lib/constants/age-groups.ts.
+   *
+   * IMPORTANT: age_high is empty in the DB. All predicates use age_low only.
+   */
+  ageGroup?: string | string[];
+
   // ── Geo / distance filters (Phase 2 B4) ──────────────────────────
   /**
    * Anchor latitude for distance filtering. Must be set together with
