@@ -2,7 +2,7 @@
 
 **Phase**: 2 of 3 (Distance, depth, lifecycle)
 **Sessions**: A3, A4, B4, B5, B6, R2
-**Status**: In progress
+**Status**: ✓ Complete — see `docs/phase-reports/phase-2-report.md` for the final review report
 **Companion docs**:
 - `docs/filter-roadmap.md` — three-phase plan
 - `docs/phase-reports/phase-1-report.md` — Phase 1 final report
@@ -238,6 +238,106 @@
 - [ ] Test empty state chip × removal for each filter type
 - [ ] Consider splitting filter-drawer.tsx if it grows past 400 lines
 - [ ] Monitor age group filter utility — if data remains too sparse, consider hiding low-match groups
+
+---
+
+---
+
+## Session B6 — Lifecycle + Past Events — shipped (2026-04-13)
+
+### What shipped
+
+#### 1. Migration: `20260413_1800_partial_indexes.sql` — applied to remote DB
+
+- **New index**: `idx_events_browse_active` — `(instance_date ASC, id) WHERE status = 'published' AND deleted_at IS NULL AND parent_event_id IS NULL`
+  - Covers the hot-path browse query (`getEvents()` main feed, category feeds, search, organizer/venue pages)
+  - `CURRENT_DATE` can't appear in a partial index predicate (not immutable), so temporal filter is applied at query time; the btree ordering on `instance_date` makes range scans fast
+- **Index audit** — 48 indexes audited on the `events` table. 3 redundant indexes dropped:
+  - `idx_events_series_id` — bare `(series_id)`, redundant with `idx_events_series` `(series_id) WHERE series_id IS NOT NULL`
+  - `idx_events_status_date` — `(status, instance_date) WHERE status = 'published'`, leading column always 'published' = wasted; `idx_events_published` already covers `(instance_date, category_id) WHERE status = 'published'`
+  - `idx_events_age_range` — `(age_low, age_high) WHERE deleted_at IS NULL`, `age_high` empty on 99% of events; `idx_events_age_low` is sufficient
+- **Net result**: +1 new, -3 dropped = 46 total indexes on events
+
+#### 2. Migration: `20260413_1810_expand_series_type.sql` — applied to remote DB
+
+- Dropped old `series_series_type_check` constraint (6 types)
+- Added expanded constraint with 10 types: `class`, `camp`, `workshop`, `recurring`, `festival`, `season`, `lifestyle`, `ongoing`, `exhibit`, `annual`
+- Aligns DB with app code that already uses `lifestyle`/`ongoing`/`exhibit` in `src/lib/constants/series-limits.ts`
+- `annual` is new per architectural decision #12 (annual recurring events)
+
+#### 3. App code: `annual` series type wired end-to-end
+
+- `src/lib/supabase/types.ts` — added `'annual'` to `SeriesType` union
+- `src/types/series.ts` — added `annual` entry to `SERIES_TYPE_INFO` (label "Annual", icon CalendarDays, badge orange)
+- `src/lib/constants/series-limits.ts` — added `annual` config (1 session max, manual date selection, registered attendance)
+- `annual` is NOT in `COLLAPSIBLE_SERIES_TYPES` — each year's instance is distinct content (correct behavior, same as `festival`/`season`)
+
+#### 4. PastEventBanner: `src/components/events/past-event-banner.tsx` (NEW)
+
+- Subtle banner: `bg-cloud border border-mist rounded-lg`, CalendarX icon
+- Message: "This event has passed." with contextual link:
+  - If organizer exists: "See upcoming events from [organizer name]" → `/organizer/[slug]`
+  - If no organizer: "Browse upcoming events" → `/events`
+- AI-dev header comment with cross-file coupling notes
+
+#### 5. PastEventBanner mounted in `src/app/event/[slug]/page.tsx`
+
+- `isPastEvent` computed from `instance_date + 'T23:59:59' < now` — event is "past" after its calendar day ends
+- Banner renders after breadcrumbs, before hero section
+- Passes `organizerName` and `organizerSlug` from the event data
+- Works for both parent and child events (both have organizer data available)
+
+#### 6. Year-level archive page: `src/app/events/archive/[year]/page.tsx` (NEW)
+
+- URL: `/events/archive/2026`
+- Fetches all events for the year (up to 500, archive pages are low-traffic)
+- Month summary grid: 12 cards showing event count per month, clickable to month page
+- Empty months shown as disabled (greyed out)
+- Year navigation arrows (prev/next year)
+- Breadcrumbs: Events → Archive → 2026
+- Does NOT use collapseSeries (past events shown individually)
+- AI-dev header comment
+
+#### 7. Month archive page polished: `src/app/events/archive/[year]/[month]/page.tsx`
+
+- Updated breadcrumbs: Events → Archive → 2026 → April (was: Events → April 2026)
+- Updated heading: "Past Events — April 2026" (was: "April 2026")
+- Updated metadata title to match
+- Added AI-dev header comment with cross-file coupling notes
+
+#### 8. Routes: `src/lib/constants/routes.ts`
+
+- Added `eventsYear: (year: number) => /events/archive/${year}`
+
+### Files touched
+
+| File | Change |
+|---|---|
+| `supabase/migrations/20260413_1800_partial_indexes.sql` | NEW — browse index + redundancy cleanup |
+| `supabase/migrations/20260413_1810_expand_series_type.sql` | NEW — expand series_type CHECK to 10 values |
+| `src/lib/supabase/types.ts` | Added `'annual'` to SeriesType union |
+| `src/types/series.ts` | Added `annual` to SERIES_TYPE_INFO |
+| `src/lib/constants/series-limits.ts` | Added `annual` config to SERIES_LIMITS |
+| `src/lib/constants/routes.ts` | Added `eventsYear` route helper |
+| `src/components/events/past-event-banner.tsx` | NEW — past event banner component |
+| `src/components/events/index.ts` | Barrel export for PastEventBanner |
+| `src/app/event/[slug]/page.tsx` | Mount PastEventBanner, add isPastEvent logic |
+| `src/app/events/archive/[year]/page.tsx` | NEW — year-level archive page |
+| `src/app/events/archive/[year]/[month]/page.tsx` | Polished breadcrumbs, heading, metadata |
+
+### R2 checklist additions (B6)
+
+- [ ] Verify `idx_events_browse_active` is used by main getEvents query: `EXPLAIN ANALYZE` on the hot path
+- [ ] Test PastEventBanner on past event with organizer — link goes to organizer page
+- [ ] Test PastEventBanner on past event without organizer — link goes to /events
+- [ ] Test PastEventBanner on future event — banner should NOT appear
+- [ ] Test PastEventBanner on event happening today — banner should NOT appear (isPastEvent uses end-of-day)
+- [ ] Test year archive page with year that has events — month grid shows counts
+- [ ] Test year archive page with year that has no events — empty state renders
+- [ ] Test month archive breadcrumbs link back to year page correctly
+- [ ] Verify `annual` series type can be inserted via Supabase — constraint allows it
+- [ ] Verify `annual` is NOT collapsed in browse feeds
+- [ ] Check that the 3 dropped indexes don't break any existing query paths
 
 ---
 

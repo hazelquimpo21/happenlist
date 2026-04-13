@@ -98,11 +98,14 @@ export const PRICE_TIERS: PriceTier[] = [
   },
 ];
 
+/** Union of valid price tier slugs. Keep in sync with PRICE_TIERS above. */
+export type PriceTierSlug = 'free' | 'under_10' | '10_to_25' | '25_to_50' | 'over_50' | 'donation';
+
 /** Set of valid tier slugs for runtime validation. */
 const VALID_SLUGS = new Set(PRICE_TIERS.map((t) => t.slug));
 
 /** Type guard: is this string a valid price tier slug? */
-export function isPriceTierSlug(value: string): boolean {
+export function isPriceTierSlug(value: string): value is PriceTierSlug {
   return VALID_SLUGS.has(value);
 }
 

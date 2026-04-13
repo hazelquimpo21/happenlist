@@ -1,7 +1,16 @@
 /**
- * MONTH EVENTS PAGE
- * =================
- * Events filtered by month with URLs like /events/2025/january
+ * MONTH ARCHIVE PAGE
+ * ==================
+ * Events filtered by month with URLs like /events/archive/2026/april
+ *
+ * Does NOT use collapseSeries — past events are shown individually.
+ * Breadcrumbs: Events → Archive → 2026 → April
+ *
+ * Cross-file coupling:
+ *   - ROUTES.eventsYear, ROUTES.eventsMonth in src/lib/constants/routes.ts
+ *   - Year-level page at src/app/events/archive/[year]/page.tsx
+ *
+ * @module app/events/archive/[year]/[month]/page
  */
 
 export const dynamic = 'force-dynamic';
@@ -56,8 +65,8 @@ export async function generateMetadata({
   const monthName = getMonthDisplayName(month);
 
   return {
-    title: `${monthName} ${year} Events`,
-    description: `Browse events happening in ${monthName} ${year}. Find concerts, festivals, classes, and more.`,
+    title: `Past Events — ${monthName} ${year}`,
+    description: `Browse past events from ${monthName} ${year} in Milwaukee. Concerts, festivals, classes, and more.`,
   };
 }
 
@@ -99,6 +108,8 @@ export default async function MonthEventsPage({
   // Fetch events for this month
   const { events, total } = await getEvents({
     dateRange,
+    includePast: true,
+    orderBy: 'date-asc',
     page,
     limit,
   });
@@ -120,11 +131,13 @@ export default async function MonthEventsPage({
 
   return (
     <Container className="py-8">
-      {/* Breadcrumbs */}
+      {/* Breadcrumbs — drill path: Events → Archive → Year → Month */}
       <Breadcrumbs
         items={[
           { label: 'Events', href: ROUTES.events },
-          { label: `${monthName} ${year}` },
+          { label: 'Archive', href: ROUTES.events },
+          { label: String(year), href: ROUTES.eventsYear(year) },
+          { label: monthName },
         ]}
         className="mb-6"
       />
@@ -133,10 +146,10 @@ export default async function MonthEventsPage({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
         <div>
           <h1 className="font-body text-h1 text-ink">
-            {monthName} {year}
+            Past Events — {monthName} {year}
           </h1>
           <p className="text-zinc text-body mt-2">
-            {total} {total === 1 ? 'event' : 'events'} happening this month
+            {total} {total === 1 ? 'event' : 'events'} in {monthName} {year}
           </p>
         </div>
 

@@ -110,11 +110,14 @@ export const AGE_GROUPS: AgeGroup[] = [
   },
 ];
 
+/** Union of valid age group slugs. Keep in sync with AGE_GROUPS above. */
+export type AgeGroupSlug = 'all_ages' | 'families_young_kids' | 'elementary' | 'teens' | 'college' | 'twenty_one_plus';
+
 /** Set of valid group slugs for runtime validation. */
 const VALID_SLUGS = new Set(AGE_GROUPS.map((g) => g.slug));
 
 /** Type guard: is this string a valid age group slug? */
-export function isAgeGroupSlug(value: string): boolean {
+export function isAgeGroupSlug(value: string): value is AgeGroupSlug {
   return VALID_SLUGS.has(value);
 }
 

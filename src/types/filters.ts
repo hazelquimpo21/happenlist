@@ -123,6 +123,17 @@ export interface EventFilters {
   /** Filter to events with benefits from a specific membership org. */
   membershipOrgId?: string;
   /**
+   * Include past events in results. By default, getEvents() only returns
+   * events with instance_date >= today. Set to true for archive pages and
+   * other contexts that need historical events.
+   *
+   * When true, the hardcoded future-only filter is skipped. You should
+   * typically pair this with a dateRange to avoid returning the entire
+   * event history.
+   */
+  includePast?: boolean;
+
+  /**
    * Include lifestyle/ongoing/exhibit series events in results.
    * These low-urgency recurring events (yoga, trivia, happy hour, exhibits)
    * are excluded from the main feed by default to prevent clutter.

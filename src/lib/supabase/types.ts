@@ -3503,7 +3503,8 @@ export type SeriesType =
   | 'season'
   | 'lifestyle'
   | 'ongoing'
-  | 'exhibit';
+  | 'exhibit'
+  | 'annual';
 
 /** How participants attend a series or event. */
 export type AttendanceMode = 'registered' | 'drop_in' | 'hybrid';

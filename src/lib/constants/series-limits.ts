@@ -137,6 +137,16 @@ export const SERIES_LIMITS: Record<string, SeriesTypeConfig> = {
     supportsSkillLevel: false,
     defaultAttendanceMode: 'drop_in',
   },
+  annual: {
+    minSessions: 1,
+    maxSessions: 1,
+    dateSelection: 'manual',
+    description: 'Annual recurring event (one instance per year)',
+    emoji: '📅',
+    supportsExtendedCare: false,
+    supportsSkillLevel: false,
+    defaultAttendanceMode: 'registered',
+  },
 };
 
 /**

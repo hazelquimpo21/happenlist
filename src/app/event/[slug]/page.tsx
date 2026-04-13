@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { Button } from '@/components/ui';
-import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox, ShareButton, VibeProfileSection, AccessBadge, ChildEventsSchedule, PastInstances, ViewTracker } from '@/components/events';
+import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox, ShareButton, VibeProfileSection, AccessBadge, ChildEventsSchedule, PastInstances, ViewTracker, PastEventBanner } from '@/components/events';
 import { HeartButton } from '@/components/hearts';
 import { SeriesLinkBadge } from '@/components/series';
 import { EventJsonLd } from '@/components/seo';
@@ -320,6 +320,9 @@ export default async function EventPage({ params }: EventPageProps) {
   // Timing badge for urgency anchoring (Today, Tomorrow, This Weekend, etc.)
   const timingBadge = getTimingBadge(event.start_datetime);
 
+  // Past event detection — compare instance_date (YYYY-MM-DD) to today in local time
+  const isPastEvent = new Date(event.instance_date + 'T23:59:59') < new Date();
+
   // Google Calendar link
   const calendarUrl = buildGoogleCalendarUrl(event as Parameters<typeof buildGoogleCalendarUrl>[0]);
 
@@ -381,6 +384,14 @@ export default async function EventPage({ params }: EventPageProps) {
           ]}
           className="mb-6"
         />
+
+        {/* Past event banner — shown when instance_date has passed */}
+        {isPastEvent && (
+          <PastEventBanner
+            organizerName={event.organizer?.name}
+            organizerSlug={event.organizer?.slug}
+          />
+        )}
 
         {/* ── Hero Section ────────────────────────────────── */}
 

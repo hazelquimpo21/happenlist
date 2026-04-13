@@ -1,6 +1,6 @@
 # Smart Filters Roadmap
 
-**Status**: Phase 1 complete. Phase 2 in progress — B4 + B5 shipped (2026-04-13). Next: B6, then R2. A4 deferred to a future session.
+**Status**: Phase 1 complete. Phase 2 complete (B4, B5, B6, R2 all shipped 2026-04-13). A4 deferred. Phase 3 waiting on view-tracking data bake (~4 weeks from 2026-04-13).
 **Last updated**: 2026-04-13
 **Owner**: Hazel
 **Related**: `CLAUDE.md` Engineering Standards section, `docs/phase-reports/phase-1-report.md`, `docs/phase-reports/phase-2-progress.md`
@@ -286,7 +286,7 @@ New `'annual'` value added to `series_type` enum. Each year = a new `events` row
 3. Each constant file exports both the enum AND the predicate-builder function. Single source of truth.
 4. UI: chip group in advanced drawer
 
-#### Session B6 — Lifecycle + past events
+#### Session B6 — Lifecycle + past events ✓ SHIPPED (2026-04-13)
 **Repo**: `happenlist`
 **Files**:
 - `supabase/migrations/YYYYMMDD_HHMM_partial_indexes.sql` (NEW)
@@ -302,7 +302,7 @@ New `'annual'` value added to `series_type` enum. Each year = a new `events` row
 3. PastEventBanner on event detail when `instance_date < today`: "This event has passed. [See upcoming from this organizer]"
 4. Archive page: indexable by year, clear labeling
 
-#### Session R2 — Phase 2 Review & Harden
+#### Session R2 — Phase 2 Review & Harden ✓ SHIPPED (2026-04-13)
 **Deliverable**: `docs/phase-reports/phase-2-report.md`
 
 **Checklist**:

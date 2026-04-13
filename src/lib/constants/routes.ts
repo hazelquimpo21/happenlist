@@ -29,6 +29,7 @@ export const ROUTES = {
   eventDetail: (slug: string, date: string) => `/event/${slug}-${date}`,
   eventsCategory: (categorySlug: string) => `/events/${categorySlug}`,
   eventsLifestyle: '/events/lifestyle',
+  eventsYear: (year: number) => `/events/archive/${year}`,
   eventsMonth: (year: number, month: string) => `/events/archive/${year}/${month}`,
 
   // -------------------------------------------------------------------------

@@ -238,7 +238,7 @@ This avoids monorepo coupling while keeping each repo self-contained. Drift gets
 
 **Phase 1 — DONE (2026-04-11).** All sessions A1, A2, B1, B2, B3, R1 shipped. See `docs/phase-reports/phase-1-report.md` for the full review report.
 
-**Phase 2 — IN PROGRESS.** Sessions B4 + B5 shipped (2026-04-13). See `docs/phase-reports/phase-2-progress.md` for per-session log; `docs/filter-roadmap.md` is the canonical three-phase plan.
+**Phase 2 — DONE (2026-04-13).** All sessions B4, B5, B6, R2 shipped. A3 done separately (scraper repo). A4 deferred. See `docs/phase-reports/phase-2-report.md` for the full review report; `docs/filter-roadmap.md` is the canonical three-phase plan.
 
 **What Phase 1 shipped**:
 - A1 — scraper taxonomy lockdown (strict enums + post-validation in atmosphere/event-meta analyzers, vocabularies source-of-truth)
@@ -248,21 +248,20 @@ This avoids monorepo coupling while keeping each repo self-contained. Drift gets
 - B3 — `event_views` table + `record_event_view()` SECURITY DEFINER function, `recordEventView` server action, `<ViewTracker />` mounted on `/event/[slug]`, `/admin/views` sanity dashboard. **Will bake unused for ~4 weeks before Phase 3 trending sort consumes it.**
 - R1 — review pass: bumped session ID entropy 64→128 bits, hardened ViewTracker sentinel, single source of truth for filter count badge (server + client both go through `countActiveFilters`), aligned `/admin/views` auth pattern, made FilterBar sticky, fixed a server/client boundary bug introduced mid-R1 (parsers moved to pure `types.ts`)
 
-**What Phase 2 has shipped so far**:
+**What Phase 2 shipped**:
 - B4 — Distance/geo filtering: Postgres `cube`+`earthdistance` extensions, `events_within_radius()` RPC with GiST index, 15 Milwaukee neighborhoods, NeighborhoodPicker with "Use my location" geolocation, DistanceBadge on EventCard, URL-driven geo filter state (`?neighborhood=bay-view&nearLat=43.007&nearLng=-87.896&radius=5`). QA found+fixed 7 bugs including stale closures, past-event leaks in RPC, NaN guards, distance-asc sort vs collapseSeries interaction.
 - B5 — Cost tiers + age groups: 6 price tiers (free/under_10/10_to_25/25_to_50/over_50/donation) and 6 age groups (all_ages/families_young_kids/elementary/teens/college/twenty_one_plus). Multi-select OR filters wired end-to-end from URL params → query layer → FilterDrawer UI. Price predicates use `is_free`/`price_low`/`price_type`. Age predicates use `age_low` only (age_high empty in DB). College group also checks `good_for @> {college_crowd}`.
+- B6 — Lifecycle + past events: `idx_events_browse_active` partial index, 3 redundant indexes dropped, `series_type` CHECK expanded to 10 types (added `annual`), `PastEventBanner` on event detail, year-level archive page (`/events/archive/[year]`), `includePast` param for `getEvents()`. Month archive breadcrumbs polished.
+- R2 — review pass: fixed archive pages not showing past events (hardcoded future-only filter), fixed `isPriceTierSlug`/`isAgeGroupSlug` to proper type predicates, verified all migrations applied, verified geo RPC performance (~11ms), verified all filter combos.
 
-**Phase 2 remaining sessions**:
-- A3 — pricing + access backfill (scraper repo, done separately)
-- A4 — outdoor venue audit (scraper repo) — **deferred**, not blocking Phase 2
-- B6 — lifecycle + past events (independent) — next up
-- R2 — Phase 2 review & harden — after B6
+**Deferred from Phase 2**:
+- A4 — outdoor venue audit (not blocking any filter work, revisit when indoor/outdoor filtering is a priority)
 
-**Key constraints learned from data audit (2026-04-11)** — still relevant for Phase 2/3:
+**Key constraints learned from data audit (2026-04-11)** — still relevant for Phase 3:
 - `vibe_tags`/`subcultures` cleaned in A1+A2; future scraper drift caught by post-validation log
 - `age_high` is empty (3 of 238 events). All age-group filtering must use `age_low` only.
 - `price_low`/`price_high` coverage improved by A3 backfill. Cost-tier filter shipped in B5.
 - `attendance_mode` populated on 9% of events. Drop-in filter waits for A3 backfill.
-- `hearts` table has 5 rows; `view_count` was 0 (now `event_views` is populating — needs ~4 weeks of bake before Phase 3 trending sort can use it).
+- `hearts` table has 5 rows; `event_views` has only 5 rows across 4 events (as of 2026-04-13) — **far from Phase 3 target** of >1000 rows across >50 events. Check `/admin/views` before starting Phase 3.
 - Locations are 99% geocoded — distance shipped in Phase 2 Session B4.
 - Storage footprint is ~17 MB for 288 events. Storage is **not** a current concern. Past-event lifecycle uses partial indexes for query speed, not deletion.

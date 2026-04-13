@@ -346,6 +346,7 @@ export async function getEvents(
     noTicketsNeeded,
     dropInOk,
     familyFriendly,
+    includePast,
     includeLifestyle,
     priceTier,
     ageGroup,
@@ -362,8 +363,8 @@ export async function getEvents(
   // works against typed, deduped, validated arrays.
   const goodForSlugs = resolveGoodForFilter(goodFor, interestPreset);
   const timeOfDayBuckets = normalizeStringArray<TimeOfDay>(timeOfDay, isTimeOfDay);
-  const priceTierSlugs = normalizeStringArray(priceTier, isPriceTierSlug as (v: string) => v is string);
-  const ageGroupSlugs = normalizeStringArray(ageGroup, isAgeGroupSlug as (v: string) => v is string);
+  const priceTierSlugs = normalizeStringArray(priceTier, isPriceTierSlug);
+  const ageGroupSlugs = normalizeStringArray(ageGroup, isAgeGroupSlug);
 
   // Single structured log line — only emit non-default filters so the noise
   // floor stays low. Convention: [scope:action] prefix per CLAUDE.md.
@@ -385,6 +386,7 @@ export async function getEvents(
   if (priceTierSlugs.length > 0) activeFilters.priceTier = priceTierSlugs;
   if (ageGroupSlugs.length > 0) activeFilters.ageGroup = ageGroupSlugs;
   if (nearLat != null && nearLng != null) activeFilters.geo = { nearLat, nearLng, radiusMiles: radiusMiles ?? DEFAULT_RADIUS_MILES };
+  if (includePast) activeFilters.includePast = includePast;
   if (includeLifestyle !== undefined) activeFilters.includeLifestyle = includeLifestyle;
   if (collapseSeries) activeFilters.collapseSeries = collapseSeries;
   if (orderBy && orderBy !== 'date-asc') activeFilters.orderBy = orderBy;
@@ -465,8 +467,13 @@ export async function getEvents(
     )
     .eq('status', 'published')
     .is('deleted_at', null)
-    .is('parent_event_id', null) // Hide child events from main feed
-    .gte('instance_date', new Date().toISOString().split('T')[0]);
+    .is('parent_event_id', null); // Hide child events from main feed
+
+  // Default: only future events. Archive pages pass includePast=true to
+  // bypass this filter and show historical events with a dateRange.
+  if (!includePast) {
+    query = query.gte('instance_date', new Date().toISOString().split('T')[0]);
+  }
 
   // Apply filters
   if (search) {

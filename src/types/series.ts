@@ -280,6 +280,14 @@ export const SERIES_TYPE_INFO: Record<SeriesType, SeriesTypeInfo> = {
     icon: 'Frame',
     badgeColor: 'bg-rose-100 text-rose-800',
   },
+  annual: {
+    type: 'annual',
+    label: 'Annual',
+    labelPlural: 'Annual Events',
+    description: 'Annual recurring event (one instance per year)',
+    icon: 'CalendarDays',
+    badgeColor: 'bg-orange-100 text-orange-800',
+  },
 };
 
 // ============================================================================
