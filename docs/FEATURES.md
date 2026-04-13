@@ -465,7 +465,7 @@ Uses Postgres `cube` + `earthdistance` extensions with a `events_within_radius()
 
 ### Roadmap
 
-See `docs/filter-roadmap.md` for the full three-phase plan. Phase 1 complete, Phase 2 in progress (B4 + B5 shipped, B6 + R2 remaining), Phase 3 planned (vibe filters, trending sort).
+See `docs/filter-roadmap.md` for the full three-phase plan. Phase 1 complete (2026-04-11), Phase 2 complete (2026-04-13), Phase 3 planned (vibe filters, trending sort — blocked on view-tracking data bake).
 
 ---
 

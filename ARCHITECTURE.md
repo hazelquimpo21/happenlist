@@ -72,7 +72,7 @@ Every user request follows a consistent pipeline from URL to rendered page. The 
   +------------------------------------------------------------------+
   |  SUPABASE / POSTGRESQL                                           |
   |                                                                  |
-  |  - Uses performance indexes (idx_events_status_date, etc.)       |
+  |  - Uses performance indexes (idx_events_browse_active, etc.)     |
   |  - RLS policies restrict visibility by status and ownership      |
   |  - Returns JSON data to the data layer                           |
   +------------------------------------------------------------------+
@@ -388,16 +388,24 @@ Superadmin edit-from-any-page system.
 
 ### Database Indexes
 
-The migration at `supabase/migrations/20260106_performance_indexes.sql` adds 20+ indexes. The most critical:
+The `events` table has 46 indexes (audited in Phase 2 B6). The most critical for the browse path:
 
 ```sql
-CREATE INDEX idx_events_status ON events(status);
-CREATE INDEX idx_events_status_date ON events(status, instance_date DESC);
+-- Partial index for the hot-path browse query (Phase 2 B6)
+CREATE INDEX idx_events_browse_active ON events(instance_date, id)
+  WHERE status = 'published' AND deleted_at IS NULL AND parent_event_id IS NULL;
+
+-- Category and status filters
+CREATE INDEX idx_events_published ON events(instance_date, category_id)
+  WHERE status = 'published';
 CREATE INDEX idx_events_category_id ON events(category_id);
-CREATE INDEX idx_hearts_user_id ON hearts(user_id);
+
+-- Geo distance (Phase 2 B4)
+CREATE INDEX idx_locations_geo ON locations USING gist(ll_to_earth(latitude, longitude))
+  WHERE latitude IS NOT NULL AND longitude IS NOT NULL;
 ```
 
-These ensure that the primary event listing query (filter by status, sort by date) uses an index scan rather than a sequential scan.
+These ensure that the primary event listing query (filter by status, sort by date) uses an index scan rather than a sequential scan. The geo GiST index powers the `events_within_radius()` RPC for distance filtering.
 
 ### React.memo on EventCard
 

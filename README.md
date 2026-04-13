@@ -154,12 +154,14 @@ happenlist/
 │
 ├── docs/                       # Documentation
 │   ├── SCHEMA.md               # Database schema reference
-│   ├── FEATURES.md             # Feature guide (auth, events, admin, etc.)
+│   ├── FEATURES.md             # Feature guide (auth, events, admin, filters, etc.)
 │   ├── CHROME-EXTENSION.md     # Chrome extension scraper integration
-│   └── USER-STORIES.md         # User stories by persona
+│   ├── USER-STORIES.md         # User stories by persona
+│   ├── filter-roadmap.md       # Smart Filters three-phase plan
+│   └── phase-reports/          # Per-phase review reports
 │
 ├── ARCHITECTURE.md             # Technical architecture deep dive
-└── AI_DEV_DOCS_ARCHIVE/        # Archived early development specs (historical)
+└── DESIGN-GUIDE.md             # Design system v3 decisions and pillars
 ```
 
 ---
@@ -201,9 +203,11 @@ For the full design reference, see [CLAUDE.md](./CLAUDE.md) and [DESIGN-GUIDE.md
 
 | Doc | What's In It | When To Read It |
 |-----|-------------|-----------------|
+| [CLAUDE.md](./CLAUDE.md) | Design system, engineering standards, Smart Filters roadmap status | Every session — this is the primary AI context file |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Data flow, component patterns, state management, performance | Building features or debugging |
+| [docs/FEATURES.md](./docs/FEATURES.md) | Auth, events, admin, series, maps, filters, view tracking | Understanding how features work |
 | [docs/SCHEMA.md](./docs/SCHEMA.md) | Every database table, field, and relationship | Working with data or queries |
-| [docs/FEATURES.md](./docs/FEATURES.md) | Auth, events, admin, series, maps, venue import | Understanding how features work |
+| [docs/filter-roadmap.md](./docs/filter-roadmap.md) | Three-phase Smart Filters plan, data audit, architectural decisions | Working on filters or sorts |
 | [docs/CHROME-EXTENSION.md](./docs/CHROME-EXTENSION.md) | Scraper API, image upload, Render backend | Working on the Chrome extension |
 | [docs/USER-STORIES.md](./docs/USER-STORIES.md) | User stories organized by persona | Planning features or understanding user needs |
 
@@ -211,14 +215,16 @@ For the full design reference, see [CLAUDE.md](./CLAUDE.md) and [DESIGN-GUIDE.md
 
 ## Features Overview
 
-### Complete (Phases 1-4)
+### Shipped
 
-- Browse events with filtering by category, date, price, audience tags
+- Browse events with filtering by category, date, price, audience tags, distance, cost tier, age group
+- Distance filtering with 15 Milwaukee neighborhoods + browser geolocation
 - "Today's events" and "This weekend" quick views
+- Past event archive pages by year and month
 - Event, venue, and organizer detail pages with SEO
 - Full-text search across events
-- Series system (classes, camps, workshops, festivals, recurring events)
-- Recurring events with skip dates and auto-replenishment
+- Series system (classes, camps, workshops, festivals, recurring, lifestyle, ongoing, exhibit, annual events)
+- Recurring event collapsing in browse feeds
 - Magic link authentication (passwordless)
 - 7-step event submission form with auto-save drafts
 - Admin review queue (approve / reject / request changes)
@@ -229,8 +235,15 @@ For the full design reference, see [CLAUDE.md](./CLAUDE.md) and [DESIGN-GUIDE.md
 - Mapbox maps and address autocomplete
 - Chrome extension scraper API with image re-hosting
 - Dynamic sitemap and Schema.org structured data
+- View tracking (accumulating data for trending sort)
 
-### Planned (Phases 5-6)
+### In Progress (Smart Filters Phase 3 — blocked on data bake)
+
+- Vibe / atmosphere filters (clean data ready, UI not built)
+- Trending + popularity sorts (needs ~4 weeks of view-tracking data)
+- Drop-in vs ticketed filter (needs attendance_mode backfill)
+
+### Future (not scoped)
 
 - Organizer claiming and dashboards
 - Email notifications and weekly digest
