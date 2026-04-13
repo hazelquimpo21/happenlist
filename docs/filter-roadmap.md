@@ -1,6 +1,6 @@
 # Smart Filters Roadmap
 
-**Status**: Phase 1 complete. Phase 2 in progress — B4 + B5 shipped (2026-04-13). Next: B6 (independent), A4 (scraper repo), R2.
+**Status**: Phase 1 complete. Phase 2 in progress — B4 + B5 shipped (2026-04-13). Next: B6, then R2. A4 deferred to a future session.
 **Last updated**: 2026-04-13
 **Owner**: Hazel
 **Related**: `CLAUDE.md` Engineering Standards section, `docs/phase-reports/phase-1-report.md`, `docs/phase-reports/phase-2-progress.md`
@@ -244,13 +244,11 @@ New `'annual'` value added to `series_type` enum. Each year = a new `events` row
 3. Backfills with `[backfill:pricing]` and `[backfill:access]` logging
 4. Audit results — sample 10 backfilled events, verify accuracy
 
-#### Session A4 — Outdoor venue audit
+#### Session A4 — Outdoor venue audit — DEFERRED
 **Repo**: `happenlist_scraper`
-**Files**:
-- `backend/analyzers/location.js` — improve venue type classification
-- `scripts/reclassify-venue-types.js` (NEW)
+**Deferred**: not blocking any Phase 2 work. Will revisit in a future session when outdoor/indoor filtering becomes a priority.
 
-**Tasks**:
+**Original tasks** (preserved for future reference):
 1. Push prompt to recognize parks, beer gardens, rooftops, beaches, festival grounds, athletic fields
 2. Backfill against existing 3,483 locations using cached name+address (no re-scrape)
 3. Spot-check ~20 reclassified locations

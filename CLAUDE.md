@@ -254,9 +254,9 @@ This avoids monorepo coupling while keeping each repo self-contained. Drift gets
 
 **Phase 2 remaining sessions**:
 - A3 — pricing + access backfill (scraper repo, done separately)
-- A4 — outdoor venue audit (scraper repo)
-- B6 — lifecycle + past events (independent)
-- R2 — Phase 2 review & harden
+- A4 — outdoor venue audit (scraper repo) — **deferred**, not blocking Phase 2
+- B6 — lifecycle + past events (independent) — next up
+- R2 — Phase 2 review & harden — after B6
 
 **Key constraints learned from data audit (2026-04-11)** — still relevant for Phase 2/3:
 - `vibe_tags`/`subcultures` cleaned in A1+A2; future scraper drift caught by post-validation log
