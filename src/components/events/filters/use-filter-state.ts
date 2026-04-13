@@ -130,6 +130,17 @@ export function useFilterState(): UseFilterStateApi {
         replaceUrl({ ...state, [key]: current.filter((v) => v !== value) } as FilterState);
         return;
       }
+      // Geo fields are coupled — clearing neighborhood also clears lat/lng/radius
+      if (key === 'neighborhood' || key === 'nearLat' || key === 'nearLng') {
+        replaceUrl({
+          ...state,
+          neighborhood: undefined,
+          nearLat: undefined,
+          nearLng: undefined,
+          radiusMiles: undefined,
+        });
+        return;
+      }
       // Single-value: clear it
       const cleared: Partial<FilterState> = { [key]: typeof current === 'boolean' ? false : undefined };
       replaceUrl({ ...state, ...cleared });

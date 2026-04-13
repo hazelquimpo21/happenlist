@@ -38,6 +38,7 @@ import { getCategoryColor } from '@/lib/constants/category-colors';
 import { EventImage } from './event-image';
 import { HeartButtonCompact } from '@/components/hearts';
 import { VibeTagPill, AccessBadge, NoiseLevelIndicator } from './vibe-profile';
+import { DistanceBadge } from './distance-badge';
 import type { EventCard as EventCardType } from '@/types';
 
 // =============================================================================
@@ -319,6 +320,13 @@ function EventCardComponent({
             <p className="text-xs text-zinc/80 mb-1.5 truncate">
               by {event.organizer_name}
             </p>
+          )}
+
+          {/* Distance badge — shown when geo anchor is active */}
+          {event.distance_miles != null && (
+            <div className="mb-1.5">
+              <DistanceBadge miles={event.distance_miles} />
+            </div>
           )}
 
           {/* Short description teaser */}

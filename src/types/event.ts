@@ -106,4 +106,6 @@ export interface EventCard {
   // Membership benefit summary for card badge
   has_member_benefits?: boolean;
   member_benefit_label?: string | null;
+  // Geo distance (populated when nearLat/nearLng anchor is set in query)
+  distance_miles?: number | null;
 }

@@ -38,6 +38,7 @@ import { GOOD_FOR_TAGS } from '@/types/good-for';
 import { VIBE_TAGS, NOISE_LEVELS } from '@/lib/constants/vocabularies';
 import { FilterChip } from './filter-chip';
 import { FilterSection } from './filter-section';
+import { NeighborhoodPicker } from './neighborhood-picker';
 import { useFilterState } from './use-filter-state';
 import { cn } from '@/lib/utils/cn';
 
@@ -155,6 +156,9 @@ export function FilterDrawer({
 
           {/* Scrollable body */}
           <div className="flex-1 overflow-y-auto px-5">
+            {/* Neighborhood / distance */}
+            <NeighborhoodPicker />
+
             {/* Categories */}
             <FilterSection
               label="Category"

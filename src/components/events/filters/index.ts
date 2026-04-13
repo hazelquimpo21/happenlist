@@ -9,6 +9,7 @@ export { FilterDrawer } from './filter-drawer';
 export { FilterChip } from './filter-chip';
 export { FilterSection } from './filter-section';
 export { EmptyFilterState } from './empty-filter-state';
+export { NeighborhoodPicker } from './neighborhood-picker';
 export { useFilterState } from './use-filter-state';
 // IMPORTANT: parseFiltersFromParams + serializeFiltersToParams come from
 // `./types`, NOT `./use-filter-state`. Re-exporting them through the

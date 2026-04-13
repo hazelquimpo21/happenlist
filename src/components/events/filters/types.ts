@@ -85,6 +85,12 @@ export interface FilterState {
   // Membership
   hasMemberBenefits: boolean;
   membershipOrgId?: string;
+
+  // Geo / distance (Phase 2 B4)
+  neighborhood?: string;   // neighborhood slug from milwaukee-neighborhoods.ts, or 'my-location'
+  nearLat?: number;        // anchor latitude (from neighborhood or browser geolocation)
+  nearLng?: number;        // anchor longitude
+  radiusMiles?: number;    // search radius (defaults to 5 in get-events.ts)
 }
 
 /** Empty / default filter state — used as the URL-cleared baseline. */
@@ -124,6 +130,8 @@ export function countActiveFilters(state: FilterState): number {
   if (state.familyFriendly) n++;
   if (state.hasMemberBenefits) n++;
   if (state.membershipOrgId) n++;
+  // Geo counts as a single filter (neighborhood or custom location)
+  if (state.neighborhood || (state.nearLat != null && state.nearLng != null)) n++;
   return n;
 }
 
@@ -139,6 +147,20 @@ export function hasAnyActive(state: FilterState): boolean {
 // These live here (not in use-filter-state.ts) so the server component
 // /events/page.tsx can import them without crossing a 'use client' boundary.
 // See the file header for why this matters.
+
+/** Parse a URL param as float, returning undefined for null/empty/NaN. */
+function safeParseFloat(value: string | null): number | undefined {
+  if (!value) return undefined;
+  const n = parseFloat(value);
+  return isNaN(n) ? undefined : n;
+}
+
+/** Parse a URL param as int, returning undefined for null/empty/NaN. */
+function safeParseInt(value: string | null): number | undefined {
+  if (!value) return undefined;
+  const n = parseInt(value, 10);
+  return isNaN(n) ? undefined : n;
+}
 
 /**
  * Parse URL search params into a typed FilterState. Unknown keys are ignored,
@@ -163,6 +185,10 @@ export function parseFiltersFromParams(params: SearchParamsLike): FilterState {
     familyFriendly: params.get('familyFriendly') === 'true',
     hasMemberBenefits: params.get('memberBenefits') === 'true',
     membershipOrgId: params.get('membershipOrg') ?? undefined,
+    neighborhood: params.get('neighborhood') ?? undefined,
+    nearLat: safeParseFloat(params.get('nearLat')),
+    nearLng: safeParseFloat(params.get('nearLng')),
+    radiusMiles: safeParseInt(params.get('radius')),
   };
 }
 
@@ -193,6 +219,10 @@ export function serializeFiltersToParams(
   if (state.familyFriendly) params.set('familyFriendly', 'true');
   if (state.hasMemberBenefits) params.set('memberBenefits', 'true');
   if (state.membershipOrgId) params.set('membershipOrg', state.membershipOrgId);
+  if (state.neighborhood) params.set('neighborhood', state.neighborhood);
+  if (state.nearLat != null) params.set('nearLat', String(state.nearLat));
+  if (state.nearLng != null) params.set('nearLng', String(state.nearLng));
+  if (state.radiusMiles != null) params.set('radius', String(state.radiusMiles));
 
   if (extras) {
     for (const [k, v] of Object.entries(extras)) {

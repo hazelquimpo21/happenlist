@@ -22,6 +22,10 @@ import {
   type TimeOfDay,
 } from '@/lib/constants/time-of-day';
 import { resolveInterestPresetGoodFor } from '@/lib/constants/interest-presets';
+import {
+  DEFAULT_RADIUS_MILES,
+  MAX_RADIUS_MILES,
+} from '@/lib/constants/milwaukee-neighborhoods';
 
 /**
  * Coerce a loose `string | string[] | undefined` param into a deduped,
@@ -341,6 +345,9 @@ export async function getEvents(
     dropInOk,
     familyFriendly,
     includeLifestyle,
+    nearLat,
+    nearLng,
+    radiusMiles,
     orderBy = 'date-asc',
     page = 1,
     limit = 24,
@@ -369,6 +376,7 @@ export async function getEvents(
   if (noiseLevel) activeFilters.noiseLevel = noiseLevel;
   if (accessType) activeFilters.accessType = accessType;
   if (familyFriendly) activeFilters.familyFriendly = familyFriendly;
+  if (nearLat != null && nearLng != null) activeFilters.geo = { nearLat, nearLng, radiusMiles: radiusMiles ?? DEFAULT_RADIUS_MILES };
   if (includeLifestyle !== undefined) activeFilters.includeLifestyle = includeLifestyle;
   if (collapseSeries) activeFilters.collapseSeries = collapseSeries;
   if (orderBy && orderBy !== 'date-asc') activeFilters.orderBy = orderBy;
@@ -377,6 +385,39 @@ export async function getEvents(
   const supabase = await createClient();
   const offset = (page - 1) * limit;
 
+  // ── Geo pre-filter: call events_within_radius RPC to get IDs + distances ──
+  // Runs BEFORE the main query so we can use .in('id', geoIds) as a predicate.
+  // The distance map is attached to EventCards post-transform.
+  const hasGeoAnchor = nearLat != null && nearLng != null;
+  let geoEventIds: string[] | null = null;
+  let distanceMap: Map<string, number> | null = null;
+
+  if (hasGeoAnchor) {
+    const clampedRadius = Math.max(0.1, Math.min(radiusMiles ?? DEFAULT_RADIUS_MILES, MAX_RADIUS_MILES));
+    const { data: geoRows, error: geoError } = await supabase
+      .rpc('events_within_radius', {
+        p_lat: nearLat!,
+        p_lng: nearLng!,
+        p_radius_miles: clampedRadius,
+        p_limit: 500,  // generous upper bound; real pagination happens below
+      });
+
+    if (geoError) {
+      console.error('[get-events:geo] RPC error:', geoError);
+      // Non-fatal: fall through without geo filter rather than crash the page
+    } else {
+      const rows = (geoRows ?? []) as { event_id: string; distance_miles: number }[];
+      geoEventIds = rows.map((r) => r.event_id);
+      distanceMap = new Map(rows.map((r) => [r.event_id, r.distance_miles]));
+      console.log(`[get-events:geo] ${geoEventIds.length} events within ${clampedRadius}mi`);
+
+      if (geoEventIds.length === 0) {
+        // No events in radius — short-circuit
+        return { events: [], total: 0 };
+      }
+    }
+  }
+
   // Over-fetch when ANY post-fetch filter is active so we still have enough
   // cards after JS-side filtering. Both `collapseSeries` and `timeOfDay`
   // shrink the result set after the DB fetch — without over-fetch the page
@@ -384,6 +425,9 @@ export async function getEvents(
   //
   // 3x is a heuristic, not a proof. If you add another post-fetch filter,
   // bump this multiplier OR move the filter into a real DB predicate.
+  // Distance-asc sort is NOT a post-fetch filter (it doesn't shrink the set,
+  // just reorders), but geo filtering via .in('id', geoEventIds) already
+  // restricts the DB result. No extra over-fetch needed for geo.
   const needsOverFetch = collapseSeries || timeOfDayBuckets.length > 0;
   const fetchLimit = needsOverFetch ? limit * 3 : limit;
   const fetchOffset = needsOverFetch ? 0 : offset;
@@ -514,6 +558,11 @@ export async function getEvents(
     query = query.eq('is_family_friendly', true);
   }
 
+  // Geo filter: restrict to event IDs returned by the RPC
+  if (geoEventIds) {
+    query = query.in('id', geoEventIds);
+  }
+
   // Membership benefit filters — requires subquery to get event IDs
   if (hasMemberBenefits || membershipOrgId) {
     let benefitQuery = supabase
@@ -548,6 +597,14 @@ export async function getEvents(
     case 'popular':
       query = query.order('heart_count', { ascending: false });
       break;
+    case 'distance-asc':
+      // Distance sorting happens post-fetch using the distanceMap from the
+      // geo RPC. DB-side sort falls back to date-asc so results are stable
+      // when distances are equal or when no geo anchor is set.
+      query = query
+        .order('instance_date', { ascending: true })
+        .order('start_datetime', { ascending: true });
+      break;
   }
 
   // Apply pagination
@@ -561,6 +618,18 @@ export async function getEvents(
   }
 
   let events = (data || []).map(transformToEventCard);
+
+  // Attach distance_miles from the geo RPC result map. Done immediately after
+  // transform so all downstream filters (lifestyle, time-of-day, collapse)
+  // operate on distance-annotated cards.
+  if (distanceMap) {
+    for (const event of events) {
+      const dist = distanceMap.get(event.id);
+      if (dist !== undefined) {
+        event.distance_miles = Math.round(dist * 100) / 100; // 2 decimal places
+      }
+    }
+  }
 
   // Lifestyle filtering: exclude lifestyle/ongoing/exhibit series from main feeds
   // unless explicitly included. This is post-fetch because we can't easily express
@@ -587,6 +656,13 @@ export async function getEvents(
   // Series collapsing: group recurring instances, keep only the soonest per series.
   if (collapseSeries) {
     events = collapseSeriesInstances(events);
+  }
+
+  // Distance-asc sort: re-order by distance AFTER collapse. collapseSeriesInstances
+  // re-sorts by instance_date internally, which would destroy distance ordering if
+  // we sorted earlier. This is the final ordering before pagination.
+  if (orderBy === 'distance-asc' && distanceMap) {
+    events.sort((a, b) => (a.distance_miles ?? Infinity) - (b.distance_miles ?? Infinity));
   }
 
   // Manual pagination when ANY post-fetch filter shrunk the result set.

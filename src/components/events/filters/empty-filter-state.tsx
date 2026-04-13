@@ -30,6 +30,7 @@
 
 import { SearchX } from 'lucide-react';
 import { getInterestPreset } from '@/lib/constants/interest-presets';
+import { getNeighborhood } from '@/lib/constants/milwaukee-neighborhoods';
 import { TIME_OF_DAY_LABELS, type TimeOfDay } from '@/lib/constants/time-of-day';
 import { getGoodForTag } from '@/types/good-for';
 import { useFilterState } from './use-filter-state';
@@ -151,6 +152,21 @@ function buildActiveChips(
       key: `org-${state.membershipOrgId}`,
       label: membershipOrgNameById[state.membershipOrgId] ?? 'Membership org',
       onRemove: () => setSingle('membershipOrgId', undefined),
+    });
+  }
+
+  // Geo / neighborhood filter
+  if (state.neighborhood || (state.nearLat != null && state.nearLng != null)) {
+    const hood = state.neighborhood ? getNeighborhood(state.neighborhood) : null;
+    const label = state.neighborhood === 'my-location'
+      ? 'Near me'
+      : hood
+        ? `Near ${hood.label}`
+        : 'Nearby';
+    chips.push({
+      key: 'geo',
+      label,
+      onRemove: () => removeOne('neighborhood'),
     });
   }
 

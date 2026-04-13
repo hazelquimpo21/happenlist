@@ -65,6 +65,11 @@ interface EventsPageProps {
     familyFriendly?: string;
     memberBenefits?: string;
     membershipOrg?: string;
+    // Geo (B4)
+    neighborhood?: string;
+    nearLat?: string;
+    nearLng?: string;
+    radius?: string;
     page?: string;
   }>;
 }
@@ -103,6 +108,9 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const familyFriendly = params.familyFriendly === 'true';
   const memberBenefits = params.memberBenefits === 'true';
   const membershipOrg = params.membershipOrg;
+  const nearLat = params.nearLat ? parseFloat(params.nearLat) : undefined;
+  const nearLng = params.nearLng ? parseFloat(params.nearLng) : undefined;
+  const radiusMiles = params.radius ? parseInt(params.radius, 10) : undefined;
 
   // Build date range if provided
   const dateRange =
@@ -130,6 +138,9 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       familyFriendly: familyFriendly || undefined,
       hasMemberBenefits: memberBenefits || undefined,
       membershipOrgId: membershipOrg || undefined,
+      nearLat: nearLat != null && !isNaN(nearLat) ? nearLat : undefined,
+      nearLng: nearLng != null && !isNaN(nearLng) ? nearLng : undefined,
+      radiusMiles: radiusMiles != null && !isNaN(radiusMiles) ? radiusMiles : undefined,
       page,
       limit: 24,
       collapseSeries: true,

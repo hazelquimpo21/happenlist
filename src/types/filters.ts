@@ -129,6 +129,28 @@ export interface EventFilters {
    * Set to true to include them, or 'only' to show ONLY lifestyle events.
    */
   includeLifestyle?: boolean | 'only';
+
+  // ── Geo / distance filters (Phase 2 B4) ──────────────────────────
+  /**
+   * Anchor latitude for distance filtering. Must be set together with
+   * nearLng. When set, only events within radiusMiles of this point
+   * are returned, and each EventCard gets a `distance_miles` field.
+   *
+   * Typically comes from a neighborhood center (milwaukee-neighborhoods.ts)
+   * or the browser Geolocation API.
+   */
+  nearLat?: number;
+
+  /**
+   * Anchor longitude for distance filtering. Must be set with nearLat.
+   */
+  nearLng?: number;
+
+  /**
+   * Radius in miles from the anchor point. Defaults to 5 miles.
+   * Max 50 miles (enforced in get-events.ts).
+   */
+  radiusMiles?: number;
 }
 
 /**
@@ -142,7 +164,7 @@ export interface PaginationParams {
 /**
  * Sort options for events.
  */
-export type SortOption = 'date-asc' | 'date-desc' | 'name-asc' | 'popular';
+export type SortOption = 'date-asc' | 'date-desc' | 'name-asc' | 'popular' | 'distance-asc';
 
 /**
  * Combined query parameters for events.
