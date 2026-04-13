@@ -1,5 +1,7 @@
 # Phase 1 — Queued Session Prompts
 
+> **OBSOLETE**: Phase 1 is complete. All prompts below were consumed. See `phase-1-report.md` for the final report.
+
 > **What this is**: ready-to-paste prompts for the remaining Phase 1 sessions, written so you can start a fresh Claude session and give it everything it needs in one shot.
 >
 > **Why**: each session starts with zero conversation context. The prompt below tells Claude exactly which roadmap section to read, which progress notes to check, what to build, and what _not_ to touch.

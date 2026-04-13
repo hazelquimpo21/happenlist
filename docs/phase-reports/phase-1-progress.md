@@ -1,5 +1,7 @@
 # Phase 1 — Progress Log
 
+> **SUPERSEDED**: Phase 1 is complete. The final report at `phase-1-report.md` compiles and supersedes this progress log. Read that instead.
+
 > **What this is**: a running log of what each session in Phase 1 of the Smart Filters Roadmap actually shipped, so the next session has full briefing and Session R1 can compile a final `phase-1-report.md` from it.
 >
 > **Append a new section per session.** Don't rewrite history. Don't move things around. R1 needs to see the chronology.

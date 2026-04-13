@@ -16,6 +16,8 @@ This document is intended for developers onboarding to the codebase and for Clau
 6. [Event Detail Page Components](#6-event-detail-page-components)
 7. [Good For Audience Tags](#7-good-for-audience-tags)
 8. [Categories](#8-categories)
+9. [Smart Filters](#9-smart-filters)
+10. [View Tracking](#10-view-tracking)
 
 ---
 
@@ -406,6 +408,89 @@ There are 15 categories:
 
 ---
 
+## 9. Smart Filters
+
+### Overview
+
+The `/events` page has a multi-layer filter system built across Phases 1 and 2 of the Smart Filters Roadmap. Filters are URL-driven (shareable, back-button friendly) and rendered via a persistent top bar + expandable Radix Dialog drawer.
+
+### Architecture
+
+- **URL is source of truth**: every filter maps to a URL search param. `router.replace` updates the URL, which re-runs the server component.
+- **Pure parsers in `types.ts`**: `parseFiltersFromParams` and `serializeFiltersToParams` live in a module free of `'use client'` so both server and client can use them.
+- **Single badge count**: `countActiveFilters()` is the one source of truth for the filter count badge on both server and client.
+- **Adding a new filter**: update `FilterState` type, parser, serializer, counter, query layer, and UI. All in documented files.
+
+### Available Filters
+
+| Filter | Type | URL Param | Phase |
+|--------|------|-----------|-------|
+| Category | single-select | `category=music` | P1 B2 |
+| Good For | multi-select OR | `goodFor=foodies&goodFor=date_night` | P1 B1 |
+| Time of Day | multi-select OR | `timeOfDay=evening&timeOfDay=late_night` | P1 B1 |
+| Interest Preset | single-select | `interestPreset=foodies` | P1 B1 |
+| Free | boolean | `free=true` | P1 B2 |
+| Vibe Tag | single-select | `vibeTag=artsy` | P1 B2 |
+| Noise Level | single-select | `noiseLevel=loud` | P1 B2 |
+| Solo-friendly | boolean | `soloFriendly=true` | P1 B2 |
+| Beginner-friendly | boolean | `beginnerFriendly=true` | P1 B2 |
+| No tickets needed | boolean | `noTicketsNeeded=true` | P1 B2 |
+| Drop-in OK | boolean | `dropInOk=true` | P1 B2 |
+| Family-friendly | boolean | `familyFriendly=true` | P1 B2 |
+| Member pricing | boolean | `memberBenefits=true` | P1 B2 |
+| Membership org | single-select | `membershipOrg=<id>` | P1 B2 |
+| Neighborhood / geo | composite | `neighborhood=bay-view&nearLat=43.007&nearLng=-87.896&radius=5` | P2 B4 |
+| Price tier | multi-select OR | `priceTier=free&priceTier=under_10` | P2 B5 |
+| Age group | multi-select OR | `ageGroup=college&ageGroup=twenty_one_plus` | P2 B5 |
+
+### Geo / Distance Filtering
+
+Uses Postgres `cube` + `earthdistance` extensions with a `events_within_radius()` RPC function and GiST index. 15 Milwaukee neighborhoods with center coordinates in `src/lib/constants/milwaukee-neighborhoods.ts`. Browser Geolocation API for "Use my location". Distance badge on event cards when a geo anchor is active.
+
+### Price Tiers
+
+6 tiers defined in `src/lib/constants/price-tiers.ts`: free, under_10, 10_to_25, 25_to_50, over_50, donation. Uses `is_free`, `price_low`, and `price_type` columns. Multi-select OR via PostgREST `.or()` with nested `and()`.
+
+### Age Groups
+
+6 groups defined in `src/lib/constants/age-groups.ts`: all_ages, families_young_kids, elementary, teens, college, twenty_one_plus. All predicates use `age_low` only (age_high is empty in DB). College group also checks `good_for @> {college_crowd}`.
+
+### Key Files
+
+- `src/components/events/filters/` -- FilterBar, FilterDrawer, FilterChip, FilterSection, EmptyFilterState, NeighborhoodPicker, types, use-filter-state hook
+- `src/data/events/get-events.ts` -- Query layer with all filter predicates
+- `src/lib/constants/` -- interest-presets.ts, time-of-day.ts, milwaukee-neighborhoods.ts, price-tiers.ts, age-groups.ts, vocabularies.ts
+- `src/types/filters.ts` -- EventFilters type (query layer input)
+- `src/app/events/page.tsx` -- Server component wiring URL params to getEvents()
+
+### Roadmap
+
+See `docs/filter-roadmap.md` for the full three-phase plan. Phase 1 complete, Phase 2 in progress (B4 + B5 shipped, B6 + R2 remaining), Phase 3 planned (vibe filters, trending sort).
+
+---
+
+## 10. View Tracking
+
+### Overview
+
+Anonymous per-event view tracking for future trending/popularity sorts. Ships unused -- accumulating data for Phase 3.
+
+### How It Works
+
+1. `<ViewTracker>` client component mounts on `/event/[slug]` detail pages.
+2. On mount, reads or creates a `hl_sid` session cookie (128-bit entropy).
+3. Calls `record_event_view()` SECURITY DEFINER RPC: `INSERT ... ON CONFLICT DO NOTHING`.
+4. Three layers of dedup: client useRef sentinel (per event ID), cookie reuse across navigations, DB unique index on `(event_id, session_id, view_date)`.
+
+### Key Files
+
+- `src/components/events/view-tracker.tsx` -- Client component
+- `src/data/events/record-view.ts` -- Server action + cookie management
+- `supabase/migrations/20260411_1900_event_views.sql` -- Table, RLS, function, indexes
+- `src/app/admin/views/page.tsx` -- Sanity dashboard (superadmin only)
+
+---
+
 ## Related Documentation
 
 For deeper dives into specific subsystems, see the individual docs in this directory:
@@ -418,3 +503,5 @@ For deeper dives into specific subsystems, see the individual docs in this direc
 - `ADMIN-ANYWHERE.md` -- Admin Anywhere toolbar implementation details.
 - `SMART-ADDRESS-SYSTEM.md` -- Venue database and address autocomplete internals.
 - `EVENT-DETAIL-COMPONENTS.md` -- Component-level breakdown of the event detail page.
+- `filter-roadmap.md` -- Three-phase Smart Filters plan with session specs, architectural decisions, and data audit.
+- `phase-reports/` -- Per-phase ship reports (phase-1-report.md, phase-2-progress.md).

@@ -238,7 +238,7 @@ This avoids monorepo coupling while keeping each repo self-contained. Drift gets
 
 **Phase 1 — DONE (2026-04-11).** All sessions A1, A2, B1, B2, B3, R1 shipped. See `docs/phase-reports/phase-1-report.md` for the full review report.
 
-**Phase 2 — IN PROGRESS.** Session B4 shipped (2026-04-13). See `docs/phase-reports/phase-2-progress.md` for per-session log; `docs/filter-roadmap.md` is the canonical three-phase plan.
+**Phase 2 — IN PROGRESS.** Sessions B4 + B5 shipped (2026-04-13). See `docs/phase-reports/phase-2-progress.md` for per-session log; `docs/filter-roadmap.md` is the canonical three-phase plan.
 
 **What Phase 1 shipped**:
 - A1 — scraper taxonomy lockdown (strict enums + post-validation in atmosphere/event-meta analyzers, vocabularies source-of-truth)

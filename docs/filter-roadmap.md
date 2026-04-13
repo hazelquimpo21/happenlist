@@ -1,9 +1,9 @@
 # Smart Filters Roadmap
 
-**Status**: Phase 1 complete (A1, A2, B1, B2, B3, R1 all shipped). Phase 2 next — earliest session is A3 (pricing + access aggressiveness, scraper repo).
-**Last updated**: 2026-04-11
+**Status**: Phase 1 complete. Phase 2 in progress — B4 + B5 shipped (2026-04-13). Next: B6 (independent), A4 (scraper repo), R2.
+**Last updated**: 2026-04-13
 **Owner**: Hazel
-**Related**: `CLAUDE.md` Engineering Standards section, `docs/phase-reports/phase-1-report.md`
+**Related**: `CLAUDE.md` Engineering Standards section, `docs/phase-reports/phase-1-report.md`, `docs/phase-reports/phase-2-progress.md`
 
 This is the canonical reference for the filter/sort/lifecycle work happening across `happenlist` and `happenlist_scraper`. It's organized as three phases with concrete sessions. Future AI sessions should read this top-to-bottom before starting work.
 
@@ -255,7 +255,7 @@ New `'annual'` value added to `series_type` enum. Each year = a new `events` row
 2. Backfill against existing 3,483 locations using cached name+address (no re-scrape)
 3. Spot-check ~20 reclassified locations
 
-#### Session B4 — Distance
+#### Session B4 — Distance ✓ SHIPPED (2026-04-13)
 **Repo**: `happenlist`
 **Files**:
 - `supabase/migrations/YYYYMMDD_HHMM_enable_geo_extensions.sql` (NEW)
@@ -274,7 +274,7 @@ New `'annual'` value added to `series_type` enum. Each year = a new `events` row
 6. Distance badge on cards when anchor is set
 7. New `EventQueryParams`: `nearLat`, `nearLng`, `radiusMiles`, sort `'distance-asc'`
 
-#### Session B5 — Cost tiers + age groups
+#### Session B5 — Cost tiers + age groups ✓ SHIPPED (2026-04-13)
 **Repo**: `happenlist`
 **Files**:
 - `src/lib/constants/price-tiers.ts` (NEW)
