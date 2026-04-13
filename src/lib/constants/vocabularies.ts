@@ -5,7 +5,7 @@
  *
  * MIRROR OF: happenlist_scraper/backend/lib/vocabularies.js
  * If you change this, change BOTH. Sync verified manually during phase reviews.
- * Last byte-for-byte verification: 2026-04-11 (Phase 1 R1) — clean.
+ * Last byte-for-byte verification: 2026-04-13 (Phase 2 A3+A4) — clean.
  *
  * This file holds the canonical TypeScript vocabularies for the four
  * controlled lists the scraper writes into the events table:
@@ -14,6 +14,9 @@
  *   - SUBCULTURES      (atmosphere analyzer → events.subcultures TEXT[])
  *   - NOISE_LEVELS     (atmosphere analyzer → events.noise_level TEXT)
  *   - GOOD_FOR_SLUGS   (event-meta analyzer → events.good_for TEXT[])
+ *   - ATTENDANCE_MODES  (event-meta analyzer → events.attendance_mode TEXT)
+ *   - ACCESS_TYPES     (pricing analyzer → events.access_type TEXT)
+ *   - VENUE_TYPES      (location analyzer → locations.venue_type TEXT)
  *
  * Why a separate TS file at all?
  *   - The scraper repo is JS/CommonJS. TypeScript needs proper `as const`
@@ -144,6 +147,47 @@ export const GOOD_FOR_SLUGS = [
 export type GoodForSlug = (typeof GOOD_FOR_SLUGS)[number];
 
 // -----------------------------------------------------------------------------
+// ATTENDANCE MODES (event-meta analyzer)
+// -----------------------------------------------------------------------------
+// How participants attend. Applies to ALL events, not just series.
+// Used by the "drop-in / ticketed" filter in Happenlist (Phase 3, Session B9).
+export const ATTENDANCE_MODES = ['drop_in', 'registered', 'hybrid'] as const;
+
+export type AttendanceMode = (typeof ATTENDANCE_MODES)[number];
+
+// -----------------------------------------------------------------------------
+// ACCESS TYPES (pricing analyzer)
+// -----------------------------------------------------------------------------
+// What someone needs to do to get into the event. Separate from price.
+export const ACCESS_TYPES = [
+  'open',
+  'ticketed',
+  'rsvp',
+  'pay_at_door',
+  'registration',
+  'membership',
+  'invite_only',
+] as const;
+
+export type AccessType = (typeof ACCESS_TYPES)[number];
+
+// -----------------------------------------------------------------------------
+// VENUE TYPES (location analyzer)
+// -----------------------------------------------------------------------------
+// Physical setting classification. Stored in locations.venue_type.
+// Used by the indoor/outdoor filter in Happenlist (Phase 3, Session B9).
+export const VENUE_TYPES = [
+  'venue',     // Indoor space (bar, theater, gallery, restaurant, club, hall, museum)
+  'outdoor',   // Parks, beaches, lakefront, athletic fields, festival grounds, streets
+  'hybrid',    // Indoor/outdoor mix: beer gardens, rooftop bars, covered pavilions, patios
+  'online',    // Virtual events (Zoom, YouTube, etc.)
+  'various',   // Multiple locations or traveling event
+  'tbd',       // Location not yet announced
+] as const;
+
+export type VenueType = (typeof VENUE_TYPES)[number];
+
+// -----------------------------------------------------------------------------
 // VALIDATION HELPERS
 // -----------------------------------------------------------------------------
 // Use these at system boundaries (URL params, form input, API payloads) to
@@ -154,6 +198,9 @@ const VIBE_TAG_SET = new Set<string>(VIBE_TAGS);
 const SUBCULTURE_SET = new Set<string>(SUBCULTURES);
 const NOISE_LEVEL_SET = new Set<string>(NOISE_LEVELS);
 const GOOD_FOR_SLUG_SET = new Set<string>(GOOD_FOR_SLUGS);
+const ATTENDANCE_MODE_SET = new Set<string>(ATTENDANCE_MODES);
+const ACCESS_TYPE_SET = new Set<string>(ACCESS_TYPES);
+const VENUE_TYPE_SET = new Set<string>(VENUE_TYPES);
 
 export function isVibeTag(value: string): value is VibeTag {
   return VIBE_TAG_SET.has(value);
@@ -169,6 +216,18 @@ export function isNoiseLevel(value: string): value is NoiseLevel {
 
 export function isGoodForSlug(value: string): value is GoodForSlug {
   return GOOD_FOR_SLUG_SET.has(value);
+}
+
+export function isAttendanceMode(value: string): value is AttendanceMode {
+  return ATTENDANCE_MODE_SET.has(value);
+}
+
+export function isAccessType(value: string): value is AccessType {
+  return ACCESS_TYPE_SET.has(value);
+}
+
+export function isVenueType(value: string): value is VenueType {
+  return VENUE_TYPE_SET.has(value);
 }
 
 /**
