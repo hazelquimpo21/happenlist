@@ -219,8 +219,6 @@ export default async function EventPage({ params }: EventPageProps) {
           vibeTags: event.vibe_tags ?? [],
           subcultures: event.subcultures ?? [],
           energyLevel: event.energy_level ?? null,
-          formality: event.formality ?? null,
-          crowdedness: event.crowdedness ?? null,
           accessType: event.access_type ?? null,
           limit: 6,
         })

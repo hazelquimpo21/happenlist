@@ -5,7 +5,7 @@
  *
  * MIRROR OF: happenlist_scraper/backend/lib/vocabularies.js
  * If you change this, change BOTH. Sync verified manually during phase reviews.
- * Last byte-for-byte verification: 2026-04-13 (Phase 2 A3+A4) — clean.
+ * Last byte-for-byte verification: 2026-04-13 (Phase 2 A3+A4 + 10 new good_for tags) — clean.
  *
  * This file holds the canonical TypeScript vocabularies for the four
  * controlled lists the scraper writes into the events table:
@@ -142,6 +142,16 @@ export const GOOD_FOR_SLUGS = [
   'active_seniors',
   'college_crowd',
   'first_timers',
+  'bridal_shower',
+  'bachelor_party',
+  'first_date',
+  'meet_people',
+  'tourist_friendly',
+  'rainy_day',
+  'budget_friendly',
+  'after_work',
+  'group_outing',
+  'quiet_hangout',
 ] as const;
 
 export type GoodForSlug = (typeof GOOD_FOR_SLUGS)[number];

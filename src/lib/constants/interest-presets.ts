@@ -8,7 +8,7 @@
  * applies the underlying tag set to the events query.
  *
  * Why presets instead of exposing raw tags?
- *   - The good_for taxonomy has 14 slugs — too many to surface as top-level
+ *   - The good_for taxonomy has 24 slugs — too many to surface as top-level
  *     pills without overwhelming the browse-first UX (Jamie, our primary
  *     persona, is in discovery mode and won't tap a 14-pill grid).
  *   - Some real-world intents map to MULTIPLE slugs ("Family chaos" needs
@@ -108,8 +108,8 @@ export const INTEREST_PRESETS = [
   {
     id: 'budget-friendly',
     label: 'Budget-friendly',
-    description: 'College-priced, student-adjacent, low-cost vibes',
-    goodFor: ['college_crowd'],
+    description: 'Free or cheap — easy on the wallet',
+    goodFor: ['budget_friendly', 'college_crowd'],
   },
   {
     id: 'first-timer',

@@ -21,8 +21,6 @@ interface SimilarEventParams {
   vibeTags: string[];
   subcultures: string[];
   energyLevel: number | null;
-  formality: number | null;
-  crowdedness: number | null;
   accessType: string | null;
   limit?: number;
 }
@@ -40,8 +38,6 @@ export async function getSimilarEvents(
     vibeTags,
     subcultures,
     energyLevel,
-    formality,
-    crowdedness,
     accessType,
     limit = 6,
   } = params;
@@ -51,7 +47,7 @@ export async function getSimilarEvents(
 
   // If we have vibe data, use a scoring approach via raw SQL
   const hasVibeData = vibeTags.length > 0 || subcultures.length > 0 ||
-    energyLevel != null || formality != null;
+    energyLevel != null;
 
   if (!hasVibeData) {
     // Fallback: same category, upcoming, ordered by date
@@ -92,8 +88,6 @@ export async function getSimilarEvents(
     p_vibe_tags: vibeTags,
     p_subcultures: subcultures,
     p_energy: energyLevel ?? 3,
-    p_formality: formality ?? 3,
-    p_crowdedness: crowdedness ?? 3,
     p_access_type: accessType,
     p_limit: limit,
   });

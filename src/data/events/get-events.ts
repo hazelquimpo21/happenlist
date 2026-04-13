@@ -340,7 +340,6 @@ export async function getEvents(
     membershipOrgId,
     energyMin,
     energyMax,
-    formalityMax,
     soloFriendly,
     beginnerFriendly,
     noTicketsNeeded,
@@ -549,16 +548,12 @@ export async function getEvents(
     query = query.lte('energy_level', energyMax);
   }
 
-  if (formalityMax) {
-    query = query.lte('formality', formalityMax);
-  }
-
   if (soloFriendly) {
-    query = query.lte('social_pressure', 2);
+    query = query.contains('good_for', ['solo_friendly']);
   }
 
   if (beginnerFriendly) {
-    query = query.gte('accessibility_score', 4);
+    query = query.contains('good_for', ['first_timers']);
   }
 
   if (noTicketsNeeded) {

@@ -73,10 +73,6 @@ const NOISE_LEVELS = {
 
 const DIMENSION_CONFIG = [
   { key: 'energy_level', label: 'Energy', low: 'Zen', high: 'Mosh Pit' },
-  { key: 'formality', label: 'Formality', low: 'Come As You Are', high: 'Black Tie' },
-  { key: 'crowdedness', label: 'Crowd Size', low: 'Intimate', high: 'Massive' },
-  { key: 'social_pressure', label: 'Social Vibe', low: 'Solo-Friendly', high: 'Networking Gauntlet' },
-  { key: 'accessibility_score', label: 'Accessibility', low: 'Insider Only', high: 'Everyone Welcome' },
 ] as const;
 
 // =============================================================================
@@ -275,15 +271,10 @@ export function AccessBadge({
 type VibeEvent = Pick<
   EventRow,
   | 'energy_level'
-  | 'formality'
-  | 'crowdedness'
-  | 'social_pressure'
-  | 'accessibility_score'
   | 'vibe_tags'
   | 'subcultures'
   | 'noise_level'
   | 'expected_crowd'
-  | 'dress_vibe'
 >;
 
 export function VibeProfileSection({
@@ -299,7 +290,7 @@ export function VibeProfileSection({
     (d) => event[d.key as keyof VibeEvent] != null
   );
   const hasTags = (event.vibe_tags?.length ?? 0) > 0 || (event.subcultures?.length ?? 0) > 0;
-  const hasCrowd = event.expected_crowd || event.dress_vibe || event.noise_level;
+  const hasCrowd = event.expected_crowd || event.noise_level;
 
   if (!hasDimensions && !hasTags && !hasCrowd) return null;
 
@@ -362,16 +353,6 @@ export function VibeProfileSection({
               </p>
               <p className="text-sm text-zinc italic leading-relaxed">
                 {event.expected_crowd}
-              </p>
-            </div>
-          )}
-          {event.dress_vibe && (
-            <div>
-              <p className="text-xs font-medium text-zinc uppercase tracking-wide mb-1">
-                What to Wear
-              </p>
-              <p className="text-sm text-zinc italic leading-relaxed">
-                {event.dress_vibe}
               </p>
             </div>
           )}

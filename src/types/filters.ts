@@ -106,11 +106,9 @@ export interface EventFilters {
   energyMax?: number;
   /** Min energy level (1-5). */
   energyMin?: number;
-  /** Max formality (1-5). */
-  formalityMax?: number;
-  /** Quick toggle: solo-friendly (social_pressure <= 2). */
+  /** Quick toggle: solo-friendly (good_for contains solo_friendly). */
   soloFriendly?: boolean;
-  /** Quick toggle: beginner-friendly (accessibility_score >= 4). */
+  /** Quick toggle: beginner-friendly (good_for contains first_timers). */
   beginnerFriendly?: boolean;
   /** Quick toggle: no tickets needed. */
   noTicketsNeeded?: boolean;
