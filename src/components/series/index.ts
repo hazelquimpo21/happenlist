@@ -23,6 +23,7 @@ export { SeriesEventsList, SeriesEventsCompact } from './series-events-list';
 
 // Event integration components
 export { SeriesLinkBadge, SeriesIndicator } from './series-link-badge';
+export { SeriesContextBlock } from './series-context-block';
 
 // Loading skeletons
 export {

@@ -39,12 +39,12 @@ import { Container, Breadcrumbs } from '@/components/layout';
 import { Button } from '@/components/ui';
 import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox, ShareButton, VibeProfileSection, AccessBadge, ChildEventsSchedule, PastInstances, ViewTracker, PastEventBanner } from '@/components/events';
 import { HeartButton } from '@/components/hearts';
-import { SeriesLinkBadge } from '@/components/series';
+import { SeriesContextBlock } from '@/components/series';
 import { EventJsonLd } from '@/components/seo';
 import { AdminToolbar, type AdminToolbarEvent } from '@/components/admin-anywhere';
 import { VenueMap } from '@/components/maps';
 import { getEvent, getSimilarEvents, getChildEvents, getChildEventCount } from '@/data/events';
-import { getSeriesById } from '@/data/series';
+import { getSeriesById, getSeriesStats } from '@/data/series';
 import { checkSingleHeart } from '@/data/user';
 import { getSession, isSuperAdmin } from '@/lib/auth';
 import { parseEventSlug, buildVenueUrl, buildOrganizerUrl, getBestImageUrl, getChildEventLabel } from '@/lib/utils';
@@ -211,7 +211,7 @@ export default async function EventPage({ params }: EventPageProps) {
   const isChildEvent = !!event.parent_event_id;
 
   // Fetch related data in parallel
-  const [similarEvents, isHearted, seriesInfo, childData, childCount, siblingEvents] = await Promise.all([
+  const [similarEvents, isHearted, seriesInfo, seriesStats, childData, childCount, siblingEvents] = await Promise.all([
     // Similar events — skip if this is a parent (we'll show children instead)
     // or a child (we'll show siblings instead)
     !isChildEvent
@@ -227,6 +227,11 @@ export default async function EventPage({ params }: EventPageProps) {
       : Promise.resolve([]),
     session ? checkSingleHeart(session.id, event.id) : Promise.resolve(false),
     event.series_id ? getSeriesById(event.series_id) : Promise.resolve(null),
+    // Stats drive the "N more upcoming dates" line + whether to show the
+    // "See past dates" CTA. Cheap count queries, fine alongside the others.
+    event.series_id
+      ? getSeriesStats(event.series_id)
+      : Promise.resolve({ totalEvents: 0, upcomingEvents: 0, pastEvents: 0, nextEventDate: null }),
     // Fetch children if this might be a parent
     !isChildEvent ? getChildEvents({ parentEventId: event.id }) : Promise.resolve({ events: [], groups: [] }),
     !isChildEvent ? getChildEventCount(event.id) : Promise.resolve(0),
@@ -546,15 +551,18 @@ export default async function EventPage({ params }: EventPageProps) {
             )}
           </div>
 
-          {/* Series badge */}
+          {/* Series context block — warm, prominent "this is part of X" block.
+              Replaces the old tiny SeriesLinkBadge. See SeriesContextBlock for
+              how we handle regular vs irregular schedules (theater runs etc.). */}
           {seriesInfo && (
-            <div className="mt-4">
-              <SeriesLinkBadge
-                seriesSlug={seriesInfo.slug}
-                seriesTitle={seriesInfo.title}
-                seriesType={seriesInfo.series_type}
+            <div className="mt-6">
+              <SeriesContextBlock
+                seriesInfo={seriesInfo}
+                categorySlug={event.category?.slug ?? null}
                 sequenceNumber={event.series_sequence}
-                size="sm"
+                // Subtract 1 so we're not counting the event the user is looking at.
+                upcomingCount={Math.max(0, (seriesStats.upcomingEvents ?? 0) - 1)}
+                hasPastInstances={(seriesStats.pastEvents ?? 0) > 0}
               />
             </div>
           )}

@@ -212,7 +212,10 @@ export default async function HomePage() {
     getCategories(),
     getEvents({ dateRange: getThisWeekendRange(), limit: 8 }),
     getEvents({ dateRange: getTodayRange(), limit: 4 }),
-    getEvents({ limit: 6, orderBy: 'date-desc' }),
+    // Just Added: collapse series so a recurring yoga class with 50 ingested
+    // instances doesn't push everything else off the list. Each series shows
+    // its next upcoming date with a "N more dates" chip.
+    getEvents({ limit: 6, orderBy: 'date-desc', collapseSeries: true }),
   ]);
 
   const weekendEvents = weekendData.events;
@@ -276,6 +279,9 @@ export default async function HomePage() {
     price_type: e.price_type,
     price_min: e.price_low,
     venue_name: e.location_name,
+    // Surface recurrence so the list can show "· weekly" next to a series
+    // event — otherwise a collapsed series row looks like a one-off.
+    recurrence_label: e.recurrence_label,
   }));
 
   return (

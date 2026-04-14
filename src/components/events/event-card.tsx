@@ -255,24 +255,36 @@ function EventCardComponent({
         {/* 📝 CONTENT SECTION */}
         {/* ---------------------------------------------------------------- */}
         <div className="p-4">
-          {/* Date — prominent */}
+          {/* Date — prominent. Prefixes with "Next:" when the card represents
+              a collapsed series (upcoming_count > 0) so users instantly
+              understand "this is the next date, not the only one." */}
           <p className="text-body-sm font-semibold text-blue mb-1">
-            {formatEventDate(event.start_datetime)}
+            {event.recurrence_label && event.upcoming_count != null && event.upcoming_count > 0
+              ? `Next: ${formatEventDate(event.start_datetime)}`
+              : formatEventDate(event.start_datetime)}
           </p>
 
-          {/* Recurrence line — "Every Tuesday · 28 more dates" */}
+          {/* Recurrence chip — category-tinted so it reads as identity, not
+              metadata. Non-interactive (the whole card links to detail page,
+              where the friendly SeriesContextBlock has the real CTAs). */}
           {event.recurrence_label && (
-            <p className="flex items-center gap-1 text-[11px] text-zinc mb-1.5">
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium mb-1.5"
+              style={{
+                backgroundColor: `${categoryColor.accent}15`,
+                color: categoryColor.accent,
+              }}
+            >
               <Repeat className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
               <span>
                 {event.recurrence_label}
                 {event.upcoming_count != null && event.upcoming_count > 0 && (
-                  <span className="text-zinc/70">
+                  <>
                     {' '}&middot; {event.upcoming_count} more {event.upcoming_count === 1 ? 'date' : 'dates'}
-                  </span>
+                  </>
                 )}
               </span>
-            </p>
+            </span>
           )}
 
           {/* Parent event badge — shows child count for parent events */}

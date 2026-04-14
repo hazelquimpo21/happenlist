@@ -8,6 +8,7 @@
  */
 
 import Link from 'next/link';
+import { Repeat } from 'lucide-react';
 import { getCategoryColor } from '@/lib/constants/category-colors';
 
 interface JustAddedEvent {
@@ -19,6 +20,10 @@ interface JustAddedEvent {
   price_type?: string | null;
   price_min?: number | null;
   venue_name?: string | null;
+  /** Recurrence label ("Every Tuesday") when this row represents a collapsed
+   *  series — we show a tiny icon so users know it's a recurring thing, not
+   *  a one-off. */
+  recurrence_label?: string | null;
 }
 
 interface JustAddedRowsProps {
@@ -72,9 +77,20 @@ export function JustAddedRows({ events, className = '' }: JustAddedRowsProps) {
               style={{ backgroundColor: colors.accent }}
             />
 
-            {/* Title */}
-            <span className="flex-1 text-body text-ink font-semibold truncate group-hover:text-blue transition-colors">
-              {event.title}
+            {/* Title + tiny recurrence hint */}
+            <span className="flex-1 min-w-0 flex items-center gap-1.5">
+              <span className="text-body text-ink font-semibold truncate group-hover:text-blue transition-colors">
+                {event.title}
+              </span>
+              {event.recurrence_label && (
+                <span
+                  className="inline-flex items-center text-zinc/70 flex-shrink-0"
+                  title={event.recurrence_label}
+                  aria-label={`Recurring — ${event.recurrence_label}`}
+                >
+                  <Repeat className="w-3 h-3" aria-hidden="true" />
+                </span>
+              )}
             </span>
 
             {/* Venue — desktop only */}
