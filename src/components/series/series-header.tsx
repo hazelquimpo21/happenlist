@@ -189,7 +189,7 @@ export function SeriesHeader({ series, className }: SeriesHeaderProps) {
           )}
 
           {/* Duration (if set in recurrence and no core times) */}
-          {(series.recurrence_rule as RecurrenceRule | null)?.duration_minutes && !series.core_start_time && (
+          {(series.recurrence_rule as unknown as RecurrenceRule | null)?.duration_minutes && !series.core_start_time && (
             <div className="flex items-center gap-3 text-body text-zinc">
               <Clock className="w-5 h-5 flex-shrink-0" />
               <span>{formatDuration((series.recurrence_rule as unknown as RecurrenceRule).duration_minutes!)}</span>

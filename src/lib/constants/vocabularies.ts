@@ -5,7 +5,9 @@
  *
  * MIRROR OF: happenlist_scraper/backend/lib/vocabularies.js
  * If you change this, change BOTH. Sync verified manually during phase reviews.
- * Last byte-for-byte verification: 2026-04-13 (Phase 2 A3+A4 + 10 new good_for tags) — clean.
+ * Last byte-for-byte verification: 2026-04-14 (scraper series session: added
+ *   SERIES_TYPES, RECURRENCE_FREQUENCIES, RECURRENCE_END_TYPES, and day/week/dom
+ *   bounds for the series rhythm UI) — clean.
  *
  * This file holds the canonical TypeScript vocabularies for the four
  * controlled lists the scraper writes into the events table:
@@ -198,6 +200,55 @@ export const VENUE_TYPES = [
 export type VenueType = (typeof VENUE_TYPES)[number];
 
 // -----------------------------------------------------------------------------
+// SERIES TYPES (event-meta analyzer → series.series_type)
+// -----------------------------------------------------------------------------
+// Classification of what KIND of multi-event grouping this is. Drives UI
+// behavior in get-events.ts (COLLAPSIBLE_SERIES_TYPES, LIFESTYLE_SERIES_TYPES)
+// and series-context-block.tsx (rhythm line, count unit, headline copy).
+//
+// If you add/remove a value:
+//   - Mirror in happenlist_scraper/backend/lib/vocabularies.js
+//   - Ensure happenlist/src/types/series.ts SERIES_TYPE_INFO has an entry
+//   - Check the DB CHECK constraint on series.series_type
+//   - Revisit COLLAPSIBLE_SERIES_TYPES / LIFESTYLE_SERIES_TYPES in get-events.ts
+export const SERIES_TYPES = [
+  'class',
+  'workshop',
+  'camp',
+  'recurring',
+  'lifestyle',
+  'ongoing',
+  'exhibit',
+  'festival',
+  'season',
+  'annual',
+] as const;
+
+export type SeriesType = (typeof SERIES_TYPES)[number];
+
+// -----------------------------------------------------------------------------
+// RECURRENCE RULE ENUMS (event-meta analyzer → series.recurrence_rule JSONB)
+// -----------------------------------------------------------------------------
+// Strict enums for series.recurrence_rule. Consumed by:
+//   - src/data/events/get-events.ts → buildRecurrenceLabel()
+//   - src/components/series/series-context-block.tsx → buildRhythmLine()
+// The JSONB itself is assembled + validated in the scraper by
+// backend/lib/recurrence-rule.js before being written.
+export const RECURRENCE_FREQUENCIES = ['daily', 'weekly', 'biweekly', 'monthly', 'yearly'] as const;
+export type RecurrenceFrequency = (typeof RECURRENCE_FREQUENCIES)[number];
+
+export const RECURRENCE_END_TYPES = ['date', 'count', 'never'] as const;
+export type RecurrenceEndType = (typeof RECURRENCE_END_TYPES)[number];
+
+// Bounds for recurrence_rule numeric fields. Kept as constants so the
+// scraper validator and any UI / query-layer validation use identical ranges.
+export const RECURRENCE_DAY_OF_WEEK_MIN = 0;
+export const RECURRENCE_DAY_OF_WEEK_MAX = 6;
+export const RECURRENCE_DAY_OF_MONTH_MIN = 1;
+export const RECURRENCE_DAY_OF_MONTH_MAX = 31;
+export const RECURRENCE_WEEK_OF_MONTH_VALUES = [1, 2, 3, 4, -1] as const;
+
+// -----------------------------------------------------------------------------
 // VALIDATION HELPERS
 // -----------------------------------------------------------------------------
 // Use these at system boundaries (URL params, form input, API payloads) to
@@ -211,6 +262,9 @@ const GOOD_FOR_SLUG_SET = new Set<string>(GOOD_FOR_SLUGS);
 const ATTENDANCE_MODE_SET = new Set<string>(ATTENDANCE_MODES);
 const ACCESS_TYPE_SET = new Set<string>(ACCESS_TYPES);
 const VENUE_TYPE_SET = new Set<string>(VENUE_TYPES);
+const SERIES_TYPE_SET = new Set<string>(SERIES_TYPES);
+const RECURRENCE_FREQUENCY_SET = new Set<string>(RECURRENCE_FREQUENCIES);
+const RECURRENCE_END_TYPE_SET = new Set<string>(RECURRENCE_END_TYPES);
 
 export function isVibeTag(value: string): value is VibeTag {
   return VIBE_TAG_SET.has(value);
@@ -238,6 +292,18 @@ export function isAccessType(value: string): value is AccessType {
 
 export function isVenueType(value: string): value is VenueType {
   return VENUE_TYPE_SET.has(value);
+}
+
+export function isSeriesType(value: string): value is SeriesType {
+  return SERIES_TYPE_SET.has(value);
+}
+
+export function isRecurrenceFrequency(value: string): value is RecurrenceFrequency {
+  return RECURRENCE_FREQUENCY_SET.has(value);
+}
+
+export function isRecurrenceEndType(value: string): value is RecurrenceEndType {
+  return RECURRENCE_END_TYPE_SET.has(value);
 }
 
 /**

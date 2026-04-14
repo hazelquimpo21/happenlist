@@ -403,13 +403,16 @@ export async function getEvents(
 
   if (hasGeoAnchor) {
     const clampedRadius = Math.max(0.1, Math.min(radiusMiles ?? DEFAULT_RADIUS_MILES, MAX_RADIUS_MILES));
+    // supabase-js rpc() Args generic defaults to `never` when TS can't widen
+    // the named overload (happens for some Database types despite the shape
+    // being correctly declared in types.ts). Cast via `never` to bypass.
     const { data: geoRows, error: geoError } = await supabase
       .rpc('events_within_radius', {
         p_lat: nearLat!,
         p_lng: nearLng!,
         p_radius_miles: clampedRadius,
         p_limit: 500,  // generous upper bound; real pagination happens below
-      });
+      } as never);
 
     if (geoError) {
       console.error('[get-events:geo] RPC error:', geoError);

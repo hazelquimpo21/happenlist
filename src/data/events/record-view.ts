@@ -137,10 +137,13 @@ export async function recordEventView(eventId: string): Promise<boolean> {
   try {
     const sessionId = await getOrCreateSessionId();
     const supabase = await createClient();
+    // supabase-js rpc() Args generic defaults to `never` when TS can't widen
+    // the named overload. The shape matches types.ts `record_event_view`
+    // exactly — cast through `Parameters` to line the types up.
     const { data, error } = await supabase.rpc('record_event_view', {
       p_event_id: eventId,
       p_session_id: sessionId,
-    });
+    } as never);
 
     if (error) {
       console.error(

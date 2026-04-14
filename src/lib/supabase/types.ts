@@ -3628,3 +3628,80 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
+// =============================================================================
+// DOMAIN TYPE ALIASES (hand-maintained — DO NOT let Supabase regen wipe these)
+// =============================================================================
+// The generator above emits `string` for every CHECK-constrained column, so
+// these aliases live at the bottom of this file and are preserved across
+// regenerations. If you regen the Supabase types, paste this block back in.
+//
+// For the enum-backed aliases (AttendanceMode, SeriesType) the source of
+// truth is `src/lib/constants/vocabularies.ts`, which mirrors the scraper's
+// `backend/lib/vocabularies.js`. We re-export rather than re-declare so a
+// vocab change propagates automatically.
+// -----------------------------------------------------------------------------
+
+export type {
+  AttendanceMode,
+  SeriesType,
+  RecurrenceFrequency,
+  RecurrenceEndType,
+} from '@/lib/constants/vocabularies';
+
+/** events.status lifecycle states. */
+export type EventStatus =
+  | 'draft'
+  | 'pending_review'
+  | 'changes_requested'
+  | 'published'
+  | 'rejected'
+  | 'cancelled'
+  | 'postponed';
+
+/** events.source — how the event was created. */
+export type EventSource = 'manual' | 'scraper' | 'user_submission';
+
+/** events.price_type / series.price_type. */
+export type PriceType =
+  | 'free'
+  | 'fixed'
+  | 'range'
+  | 'varies'
+  | 'donation'
+  | 'per_session';
+
+/** series.skill_level for classes / workshops. */
+export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'all_levels';
+
+/**
+ * series.recurrence_rule JSONB shape.
+ *
+ * Assembled + validated by `happenlist_scraper/backend/lib/recurrence-rule.js`
+ * before being written. UI consumers: `src/data/events/get-events.ts`
+ * (buildRecurrenceLabel) and `src/components/series/series-context-block.tsx`
+ * (buildRhythmLine).
+ *
+ * If you add a field, update BOTH consumers above AND the scraper assembler.
+ */
+export interface RecurrenceRule {
+  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly';
+  /** Every N frequency units. 1 = every week, 2 = every other week. */
+  interval?: number;
+  /** 0=Sun … 6=Sat. Used for weekly/biweekly. */
+  days_of_week?: number[];
+  /** 1=first, 2=second, 3=third, 4=fourth, -1=last. Monthly only. */
+  week_of_month?: number;
+  /** 1-31. Monthly fixed-day patterns ("the 15th of every month"). */
+  day_of_month?: number;
+  /** HH:MM 24-hour start time. */
+  time?: string;
+  /** Session duration in minutes. */
+  duration_minutes?: number;
+  end_type?: 'date' | 'count' | 'never';
+  /** YYYY-MM-DD when end_type='date'. */
+  end_date?: string;
+  /** When end_type='count'. */
+  end_count?: number;
+}
+
