@@ -32,6 +32,8 @@ import {
   DoorOpen,
   CreditCard,
   Zap,
+  Ban,
+  MessageCircle,
 } from 'lucide-react';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { Button } from '@/components/ui';
@@ -391,6 +393,19 @@ export default async function EventPage({ params }: EventPageProps) {
           />
         )}
 
+        {/* Sold out banner — prominent warning when event is sold out */}
+        {event.sold_out && !isPastEvent && (
+          <div className="flex items-center gap-3 p-4 rounded-xl bg-rose-50 border border-rose-200 mb-6">
+            <Ban className="w-5 h-5 text-rose-600 flex-shrink-0" aria-hidden="true" />
+            <div>
+              <p className="font-semibold text-rose-800">Sold Out</p>
+              {event.sold_out_details && (
+                <p className="text-sm text-rose-700 mt-0.5">{event.sold_out_details}</p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* ── Hero Section ────────────────────────────────── */}
 
         {/* Hero image — wide banner when no flyer */}
@@ -621,6 +636,26 @@ export default async function EventPage({ params }: EventPageProps) {
                 <div className="prose-event text-slate leading-relaxed">
                   {event.happenlist_summary}
                 </div>
+              </div>
+            )}
+
+            {/* Personality Badges — editorial hooks that sell the experience */}
+            {event.personality_badges && event.personality_badges.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {event.personality_badges.map((badge, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border"
+                    style={{
+                      backgroundColor: `${categoryColor.accent}08`,
+                      borderColor: `${categoryColor.accent}25`,
+                      color: categoryColor.accent,
+                    }}
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+                    {badge}
+                  </span>
+                ))}
               </div>
             )}
 
@@ -1006,6 +1041,12 @@ export default async function EventPage({ params }: EventPageProps) {
 
               {/* Primary CTA Button — big, rounded-full, coral */}
               <div className="space-y-3">
+                {event.sold_out && !isPastEvent && (
+                  <div className="flex items-center justify-center gap-2 w-full px-4 py-3 text-sm font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-full">
+                    <Ban className="w-4 h-4" aria-hidden="true" />
+                    Sold Out
+                  </div>
+                )}
                 {event.ticket_url ? (
                   <Button
                     href={event.ticket_url}
@@ -1015,7 +1056,7 @@ export default async function EventPage({ params }: EventPageProps) {
                     rightIcon={<ExternalLink className="w-4 h-4" />}
                     className="!rounded-full"
                   >
-                    Get Tickets
+                    {event.sold_out ? 'Check Availability' : 'Get Tickets'}
                   </Button>
                 ) : event.registration_url ? (
                   <Button
