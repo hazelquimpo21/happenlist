@@ -3647,6 +3647,8 @@ export type {
   SeriesType,
   RecurrenceFrequency,
   RecurrenceEndType,
+  PriceType,
+  ImageType,
 } from '@/lib/constants/vocabularies';
 
 /** events.status lifecycle states. */
@@ -3662,14 +3664,8 @@ export type EventStatus =
 /** events.source — how the event was created. */
 export type EventSource = 'manual' | 'scraper' | 'user_submission';
 
-/** events.price_type / series.price_type. */
-export type PriceType =
-  | 'free'
-  | 'fixed'
-  | 'range'
-  | 'varies'
-  | 'donation'
-  | 'per_session';
+// PriceType + ImageType are re-exported from @/lib/constants/vocabularies above.
+// Keep the re-export; do not redeclare here.
 
 /** series.skill_level for classes / workshops. */
 export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'all_levels';

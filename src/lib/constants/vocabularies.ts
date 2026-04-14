@@ -5,9 +5,9 @@
  *
  * MIRROR OF: happenlist_scraper/backend/lib/vocabularies.js
  * If you change this, change BOTH. Sync verified manually during phase reviews.
- * Last byte-for-byte verification: 2026-04-14 (scraper series session: added
- *   SERIES_TYPES, RECURRENCE_FREQUENCIES, RECURRENCE_END_TYPES, and day/week/dom
- *   bounds for the series rhythm UI) — clean.
+ * Last byte-for-byte verification: 2026-04-14 (scraper image-pipeline session:
+ *   added PRICE_TYPES, IMAGE_TYPES, IMAGE_TYPES_ANALYZER for the watermark
+ *   rewrite + image_type constraint migration) — clean.
  *
  * This file holds the canonical TypeScript vocabularies for the four
  * controlled lists the scraper writes into the events table:
@@ -200,6 +200,37 @@ export const VENUE_TYPES = [
 export type VenueType = (typeof VENUE_TYPES)[number];
 
 // -----------------------------------------------------------------------------
+// PRICE TYPES (pricing analyzer → events.price_type)
+// -----------------------------------------------------------------------------
+// What kind of price the event charges. Matches the events.price_type CHECK
+// constraint. Drives card price badges and the price-tier filter.
+export const PRICE_TYPES = [
+  'free',
+  'fixed',
+  'range',
+  'varies',
+  'donation',
+  'per_session',
+] as const;
+
+export type PriceType = (typeof PRICE_TYPES)[number];
+
+// -----------------------------------------------------------------------------
+// IMAGE TYPES (image analyzer → events.image_type)
+// -----------------------------------------------------------------------------
+// What the hero image IS. Matches the events_image_type_check constraint
+// (widened from flyer|thumbnail|logo|unknown → flyer|photo|logo|unknown in
+// migration 20260414_1708_image_type_allow_photo.sql).
+//
+// The scraper's analyzer can also emit 'unusable' — it's coalesced to
+// 'unknown' at save time. See backend/lib/image-types.js.
+export const IMAGE_TYPES = ['flyer', 'photo', 'logo', 'unknown'] as const;
+export type ImageType = (typeof IMAGE_TYPES)[number];
+
+export const IMAGE_TYPES_ANALYZER = ['flyer', 'photo', 'logo', 'unusable', 'unknown'] as const;
+export type ImageTypeAnalyzer = (typeof IMAGE_TYPES_ANALYZER)[number];
+
+// -----------------------------------------------------------------------------
 // SERIES TYPES (event-meta analyzer → series.series_type)
 // -----------------------------------------------------------------------------
 // Classification of what KIND of multi-event grouping this is. Drives UI
@@ -262,6 +293,8 @@ const GOOD_FOR_SLUG_SET = new Set<string>(GOOD_FOR_SLUGS);
 const ATTENDANCE_MODE_SET = new Set<string>(ATTENDANCE_MODES);
 const ACCESS_TYPE_SET = new Set<string>(ACCESS_TYPES);
 const VENUE_TYPE_SET = new Set<string>(VENUE_TYPES);
+const PRICE_TYPE_SET = new Set<string>(PRICE_TYPES);
+const IMAGE_TYPE_SET = new Set<string>(IMAGE_TYPES);
 const SERIES_TYPE_SET = new Set<string>(SERIES_TYPES);
 const RECURRENCE_FREQUENCY_SET = new Set<string>(RECURRENCE_FREQUENCIES);
 const RECURRENCE_END_TYPE_SET = new Set<string>(RECURRENCE_END_TYPES);
@@ -292,6 +325,14 @@ export function isAccessType(value: string): value is AccessType {
 
 export function isVenueType(value: string): value is VenueType {
   return VENUE_TYPE_SET.has(value);
+}
+
+export function isPriceType(value: string): value is PriceType {
+  return PRICE_TYPE_SET.has(value);
+}
+
+export function isImageType(value: string): value is ImageType {
+  return IMAGE_TYPE_SET.has(value);
 }
 
 export function isSeriesType(value: string): value is SeriesType {
