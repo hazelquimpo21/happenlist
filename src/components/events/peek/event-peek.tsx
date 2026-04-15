@@ -185,8 +185,11 @@ export function EventPeek({
           </div>
         )}
 
-        {/* Heart lives on hero so it's reachable without scrolling on mobile. */}
-        <div className="absolute top-3 right-3 z-10">
+        {/* Heart lives on hero so it's reachable without scrolling on mobile.
+            Desktop has a close button at top-3 right-3, so we offset the
+            heart left of it there. Mobile has no close button (tap backdrop
+            or drag handle to dismiss), so heart sits at the edge. */}
+        <div className="absolute top-3 right-3 md:right-14 z-10">
           <HeartButtonCompact
             eventId={event.id}
             className="bg-white/90 backdrop-blur-sm shadow-sm hover:bg-white"

@@ -84,7 +84,15 @@ interface PeekContextValue {
   data: PeekData | null;
   isOpen: boolean;
   openPeek: (target: PeekTarget, stub?: PeekStub) => void;
-  closePeek: () => void;
+  /**
+   * Close the peek. By default, pops our pushed history entry so the URL
+   * reverts to where the user came from. Pass `{ forNavigation: true }`
+   * when closing *because* the user is navigating away via a CTA — in
+   * that case we skip `history.back()` because the outgoing navigation
+   * will set its own URL, and racing a back-pop against it strands the
+   * user on the previous page (e.g. /events) instead of the detail page.
+   */
+  closePeek: (opts?: { forNavigation?: boolean }) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -204,21 +212,30 @@ export function PeekProvider({ children }: { children: ReactNode }) {
   // -------------------------------------------------------------------------
   // CLOSE
   // -------------------------------------------------------------------------
-  const closePeek = useCallback(() => {
-    console.log(`[${PEEK_LOG_SCOPE}:close]`);
+  const closePeek = useCallback((opts?: { forNavigation?: boolean }) => {
+    console.log(`[${PEEK_LOG_SCOPE}:close] forNavigation=${!!opts?.forNavigation}`);
     // Restore focus to the card that opened the peek — accessibility win
     // for keyboard users. Do this *before* unmounting the sheet so Radix
-    // doesn't fight us over focus.
+    // doesn't fight us over focus. Skip when navigating away: the next
+    // page owns focus.
     const trigger = dataRef.current?.triggerEl;
     setData(null);
-    if (trigger && document.contains(trigger)) {
+    if (!opts?.forNavigation && trigger && document.contains(trigger)) {
       // Next tick so React unmounts the sheet before we focus.
       requestAnimationFrame(() => trigger.focus({ preventScroll: true }));
     }
-    if (weOwnTopOfHistory.current) {
+    if (weOwnTopOfHistory.current && !opts?.forNavigation) {
       // Pop our pushed entry so the URL reverts to where the user came from.
+      // When navigating, we leave the entry alone — the outgoing <Link>/<a>
+      // will replace or push over it. Calling history.back() here would
+      // race the navigation and strand the user on the previous page.
       weOwnTopOfHistory.current = false;
       window.history.back();
+    } else if (opts?.forNavigation) {
+      // We're handing off to a Link/<a>. Reset our ownership flag so the
+      // next popstate (if any) doesn't try to re-own the history entry
+      // the new navigation just replaced.
+      weOwnTopOfHistory.current = false;
     }
   }, []);
 

@@ -51,6 +51,10 @@ export function PeekHost() {
     );
   }
 
+  // Navigation-aware close — peek CTAs call this so closePeek doesn't
+  // race the outgoing link navigation with history.back().
+  const handleNavigate = () => closePeek({ forNavigation: true });
+
   // Loaded — render the real content.
   if (data.event) {
     return (
@@ -58,7 +62,7 @@ export function PeekHost() {
         event={data.event}
         open={isOpen}
         onOpenChange={handleOpenChange}
-        onNavigate={closePeek}
+        onNavigate={handleNavigate}
       />
     );
   }
@@ -70,7 +74,7 @@ export function PeekHost() {
         event={cardToPeekStub(data.stub)}
         open={isOpen}
         onOpenChange={handleOpenChange}
-        onNavigate={closePeek}
+        onNavigate={handleNavigate}
         isStub
       />
     );
