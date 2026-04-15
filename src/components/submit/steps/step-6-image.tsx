@@ -16,7 +16,7 @@
 import { useState } from 'react';
 import { Image as ImageIcon, Link, Upload, X } from 'lucide-react';
 import { StepHeader } from '../step-progress';
-import { Input, Button } from '@/components/ui';
+import { Input } from '@/components/ui';
 import type { EventDraftData } from '@/types/submission';
 import { cn } from '@/lib/utils';
 

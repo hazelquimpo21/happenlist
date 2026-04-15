@@ -16,7 +16,6 @@ import {
   XCircle,
   FileText,
   Repeat,
-  Settings,
   LogOut,
   ChevronRight,
 } from 'lucide-react';

@@ -13,7 +13,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight, Heart } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { TimeAwareGreeting } from './time-aware-greeting';
 import { getCategoryColor } from '@/lib/constants/category-colors';
 
@@ -101,7 +101,8 @@ export function HeroSlideshow({ events, weekendEvents, weekendTotal }: HeroSlide
   const onTouchEnd = (e: React.TouchEvent) => {
     const diff = touchStartRef.current - e.changedTouches[0].clientX;
     if (Math.abs(diff) > 50) {
-      diff > 0 ? next() : prev();
+      if (diff > 0) next();
+      else prev();
     }
   };
 
@@ -123,7 +124,6 @@ export function HeroSlideshow({ events, weekendEvents, weekendTotal }: HeroSlide
 
   const event = events[current];
   const colors = getCategoryColor(event.category_slug);
-  const placeholder = PLACEHOLDERS[current % PLACEHOLDERS.length];
 
   return (
     <section

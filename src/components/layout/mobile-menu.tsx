@@ -33,7 +33,7 @@ import {
 import * as Dialog from '@radix-ui/react-dialog';
 import { useAuth } from '@/hooks/use-auth';
 import { UserAvatar } from '@/components/auth/user-avatar';
-import { NAV_ITEMS, ROUTES } from '@/lib/constants';
+import { NAV_ITEMS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 // ============================================================================
@@ -114,7 +114,7 @@ function MenuButton({ onClick, icon, children, variant = 'default' }: MenuButton
  */
 export function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
-  const { session, isLoading, signOut } = useAuth();
+  const { session, signOut } = useAuth();
 
   const closeMenu = () => setIsOpen(false);
 

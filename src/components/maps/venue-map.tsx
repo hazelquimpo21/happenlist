@@ -75,8 +75,9 @@ interface VenueMapProps {
 export function VenueMap({
   latitude,
   longitude,
-  venueName,
-  address,
+  // venueName + address are part of the public API but not yet rendered
+  // inside the map (planned: tooltip + directions). Keep the props
+  // declared in the type; just don't destructure them here.
   venueType = 'venue',
   height = '300px',
   className,

@@ -113,7 +113,7 @@ export async function superadminEditEvent(
   // 🔐 Verify superadmin status
   try {
     requireSuperAdmin(adminEmail);
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: 'Unauthorized: Superadmin access required',
@@ -334,7 +334,7 @@ export async function superadminDeleteEvent(
   // 🔐 Verify superadmin status
   try {
     requireSuperAdmin(adminEmail);
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: 'Unauthorized: Superadmin access required',
@@ -496,7 +496,7 @@ export async function superadminRestoreEvent(
   // 🔐 Verify superadmin status
   try {
     requireSuperAdmin(adminEmail);
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: 'Unauthorized: Superadmin access required',
@@ -621,7 +621,7 @@ export async function superadminChangeStatus(
   // 🔐 Verify superadmin status
   try {
     requireSuperAdmin(adminEmail);
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: 'Unauthorized: Superadmin access required',

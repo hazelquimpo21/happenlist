@@ -6,7 +6,6 @@
 
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -24,7 +23,6 @@ import {
 } from 'lucide-react';
 import { cn, getBestImageUrl, formatMKE, formatTimeMKE, formatDateTimeMKE } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import type { AdminEventCard as AdminEventCardType } from '@/data/admin';
 
 interface AdminEventCardProps {
@@ -42,7 +40,6 @@ export function AdminEventCard({
   onApprove,
   onReject,
 }: AdminEventCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
 
   // Status badge styles
   const statusStyles: Record<string, { className: string; label: string }> = {

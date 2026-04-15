@@ -15,7 +15,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Save, Loader2, Send } from 'lucide-react';
 import { StepProgress } from './step-progress';
 import { Button } from '@/components/ui';
@@ -23,7 +22,6 @@ import type {
   EventDraft,
   EventDraftData,
   SeriesDraftData,
-  EventStatus,
 } from '@/types/submission';
 import {
   validateStep1,
@@ -63,14 +61,11 @@ interface FormWrapperProps {
 // ============================================================================
 
 export function FormWrapper({
-  draft,
   children,
   currentStep,
   setCurrentStep,
   draftData,
-  setDraftData,
   seriesDraftData,
-  setSeriesDraftData,
   completedSteps,
   setCompletedSteps,
   onSave,
@@ -79,7 +74,6 @@ export function FormWrapper({
   isSubmitting,
   lastSaved,
 }: FormWrapperProps) {
-  const router = useRouter();
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 

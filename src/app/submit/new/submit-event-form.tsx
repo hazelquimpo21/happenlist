@@ -53,9 +53,6 @@ interface SubmitEventFormProps {
 // ============================================================================
 
 export function SubmitEventForm({
-  userEmail,
-  userName,
-  userId,
   categories,
   existingDraft,
 }: SubmitEventFormProps) {

@@ -15,7 +15,7 @@
 'use client';
 
 import { StepHeader } from '../step-progress';
-import { Input, Button } from '@/components/ui';
+import { Input } from '@/components/ui';
 import type { EventDraftData } from '@/types/submission';
 import { MAX_TITLE_LENGTH, MAX_SHORT_DESCRIPTION_LENGTH } from '@/lib/constants/series-limits';
 import { cn } from '@/lib/utils';

@@ -153,8 +153,6 @@ export function AdminSeriesGrid({ series }: AdminSeriesGridProps) {
     }
   }, [mergeTargetId, selected, series, router]);
 
-  const selectedSeries = series.filter(s => selected.has(s.id));
-
   return (
     <div>
       {/* Bulk action bar */}

@@ -49,7 +49,7 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
         <Home className="w-4 h-4" />
       </Link>
 
-      {items.map((item, index) => (
+      {items.map((item) => (
         <div key={item.label} className="flex items-center gap-1">
           {/* Separator */}
           <ChevronRight className="w-4 h-4 text-mist flex-shrink-0" />

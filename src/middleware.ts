@@ -60,11 +60,10 @@ export async function middleware(request: NextRequest) {
   // IMPORTANT: Do not run any Supabase auth code between
   // createServerClient and supabase.auth.getUser()
 
-  // This refreshes the session if expired and updates cookies
-  // The getUser() call is required to properly refresh tokens
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // This refreshes the session if expired and updates cookies.
+  // The getUser() call is required to properly refresh tokens — we
+  // don't use the returned user here, we just need the side effect.
+  await supabase.auth.getUser();
 
   // Optional: Protect certain routes
   // Uncomment to enable route protection

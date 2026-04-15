@@ -5,7 +5,6 @@
  */
 
 import { cn } from '@/lib/utils';
-import { CATEGORY_COLORS } from '@/lib/constants/category-colors';
 
 interface SkeletonProps {
   /** Shape variant */
@@ -65,27 +64,15 @@ export function Skeleton({
 }
 
 /**
- * Category accent colors for skeleton top borders.
- * Cycles through them for visual variety.
- */
-const SKELETON_ACCENT_COLORS = [
-  CATEGORY_COLORS.music.accent,
-  CATEGORY_COLORS.arts.accent,
-  CATEGORY_COLORS.food.accent,
-  CATEGORY_COLORS.sports.accent,
-  CATEGORY_COLORS.nightlife.accent,
-  CATEGORY_COLORS.festivals.accent,
-];
-
-/**
  * Preset skeleton for event cards.
- * Matches the real EventCard layout: 3px colored top border,
- * image area, date line, title, venue, and price.
+ *
+ * The `index` prop is accepted for backwards compatibility (callers pass
+ * one for variety in earlier designs that cycled accent colors per
+ * card). The v3 card redesign dropped the colored top border, so we
+ * no longer differentiate by index — but keeping the prop avoids
+ * touching every grid call site.
  */
-export function EventCardSkeleton({ index = 0 }: { index?: number }) {
-  const accentColor =
-    SKELETON_ACCENT_COLORS[index % SKELETON_ACCENT_COLORS.length];
-
+export function EventCardSkeleton({ index: _index = 0 }: { index?: number }) {
   return (
     <div
       className="bg-pure rounded-lg overflow-hidden shadow-card"

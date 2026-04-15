@@ -43,7 +43,6 @@ import {
 } from '@/lib/constants/series-limits';
 import { formatAgeRange } from '@/types';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
 
 // ============================================================================
 // TYPES

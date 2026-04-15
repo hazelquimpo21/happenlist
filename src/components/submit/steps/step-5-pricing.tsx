@@ -20,7 +20,7 @@
 
 'use client';
 
-import { Gift, DollarSign, Ticket, ExternalLink, Heart, Globe, Instagram, Facebook, ClipboardList, Package, FileText } from 'lucide-react';
+import { Gift, DollarSign, Ticket, Heart, Globe, Instagram, Facebook, ClipboardList, Package, FileText } from 'lucide-react';
 import { StepHeader } from '../step-progress';
 import { Input } from '@/components/ui';
 import type { EventDraftData, PriceType, SeriesDraftData } from '@/types/submission';

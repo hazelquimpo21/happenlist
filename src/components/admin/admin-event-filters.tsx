@@ -82,7 +82,7 @@ export function AdminEventFilters({
 
       // Refresh the page to show updated images
       window.location.reload();
-    } catch (error) {
+    } catch {
       setMigrationResult({
         success: false,
         message: 'Failed to migrate images',

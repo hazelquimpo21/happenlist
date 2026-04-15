@@ -14,6 +14,21 @@ const eslintConfig = [
   {
     ignores: ['src/lib/supabase/types.ts'],
   },
+  {
+    // Allow underscore-prefixed args/vars to mark "intentionally unused"
+    // — the standard TS convention. Without this, every `_request` or
+    // `_index` we add to silence a warning re-warns about itself.
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+    },
+  },
 ];
 
 export default eslintConfig;

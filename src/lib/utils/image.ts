@@ -100,7 +100,6 @@ export function isValidImageUrl(url: string | null | undefined): boolean {
   
   try {
     const parsed = new URL(url);
-    const lowercaseUrl = url.toLowerCase();
     const pathname = parsed.pathname.toLowerCase();
     
     // First, check if it matches known PAGE patterns (reject these)

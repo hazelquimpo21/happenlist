@@ -29,7 +29,6 @@ import type {
   SeriesDraftData,
   RecurrenceRule,
   RecurrenceFrequency,
-  RecurrenceEndType,
 } from '@/types/submission';
 import { DAY_OF_WEEK_SHORT } from '@/types/submission';
 import { RECURRENCE_FREQUENCY_OPTIONS, SERIES_LIMITS } from '@/lib/constants/series-limits';
@@ -125,8 +124,13 @@ export function Step3DateTime({
   const [campTime, setCampTime] = useState(seriesDraftData?.core_start_time || '09:00');
   const [campEndTime, setCampEndTime] = useState(seriesDraftData?.core_end_time || '15:00');
 
-  // Days of week for camp (default Mon-Fri from config)
-  const campDaysOfWeek = seriesDraftData?.days_of_week ?? seriesConfig?.defaultDaysOfWeek ?? [1, 2, 3, 4, 5];
+  // Days of week for camp (default Mon-Fri from config). useMemo'd so
+  // the array identity is stable across renders — the campDates useMemo
+  // below depends on it, and a fresh array each render would re-fire it.
+  const campDaysOfWeek = useMemo(
+    () => seriesDraftData?.days_of_week ?? seriesConfig?.defaultDaysOfWeek ?? [1, 2, 3, 4, 5],
+    [seriesDraftData?.days_of_week, seriesConfig?.defaultDaysOfWeek]
+  );
 
   // Calculate preview dates for camp
   const campDates = useMemo(() => {

@@ -40,7 +40,6 @@ import type {
   EventDraftData,
   EventMode,
   SeriesDraftData,
-  AttendanceMode,
   SkillLevel,
 } from '@/types/submission';
 import { EVENT_MODE_LABELS } from '@/types/submission';

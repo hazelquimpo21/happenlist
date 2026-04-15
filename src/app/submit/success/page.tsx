@@ -31,7 +31,9 @@ export default async function SubmitSuccessPage({
 }: {
   searchParams: Promise<{ id?: string }>;
 }) {
-  const { id: eventId } = await searchParams;
+  // Await but discard — the success page doesn't display the id; it's
+  // here to keep Next happy about the route having dynamic params.
+  await searchParams;
 
   return (
     <Container>

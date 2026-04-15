@@ -83,7 +83,6 @@ function formatMessage(
   message: string,
   context?: LogContext
 ): string {
-  const timestamp = new Date().toISOString();
   const levelPrefix = LOG_PREFIXES[level];
   const actionPrefix = context?.action ? ACTION_PREFIXES[context.action] || '' : '';
 

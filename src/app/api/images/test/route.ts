@@ -101,7 +101,7 @@ export async function GET() {
  * POST /api/images/test
  * Test upload with a 1x1 pixel test image
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const supabase = createAdminClient();
     

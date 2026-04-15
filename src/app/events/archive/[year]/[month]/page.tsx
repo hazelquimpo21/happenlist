@@ -176,7 +176,7 @@ export default async function MonthEventsPage({
 
       {/* Quick links to nearby months */}
       <div className="flex flex-wrap gap-2 mb-8">
-        {MONTH_NAMES.map((m, idx) => {
+        {MONTH_NAMES.map((m) => {
           const isCurrentMonth = m === monthLower;
           return (
             <Button

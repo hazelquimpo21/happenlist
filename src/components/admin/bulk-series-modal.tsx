@@ -163,11 +163,13 @@ export function BulkSeriesModal({ events, onClose, onSeriesComplete }: BulkSerie
     });
   }, []);
 
-  // All event IDs to include = selected + added suggestions
-  const allEventIds = [
-    ...events.map(e => e.id),
-    ...Array.from(addedSuggestionIds),
-  ];
+  // All event IDs to include = selected + added suggestions.
+  // useMemo so the array identity is stable — three useCallback hooks
+  // depend on it; without memoization they'd recreate every render.
+  const allEventIds = useMemo(
+    () => [...events.map((e) => e.id), ...Array.from(addedSuggestionIds)],
+    [events, addedSuggestionIds]
+  );
 
   // Track how many selected events are already in a series, grouped by series
   const eventsInSeries = events.filter(e => e.series_id);

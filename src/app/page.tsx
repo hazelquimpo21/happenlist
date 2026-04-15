@@ -21,13 +21,12 @@ import { ChevronRight, ArrowRight, Repeat } from 'lucide-react';
 import { Container } from '@/components/layout';
 import {
   HeroSlideshow,
-  ListCard,
   JustAddedRows,
   FilterPills,
 } from '@/components/homepage';
 import { getEvents, getFeaturedEvents } from '@/data/events';
 import { getCategories } from '@/data/categories';
-import { getThisWeekendRange, getTodayRange } from '@/lib/utils';
+import { getThisWeekendRange } from '@/lib/utils';
 import { ROUTES } from '@/lib/constants';
 import { getCategoryColor } from '@/lib/constants/category-colors';
 import type { EventCard as EventCardType } from '@/types';
@@ -207,11 +206,10 @@ function CompactEventCard({ event, dark = false }: { event: EventCardType; dark?
 
 export default async function HomePage() {
   // Fetch data in parallel
-  const [featuredEvents, categories, weekendData, todayData, recentData] = await Promise.all([
+  const [featuredEvents, categories, weekendData, recentData] = await Promise.all([
     getFeaturedEvents({ limit: 5 }),
     getCategories(),
     getEvents({ dateRange: getThisWeekendRange(), limit: 8 }),
-    getEvents({ dateRange: getTodayRange(), limit: 4 }),
     // Just Added: collapse series so a recurring yoga class with 50 ingested
     // instances doesn't push everything else off the list. Each series shows
     // its next upcoming date with a "N more dates" chip.
@@ -219,7 +217,6 @@ export default async function HomePage() {
   ]);
 
   const weekendEvents = weekendData.events;
-  const todayEvents = todayData.events;
   const recentEvents = recentData.events;
 
   // Pick the top 3 categories that have events — fetch events for each
