@@ -7,6 +7,18 @@
  * color accent (3px top border + opaque badge pill). Date format uses
  * day-of-week + time ("Sat · 7pm") for natural schedule planning.
  *
+ * INTERACTION:
+ *   Tapping a card opens the event PEEK (a modal/bottom-sheet) via
+ *   `usePeek().openPeek()`. The underlying `<Link>` stays in the DOM
+ *   so:
+ *     - Middle-click / cmd-click opens the full page in a new tab
+ *     - Right-click "open in new tab" works
+ *     - Search engines see a real link
+ *     - Keyboard users can Tab to it and press Enter (also opens peek)
+ *   The click handler only hijacks the DEFAULT left-click with no
+ *   modifiers — which is the "I want to browse" intent. Everything
+ *   else keeps its native behavior.
+ *
  * FEATURES:
  *   - Per-category color treatment (border + badge)
  *   - Smart date formatting (Today/Tomorrow/day+time)
@@ -20,8 +32,11 @@
  *   <EventCard event={eventData} variant="featured" showCategory />
  */
 
-import { memo } from 'react';
+'use client';
+
+import { memo, type MouseEvent } from 'react';
 import Link from 'next/link';
+import { usePeek } from '@/contexts/peek-context';
 import { MapPin, Baby, Users, Repeat } from 'lucide-react';
 import {
   isToday,
@@ -181,6 +196,34 @@ function EventCardComponent({
 }: EventCardProps) {
   const eventUrl = buildEventUrl(event);
   const categoryColor = getCategoryColor(event.category_slug);
+  const { openPeek } = usePeek();
+
+  /**
+   * Intercept only the "default" click (plain left-click, no modifiers).
+   * Preserves native browser behavior for power users:
+   *   - cmd/ctrl/shift/meta + click → new tab
+   *   - middle click               → new tab
+   *   - right click                → context menu
+   *   - default click              → open peek (preventDefault)
+   */
+  const handleCardClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      e.metaKey ||
+      e.ctrlKey ||
+      e.shiftKey ||
+      e.altKey ||
+      e.button !== 0
+    ) {
+      return; // let the browser handle it
+    }
+    e.preventDefault();
+    // Pass the card data as a stub for instant first paint — peek
+    // shows title/image/date immediately while the full fetch runs.
+    openPeek(
+      { slug: event.slug, instanceDate: event.instance_date },
+      event
+    );
+  };
 
   return (
     <article
@@ -189,13 +232,20 @@ function EventCardComponent({
         'bg-pure rounded-lg overflow-hidden',
         // Shadows
         'shadow-card',
-        // Hover: deeper shadow + lift
+        // Hover: deeper shadow + lift. Active: quick press-down for
+        // immediate tactile feedback before the peek slides in.
         'transition-all duration-200',
         'hover:shadow-card-lifted hover:-translate-y-1',
+        'active:translate-y-0 active:shadow-card active:duration-75',
         className
       )}
     >
-      <Link href={eventUrl} className="block focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2 rounded-lg">
+      <Link
+        href={eventUrl}
+        onClick={handleCardClick}
+        prefetch={false}
+        className="block focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2 rounded-lg"
+      >
         {/* ---------------------------------------------------------------- */}
         {/* 🖼️ IMAGE SECTION */}
         {/* ---------------------------------------------------------------- */}

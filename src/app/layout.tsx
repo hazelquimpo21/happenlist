@@ -13,6 +13,8 @@ import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/auth-context';
+import { PeekProvider } from '@/contexts/peek-context';
+import { PeekHost } from '@/components/events';
 import { Header, Footer } from '@/components/layout';
 import { SITE_CONFIG } from '@/lib/constants';
 import './globals.css';
@@ -112,14 +114,23 @@ export default function RootLayout({ children }: RootLayoutProps) {
 
         {/* Auth Provider - Wraps entire app for auth state */}
         <AuthProvider>
-          {/* Site Header */}
-          <Header />
+          {/* Peek Provider — controls the event peek sheet. Any child
+              can call usePeek() to open/close. See peek-context.tsx. */}
+          <PeekProvider>
+            {/* Site Header */}
+            <Header />
 
-          {/* Main Content */}
-          <main id="main-content" className="flex-1">{children}</main>
+            {/* Main Content */}
+            <main id="main-content" className="flex-1">{children}</main>
 
-          {/* Site Footer */}
-          <Footer />
+            {/* Event Peek modal host — mounted at root so any EventCard
+                click can open a peek sheet overlay. URL is pushStated to
+                /event/[slug] while the peek is open so back button closes. */}
+            <PeekHost />
+
+            {/* Site Footer */}
+            <Footer />
+          </PeekProvider>
 
           {/* Toast Notifications */}
           <Toaster

@@ -30,3 +30,4 @@ export { ChildEventsSchedule } from './child-events-schedule';
 export { PastInstances } from './past-instances';
 export { ViewTracker } from './view-tracker';
 export { PastEventBanner } from './past-event-banner';
+export { EventPeek, EventPeekSheet, PeekHost, PeekSkeleton } from './peek';
