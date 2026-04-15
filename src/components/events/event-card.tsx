@@ -53,6 +53,7 @@ import { getCategoryColor } from '@/lib/constants/category-colors';
 import { EventImage } from './event-image';
 import { HeartButtonCompact } from '@/components/hearts';
 import { VibeTagPill, AccessBadge, NoiseLevelIndicator } from './vibe-profile';
+import { AccessibilityIconRow } from './accessibility-badges';
 import { DistanceBadge } from './distance-badge';
 import type { EventCard as EventCardType } from '@/types';
 
@@ -382,6 +383,15 @@ function EventCardComponent({
             <p className="text-xs text-zinc/80 mb-1.5 truncate">
               by {event.organizer_name}
             </p>
+          )}
+
+          {/* Accessibility icon row — sits under location/organizer, NOT in
+              the vibe-tag row below. Returns null when no tags so spacing is
+              automatic. Single aria-label on the row covers all icons. */}
+          {event.accessibility_tags && event.accessibility_tags.length > 0 && (
+            <div className="mb-1.5">
+              <AccessibilityIconRow tags={event.accessibility_tags} />
+            </div>
           )}
 
           {/* Distance badge — shown when geo anchor is active */}

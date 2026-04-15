@@ -34,6 +34,10 @@ import { getNeighborhood } from '@/lib/constants/milwaukee-neighborhoods';
 import { getPriceTier } from '@/lib/constants/price-tiers';
 import { getAgeGroup } from '@/lib/constants/age-groups';
 import { TIME_OF_DAY_LABELS, type TimeOfDay } from '@/lib/constants/time-of-day';
+import {
+  ACCESSIBILITY_TAG_LABELS,
+  isAccessibilityTag,
+} from '@/lib/constants/vocabularies';
 import { getGoodForTag } from '@/types/good-for';
 import { useFilterState } from './use-filter-state';
 import { FilterChip } from './filter-chip';
@@ -122,6 +126,18 @@ function buildActiveChips(
       key: `age-${slug}`,
       label: group?.label ?? slug,
       onRemove: () => removeOne('ageGroup', slug),
+    });
+  }
+
+  // Accessibility (Stage 2) — narrow defensively in case a stale URL carries
+  // a vocab value we've since removed; the label-lookup would otherwise be
+  // undefined.
+  for (const tag of state.accessibility) {
+    if (!isAccessibilityTag(tag)) continue;
+    chips.push({
+      key: `a11y-${tag}`,
+      label: ACCESSIBILITY_TAG_LABELS[tag],
+      onRemove: () => removeOne('accessibility', tag),
     });
   }
 

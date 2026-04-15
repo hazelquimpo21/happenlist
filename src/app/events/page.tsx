@@ -68,6 +68,14 @@ interface EventsPageProps {
     // Price + age (B5)
     priceTier?: string | string[];
     ageGroup?: string | string[];
+    // Tagging expansion (Stage 1+2). Only `accessibility` has a UI surface
+    // in Stage 2; the others ride along so deep-linked URLs still flow into
+    // getEvents in advance of Stage 3 surfacing them.
+    accessibility?: string | string[];
+    sensory?: string | string[];
+    leaveWith?: string | string[];
+    socialMode?: string;
+    energyNeeded?: string;
     // Geo (B4)
     neighborhood?: string;
     nearLat?: string;
@@ -102,6 +110,9 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const timeOfDayArray = toArray(params.timeOfDay);
   const priceTierArray = toArray(params.priceTier);
   const ageGroupArray = toArray(params.ageGroup);
+  const accessibilityArray = toArray(params.accessibility);
+  const sensoryArray = toArray(params.sensory);
+  const leaveWithArray = toArray(params.leaveWith);
   const interestPreset = params.interestPreset;
   const vibeTag = params.vibeTag;
   const noiseLevel = params.noiseLevel;
@@ -135,6 +146,11 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       interestPreset,
       priceTier: priceTierArray.length > 0 ? priceTierArray : undefined,
       ageGroup: ageGroupArray.length > 0 ? ageGroupArray : undefined,
+      accessibility: accessibilityArray.length > 0 ? accessibilityArray : undefined,
+      sensory: sensoryArray.length > 0 ? sensoryArray : undefined,
+      leaveWith: leaveWithArray.length > 0 ? leaveWithArray : undefined,
+      socialMode: params.socialMode,
+      energyNeeded: params.energyNeeded,
       vibeTag,
       noiseLevel,
       accessType,

@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { Button } from '@/components/ui';
-import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox, ShareButton, VibeProfileSection, AccessBadge, ChildEventsSchedule, PastInstances, ViewTracker, PastEventBanner } from '@/components/events';
+import { EventGrid, SectionHeader, EventPrice, EventDateTime, EventLinks, FlyerLightbox, ShareButton, VibeProfileSection, AccessibilityBadges, AccessBadge, ChildEventsSchedule, PastInstances, ViewTracker, PastEventBanner } from '@/components/events';
 import { HeartButton } from '@/components/hearts';
 import { SeriesContextBlock } from '@/components/series';
 import { EventJsonLd } from '@/components/seo';
@@ -1015,6 +1015,13 @@ export default async function EventPage({ params }: EventPageProps) {
             {event.series_id && (
               <PastInstances seriesId={event.series_id} excludeEventId={event.id} />
             )}
+
+            {/* Accessibility — explicit-only signals from the organizer.
+                Renders ABOVE the vibe profile because these are the most
+                trustworthy field in the new tagging set and the most load-
+                bearing for users who actually need them. Hides when empty
+                (silence is honest — see component header). */}
+            <AccessibilityBadges tags={event.accessibility_tags} />
 
             {/* Vibe Profile — "What's It Actually Like?" */}
             <VibeProfileSection event={event} accentColor={categoryColor.accent} />

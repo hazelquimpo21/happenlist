@@ -37,7 +37,12 @@ import { SlidersHorizontal, X } from 'lucide-react';
 import { GOOD_FOR_TAGS } from '@/types/good-for';
 import { PRICE_TIERS } from '@/lib/constants/price-tiers';
 import { AGE_GROUPS } from '@/lib/constants/age-groups';
-import { VIBE_TAGS, NOISE_LEVELS } from '@/lib/constants/vocabularies';
+import {
+  VIBE_TAGS,
+  NOISE_LEVELS,
+  ACCESSIBILITY_TAGS,
+  ACCESSIBILITY_TAG_LABELS,
+} from '@/lib/constants/vocabularies';
 import { FilterChip } from './filter-chip';
 import { FilterSection } from './filter-section';
 import { NeighborhoodPicker } from './neighborhood-picker';
@@ -158,6 +163,27 @@ export function FilterDrawer({
 
           {/* Scrollable body */}
           <div className="flex-1 overflow-y-auto px-5">
+            {/* Access — at the TOP of the drawer because accessibility is the
+                most trustworthy field in the new tagging set (explicit-only,
+                never inferred) and the most load-bearing for users who need
+                it. Do not bury it under "Vibe". */}
+            <FilterSection
+              label="Access"
+              hint="Multi-select — events match if the listing states any selected feature"
+              showClear={state.accessibility.length > 0}
+              onClear={() => setSingle('accessibility', [])}
+            >
+              {ACCESSIBILITY_TAGS.map((tag) => (
+                <FilterChip
+                  key={tag}
+                  label={ACCESSIBILITY_TAG_LABELS[tag]}
+                  active={state.accessibility.includes(tag)}
+                  size="sm"
+                  onClick={() => toggleArrayValue('accessibility', tag)}
+                />
+              ))}
+            </FilterSection>
+
             {/* Neighborhood / distance */}
             <NeighborhoodPicker />
 
