@@ -7,6 +7,61 @@
 import type { Database } from '@/lib/supabase/types';
 import type { EventPerformer } from './performer';
 import type { EventMembershipBenefit } from './membership';
+import type {
+  AccessibilityTag,
+  SensoryTag,
+  LeaveWith,
+  SocialMode,
+  EnergyNeeded,
+  SliderDimension,
+} from '@/lib/constants/vocabularies';
+
+/**
+ * Per-tag evidence map — the quoted fragment from the page that justifies
+ * each tag. Written by the scraper's analyzers into
+ * events.inferred_signals.<dimension>.evidence so reviewers can audit.
+ *
+ * Keys are snake_case vocab values (typed loosely as string so the JSONB
+ * round-trip doesn't force a narrow union at read time); values are the
+ * evidence strings or "(inferred from event type: …)" placeholders.
+ */
+export type EvidenceMap = Record<string, string>;
+
+/**
+ * Slider reading on a single dimension. `value` is 1–5 (rubric in
+ * SLIDER_RUBRICS[dimension]); `confidence` reflects how much of the reading
+ * was grounded vs. inferred; `evidence` is the justifying quote or an
+ * "(inferred…)" placeholder.
+ *
+ * ADMIN-ONLY in v1 — surfaces only via the admin review panel until human
+ * calibration audit confirms 1/3/5 labeling holds across categories.
+ */
+export interface SliderReading {
+  value: 1 | 2 | 3 | 4 | 5;
+  confidence: 'high' | 'medium' | 'low';
+  evidence: string;
+}
+
+/**
+ * Shape of the events.inferred_signals JSONB blob. All keys optional — the
+ * payload grows as the scraper runs more analyzers on a given event, and
+ * older events won't have all keys. Detail-page / admin consumers must
+ * handle missing keys defensively.
+ */
+export interface InferredSignals {
+  accessibility?: {
+    evidence: EvidenceMap;
+    explicit_only?: boolean;
+  };
+  sensory?: {
+    evidence: EvidenceMap;
+    confidence?: 'high' | 'medium' | 'low';
+  };
+  leave_with?: {
+    evidence: EvidenceMap;
+  };
+  sliders?: Partial<Record<SliderDimension, SliderReading>>;
+}
 
 // Base types from database
 export type EventRow = Database['public']['Tables']['events']['Row'];
@@ -46,6 +101,16 @@ export interface EventWithDetails extends EventRow {
   event_performers?: EventPerformer[];
   // Linked membership benefits (from event_membership_benefits junction)
   event_membership_benefits?: EventMembershipBenefit[];
+
+  // Tagging expansion (scraper migrations 00016–00019). Typed here because
+  // the generated Database types in src/lib/supabase/types.ts have not been
+  // regenerated to include these columns yet.
+  accessibility_tags?: AccessibilityTag[] | null;
+  sensory_tags?: SensoryTag[] | null;
+  leave_with?: LeaveWith[] | null;
+  social_mode?: SocialMode | null;
+  energy_needed?: EnergyNeeded | null;
+  inferred_signals?: InferredSignals | null;
 }
 
 /**
@@ -108,4 +173,13 @@ export interface EventCard {
   member_benefit_label?: string | null;
   // Geo distance (populated when nearLat/nearLng anchor is set in query)
   distance_miles?: number | null;
+
+  // Tagging expansion (scraper migrations 00016–00019). Cards don't need
+  // inferred_signals — that's detail-page / admin-only. These flat columns
+  // are all the card needs for badge + filter surfacing.
+  accessibility_tags?: AccessibilityTag[];
+  sensory_tags?: SensoryTag[];
+  leave_with?: LeaveWith[];
+  social_mode?: SocialMode | null;
+  energy_needed?: EnergyNeeded | null;
 }

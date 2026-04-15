@@ -181,6 +181,55 @@ export interface EventFilters {
    * Max 50 miles (enforced in get-events.ts).
    */
   radiusMiles?: number;
+
+  // ── Tagging expansion filters (Stage 1) ──────────────────────────
+  /**
+   * Filter by accessibility tag(s) — e.g. "step_free", "asl_interpreted".
+   * Multi-value semantics: ANY-match (event passes if its accessibility_tags
+   * overlaps the requested set). Uses PG `&&` / PostgREST `.overlaps()`.
+   *
+   * These tags are EXPLICIT-ONLY — the scraper only sets them when the page
+   * literally says so, never inferred. They're the most trustworthy signal
+   * in the new set.
+   *
+   * Loose `string | string[]` type so URL params flow in directly;
+   * get-events.ts validates each value via `isAccessibilityTag` and drops
+   * unknowns.
+   */
+  accessibility?: string | string[];
+
+  /**
+   * Filter by sensory tag(s) — e.g. "loud_music", "strobe_lights".
+   * Multi-value semantics: ANY-match. Sensory tags can be inferred from
+   * event type (not just explicit), so the evidence string in
+   * inferred_signals.sensory.evidence may say "(inferred from event type: …)".
+   */
+  sensory?: string | string[];
+
+  /**
+   * Filter by leave_with tag(s) — "a_thing_you_made", "a_new_skill", etc.
+   * Multi-value semantics: ANY-match. `just_an_experience` does not stack
+   * with other leave_with tags (enforced at scrape time).
+   */
+  leaveWith?: string | string[];
+
+  /**
+   * Filter by social mode (single-value enum) — "solo_welcoming",
+   * "mingling_required", etc. See SOCIAL_MODES in vocabularies.ts.
+   */
+  socialMode?: string;
+
+  /**
+   * Filter by energy-needed mode (single-value enum) — "receptive",
+   * "physically_demanding", etc. See ENERGY_NEEDED in vocabularies.ts.
+   */
+  energyNeeded?: string;
+
+  // NOTE: No slider filters in the public filter set. Sliders
+  // (social_intensity, structure, commitment, spend_level) are stored in
+  // events.inferred_signals.sliders and are ADMIN-ONLY in v1 — they need
+  // human calibration audit before we expose them. See Stage 4 of
+  // TAGGING_UI_PROMPT.md for the admin review surface plan.
 }
 
 /**

@@ -60,7 +60,7 @@ interface UseFilterStateApi {
   setState: (next: FilterState) => void;
 
   /** Toggle a single string in a multi-value field (goodFor / timeOfDay / priceTier / ageGroup). */
-  toggleArrayValue: (field: 'goodFor' | 'timeOfDay' | 'priceTier' | 'ageGroup', value: string) => void;
+  toggleArrayValue: (field: 'goodFor' | 'timeOfDay' | 'priceTier' | 'ageGroup' | 'accessibility' | 'sensory' | 'leaveWith', value: string) => void;
 
   /** Set or clear a single-value field. Pass undefined to clear. */
   setSingle: <K extends keyof FilterState>(field: K, value: FilterState[K]) => void;
@@ -99,7 +99,7 @@ export function useFilterState(): UseFilterStateApi {
   );
 
   const toggleArrayValue = useCallback(
-    (field: 'goodFor' | 'timeOfDay' | 'priceTier' | 'ageGroup', value: string) => {
+    (field: 'goodFor' | 'timeOfDay' | 'priceTier' | 'ageGroup' | 'accessibility' | 'sensory' | 'leaveWith', value: string) => {
       const current = state[field];
       const next = current.includes(value)
         ? current.filter((v) => v !== value)

@@ -5,20 +5,27 @@
  *
  * MIRROR OF: happenlist_scraper/backend/lib/vocabularies.js
  * If you change this, change BOTH. Sync verified manually during phase reviews.
- * Last byte-for-byte verification: 2026-04-14 (scraper image-pipeline session:
- *   added PRICE_TYPES, IMAGE_TYPES, IMAGE_TYPES_ANALYZER for the watermark
- *   rewrite + image_type constraint migration) — clean.
+ * Last byte-for-byte verification: 2026-04-14 (tagging expansion Stage 1:
+ *   added ACCESSIBILITY_TAGS, SENSORY_TAGS + SENSORY_TAG_PRIORITY, LEAVE_WITH,
+ *   SOCIAL_MODES, ENERGY_NEEDED, SLIDER_DIMENSIONS + SLIDER_RUBRICS plus
+ *   *_LABELS mirrors, matching scraper migrations 00016–00019) — clean.
  *
- * This file holds the canonical TypeScript vocabularies for the four
- * controlled lists the scraper writes into the events table:
+ * This file holds the canonical TypeScript vocabularies for the controlled
+ * lists the scraper writes into the events table:
  *
- *   - VIBE_TAGS        (atmosphere analyzer → events.vibe_tags TEXT[])
- *   - SUBCULTURES      (atmosphere analyzer → events.subcultures TEXT[])
- *   - NOISE_LEVELS     (atmosphere analyzer → events.noise_level TEXT)
- *   - GOOD_FOR_SLUGS   (event-meta analyzer → events.good_for TEXT[])
- *   - ATTENDANCE_MODES  (event-meta analyzer → events.attendance_mode TEXT)
- *   - ACCESS_TYPES     (pricing analyzer → events.access_type TEXT)
- *   - VENUE_TYPES      (location analyzer → locations.venue_type TEXT)
+ *   - VIBE_TAGS          (atmosphere analyzer → events.vibe_tags TEXT[])
+ *   - SUBCULTURES        (atmosphere analyzer → events.subcultures TEXT[])
+ *   - NOISE_LEVELS       (atmosphere analyzer → events.noise_level TEXT)
+ *   - GOOD_FOR_SLUGS     (event-meta analyzer → events.good_for TEXT[])
+ *   - ATTENDANCE_MODES   (event-meta analyzer → events.attendance_mode TEXT)
+ *   - ACCESS_TYPES       (pricing analyzer → events.access_type TEXT)
+ *   - VENUE_TYPES        (location analyzer → locations.venue_type TEXT)
+ *   - ACCESSIBILITY_TAGS (accessibility analyzer → events.accessibility_tags TEXT[])
+ *   - SENSORY_TAGS       (sensory analyzer → events.sensory_tags TEXT[])
+ *   - LEAVE_WITH         (basic-info analyzer → events.leave_with TEXT[])
+ *   - SOCIAL_MODES       (vibe-sliders analyzer → events.social_mode TEXT)
+ *   - ENERGY_NEEDED      (vibe-sliders analyzer → events.energy_needed TEXT)
+ *   - SLIDER_DIMENSIONS  (vibe-sliders analyzer → events.inferred_signals.sliders)
  *
  * Why a separate TS file at all?
  *   - The scraper repo is JS/CommonJS. TypeScript needs proper `as const`
@@ -231,6 +238,282 @@ export const IMAGE_TYPES_ANALYZER = ['flyer', 'photo', 'logo', 'unusable', 'unkn
 export type ImageTypeAnalyzer = (typeof IMAGE_TYPES_ANALYZER)[number];
 
 // -----------------------------------------------------------------------------
+// ACCESSIBILITY TAGS (accessibility analyzer)
+// -----------------------------------------------------------------------------
+// EXPLICIT-ONLY accessibility features. Tag only appears if the page SAYS IT.
+// Never inferred from venue type, category, or organizer. Over-claiming
+// accessibility is worse than missing it — a wheelchair user showing up to a
+// venue we tagged `step_free` and finding stairs has been actively harmed.
+//
+// Stored in events.accessibility_tags TEXT[] (flat surface for fast filter)
+// AND in events.inferred_signals.accessibility.evidence (per-tag quoted
+// fragment from the page, so reviewers can audit).
+//
+// This is the only closed-vocab field in the new signals set that is
+// never-inferred. Surface at the TOP of filter drawer (above Vibe).
+export const ACCESSIBILITY_TAGS = [
+  'step_free',                    // Step-free entrance / wheelchair accessible / ramp access
+  'asl_interpreted',              // ASL interpretation provided (at least for part of the event)
+  'captioned',                    // Open captions, live captioning, or CART mentioned
+  'audio_description',            // Audio description for blind/low-vision attendees
+  'sensory_friendly_session',     // Designated sensory-friendly performance or quiet room
+  'service_dog_welcome',          // Service animals explicitly welcomed
+  'gender_neutral_restroom',      // Gender-neutral or all-gender restrooms on-site
+  'large_print_materials',        // Large-print programs/menus/materials available
+  'reserved_accessible_seating',  // Accessible seating can be reserved in advance
+  'childcare_on_site',            // Childcare provided during the event
+  'nursing_friendly',             // Dedicated nursing/lactation space mentioned
+  'scent_free_policy',            // Fragrance-free or low-scent policy stated
+] as const;
+
+export type AccessibilityTag = (typeof ACCESSIBILITY_TAGS)[number];
+
+// Human-readable labels for UI. Keep snake_case values stable; label is display only.
+// Mirrors ACCESSIBILITY_TAG_LABELS in scraper's backend/lib/vocabularies.js.
+export const ACCESSIBILITY_TAG_LABELS: Record<AccessibilityTag, string> = {
+  step_free: 'Step-free entrance',
+  asl_interpreted: 'ASL interpretation',
+  captioned: 'Captioned',
+  audio_description: 'Audio description',
+  sensory_friendly_session: 'Sensory-friendly session',
+  service_dog_welcome: 'Service animals welcome',
+  gender_neutral_restroom: 'Gender-neutral restrooms',
+  large_print_materials: 'Large-print materials',
+  reserved_accessible_seating: 'Reserved accessible seating',
+  childcare_on_site: 'Childcare on-site',
+  nursing_friendly: 'Nursing/lactation space',
+  scent_free_policy: 'Scent-free policy',
+};
+
+// -----------------------------------------------------------------------------
+// SENSORY TAGS (sensory analyzer)
+// -----------------------------------------------------------------------------
+// How the room will feel to the nervous system. Critical for neurodivergent
+// folks, anyone with light/sound sensitivities, migraine sufferers, PTSD,
+// or anyone deciding whether they have the bandwidth tonight.
+//
+// Stored in events.sensory_tags TEXT[] + events.inferred_signals.sensory.
+// Inferable from event type when the page doesn't spell it out — every
+// inferred tag must say "(inferred from event type: …)" in its evidence
+// string and gets lower confidence.
+export const SENSORY_TAGS = [
+  'loud_music',           // Amplified music at a level that interferes with conversation
+  'live_amplified',       // Live band or PA with high peak volume
+  'strong_scents',        // Incense, essential oils, heavy perfume norms, strong food aromas
+  'strobe_lights',        // Strobes, flashing lights, fast LEDs. SEIZURE-RELEVANT.
+  'low_light',            // Dim or candlelit room — reading text is hard
+  'dark_room',            // Effectively lights-out (film, immersive)
+  'crowded',              // Bodies-within-arms-reach for most of the event
+  'standing_room',        // No seats guaranteed; on your feet
+  'seated_throughout',    // Seating assigned/guaranteed; no long standing
+  'loud_crowd',           // Loud talking/cheering crowd, separate from music
+  'quiet_expected',       // Library rules — silence/whispers expected
+  'unpredictable_volume', // Volume varies widely (kids events, festivals, open mic)
+] as const;
+
+export type SensoryTag = (typeof SENSORY_TAGS)[number];
+
+export const SENSORY_TAG_LABELS: Record<SensoryTag, string> = {
+  loud_music: 'Loud music',
+  live_amplified: 'Live amplified sound',
+  strong_scents: 'Strong scents',
+  strobe_lights: 'Strobe lights',
+  low_light: 'Low light',
+  dark_room: 'Dark room',
+  crowded: 'Crowded',
+  standing_room: 'Standing room',
+  seated_throughout: 'Seated throughout',
+  loud_crowd: 'Loud crowd',
+  quiet_expected: 'Quiet expected',
+  unpredictable_volume: 'Unpredictable volume',
+};
+
+// Priority order for "which sensory tag to surface first on a card" — higher
+// items in the list win the limited card real-estate. strobe_lights wins
+// because it's the most decision-critical (seizure risk); volume signals
+// come next; comfort signals last. Byte-synced with scraper.
+export const SENSORY_TAG_PRIORITY: readonly SensoryTag[] = [
+  'strobe_lights',
+  'loud_music',
+  'live_amplified',
+  'loud_crowd',
+  'crowded',
+  'standing_room',
+  'strong_scents',
+  'unpredictable_volume',
+  'low_light',
+  'dark_room',
+  'quiet_expected',
+  'seated_throughout',
+] as const;
+
+// -----------------------------------------------------------------------------
+// LEAVE-WITH (basic-info analyzer)
+// -----------------------------------------------------------------------------
+// What does an attendee LEAVE this event with? Structural question, not a
+// feelings question. The format produces a thing, a skill, a connection, a
+// full belly, a memory, a shifted mood, or just the experience itself.
+//
+// Pick 1–3. `just_an_experience` is its own answer — do NOT combine with
+// other tags (the basic-info analyzer's prompt + validator enforces this).
+//
+// Stored in events.leave_with TEXT[] + events.inferred_signals.leave_with.
+export const LEAVE_WITH = [
+  'a_thing_you_made',     // You walk out holding/wearing something YOU produced
+  'a_new_skill',          // You can do something at the end you couldn't at the start
+  'a_new_connection',     // The format puts you in contact with people you didn't come with
+  'a_full_belly',         // The food IS the event or a substantial part of it
+  'a_photo_or_memory',    // Spectacle-driven — you came for the sight or moment
+  'a_shifted_mood',       // You came stressed, you leave regulated
+  'just_an_experience',   // The point is the thing itself; nothing else goes home with you
+] as const;
+
+export type LeaveWith = (typeof LEAVE_WITH)[number];
+
+export const LEAVE_WITH_LABELS: Record<LeaveWith, string> = {
+  a_thing_you_made: 'A thing you made',
+  a_new_skill: 'A new skill',
+  a_new_connection: 'A new connection',
+  a_full_belly: 'A full belly',
+  a_photo_or_memory: 'A memory',
+  a_shifted_mood: 'A shifted mood',
+  just_an_experience: 'Just the experience',
+};
+
+// -----------------------------------------------------------------------------
+// SOCIAL MODES (vibe-sliders analyzer → events.social_mode)
+// -----------------------------------------------------------------------------
+// How the room is SHAPED for who shows up — answers "can I come alone and
+// not feel weird?" Single-value enum. `solo_welcoming` is about the ROOM,
+// not your personal comfort: a mixer is NOT solo_welcoming even if you
+// personally enjoy going alone — it's mingling_required.
+export const SOCIAL_MODES = [
+  'solo_welcoming',     // Alone feels normal (classes, lectures, drop-in craft, most shows)
+  'pair_friendly',      // Works great with one other person (date spots, dinners)
+  'small_group',        // 3–6 sweet spot (trivia, escape rooms, dinner parties)
+  'large_group',        // 6+ shines (festivals, parties, group outings)
+  'mingling_required',  // Meeting strangers IS the point (networking, mixers, speed friending)
+  'parallel_play',      // In a room with others doing your own thing (open studio, body-doubling)
+  'observational',      // Audience-shaped (concerts, films, talks) — no peer interaction expected
+] as const;
+
+export type SocialMode = (typeof SOCIAL_MODES)[number];
+
+export const SOCIAL_MODE_LABELS: Record<SocialMode, string> = {
+  solo_welcoming: 'Comfortable solo',
+  pair_friendly: 'Good for two',
+  small_group: 'Small group (3–6)',
+  large_group: 'Group of 6+',
+  mingling_required: 'Meet strangers',
+  parallel_play: 'Parallel play',
+  observational: 'Audience-style',
+};
+
+// -----------------------------------------------------------------------------
+// ENERGY NEEDED (vibe-sliders analyzer → events.energy_needed)
+// -----------------------------------------------------------------------------
+// What the body and brain have to GIVE. Single-value enum. Pick the single
+// DOMINANT mode of output required. If torn between two modes, pick
+// whichever is more load-bearing for the decision to attend.
+export const ENERGY_NEEDED = [
+  'receptive',              // Show up, sit/stand, let it happen. (Concert, film, sound bath.)
+  'light_participation',    // Clap, sing along, answer trivia, chat with a neighbor.
+  'participatory',          // You're doing the thing — dancing, making, speaking, moving.
+  'physically_demanding',   // Sweat, soreness, fitness baseline expected.
+  'emotionally_demanding',  // Grief, vulnerability, conflict, heavy material. Pace yourself.
+  'mentally_demanding',     // Sustained focus, complex material, long-form learning.
+] as const;
+
+export type EnergyNeeded = (typeof ENERGY_NEEDED)[number];
+
+export const ENERGY_NEEDED_LABELS: Record<EnergyNeeded, string> = {
+  receptive: 'Sit back and receive',
+  light_participation: 'Light participation',
+  participatory: 'Fully participatory',
+  physically_demanding: 'Physically demanding',
+  emotionally_demanding: 'Emotionally demanding',
+  mentally_demanding: 'Mentally demanding',
+};
+
+// -----------------------------------------------------------------------------
+// VIBE SLIDERS (vibe-sliders analyzer → events.inferred_signals.sliders)
+// -----------------------------------------------------------------------------
+// Four sliders, each 1–5 with confidence + evidence. NOT promoted to flat
+// columns — slider queries are range-based and JSONB path access is fine at
+// current scale. ADMIN-ONLY in v1 — the rubrics need human calibration audit
+// before we expose slider filters publicly (see Stage 4 of TAGGING_UI_PROMPT).
+//
+// The rubrics live here as a structured dict so the admin review UI and
+// scraper prompts share a single source of truth.
+export const SLIDER_DIMENSIONS = [
+  'social_intensity',
+  'structure',
+  'commitment',
+  'spend_level',
+] as const;
+
+export type SliderDimension = (typeof SLIDER_DIMENSIONS)[number];
+
+export interface SliderRubric {
+  label: string;
+  description: string;
+  points: {
+    1: string;
+    2: string;
+    3: string;
+    4: string;
+    5: string;
+  };
+}
+
+export const SLIDER_RUBRICS: Record<SliderDimension, SliderRubric> = {
+  social_intensity: {
+    label: 'Social intensity',
+    description: 'How much interaction with strangers is expected.',
+    points: {
+      1: 'Solo parallel — reading at a café, yoga class, museum visit. Can leave without speaking.',
+      2: 'Ambient social — concert, film, lecture. In a room with people, not required to talk.',
+      3: 'Light social — trivia with friends, group class, open mic. Talk with your group, nod at neighbors.',
+      4: 'Active social — mixers, dinner parties, small workshops. Sustained conversation.',
+      5: 'Mingling-required — speed dating, networking, icebreaker-heavy. Not talking to strangers = failing the event.',
+    },
+  },
+  structure: {
+    label: 'Structure',
+    description: 'How scheduled or rigid the format is.',
+    points: {
+      1: 'Unstructured — drop-in open studio, hangout, happy hour. Come and go, do your thing.',
+      2: 'Loose shape — market, festival grounds, gallery opening. Schedule exists; you set your path.',
+      3: 'Semi-structured — brewery tour, guided tasting, trivia. A host leads with slack.',
+      4: 'Structured — class, lecture, performance with set times. Follow the leader.',
+      5: 'Highly structured — multi-session curriculum, ceremony, formal dinner with program. Every minute scheduled.',
+    },
+  },
+  commitment: {
+    label: 'Commitment',
+    description: "How much you're locked in once you say yes.",
+    points: {
+      1: 'Drop-in, pay at door, walk up whenever. Zero commitment.',
+      2: 'Ticketed single event, 1–3 hours. Buy it, show up, leave.',
+      3: 'Half-day or full-day single event (festival day, retreat day, long workshop).',
+      4: 'Multi-session series, camp, or multi-day event with connected content.',
+      5: 'Long-term cohort (6+ weeks, fellowship, residency, training program).',
+    },
+  },
+  spend_level: {
+    label: 'Spend level',
+    description: 'The HONEST cost of attending, including extras beyond the ticket.',
+    points: {
+      1: 'Free or donation-based. Maybe tip the performer.',
+      2: 'Under $20 total. Cheap show, $5 cover, cheap drinks.',
+      3: '$20–60 per person. Mid-range tickets, class fees, dinner out.',
+      4: '$60–150 per person. Nicer dinner, premium ticket, workshop with supplies.',
+      5: '$150+ per person. Gala, VIP, long retreat, weekend pass.',
+    },
+  },
+};
+
+// -----------------------------------------------------------------------------
 // SERIES TYPES (event-meta analyzer → series.series_type)
 // -----------------------------------------------------------------------------
 // Classification of what KIND of multi-event grouping this is. Drives UI
@@ -298,6 +581,12 @@ const IMAGE_TYPE_SET = new Set<string>(IMAGE_TYPES);
 const SERIES_TYPE_SET = new Set<string>(SERIES_TYPES);
 const RECURRENCE_FREQUENCY_SET = new Set<string>(RECURRENCE_FREQUENCIES);
 const RECURRENCE_END_TYPE_SET = new Set<string>(RECURRENCE_END_TYPES);
+const ACCESSIBILITY_TAG_SET = new Set<string>(ACCESSIBILITY_TAGS);
+const SENSORY_TAG_SET = new Set<string>(SENSORY_TAGS);
+const LEAVE_WITH_SET = new Set<string>(LEAVE_WITH);
+const SOCIAL_MODE_SET = new Set<string>(SOCIAL_MODES);
+const ENERGY_NEEDED_SET = new Set<string>(ENERGY_NEEDED);
+const SLIDER_DIMENSION_SET = new Set<string>(SLIDER_DIMENSIONS);
 
 export function isVibeTag(value: string): value is VibeTag {
   return VIBE_TAG_SET.has(value);
@@ -345,6 +634,30 @@ export function isRecurrenceFrequency(value: string): value is RecurrenceFrequen
 
 export function isRecurrenceEndType(value: string): value is RecurrenceEndType {
   return RECURRENCE_END_TYPE_SET.has(value);
+}
+
+export function isAccessibilityTag(value: string): value is AccessibilityTag {
+  return ACCESSIBILITY_TAG_SET.has(value);
+}
+
+export function isSensoryTag(value: string): value is SensoryTag {
+  return SENSORY_TAG_SET.has(value);
+}
+
+export function isLeaveWith(value: string): value is LeaveWith {
+  return LEAVE_WITH_SET.has(value);
+}
+
+export function isSocialMode(value: string): value is SocialMode {
+  return SOCIAL_MODE_SET.has(value);
+}
+
+export function isEnergyNeeded(value: string): value is EnergyNeeded {
+  return ENERGY_NEEDED_SET.has(value);
+}
+
+export function isSliderDimension(value: string): value is SliderDimension {
+  return SLIDER_DIMENSION_SET.has(value);
 }
 
 /**

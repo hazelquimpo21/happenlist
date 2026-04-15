@@ -14,7 +14,15 @@ import { createClient } from '@/lib/supabase/server';
 import type { EventCard, EventQueryParams } from '@/types';
 import {
   isGoodForSlug,
+  isAccessibilityTag,
+  isSensoryTag,
+  isLeaveWith,
+  isSocialMode,
+  isEnergyNeeded,
   type GoodForSlug,
+  type AccessibilityTag,
+  type SensoryTag,
+  type LeaveWith,
 } from '@/lib/constants/vocabularies';
 import {
   isTimeOfDay,
@@ -281,6 +289,16 @@ function transformToEventCard(row: Record<string, unknown>): EventCard {
     access_type: row.access_type as string | null ?? null,
     noise_level: row.noise_level as string | null ?? null,
     vibe_tags: (row.vibe_tags as string[] | null) ?? [],
+    // Tagging expansion: flat vocab columns. Type-cast to the union array
+    // types is safe because the scraper post-validates against the vocabs
+    // before insert; anything that slipped through would fail the isX guards
+    // during filter runtime rather than cause a query error. Empty arrays,
+    // not null, so consumers don't need existence checks.
+    accessibility_tags: ((row.accessibility_tags as string[] | null) ?? []) as EventCard['accessibility_tags'],
+    sensory_tags: ((row.sensory_tags as string[] | null) ?? []) as EventCard['sensory_tags'],
+    leave_with: ((row.leave_with as string[] | null) ?? []) as EventCard['leave_with'],
+    social_mode: (row.social_mode as EventCard['social_mode']) ?? null,
+    energy_needed: (row.energy_needed as EventCard['energy_needed']) ?? null,
     organizer_name: row.organizer_name as string | null ?? null,
     organizer_is_venue: (row.organizer_is_venue as boolean | null) ?? false,
     // Parent event fields
@@ -352,6 +370,11 @@ export async function getEvents(
     nearLat,
     nearLng,
     radiusMiles,
+    accessibility,
+    sensory,
+    leaveWith,
+    socialMode,
+    energyNeeded,
     orderBy = 'date-asc',
     page = 1,
     limit = 24,
@@ -364,6 +387,13 @@ export async function getEvents(
   const timeOfDayBuckets = normalizeStringArray<TimeOfDay>(timeOfDay, isTimeOfDay);
   const priceTierSlugs = normalizeStringArray(priceTier, isPriceTierSlug);
   const ageGroupSlugs = normalizeStringArray(ageGroup, isAgeGroupSlug);
+  const accessibilityTags = normalizeStringArray<AccessibilityTag>(accessibility, isAccessibilityTag);
+  const sensoryTags = normalizeStringArray<SensoryTag>(sensory, isSensoryTag);
+  const leaveWithSlugs = normalizeStringArray<LeaveWith>(leaveWith, isLeaveWith);
+  // Single-value enums: validate via guard, drop if unknown. Defensive against
+  // stale shared URLs carrying vocab values we've since renamed/removed.
+  const socialModeValue = socialMode && isSocialMode(socialMode) ? socialMode : undefined;
+  const energyNeededValue = energyNeeded && isEnergyNeeded(energyNeeded) ? energyNeeded : undefined;
 
   // Single structured log line — only emit non-default filters so the noise
   // floor stays low. Convention: [scope:action] prefix per CLAUDE.md.
@@ -384,6 +414,11 @@ export async function getEvents(
   if (familyFriendly) activeFilters.familyFriendly = familyFriendly;
   if (priceTierSlugs.length > 0) activeFilters.priceTier = priceTierSlugs;
   if (ageGroupSlugs.length > 0) activeFilters.ageGroup = ageGroupSlugs;
+  if (accessibilityTags.length > 0) activeFilters.accessibility = accessibilityTags;
+  if (sensoryTags.length > 0) activeFilters.sensory = sensoryTags;
+  if (leaveWithSlugs.length > 0) activeFilters.leaveWith = leaveWithSlugs;
+  if (socialModeValue) activeFilters.socialMode = socialModeValue;
+  if (energyNeededValue) activeFilters.energyNeeded = energyNeededValue;
   if (nearLat != null && nearLng != null) activeFilters.geo = { nearLat, nearLng, radiusMiles: radiusMiles ?? DEFAULT_RADIUS_MILES };
   if (includePast) activeFilters.includePast = includePast;
   if (includeLifestyle !== undefined) activeFilters.includeLifestyle = includeLifestyle;
@@ -454,6 +489,8 @@ export async function getEvents(
       is_free, heart_count, good_for,
       short_description, tagline, talent_name,
       access_type, noise_level, vibe_tags,
+      accessibility_tags, sensory_tags, leave_with,
+      social_mode, energy_needed, inferred_signals,
       organizer_name, organizer_is_venue,
       age_restriction, is_family_friendly,
       parent_event_id,
@@ -569,6 +606,31 @@ export async function getEvents(
 
   if (familyFriendly) {
     query = query.eq('is_family_friendly', true);
+  }
+
+  // Tagging-expansion filters (scraper migrations 00016–00019).
+  // Arrays use `&&` (PG) / `.overlaps()` (PostgREST) for ANY-match semantics —
+  // matches the vibe_tags / good_for pattern. Enums use `.eq()`. Unknown
+  // values were already dropped by the isX guards above, so queries only ever
+  // see valid vocab values even when URL params are stale or typo'd.
+  if (accessibilityTags.length > 0) {
+    query = query.overlaps('accessibility_tags', accessibilityTags);
+  }
+
+  if (sensoryTags.length > 0) {
+    query = query.overlaps('sensory_tags', sensoryTags);
+  }
+
+  if (leaveWithSlugs.length > 0) {
+    query = query.overlaps('leave_with', leaveWithSlugs);
+  }
+
+  if (socialModeValue) {
+    query = query.eq('social_mode', socialModeValue);
+  }
+
+  if (energyNeededValue) {
+    query = query.eq('energy_needed', energyNeededValue);
   }
 
   // Price tier: each tier maps to a specific predicate. Multi-select = OR.

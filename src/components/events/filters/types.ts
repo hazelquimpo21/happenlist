@@ -95,6 +95,14 @@ export interface FilterState {
   nearLat?: number;        // anchor latitude (from neighborhood or browser geolocation)
   nearLng?: number;        // anchor longitude
   radiusMiles?: number;    // search radius (defaults to 5 in get-events.ts)
+
+  // Tagging expansion (Stage 1) — multi-value arrays + two single-value enums.
+  // Slider filters intentionally omitted (admin-only in v1).
+  accessibility: string[];
+  sensory: string[];
+  leaveWith: string[];
+  socialMode?: string;
+  energyNeeded?: string;
 }
 
 /** Empty / default filter state — used as the URL-cleared baseline. */
@@ -103,6 +111,9 @@ export const EMPTY_FILTER_STATE: FilterState = {
   timeOfDay: [],
   priceTier: [],
   ageGroup: [],
+  accessibility: [],
+  sensory: [],
+  leaveWith: [],
   isFree: false,
   soloFriendly: false,
   beginnerFriendly: false,
@@ -136,6 +147,11 @@ export function countActiveFilters(state: FilterState): number {
   if (state.familyFriendly) n++;
   n += state.priceTier.length;
   n += state.ageGroup.length;
+  n += state.accessibility.length;
+  n += state.sensory.length;
+  n += state.leaveWith.length;
+  if (state.socialMode) n++;
+  if (state.energyNeeded) n++;
   if (state.hasMemberBenefits) n++;
   if (state.membershipOrgId) n++;
   // Geo counts as a single filter (neighborhood or custom location)
@@ -184,6 +200,11 @@ export function parseFiltersFromParams(params: SearchParamsLike): FilterState {
     timeOfDay: params.getAll('timeOfDay'),
     priceTier: params.getAll('priceTier'),
     ageGroup: params.getAll('ageGroup'),
+    accessibility: params.getAll('accessibility'),
+    sensory: params.getAll('sensory'),
+    leaveWith: params.getAll('leaveWith'),
+    socialMode: params.get('socialMode') ?? undefined,
+    energyNeeded: params.get('energyNeeded') ?? undefined,
     isFree: params.get('free') === 'true',
     vibeTag: params.get('vibeTag') ?? undefined,
     noiseLevel: params.get('noiseLevel') ?? undefined,
@@ -220,6 +241,11 @@ export function serializeFiltersToParams(
   for (const bucket of state.timeOfDay) params.append('timeOfDay', bucket);
   for (const slug of state.priceTier) params.append('priceTier', slug);
   for (const slug of state.ageGroup) params.append('ageGroup', slug);
+  for (const tag of state.accessibility) params.append('accessibility', tag);
+  for (const tag of state.sensory) params.append('sensory', tag);
+  for (const slug of state.leaveWith) params.append('leaveWith', slug);
+  if (state.socialMode) params.set('socialMode', state.socialMode);
+  if (state.energyNeeded) params.set('energyNeeded', state.energyNeeded);
   if (state.isFree) params.set('free', 'true');
   if (state.vibeTag) params.set('vibeTag', state.vibeTag);
   if (state.noiseLevel) params.set('noiseLevel', state.noiseLevel);
