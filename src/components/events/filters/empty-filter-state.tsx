@@ -37,6 +37,14 @@ import { TIME_OF_DAY_LABELS, type TimeOfDay } from '@/lib/constants/time-of-day'
 import {
   ACCESSIBILITY_TAG_LABELS,
   isAccessibilityTag,
+  SENSORY_TAG_LABELS,
+  isSensoryTag,
+  LEAVE_WITH_LABELS,
+  isLeaveWith,
+  SOCIAL_MODE_LABELS,
+  isSocialMode,
+  ENERGY_NEEDED_LABELS,
+  isEnergyNeeded,
 } from '@/lib/constants/vocabularies';
 import { getGoodForTag } from '@/types/good-for';
 import { useFilterState } from './use-filter-state';
@@ -138,6 +146,44 @@ function buildActiveChips(
       key: `a11y-${tag}`,
       label: ACCESSIBILITY_TAG_LABELS[tag],
       onRemove: () => removeOne('accessibility', tag),
+    });
+  }
+
+  // Sensory (Stage 3)
+  for (const tag of state.sensory) {
+    if (!isSensoryTag(tag)) continue;
+    chips.push({
+      key: `sensory-${tag}`,
+      label: SENSORY_TAG_LABELS[tag],
+      onRemove: () => removeOne('sensory', tag),
+    });
+  }
+
+  // Leave with (Stage 3)
+  for (const tag of state.leaveWith) {
+    if (!isLeaveWith(tag)) continue;
+    chips.push({
+      key: `leaveWith-${tag}`,
+      label: LEAVE_WITH_LABELS[tag],
+      onRemove: () => removeOne('leaveWith', tag),
+    });
+  }
+
+  // Social mode + energy needed (Stage 3) — single-value enums.
+  if (state.socialMode && isSocialMode(state.socialMode)) {
+    const v = state.socialMode;
+    chips.push({
+      key: `socialMode-${v}`,
+      label: `Social: ${SOCIAL_MODE_LABELS[v]}`,
+      onRemove: () => setSingle('socialMode', undefined),
+    });
+  }
+  if (state.energyNeeded && isEnergyNeeded(state.energyNeeded)) {
+    const v = state.energyNeeded;
+    chips.push({
+      key: `energyNeeded-${v}`,
+      label: `Energy: ${ENERGY_NEEDED_LABELS[v]}`,
+      onRemove: () => setSingle('energyNeeded', undefined),
     });
   }
 

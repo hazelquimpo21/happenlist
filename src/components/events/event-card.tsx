@@ -52,8 +52,16 @@ import { getChildEventLabel } from '@/lib/utils/parent-event-labels';
 import { getCategoryColor } from '@/lib/constants/category-colors';
 import { EventImage } from './event-image';
 import { HeartButtonCompact } from '@/components/hearts';
-import { VibeTagPill, AccessBadge, NoiseLevelIndicator } from './vibe-profile';
+import {
+  VibeTagPill,
+  AccessBadge,
+  NoiseLevelIndicator,
+  SensoryTagPill,
+  SocialModePill,
+  pickTopSensoryTag,
+} from './vibe-profile';
 import { AccessibilityIconRow } from './accessibility-badges';
+import { isSocialMode } from '@/lib/constants/vocabularies';
 import { DistanceBadge } from './distance-badge';
 import type { EventCard as EventCardType } from '@/types';
 
@@ -198,6 +206,29 @@ function EventCardComponent({
   const eventUrl = buildEventUrl(event);
   const categoryColor = getCategoryColor(event.category_slug);
   const { openPeek } = usePeek();
+
+  // ── Smart tag row (Stage 3) ──────────────────────────────────────────
+  // Cap 3 chips total. Prioritize social_mode + top-priority sensory + first
+  // vibe — these answer "can I come alone?", "will it overwhelm me?", and
+  // "what's the flavor?" in that order. Fill remaining slots with extra
+  // vibe tags so older events without new analyzers run still get a tag row.
+  const topSensory = pickTopSensoryTag(event.sensory_tags);
+  const validSocial =
+    event.social_mode && isSocialMode(event.social_mode) ? event.social_mode : null;
+
+  type TagChip =
+    | { kind: 'social'; value: string }
+    | { kind: 'sensory'; value: ReturnType<typeof pickTopSensoryTag> & string }
+    | { kind: 'vibe'; value: string };
+
+  const tagChips: TagChip[] = [];
+  if (validSocial) tagChips.push({ kind: 'social', value: validSocial });
+  if (topSensory) tagChips.push({ kind: 'sensory', value: topSensory });
+  for (const v of event.vibe_tags ?? []) {
+    if (tagChips.length >= 3) break;
+    tagChips.push({ kind: 'vibe', value: v });
+  }
+  const visibleChips = tagChips.slice(0, 3);
 
   /**
    * Intercept only the "default" click (plain left-click, no modifiers).
@@ -415,10 +446,25 @@ function EventCardComponent({
               <AccessBadge accessType={event.access_type} isFree={event.is_free} />
             )}
 
-            {/* Vibe tag pills (max 2) */}
-            {event.vibe_tags && event.vibe_tags.slice(0, 2).map((tag) => (
-              <VibeTagPill key={tag} tag={tag} size="xs" />
-            ))}
+            {/* Smart tag row (Stage 3): social_mode + top sensory + first
+                vibe (capped at 3). Falls back to vibes-only for events that
+                pre-date the new analyzers. */}
+            {visibleChips.map((chip, i) => {
+              const key = `${chip.kind}-${chip.value}-${i}`;
+              if (chip.kind === 'social') {
+                return (
+                  <SocialModePill
+                    key={key}
+                    mode={chip.value as Parameters<typeof SocialModePill>[0]['mode']}
+                    size="xs"
+                  />
+                );
+              }
+              if (chip.kind === 'sensory') {
+                return <SensoryTagPill key={key} tag={chip.value} size="xs" />;
+              }
+              return <VibeTagPill key={key} tag={chip.value} size="xs" />;
+            })}
 
             {/* Noise level */}
             {event.noise_level && (

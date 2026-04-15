@@ -7,8 +7,33 @@
 
 'use client';
 
+import {
+  Hammer,
+  GraduationCap,
+  Users,
+  UtensilsCrossed,
+  Camera,
+  Wind,
+  Sparkles,
+  type LucideIcon,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { EventRow } from '@/types';
+import {
+  SENSORY_TAG_LABELS,
+  SENSORY_TAG_PRIORITY,
+  LEAVE_WITH_LABELS,
+  SOCIAL_MODE_LABELS,
+  ENERGY_NEEDED_LABELS,
+  isSensoryTag,
+  isLeaveWith,
+  isSocialMode,
+  isEnergyNeeded,
+  type SensoryTag,
+  type LeaveWith,
+  type SocialMode,
+  type EnergyNeeded,
+} from '@/lib/constants/vocabularies';
 
 // =============================================================================
 // CONSTANTS
@@ -265,9 +290,160 @@ export function AccessBadge({
 }
 
 // =============================================================================
+// SENSORY TAG PILL
+// =============================================================================
+// Neutral-stone palette — sensory signals are about what the room feels like,
+// not how it's vibed. Distinct from VibeTagPill so users don't conflate
+// "loud_music" with vibe colors. Strobe gets an amber tint because it's the
+// only seizure-relevant signal and earns visual emphasis.
+
+export function SensoryTagPill({
+  tag,
+  size = 'sm',
+  className,
+}: {
+  tag: SensoryTag;
+  size?: 'sm' | 'xs';
+  className?: string;
+}) {
+  const isCritical = tag === 'strobe_lights';
+  const colorClasses = isCritical
+    ? 'bg-amber-100 text-amber-900'
+    : 'bg-stone-100 text-stone-700';
+
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full font-medium',
+        colorClasses,
+        size === 'sm' ? 'px-2.5 py-0.5 text-xs' : 'px-2 py-0.5 text-[10px]',
+        className
+      )}
+    >
+      {SENSORY_TAG_LABELS[tag]}
+    </span>
+  );
+}
+
+// =============================================================================
+// LEAVE-WITH PILL
+// =============================================================================
+
+const LEAVE_WITH_ICONS: Record<LeaveWith, LucideIcon> = {
+  a_thing_you_made: Hammer,
+  a_new_skill: GraduationCap,
+  a_new_connection: Users,
+  a_full_belly: UtensilsCrossed,
+  a_photo_or_memory: Camera,
+  a_shifted_mood: Wind,
+  just_an_experience: Sparkles,
+};
+
+export function LeaveWithPill({
+  tag,
+  size = 'sm',
+  className,
+}: {
+  tag: LeaveWith;
+  size?: 'sm' | 'xs';
+  className?: string;
+}) {
+  const Icon = LEAVE_WITH_ICONS[tag];
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full font-medium',
+        'bg-emerald-50 text-emerald-800',
+        size === 'sm' ? 'px-2.5 py-0.5 text-xs' : 'px-2 py-0.5 text-[10px]',
+        className
+      )}
+    >
+      <Icon className={size === 'sm' ? 'w-3 h-3' : 'w-2.5 h-2.5'} aria-hidden="true" />
+      <span>{LEAVE_WITH_LABELS[tag]}</span>
+    </span>
+  );
+}
+
+// =============================================================================
+// SOCIAL-MODE / ENERGY-NEEDED PILL (single value, used on cards + detail page)
+// =============================================================================
+
+export function SocialModePill({
+  mode,
+  size = 'sm',
+  className,
+}: {
+  mode: SocialMode;
+  size?: 'sm' | 'xs';
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full font-medium',
+        'bg-indigo-50 text-indigo-800',
+        size === 'sm' ? 'px-2.5 py-0.5 text-xs' : 'px-2 py-0.5 text-[10px]',
+        className
+      )}
+    >
+      {SOCIAL_MODE_LABELS[mode]}
+    </span>
+  );
+}
+
+export function EnergyNeededPill({
+  energy,
+  size = 'sm',
+  className,
+}: {
+  energy: EnergyNeeded;
+  size?: 'sm' | 'xs';
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full font-medium',
+        'bg-orange-50 text-orange-800',
+        size === 'sm' ? 'px-2.5 py-0.5 text-xs' : 'px-2 py-0.5 text-[10px]',
+        className
+      )}
+    >
+      {ENERGY_NEEDED_LABELS[energy]}
+    </span>
+  );
+}
+
+// =============================================================================
+// HELPERS — pick the highest-priority sensory tag for limited card real estate
+// =============================================================================
+
+/**
+ * Returns the highest-priority sensory tag from the input, or null.
+ * Order is defined by SENSORY_TAG_PRIORITY (strobe_lights wins because it's
+ * the only seizure-relevant signal). Unknown values are dropped silently.
+ */
+export function pickTopSensoryTag(
+  tags: readonly string[] | null | undefined
+): SensoryTag | null {
+  if (!tags || tags.length === 0) return null;
+  const valid = new Set<SensoryTag>();
+  for (const t of tags) if (typeof t === 'string' && isSensoryTag(t)) valid.add(t);
+  if (valid.size === 0) return null;
+  for (const candidate of SENSORY_TAG_PRIORITY) {
+    if (valid.has(candidate)) return candidate;
+  }
+  return null;
+}
+
+// =============================================================================
 // FULL VIBE PROFILE SECTION (for event detail page)
 // =============================================================================
 
+// Custom type rather than Pick<EventRow, ...> because the new tagging-expansion
+// columns (sensory_tags, leave_with, social_mode, energy_needed) aren't in the
+// generated Database types yet. The runtime payload comes from
+// EventWithDetails which carries them as TS-only overlays.
 type VibeEvent = Pick<
   EventRow,
   | 'energy_level'
@@ -275,7 +451,12 @@ type VibeEvent = Pick<
   | 'subcultures'
   | 'noise_level'
   | 'expected_crowd'
->;
+> & {
+  sensory_tags?: readonly string[] | null;
+  leave_with?: readonly string[] | null;
+  social_mode?: string | null;
+  energy_needed?: string | null;
+};
 
 export function VibeProfileSection({
   event,
@@ -292,7 +473,35 @@ export function VibeProfileSection({
   const hasTags = (event.vibe_tags?.length ?? 0) > 0 || (event.subcultures?.length ?? 0) > 0;
   const hasCrowd = event.expected_crowd || event.noise_level;
 
-  if (!hasDimensions && !hasTags && !hasCrowd) return null;
+  // Narrow the new tagging-expansion arrays + enums defensively. Stale rows
+  // could carry vocab values we since removed; the *_LABELS lookup would
+  // return undefined and the pill would render blank.
+  const sensoryTags: SensoryTag[] = (event.sensory_tags ?? []).filter(
+    (t): t is SensoryTag => typeof t === 'string' && isSensoryTag(t)
+  );
+  const leaveWithTags: LeaveWith[] = (event.leave_with ?? []).filter(
+    (t): t is LeaveWith => typeof t === 'string' && isLeaveWith(t)
+  );
+  const socialMode =
+    event.social_mode && isSocialMode(event.social_mode) ? event.social_mode : null;
+  const energyNeeded =
+    event.energy_needed && isEnergyNeeded(event.energy_needed)
+      ? event.energy_needed
+      : null;
+
+  const hasSensory = sensoryTags.length > 0;
+  const hasLeaveWith = leaveWithTags.length > 0;
+  const hasSocialEnergy = socialMode != null || energyNeeded != null;
+
+  if (
+    !hasDimensions &&
+    !hasTags &&
+    !hasCrowd &&
+    !hasSensory &&
+    !hasLeaveWith &&
+    !hasSocialEnergy
+  )
+    return null;
 
   return (
     <div className={cn('space-y-6', className)}>
@@ -356,6 +565,65 @@ export function VibeProfileSection({
               </p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* How the room feels — sensory_tags. Hides when empty. Pill row uses
+          the neutral-stone palette so it's distinct from vibe colors above. */}
+      {hasSensory && (
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium text-zinc uppercase tracking-wide">
+            How the Room Feels
+          </h3>
+          <div className="flex flex-wrap gap-1.5">
+            {sensoryTags.map((tag) => (
+              <SensoryTagPill key={tag} tag={tag} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* What you'll leave with — leave_with. Each pill carries an icon for
+          quick scanning. Hides when empty. */}
+      {hasLeaveWith && (
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium text-zinc uppercase tracking-wide">
+            What You&apos;ll Leave With
+          </h3>
+          <div className="flex flex-wrap gap-1.5">
+            {leaveWithTags.map((tag) => (
+              <LeaveWithPill key={tag} tag={tag} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Who it's for — social_mode + energy_needed. Two labeled rows so the
+          dimension is unambiguous (a single pill saying "Comfortable solo"
+          out of context could read as a vibe). Hides when both are null. */}
+      {hasSocialEnergy && (
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium text-zinc uppercase tracking-wide">
+            Who It&apos;s For
+          </h3>
+          <dl className="space-y-1.5">
+            {socialMode && (
+              <div className="flex items-center gap-2">
+                <dt className="text-sm text-zinc">Social style:</dt>
+                <dd>
+                  <SocialModePill mode={socialMode} />
+                </dd>
+              </div>
+            )}
+            {energyNeeded && (
+              <div className="flex items-center gap-2">
+                <dt className="text-sm text-zinc">Energy needed:</dt>
+                <dd>
+                  <EnergyNeededPill energy={energyNeeded} />
+                </dd>
+              </div>
+            )}
+          </dl>
         </div>
       )}
     </div>

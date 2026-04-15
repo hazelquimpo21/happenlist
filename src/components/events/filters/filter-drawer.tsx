@@ -42,9 +42,18 @@ import {
   NOISE_LEVELS,
   ACCESSIBILITY_TAGS,
   ACCESSIBILITY_TAG_LABELS,
+  SENSORY_TAGS,
+  SENSORY_TAG_LABELS,
+  LEAVE_WITH,
+  LEAVE_WITH_LABELS,
+  SOCIAL_MODES,
+  SOCIAL_MODE_LABELS,
+  ENERGY_NEEDED,
+  ENERGY_NEEDED_LABELS,
 } from '@/lib/constants/vocabularies';
 import { FilterChip } from './filter-chip';
 import { FilterSection } from './filter-section';
+import { CollapsibleFilterSection } from './collapsible-filter-section';
 import { NeighborhoodPicker } from './neighborhood-picker';
 import { useFilterState } from './use-filter-state';
 import { cn } from '@/lib/utils/cn';
@@ -303,6 +312,100 @@ export function FilterDrawer({
                 />
               ))}
             </FilterSection>
+
+            {/* Sensory (Stage 3) — collapsible because the list is long and
+                most users only need it some of the time. Default open on
+                first visit so the section is discoverable. */}
+            <CollapsibleFilterSection
+              id="sensory"
+              label="Sensory"
+              hint="Multi-select — events match if they share any selected sensory signal"
+              showClear={state.sensory.length > 0}
+              onClear={() => setSingle('sensory', [])}
+            >
+              {SENSORY_TAGS.map((tag) => (
+                <FilterChip
+                  key={tag}
+                  label={SENSORY_TAG_LABELS[tag]}
+                  active={state.sensory.includes(tag)}
+                  size="sm"
+                  onClick={() => toggleArrayValue('sensory', tag)}
+                />
+              ))}
+            </CollapsibleFilterSection>
+
+            {/* Leave with (Stage 3) — what an attendee walks out with.
+                Structural answer (a thing, a skill, a connection, etc.). */}
+            <CollapsibleFilterSection
+              id="leave_with"
+              label="Leave with"
+              hint="Multi-select — events match if they produce any selected outcome"
+              showClear={state.leaveWith.length > 0}
+              onClear={() => setSingle('leaveWith', [])}
+            >
+              {LEAVE_WITH.map((tag) => (
+                <FilterChip
+                  key={tag}
+                  label={LEAVE_WITH_LABELS[tag]}
+                  active={state.leaveWith.includes(tag)}
+                  size="sm"
+                  onClick={() => toggleArrayValue('leaveWith', tag)}
+                />
+              ))}
+            </CollapsibleFilterSection>
+
+            {/* Social + Energy (Stage 3) — single-value enums. Two grouped
+                pickers in one collapsible to save vertical space. Each enum
+                toggles off if you click the active value again. */}
+            <CollapsibleFilterSection
+              id="social_energy"
+              label="Social + Energy"
+              hint="Pick one of each, or leave blank to skip"
+              showClear={!!state.socialMode || !!state.energyNeeded}
+              onClear={() => {
+                setSingle('socialMode', undefined);
+                setSingle('energyNeeded', undefined);
+              }}
+            >
+              <div className="w-full">
+                <p className="text-xs text-zinc mb-2">Social style</p>
+                <div className="flex flex-wrap gap-2">
+                  {SOCIAL_MODES.map((mode) => (
+                    <FilterChip
+                      key={mode}
+                      label={SOCIAL_MODE_LABELS[mode]}
+                      active={state.socialMode === mode}
+                      size="sm"
+                      onClick={() =>
+                        setSingle(
+                          'socialMode',
+                          state.socialMode === mode ? undefined : mode
+                        )
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="w-full mt-3">
+                <p className="text-xs text-zinc mb-2">Energy needed</p>
+                <div className="flex flex-wrap gap-2">
+                  {ENERGY_NEEDED.map((energy) => (
+                    <FilterChip
+                      key={energy}
+                      label={ENERGY_NEEDED_LABELS[energy]}
+                      active={state.energyNeeded === energy}
+                      size="sm"
+                      onClick={() =>
+                        setSingle(
+                          'energyNeeded',
+                          state.energyNeeded === energy ? undefined : energy
+                        )
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
+            </CollapsibleFilterSection>
 
             {/* Quick toggles */}
             <FilterSection label="Quick filters">

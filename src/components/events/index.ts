@@ -25,7 +25,17 @@ export { EventLinks, EventLink } from './event-links';
 export { SectionHeader } from './section-header';
 export { FlyerLightbox } from './flyer-lightbox';
 export { ShareButton } from './share-button';
-export { VibeProfileSection, VibeTagPill, AccessBadge, NoiseLevelIndicator } from './vibe-profile';
+export {
+  VibeProfileSection,
+  VibeTagPill,
+  AccessBadge,
+  NoiseLevelIndicator,
+  SensoryTagPill,
+  LeaveWithPill,
+  SocialModePill,
+  EnergyNeededPill,
+  pickTopSensoryTag,
+} from './vibe-profile';
 export { AccessibilityBadges, AccessibilityIconRow } from './accessibility-badges';
 export { ChildEventsSchedule } from './child-events-schedule';
 export { PastInstances } from './past-instances';
