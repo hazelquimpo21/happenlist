@@ -28,8 +28,9 @@ import { AdminHeader, AdminBreadcrumbs } from '@/components/admin';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { getAdminEvent, getEventAuditHistory } from '@/data/admin';
+import { getAdminEvent, getEventAuditHistory, getSignalReviewsForEvent } from '@/data/admin';
 import { getSession, isSuperAdmin } from '@/lib/auth';
+import { SignalsReviewPanel } from '@/components/superadmin';
 import { adminDataLogger } from '@/lib/utils/logger';
 import { getBestImageUrl, getImageUrlIssue } from '@/lib/utils';
 import { EventApprovalForm } from './approval-form';
@@ -55,10 +56,11 @@ export default async function EventReviewPage({ params }: PageProps) {
   const { session } = await getSession();
   const userIsSuperAdmin = session ? isSuperAdmin(session.email) : false;
 
-  // Fetch event and audit history in parallel
-  const [event, auditHistory] = await Promise.all([
+  // Fetch event, audit history, and signal reviews in parallel
+  const [event, auditHistory, signalReviews] = await Promise.all([
     getAdminEvent(resolvedParams.id),
     getEventAuditHistory(resolvedParams.id),
+    getSignalReviewsForEvent(resolvedParams.id),
   ]);
 
   if (!event) {
@@ -321,6 +323,20 @@ export default async function EventReviewPage({ params }: PageProps) {
                 </pre>
               </Card>
             )}
+
+            {/* AI Signals review (Stage 4) — slider readings, vocab evidence,
+                Looks-right / Flag / Override per dimension. Sliders are
+                admin-only in v1. The component handles its own POSTs and
+                triggers a router refresh on change. */}
+            <Card padding="lg" className="border border-mist">
+              <SignalsReviewPanel
+                eventId={event.id}
+                inferred={event.inferred_signals ?? null}
+                overrides={event.signal_overrides ?? null}
+                reviews={signalReviews}
+                canOverride={userIsSuperAdmin}
+              />
+            </Card>
 
             {/* Audit history */}
             {auditHistory.length > 0 && (

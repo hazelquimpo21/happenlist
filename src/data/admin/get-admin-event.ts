@@ -6,7 +6,14 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { adminDataLogger } from '@/lib/utils/logger';
-import type { EventRow } from '@/types/event';
+import type { EventRow, InferredSignals } from '@/types/event';
+import type {
+  AccessibilityTag,
+  SensoryTag,
+  LeaveWith,
+  SocialMode,
+  EnergyNeeded,
+} from '@/lib/constants/vocabularies';
 import type { AuditLogEntry } from './get-admin-stats';
 
 /**
@@ -39,6 +46,20 @@ export interface AdminEventDetails extends EventRow {
     logo_url: string | null;
     website_url: string | null;
   } | null;
+
+  // Tagging-expansion fields (scraper migrations 00016–00019). Re-declared
+  // here because the generated Database types in src/lib/supabase/types.ts
+  // haven't been regenerated to include these columns.
+  accessibility_tags?: AccessibilityTag[] | null;
+  sensory_tags?: SensoryTag[] | null;
+  leave_with?: LeaveWith[] | null;
+  social_mode?: SocialMode | null;
+  energy_needed?: EnergyNeeded | null;
+  inferred_signals?: InferredSignals | null;
+
+  // Stage 4 — per-dimension reviewer overrides (migration 00020). Same
+  // shape as inferred_signals so a public read can prefer override over AI.
+  signal_overrides?: InferredSignals | null;
 }
 
 /**

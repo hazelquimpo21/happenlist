@@ -24,6 +24,20 @@ export type { AdminSeriesCard, AdminSeriesFilters, AdminSeriesResult } from './g
 export { getAdminEvent, getEventAuditHistory } from './get-admin-event';
 export type { AdminEventDetails } from './get-admin-event';
 
+// Signal reviews + per-dimension overrides (tagging-expansion Stage 4)
+export {
+  getSignalReviewsForEvent,
+  latestVerdictByDimension,
+  createSignalReview,
+  setSignalOverride,
+} from './signal-reviews';
+export type {
+  SignalReview,
+  ReviewVerdict,
+  ReviewDimension,
+  SignalOverrideValue,
+} from './signal-reviews';
+
 // Event actions
 export {
   approveEvent,

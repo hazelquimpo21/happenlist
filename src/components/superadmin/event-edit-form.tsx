@@ -43,6 +43,18 @@ import { Button } from '@/components/ui/button';
 import { RecurrenceBuilder } from './recurrence-builder';
 import { SeriesSearch } from './series-search';
 import { GOOD_FOR_TAGS } from '@/types';
+import {
+  ACCESSIBILITY_TAGS,
+  ACCESSIBILITY_TAG_LABELS,
+  SENSORY_TAGS,
+  SENSORY_TAG_LABELS,
+  LEAVE_WITH,
+  LEAVE_WITH_LABELS,
+  SOCIAL_MODES,
+  SOCIAL_MODE_LABELS,
+  ENERGY_NEEDED,
+  ENERGY_NEEDED_LABELS,
+} from '@/lib/constants/vocabularies';
 import type { AdminEventDetails } from '@/data/admin/get-admin-event';
 import type { RecurrenceRule } from '@/lib/supabase/types';
 
@@ -101,6 +113,14 @@ interface FormState {
   registration_url: string;
   // Audience
   good_for: string[];
+  // Tagging-expansion (Stage 4 admin manual editing). Multi-value arrays +
+  // two single-value enums. Sliders are NOT here — they go through the
+  // SignalsReviewPanel override flow so every change is attributed.
+  accessibility_tags: string[];
+  sensory_tags: string[];
+  leave_with: string[];
+  social_mode: string;
+  energy_needed: string;
   // Category
   category_id: string;
   // Status
@@ -154,6 +174,11 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
     facebook_url: event.facebook_url || '',
     registration_url: event.registration_url || '',
     good_for: event.good_for || [],
+    accessibility_tags: ((event as { accessibility_tags?: string[] | null }).accessibility_tags) || [],
+    sensory_tags: ((event as { sensory_tags?: string[] | null }).sensory_tags) || [],
+    leave_with: ((event as { leave_with?: string[] | null }).leave_with) || [],
+    social_mode: ((event as { social_mode?: string | null }).social_mode) || '',
+    energy_needed: ((event as { energy_needed?: string | null }).energy_needed) || '',
     category_id: event.category_id || '',
     status: event.status || 'draft',
   });
@@ -383,6 +408,37 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
       const newGoodFor = formState.good_for.slice().sort().join(',');
       if (newGoodFor !== originalGoodFor) {
         updates.good_for = formState.good_for;
+      }
+
+      // Tagging expansion (Stage 4) — array fields use sorted-join compare,
+      // enums compare empty-string-as-null. Empty UI value → DB null so the
+      // CHECK constraint on social_mode / energy_needed isn't tripped.
+      const arrayDiffer = (a: string[], b: string[]) =>
+        a.slice().sort().join(',') !== b.slice().sort().join(',');
+
+      const evAccess = ((event as { accessibility_tags?: string[] | null }).accessibility_tags) || [];
+      if (arrayDiffer(formState.accessibility_tags, evAccess)) {
+        updates.accessibility_tags = formState.accessibility_tags;
+      }
+
+      const evSensory = ((event as { sensory_tags?: string[] | null }).sensory_tags) || [];
+      if (arrayDiffer(formState.sensory_tags, evSensory)) {
+        updates.sensory_tags = formState.sensory_tags;
+      }
+
+      const evLeaveWith = ((event as { leave_with?: string[] | null }).leave_with) || [];
+      if (arrayDiffer(formState.leave_with, evLeaveWith)) {
+        updates.leave_with = formState.leave_with;
+      }
+
+      const evSocialMode = ((event as { social_mode?: string | null }).social_mode) || '';
+      if (formState.social_mode !== evSocialMode) {
+        updates.social_mode = formState.social_mode || null;
+      }
+
+      const evEnergyNeeded = ((event as { energy_needed?: string | null }).energy_needed) || '';
+      if (formState.energy_needed !== evEnergyNeeded) {
+        updates.energy_needed = formState.energy_needed || null;
       }
 
       // Category
@@ -938,6 +994,173 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
               {formState.good_for.length} selected
             </p>
           )}
+        </div>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* TAGGING-EXPANSION SIGNALS (Stage 4 manual editing) */}
+        {/* ------------------------------------------------------------------ */}
+        {/* Accessibility / sensory / leave_with as multi-chip toggles, social_
+            mode + energy_needed as native selects. Sliders intentionally NOT
+            here — they go through SignalsReviewPanel's override flow so each
+            slider change is attributed to a reviewer. */}
+        <div className="p-4 bg-white/50 rounded-lg border border-mist/50 space-y-5">
+          <div className="flex items-baseline justify-between">
+            <p className="text-sm font-medium text-ink">Signal tags</p>
+            <p className="text-[11px] text-zinc">
+              Manual edits go straight to the events table; sliders use the review panel.
+            </p>
+          </div>
+
+          {/* Accessibility */}
+          <div>
+            <p className="text-xs font-medium text-zinc mb-2">
+              Accessibility {formState.accessibility_tags.length > 0 && `(${formState.accessibility_tags.length})`}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {ACCESSIBILITY_TAGS.map((tag) => {
+                const isSelected = formState.accessibility_tags.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => {
+                      setFormState((prev) => ({
+                        ...prev,
+                        accessibility_tags: isSelected
+                          ? prev.accessibility_tags.filter((s) => s !== tag)
+                          : [...prev.accessibility_tags, tag],
+                      }));
+                      resetStatus();
+                    }}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                      isSelected
+                        ? 'bg-blue text-white'
+                        : 'bg-cloud/50 text-zinc hover:bg-cloud'
+                    }`}
+                  >
+                    {ACCESSIBILITY_TAG_LABELS[tag]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sensory */}
+          <div>
+            <p className="text-xs font-medium text-zinc mb-2">
+              Sensory {formState.sensory_tags.length > 0 && `(${formState.sensory_tags.length})`}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {SENSORY_TAGS.map((tag) => {
+                const isSelected = formState.sensory_tags.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => {
+                      setFormState((prev) => ({
+                        ...prev,
+                        sensory_tags: isSelected
+                          ? prev.sensory_tags.filter((s) => s !== tag)
+                          : [...prev.sensory_tags, tag],
+                      }));
+                      resetStatus();
+                    }}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                      isSelected
+                        ? 'bg-stone-700 text-white'
+                        : 'bg-cloud/50 text-zinc hover:bg-cloud'
+                    }`}
+                  >
+                    {SENSORY_TAG_LABELS[tag]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Leave with */}
+          <div>
+            <p className="text-xs font-medium text-zinc mb-2">
+              Leave with {formState.leave_with.length > 0 && `(${formState.leave_with.length})`}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {LEAVE_WITH.map((tag) => {
+                const isSelected = formState.leave_with.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => {
+                      setFormState((prev) => ({
+                        ...prev,
+                        leave_with: isSelected
+                          ? prev.leave_with.filter((s) => s !== tag)
+                          : [...prev.leave_with, tag],
+                      }));
+                      resetStatus();
+                    }}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                      isSelected
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-cloud/50 text-zinc hover:bg-cloud'
+                    }`}
+                  >
+                    {LEAVE_WITH_LABELS[tag]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Social mode + energy needed (single-value enums) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="social_mode" className="block text-xs font-medium text-zinc mb-1">
+                Social mode
+              </label>
+              <select
+                id="social_mode"
+                value={formState.social_mode}
+                onChange={(e) => {
+                  setFormState((prev) => ({ ...prev, social_mode: e.target.value }));
+                  resetStatus();
+                }}
+                className="w-full px-3 py-2 border border-mist rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue"
+              >
+                <option value="">— unset —</option>
+                {SOCIAL_MODES.map((m) => (
+                  <option key={m} value={m}>
+                    {SOCIAL_MODE_LABELS[m]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="energy_needed" className="block text-xs font-medium text-zinc mb-1">
+                Energy needed
+              </label>
+              <select
+                id="energy_needed"
+                value={formState.energy_needed}
+                onChange={(e) => {
+                  setFormState((prev) => ({ ...prev, energy_needed: e.target.value }));
+                  resetStatus();
+                }}
+                className="w-full px-3 py-2 border border-mist rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue"
+              >
+                <option value="">— unset —</option>
+                {ENERGY_NEEDED.map((e) => (
+                  <option key={e} value={e}>
+                    {ENERGY_NEEDED_LABELS[e]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
 
         {/* ------------------------------------------------------------------ */}
