@@ -224,7 +224,7 @@ function ErrorSheet({ open, onOpenChange, message }: ErrorSheetProps) {
           aria-hidden="true"
         />
         <h2 className="font-body text-h4 font-semibold text-ink">
-          We couldn't load this one
+          We couldn&apos;t load this one
         </h2>
         <p className="text-body-sm text-zinc max-w-sm">{message}</p>
         <button
