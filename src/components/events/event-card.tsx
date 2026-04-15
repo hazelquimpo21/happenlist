@@ -61,7 +61,11 @@ import {
   pickTopSensoryTag,
 } from './vibe-profile';
 import { AccessibilityIconRow } from './accessibility-badges';
-import { isSocialMode } from '@/lib/constants/vocabularies';
+import {
+  isSocialMode,
+  type SensoryTag,
+  type SocialMode,
+} from '@/lib/constants/vocabularies';
 import { DistanceBadge } from './distance-badge';
 import type { EventCard as EventCardType } from '@/types';
 
@@ -212,13 +216,13 @@ function EventCardComponent({
   // vibe — these answer "can I come alone?", "will it overwhelm me?", and
   // "what's the flavor?" in that order. Fill remaining slots with extra
   // vibe tags so older events without new analyzers run still get a tag row.
-  const topSensory = pickTopSensoryTag(event.sensory_tags);
-  const validSocial =
+  const topSensory: SensoryTag | null = pickTopSensoryTag(event.sensory_tags);
+  const validSocial: SocialMode | null =
     event.social_mode && isSocialMode(event.social_mode) ? event.social_mode : null;
 
   type TagChip =
-    | { kind: 'social'; value: string }
-    | { kind: 'sensory'; value: ReturnType<typeof pickTopSensoryTag> & string }
+    | { kind: 'social'; value: SocialMode }
+    | { kind: 'sensory'; value: SensoryTag }
     | { kind: 'vibe'; value: string };
 
   const tagChips: TagChip[] = [];
@@ -452,13 +456,7 @@ function EventCardComponent({
             {visibleChips.map((chip, i) => {
               const key = `${chip.kind}-${chip.value}-${i}`;
               if (chip.kind === 'social') {
-                return (
-                  <SocialModePill
-                    key={key}
-                    mode={chip.value as Parameters<typeof SocialModePill>[0]['mode']}
-                    size="xs"
-                  />
-                );
+                return <SocialModePill key={key} mode={chip.value} size="xs" />;
               }
               if (chip.kind === 'sensory') {
                 return <SensoryTagPill key={key} tag={chip.value} size="xs" />;

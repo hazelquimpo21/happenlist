@@ -29,7 +29,7 @@
  * =============================================================================
  */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircle, Flag, PencilLine, X, Loader2 } from 'lucide-react';
 import {
@@ -83,15 +83,26 @@ const CONFIDENCE_STYLES: Record<'high' | 'medium' | 'low', string> = {
   low: 'bg-red-100 text-red-800',
 };
 
-function ConfidenceBadge({ confidence }: { confidence: 'high' | 'medium' | 'low' }) {
+/**
+ * Narrow at runtime — JSONB can hold any string and the type guarantees only
+ * hold at the TS layer. Falls back to 'medium' so a malformed payload still
+ * renders something rather than `bg-undefined`.
+ */
+function normalizeConfidence(c: string | undefined | null): 'high' | 'medium' | 'low' {
+  if (c === 'high' || c === 'medium' || c === 'low') return c;
+  return 'medium';
+}
+
+function ConfidenceBadge({ confidence }: { confidence: string | undefined | null }) {
+  const normalized = normalizeConfidence(confidence);
   return (
     <span
       className={cn(
         'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide',
-        CONFIDENCE_STYLES[confidence],
+        CONFIDENCE_STYLES[normalized],
       )}
     >
-      {confidence}
+      {normalized}
     </span>
   );
 }
@@ -619,7 +630,7 @@ export function SignalsReviewPanel({
 
   // Use the up-to-date prop reviews when the parent re-fetches; fall back
   // to local optimistic list during in-flight requests.
-  useMemoSyncReviews(reviews, setLocalReviews);
+  useSyncReviews(reviews, setLocalReviews);
 
   const verdictMap = useMemo(
     () => latestVerdictByDimension(localReviews),
@@ -836,14 +847,12 @@ function SliderBody({
 // HOOKS
 // -----------------------------------------------------------------------------
 
-import { useEffect } from 'react';
-
 /**
  * Sync the local optimistic reviews list with the server-fetched prop after
  * router.refresh() resolves. Keeps the verdict pills accurate without an
  * extra fetch from the panel itself.
  */
-function useMemoSyncReviews(
+function useSyncReviews(
   reviews: readonly SignalReview[],
   setLocal: (next: SignalReview[]) => void,
 ) {

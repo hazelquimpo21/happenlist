@@ -27,7 +27,7 @@
 
 'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
@@ -54,22 +54,21 @@ export function CollapsibleFilterSection({
   onClear,
   children,
 }: CollapsibleFilterSectionProps) {
-  // Track open state ourselves so the chevron rotation + sessionStorage write
-  // both react to the same toggle event. The native <details> would handle
-  // open/close on its own, but we need a hook for persistence anyway.
+  // Single source of truth: React state controls the <details open> attribute.
+  // We do NOT touch detailsRef.current.open directly — that would race with
+  // React's render and could double-toggle.
   const [open, setOpen] = useState<boolean>(defaultOpen);
-  const detailsRef = useRef<HTMLDetailsElement>(null);
   const storageKey = STORAGE_KEY_PREFIX + id;
 
   // Hydrate from sessionStorage on mount. Done in an effect (not initial
-  // useState) because `sessionStorage` is browser-only and SSR would crash.
+  // useState) because sessionStorage is browser-only and SSR would crash.
+  // First-paint flash (defaultOpen → stored value) is one frame and doesn't
+  // produce a React hydration warning since the open prop is controlled.
   useEffect(() => {
     try {
       const stored = window.sessionStorage.getItem(storageKey);
       if (stored === 'open' || stored === 'closed') {
-        const next = stored === 'open';
-        setOpen(next);
-        if (detailsRef.current) detailsRef.current.open = next;
+        setOpen(stored === 'open');
       }
     } catch {
       // sessionStorage can throw in some privacy modes — fall through to default
@@ -88,7 +87,6 @@ export function CollapsibleFilterSection({
 
   return (
     <details
-      ref={detailsRef}
       open={open}
       onToggle={handleToggle}
       className="py-5 border-b border-mist last:border-b-0"

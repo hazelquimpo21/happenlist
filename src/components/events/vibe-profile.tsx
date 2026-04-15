@@ -422,18 +422,31 @@ export function EnergyNeededPill({
  * Returns the highest-priority sensory tag from the input, or null.
  * Order is defined by SENSORY_TAG_PRIORITY (strobe_lights wins because it's
  * the only seizure-relevant signal). Unknown values are dropped silently.
+ *
+ * Drift safety: if SENSORY_TAGS adds a value that wasn't backfilled into
+ * SENSORY_TAG_PRIORITY, we'd otherwise silently drop it from cards. The
+ * fallback returns the first valid tag in input order so the new vocab
+ * value at least surfaces somewhere — surface-via-arbitrary-order is
+ * better than surface-not-at-all.
  */
 export function pickTopSensoryTag(
   tags: readonly string[] | null | undefined
 ): SensoryTag | null {
   if (!tags || tags.length === 0) return null;
-  const valid = new Set<SensoryTag>();
-  for (const t of tags) if (typeof t === 'string' && isSensoryTag(t)) valid.add(t);
-  if (valid.size === 0) return null;
-  for (const candidate of SENSORY_TAG_PRIORITY) {
-    if (valid.has(candidate)) return candidate;
+  const valid: SensoryTag[] = [];
+  const validSet = new Set<SensoryTag>();
+  for (const t of tags) {
+    if (typeof t === 'string' && isSensoryTag(t) && !validSet.has(t)) {
+      valid.push(t);
+      validSet.add(t);
+    }
   }
-  return null;
+  if (valid.length === 0) return null;
+  for (const candidate of SENSORY_TAG_PRIORITY) {
+    if (validSet.has(candidate)) return candidate;
+  }
+  // Drift fallback: vocab has a value that priority list doesn't know about.
+  return valid[0];
 }
 
 // =============================================================================

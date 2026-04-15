@@ -38,6 +38,18 @@ export type {
   SignalOverrideValue,
 } from './signal-reviews';
 
+// Calibration dashboard (admin agreement-rate metrics)
+export {
+  getSignalsCalibration,
+  agreementBand,
+} from './get-signals-calibration';
+export type {
+  CalibrationData,
+  DimensionStats,
+  ReviewerStats,
+  CalibrationActivityRow,
+} from './get-signals-calibration';
+
 // Event actions
 export {
   approveEvent,

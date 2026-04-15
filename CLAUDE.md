@@ -289,7 +289,33 @@ Also extended `SuperadminEventEditForm` with manual editing for `accessibility_t
 **Public-read precedence rule** — when both `inferred_signals.X` and `signal_overrides.X` are populated, the override wins. The admin panel renders both with a "Showing reviewer override" badge so it's obvious which side fired. Public surfaces (detail page, cards) currently read only the flat columns (`accessibility_tags`, `sensory_tags`, etc.) and `inferred_signals`; promoting overrides to the flat columns is a TODO if the override flow ever sees significant traffic.
 
 **Critical operational notes:**
-- **No real data to QA against on day of ship.** Migrations 00016–00020 ran against an empty signal surface (every existing event has `accessibility_tags = '{}'`, `inferred_signals = '{}'`, etc.). Visual QA requires either re-scraping events with tag-rich pages, or hand-inserting test rows.
+- **No real data to QA against on day of ship.** Migrations 00016–00021 ran against an empty signal surface (every existing event has `accessibility_tags = '{}'`, `inferred_signals = '{}'`, etc.). Visual QA requires either re-scraping events with tag-rich pages, or hand-inserting test rows.
 - **Vocab sync is load-bearing.** If `vocabularies.ts` and `happenlist_scraper/backend/lib/vocabularies.js` drift, filter guards silently drop real data. Mirror EVERY change in both files.
-- **Sliders are admin-only in v1.** Do not add public slider filters until human review on ~hundreds of events confirms 1/3/5 calibration. Phase out via the SignalsReviewPanel agreement-rate metrics (computed from `signal_reviews.verdict`).
+- **Sliders are admin-only in v1.** Do not add public slider filters until human review on ~hundreds of events confirms 1/3/5 calibration. Track progress at `/admin/signals-calibration` (agreement rate per dimension, sorted lowest-first).
 - **The peek modal does not yet show any new signals.** Cards open a peek (`src/components/events/peek/`); the new accessibility/sensory/leave_with surfaces only render on the full detail page. Follow-up if the gap matters.
+
+## Calibration dashboard
+
+`/admin/signals-calibration` reads `signal_reviews` and shows per-dimension agreement rate (looks_right ÷ total), per-reviewer activity, and the recent activity feed with deep links to events. Sorted lowest-first so dimensions needing prompt iteration bubble up. Use the "Dims < 50% agreement" stat tile as the gating metric for "ready to expose this dimension publicly".
+
+Source: `src/data/admin/get-signals-calibration.ts` (server) + `src/app/admin/signals-calibration/page.tsx` (admin-only, not superadmin-gated since any admin can write reviews).
+
+## Stage 4 follow-up bug-scan + fixes (2026-04-14)
+
+After Stage 4 landed, a deep scan of all four ships surfaced these issues. All fixes shipped in the same push as the calibration page.
+
+| # | Severity | Issue | Fix |
+|---|---|---|---|
+| 1 | **Critical** | `setSignalOverride` did read-modify-write on `events.signal_overrides`. Two reviewers overriding different dimensions of the same event in the same second would have one write silently lost. | Migration 00021 adds `set_signal_override_path()` Postgres RPC using `jsonb_set` for atomic per-path writes. `setSignalOverride` now calls the RPC. |
+| 2 | High | `getEvents()` SELECT included `inferred_signals` (JSONB blob, can be ~1KB+ per event) but the list view never used it. ~25KB+ wasted bandwidth per page. | Removed from SELECT. Detail page (`get-event.ts`) still gets it via `select('*')`. |
+| 3 | Medium | `CollapsibleFilterSection` mutated `detailsRef.current.open` in the hydration effect AND set React state. The DOM mutation was redundant since `open={open}` already controlled the element, and risked a double-toggle. | Dropped the ref entirely; React state is the single source of truth for the `<details open>` attribute. |
+| 4 | Medium | `pickTopSensoryTag` would silently drop a valid sensory tag if it wasn't in `SENSORY_TAG_PRIORITY` (vocab/priority drift). | Added drift fallback: if no priority match, return the first valid tag in input order. Prevents silent data loss when the priority list lags a vocab addition. |
+| 5 | Medium | `SignalsReviewPanel` rendered slider `confidence` directly into `CONFIDENCE_STYLES[confidence]`. The TS type guarantees `'high'\|'medium'\|'low'` but JSONB can hold anything — malformed payload would render `bg-undefined`. | New `normalizeConfidence()` helper falls back to `'medium'` for unknown values. |
+| 6 | Low | `event-card.tsx` smart-row used `ReturnType<typeof pickTopSensoryTag> & string` for the chip type — hacky. | Imported `SensoryTag` and `SocialMode` directly; chip union now reads cleanly. Removed the `as Parameters<...>` cast on `<SocialModePill mode={...}/>`. |
+| 7 | Low | `SignalsReviewPanel` had `import { useEffect } from 'react'` at the BOTTOM of the file, separate from the top imports. | Consolidated into the top import. Renamed `useMemoSyncReviews` → `useSyncReviews` (it's a `useEffect`, not a `useMemo`). |
+
+Not fixed (accepted trade-offs):
+- **Hydration flash on `CollapsibleFilterSection`:** SSR renders `defaultOpen` (true), client may flip to closed after sessionStorage read. One frame, no React warning. Acceptable.
+- **Override form closes immediately on save:** No "saved!" beat. Acceptable for admin tooling.
+- **Generated Supabase types don't include the new tables/columns:** every consumer casts. Regenerating types via `npx supabase gen types typescript` is a follow-up — would replace ~15 `as any` / `as unknown as X` casts across `signal-reviews.ts`, `get-admin-event.ts`, `get-events.ts`, `get-signals-calibration.ts`. Not blocking.
+- **Override → flat column promotion:** Overrides on `accessibility_tags` etc. live only in `signal_overrides` JSONB. Public detail page + cards still read flat columns. If overrides see meaningful traffic, add a write-through trigger or a view that COALESCEs override over flat. Not needed yet.

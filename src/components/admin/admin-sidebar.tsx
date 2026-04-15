@@ -18,6 +18,7 @@ import {
   Repeat,
   LogOut,
   ChevronRight,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -94,6 +95,11 @@ export function AdminSidebar({ pendingCount = 0 }: AdminSidebarProps) {
           label: 'Activity Log',
           href: '/admin/activity',
           icon: <FileText className="w-5 h-5" />,
+        },
+        {
+          label: 'Signals Calibration',
+          href: '/admin/signals-calibration',
+          icon: <BarChart3 className="w-5 h-5" />,
         },
       ],
     },

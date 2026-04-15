@@ -139,18 +139,23 @@ interface UpsertOverrideParams {
 }
 
 /**
- * Merge a per-dimension override into events.signal_overrides AND record
- * the audit trail in one logical operation.
+ * Atomically write a per-dimension override into events.signal_overrides
+ * AND record an audit row in signal_reviews.
  *
- * For slider dimensions (social_intensity / structure / commitment /
- * spend_level), the override is written under signal_overrides.sliders.<dim>
- * to mirror the analyzer's shape in inferred_signals. For everything else
- * it's written at the top level: signal_overrides.<dim>.
+ * Slider dimensions land at signal_overrides.sliders.<dim> to mirror the
+ * analyzer's shape; everything else is top-level signal_overrides.<dim>.
  *
- * The merge uses jsonb_set so other dimensions in the override blob are
- * preserved (last-writer-wins per dimension is still possible if two
- * reviewers race on the same dimension — accept the trade-off; admin volume
- * is small).
+ * Atomicity: the JSONB write goes through the set_signal_override_path RPC
+ * (migration 00021) which uses Postgres jsonb_set inside a single UPDATE.
+ * Without the RPC, two reviewers overriding different dimensions of the
+ * same event in the same second would clobber each other (both read {},
+ * second write overwrites first).
+ *
+ * Audit row: written AFTER the override succeeds. If the override fails,
+ * no audit row is created. If the audit write fails (very rare), the
+ * override is already committed and the caller sees an error — accept the
+ * trade-off vs. wrapping both in a transaction (would require a more
+ * elaborate RPC).
  */
 export async function setSignalOverride(
   params: UpsertOverrideParams,
@@ -164,65 +169,26 @@ export async function setSignalOverride(
 
   const supabase = await createClient();
 
-  // Slider dimensions live one level deeper under .sliders.<dim>. Everything
-  // else is a top-level key. The path is built as a Postgres TEXT[] for
-  // jsonb_set's path arg.
   const isSlider = ['social_intensity', 'structure', 'commitment', 'spend_level'].includes(
     dimension,
   );
   const path = isSlider ? ['sliders', dimension] : [dimension];
 
-  // Use jsonb_set via execute_sql-style RPC isn't wired up — fall back to
-  // a read-modify-write. This races if two reviewers hit override on
-  // different dimensions simultaneously, but the audit trail still records
-  // both verdicts cleanly. Acceptable for v1.
-  const { data: current, error: readErr } = await supabase
-    .from('events')
-    .select('signal_overrides')
-    .eq('id', eventId)
-    .single();
-
-  if (readErr || !current) {
-    timer.error('Event not found for override', readErr);
-    throw readErr ?? new Error('Event not found');
-  }
-
-  const overrides =
-    ((current as { signal_overrides: Record<string, unknown> | null }).signal_overrides ?? {}) as Record<
-      string,
-      unknown
-    >;
-  const next = { ...overrides };
-
-  if (isSlider) {
-    const sliders = { ...((next.sliders as Record<string, unknown>) ?? {}) };
-    if (value === null) {
-      delete sliders[dimension];
-    } else {
-      sliders[dimension] = value;
-    }
-    next.sliders = sliders;
-  } else {
-    if (value === null) {
-      delete next[dimension];
-    } else {
-      next[dimension] = value;
-    }
-  }
-
+  // Atomic write via RPC — concurrent overrides on different dimensions
+  // serialize at the row level via Postgres MVCC instead of clobbering.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: writeErr } = await (supabase as any)
-    .from('events')
-    .update({ signal_overrides: next, updated_at: new Date().toISOString() })
-    .eq('id', eventId);
+  const { error: rpcErr } = await (supabase as any).rpc('set_signal_override_path', {
+    p_event_id: eventId,
+    p_path: path,
+    p_value: value,  // postgrest serializes null → SQL NULL → "delete this key"
+  });
 
-  if (writeErr) {
-    timer.error('Failed to write override', writeErr);
-    throw writeErr;
+  if (rpcErr) {
+    timer.error('Failed to set override via RPC', rpcErr);
+    throw rpcErr;
   }
 
-  // Audit row — fire-and-await so the trail is consistent with the override
-  // before we return success to the caller.
+  // Audit row — written AFTER the override succeeds.
   await createSignalReview({
     eventId,
     dimension,

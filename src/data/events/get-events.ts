@@ -490,7 +490,7 @@ export async function getEvents(
       short_description, tagline, talent_name,
       access_type, noise_level, vibe_tags,
       accessibility_tags, sensory_tags, leave_with,
-      social_mode, energy_needed, inferred_signals,
+      social_mode, energy_needed,
       organizer_name, organizer_is_venue,
       age_restriction, is_family_friendly,
       parent_event_id,
