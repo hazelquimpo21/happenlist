@@ -36,6 +36,16 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
+# iCloud sync conflict copies (e.g. "page 2.tsx", "layout 3.tsx")
+*[[:space:]][0-9].ts
+*[[:space:]][0-9].tsx
+*[[:space:]][0-9].js
+*[[:space:]][0-9].jsx
+*[[:space:]][0-9].md
+
+# Claude Code agent worktrees (local-only, ephemeral)
+.claude/worktrees/
+
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
