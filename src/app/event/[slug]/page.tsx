@@ -86,6 +86,7 @@ import {
   TailSectionHeader,
   Chapter,
   EditorsTake,
+  FeaturedPeople,
 } from './_sections';
 
 interface EventPageProps {
@@ -376,6 +377,14 @@ export default async function EventPage({ params }: EventPageProps) {
                 isPastEvent={isPastEvt}
                 calendarUrl={calendarUrl}
                 categoryColor={categoryColor}
+              />
+              {/* Compact "who's in this" card — clickable avatars + names
+                  linked to performer pages. Replaces the old Part I chapter
+                  which over-dignified secondary info. */}
+              <FeaturedPeople
+                performers={event.event_performers}
+                legacyTalentName={event.talent_name}
+                accentColor={categoryColor.accent}
               />
             </div>
           </aside>
