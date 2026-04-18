@@ -18,3 +18,4 @@ export { MemberBenefits } from './member-benefits';
 export { PersonalityStickers } from './personality-stickers';
 export { PriceDetails } from './price-details';
 export { TailSectionHeader } from './tail-section-header';
+export { Chapter } from './chapter';

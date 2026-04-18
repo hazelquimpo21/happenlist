@@ -87,6 +87,7 @@ import {
   PersonalityStickers,
   PriceDetails,
   TailSectionHeader,
+  Chapter,
 } from './_sections';
 
 interface EventPageProps {
@@ -282,7 +283,20 @@ export default async function EventPage({ params }: EventPageProps) {
 
         {/* MAIN + SIDEBAR */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10 lg:gap-16">
-          <main className="space-y-14 min-w-0">
+          <main className="space-y-20 min-w-0">
+            {/*
+              Main column is structured as four chapters:
+                I   · The pitch       (editorial, warm)
+                II  · The lineup      (dark aside, concert-bill feel)
+                III · The details     (practical, default)
+                IV  · How it feels    (full-bleed — rendered OUTSIDE Container below)
+
+              Each Chapter only renders if it has content. A chapter with zero
+              child sections returns null via the `hasContent` guard below.
+            */}
+
+            {/* ── Series context — stands outside the chapter flow because it's
+                contextual framing, not part of the narrative. */}
             {seriesInfo && (
               <SeriesContextBlock
                 seriesInfo={seriesInfo}
@@ -293,61 +307,93 @@ export default async function EventPage({ params }: EventPageProps) {
               />
             )}
 
-            {event.happenlist_summary && (
-              <WhyWePicked summary={event.happenlist_summary} accentColor={categoryColor.accent} />
+            {/* ── Part I · The pitch ── */}
+            {(event.happenlist_summary ||
+              (event.personality_badges && event.personality_badges.length > 0)) && (
+              <Chapter number="I" title="The pitch" accentColor={categoryColor.accent}>
+                {event.happenlist_summary && (
+                  <WhyWePicked
+                    summary={event.happenlist_summary}
+                    accentColor={categoryColor.accent}
+                  />
+                )}
+                {event.personality_badges && event.personality_badges.length > 0 && (
+                  <PersonalityStickers badges={event.personality_badges} />
+                )}
+              </Chapter>
             )}
 
-            {event.personality_badges && event.personality_badges.length > 0 && (
-              <PersonalityStickers badges={event.personality_badges} />
-            )}
-
+            {/* ── Part II · The lineup ──
+                Dark-bg aside so the performer bill feels like the back of a
+                concert ticket, not another section of running text. */}
             {event.event_performers && event.event_performers.length > 0 ? (
-              <LineupSection
-                performers={event.event_performers}
+              <Chapter
+                number="II"
+                title="The lineup"
                 accentColor={categoryColor.accent}
-              />
+                variant="dark"
+              >
+                <LineupSection
+                  performers={event.event_performers}
+                  accentColor={categoryColor.accent}
+                  variant="dark"
+                />
+              </Chapter>
             ) : event.talent_name ? (
-              <LegacyTalent name={event.talent_name} bio={event.talent_bio} />
+              <Chapter
+                number="II"
+                title="The featured"
+                accentColor={categoryColor.accent}
+                variant="dark"
+              >
+                <LegacyTalent name={event.talent_name} bio={event.talent_bio} />
+              </Chapter>
             ) : null}
 
-            {event.event_membership_benefits && event.event_membership_benefits.length > 0 && (
-              <MemberBenefits benefits={event.event_membership_benefits} />
-            )}
+            {/* ── Part III · The details ── */}
+            <Chapter number="III" title="The details" accentColor={categoryColor.accent}>
+              {event.description && (
+                <AboutSection description={event.description} accentColor={categoryColor.accent} />
+              )}
 
-            {event.description && (
-              <AboutSection description={event.description} accentColor={categoryColor.accent} />
-            )}
+              {event.organizer_description && (
+                <OrganizerQuote
+                  body={event.organizer_description}
+                  accentColor={categoryColor.accent}
+                  organizerName={event.organizer?.name}
+                  organizerIsVenue={event.organizer_is_venue}
+                />
+              )}
 
-            {event.organizer_description && (
-              <OrganizerQuote
-                body={event.organizer_description}
+              <GettingIn
+                accessType={event.access_type}
+                attendanceMode={event.attendance_mode}
+                hasTicketUrl={!!event.ticket_url}
+                membershipRequired={event.membership_required}
+                membershipDetails={event.membership_details}
+                isFree={event.is_free}
                 accentColor={categoryColor.accent}
-                organizerName={event.organizer?.name}
-                organizerIsVenue={event.organizer_is_venue}
               />
-            )}
 
-            <GettingIn
-              accessType={event.access_type}
-              attendanceMode={event.attendance_mode}
-              hasTicketUrl={!!event.ticket_url}
-              membershipRequired={event.membership_required}
-              membershipDetails={event.membership_details}
-              isFree={event.is_free}
-              accentColor={categoryColor.accent}
-            />
+              {event.event_membership_benefits &&
+                event.event_membership_benefits.length > 0 && (
+                  <MemberBenefits benefits={event.event_membership_benefits} />
+                )}
 
-            {seriesInfo && <SeriesDetailsAccordion seriesInfo={seriesInfo} />}
+              {event.price_details && <PriceDetails details={event.price_details} />}
 
-            {event.series_id && (
-              <PastInstances seriesId={event.series_id} excludeEventId={event.id} />
-            )}
+              {seriesInfo && <SeriesDetailsAccordion seriesInfo={seriesInfo} />}
 
-            {/* Legacy vibe surfaces (energy, vibe_tags, subcultures, noise, expected_crowd).
-                New signals live in HowItFeelsSection below. */}
-            <VibeProfileSection event={event} accentColor={categoryColor.accent} />
+              {event.series_id && (
+                <PastInstances seriesId={event.series_id} excludeEventId={event.id} />
+              )}
 
-            {event.price_details && <PriceDetails details={event.price_details} />}
+              {/* Legacy vibe surfaces (energy bars, vibe_tags, subcultures,
+                  noise_level, expected_crowd). The NEW signals (sensory,
+                  leave_with, social_mode, energy_needed, accessibility)
+                  live in HowItFeelsSection below (Part IV). */}
+              <VibeProfileSection event={event} accentColor={categoryColor.accent} />
+            </Chapter>
           </main>
 
           <aside>
