@@ -120,11 +120,11 @@
      Color is driven by --drop-cap-color (set inline per-event).
      Added 2026-04-18 for event detail redesign. */
   .prose-event--dropcap > p:first-of-type::first-letter {
-    font-size: 4rem;
+    font-size: 3.25rem;
     font-weight: 800;
     float: left;
     line-height: 0.85;
-    margin: 0.15rem 0.75rem 0 0;
+    margin: 0.1rem 0.6rem 0 0;
     color: var(--drop-cap-color, currentColor);
   }
 

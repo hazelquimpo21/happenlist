@@ -25,7 +25,7 @@ export function AboutSection({ description, accentColor }: AboutSectionProps) {
     <section>
       <SectionLabel className="mb-4">About this event</SectionLabel>
       <div
-        className="prose-event prose-event--dropcap text-lg leading-relaxed whitespace-pre-wrap"
+        className="prose-event prose-event--dropcap text-base leading-relaxed whitespace-pre-wrap"
         style={{ ['--drop-cap-color' as string]: accentColor } as React.CSSProperties}
       >
         {paragraphs.map((para, i) => (

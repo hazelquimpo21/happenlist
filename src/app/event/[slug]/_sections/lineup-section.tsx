@@ -73,7 +73,7 @@ export function LineupSection({ performers, accentColor }: LineupSectionProps) {
                   <Link
                     href={`/performer/${ep.performer.slug}`}
                     className={`font-extrabold text-ink hover:text-blue transition-colors leading-none tracking-tight ${
-                      isHeadliner ? 'text-4xl md:text-5xl' : 'text-xl md:text-2xl'
+                      isHeadliner ? 'text-3xl md:text-4xl' : 'text-lg md:text-xl'
                     }`}
                   >
                     {ep.performer.name}

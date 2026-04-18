@@ -20,7 +20,7 @@ export function WhyWePicked({ summary, accentColor }: WhyWePickedProps) {
       <SectionLabel icon={Sparkles} color={accentColor} className="mb-4">
         Why we picked this
       </SectionLabel>
-      <p className="text-2xl md:text-[26px] font-medium italic leading-snug tracking-tight text-ink">
+      <p className="text-xl md:text-2xl font-medium italic leading-snug tracking-tight text-ink">
         {summary}
       </p>
     </section>

@@ -141,25 +141,37 @@ export function HowItFeelsSection({ event, accentColor }: HowItFeelsSectionProps
 
   return (
     <section className="relative w-full bg-night text-cream">
-      {/* 6px category accent bar at top */}
+      {/* ── Chapter-break banner ──
+         A tall category-colored band acts as the bridge between the light
+         page above and the dark editorial section below. The eyebrow lives
+         here, so the reader sees "this is a new chapter" before the dark
+         background starts. Without this the dark section reads as a
+         detached footer. */}
       <div
-        aria-hidden="true"
-        className="absolute inset-x-0 top-0 h-1.5"
-        style={{ backgroundColor: accentColor }}
-      />
+        className="w-full py-5 md:py-6"
+        style={{ backgroundColor: accentColor, color: '#FFFFFF' }}
+      >
+        <div className="container mx-auto px-4 md:px-6 flex items-center gap-3">
+          <span
+            aria-hidden="true"
+            className="inline-block w-8 h-px bg-current opacity-60"
+          />
+          <p className="font-mono text-[11px] md:text-xs font-bold uppercase tracking-[0.25em]">
+            Part II · The thing nobody tells you
+          </p>
+          <span
+            aria-hidden="true"
+            className="inline-block flex-1 h-px bg-current opacity-20"
+          />
+        </div>
+      </div>
 
-      <div className="container mx-auto px-4 md:px-6 py-16 md:py-24">
-        <p
-          className="font-mono text-[11px] font-bold uppercase tracking-[0.25em] mb-4"
-          style={{ color: accentColor }}
-        >
-          The thing nobody tells you
-        </p>
-        <h2 className="font-body text-5xl md:text-7xl font-extrabold leading-[0.95] tracking-tight mb-4">
+      <div className="container mx-auto px-4 md:px-6 py-12 md:py-20">
+        <h2 className="font-body text-4xl md:text-6xl font-extrabold leading-[0.95] tracking-tight mb-4">
           How it{' '}
           <span style={{ color: accentColor }}>feels</span>.
         </h2>
-        <p className="text-lg text-cream/70 max-w-xl mb-14 leading-relaxed">
+        <p className="text-base text-cream/70 max-w-xl mb-12 leading-relaxed">
           The details organizers don&apos;t always put in the description — pulled
           from the room, the crowd, and what people remember afterward.
         </p>
@@ -175,12 +187,12 @@ export function HowItFeelsSection({ event, accentColor }: HowItFeelsSectionProps
                 The room
               </h3>
               {sensorySentence ? (
-                <p className="text-xl font-medium leading-snug tracking-tight">
+                <p className="text-lg font-medium leading-snug tracking-tight">
                   {sensorySentence}
                 </p>
               ) : (
                 // Fallback when no sentence maps — show labeled tags
-                <p className="text-xl font-medium leading-snug">
+                <p className="text-lg font-medium leading-snug">
                   {sensoryTags.map((t) => SENSORY_TAG_LABELS[t]).join(' · ')}
                 </p>
               )}
@@ -216,27 +228,27 @@ export function HowItFeelsSection({ event, accentColor }: HowItFeelsSectionProps
                 The crowd
               </h3>
               {crowdSentence ? (
-                <p className="text-xl font-medium leading-snug tracking-tight">
+                <p className="text-lg font-medium leading-snug tracking-tight">
                   {crowdSentence}
                 </p>
               ) : (
-                <dl className="space-y-3 text-base">
+                <dl className="space-y-3 text-sm">
                   {socialMode && (
                     <div>
-                      <dt className="text-cream/60 text-xs uppercase tracking-wider font-medium mb-0.5">
+                      <dt className="text-cream/60 text-[11px] uppercase tracking-wider font-medium mb-0.5">
                         Social style
                       </dt>
-                      <dd className="text-xl font-semibold">
+                      <dd className="text-lg font-semibold">
                         {SOCIAL_MODE_LABELS[socialMode]}
                       </dd>
                     </div>
                   )}
                   {energyNeeded && (
                     <div>
-                      <dt className="text-cream/60 text-xs uppercase tracking-wider font-medium mb-0.5">
+                      <dt className="text-cream/60 text-[11px] uppercase tracking-wider font-medium mb-0.5">
                         Energy needed
                       </dt>
-                      <dd className="text-xl font-semibold">
+                      <dd className="text-lg font-semibold">
                         {ENERGY_NEEDED_LABELS[energyNeeded]}
                       </dd>
                     </div>
@@ -264,10 +276,10 @@ export function HowItFeelsSection({ event, accentColor }: HowItFeelsSectionProps
                       className="flex flex-col items-center text-center gap-2 w-20"
                     >
                       <div
-                        className="w-14 h-14 rounded-full bg-cream/10 flex items-center justify-center"
+                        className="w-12 h-12 rounded-full bg-cream/10 flex items-center justify-center"
                         style={{ color: accentColor }}
                       >
-                        <Icon className="w-7 h-7" strokeWidth={2} aria-hidden="true" />
+                        <Icon className="w-6 h-6" strokeWidth={2} aria-hidden="true" />
                       </div>
                       <span className="text-xs font-semibold leading-tight text-cream/90">
                         {LEAVE_WITH_LABELS[tag]}

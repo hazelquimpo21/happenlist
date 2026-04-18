@@ -238,15 +238,15 @@ export function PosterHero({ event, categoryColor, timingBadge }: PosterHeroProp
 
           {/* Type column */}
           <div>
-            {/* Giant date stamp */}
+            {/* Date stamp */}
             <div
               className="font-mono font-bold leading-[0.9] tracking-tight mb-3"
-              style={{ fontSize: 'clamp(44px, 9vw, 104px)' }}
+              style={{ fontSize: 'clamp(36px, 6vw, 72px)' }}
             >
               <div
                 className="font-mono font-bold uppercase mb-2"
                 style={{
-                  fontSize: 'clamp(10px, 1vw, 12px)',
+                  fontSize: '11px',
                   letterSpacing: '0.25em',
                   opacity: 0.78,
                 }}
@@ -258,7 +258,7 @@ export function PosterHero({ event, categoryColor, timingBadge }: PosterHeroProp
 
             <h1
               className="font-body font-extrabold leading-[0.95] tracking-tight mb-5"
-              style={{ fontSize: 'clamp(38px, 6vw, 80px)' }}
+              style={{ fontSize: 'clamp(28px, 4vw, 52px)' }}
             >
               <TitleWithUnderline
                 title={event.title}

@@ -46,7 +46,6 @@ import { Container, Breadcrumbs } from '@/components/layout';
 import { Sticker } from '@/components/ui';
 import {
   EventGrid,
-  SectionHeader,
   VibeProfileSection,
   ChildEventsSchedule,
   PastInstances,
@@ -87,6 +86,7 @@ import {
   MemberBenefits,
   PersonalityStickers,
   PriceDetails,
+  TailSectionHeader,
 } from './_sections';
 
 interface EventPageProps {
@@ -275,7 +275,7 @@ export default async function EventPage({ params }: EventPageProps) {
         )}
 
         {event.short_description && (
-          <p className="mb-10 text-xl md:text-2xl font-medium text-slate leading-snug max-w-3xl">
+          <p className="mb-10 text-lg md:text-xl font-medium text-slate leading-snug max-w-3xl">
             {event.short_description}
           </p>
         )}
@@ -367,10 +367,14 @@ export default async function EventPage({ params }: EventPageProps) {
       {/* 6. HOW IT FEELS — full-bleed signals editorial */}
       <HowItFeelsSection event={event} accentColor={categoryColor.accent} />
 
-      <Container className="py-12">
+      <Container className="py-16 md:py-20">
         {isParentEvent && childData.events.length > 0 && (
           <section className="mb-16">
-            <SectionHeader title="Schedule" />
+            <TailSectionHeader
+              eyebrow="Full schedule"
+              headline="Every date, all the details"
+              accentColor={categoryColor.accent}
+            />
             <ChildEventsSchedule
               events={childData.events}
               groups={childData.groups}
@@ -381,14 +385,22 @@ export default async function EventPage({ params }: EventPageProps) {
 
         {isChildEvent && siblingEventCards.length > 0 && (
           <section className="mb-16">
-            <SectionHeader title={`More from ${event.parent_event_title || 'this event'}`} />
+            <TailSectionHeader
+              eyebrow="Also part of this"
+              headline={`More from ${event.parent_event_title || 'this event'}`}
+              accentColor={categoryColor.accent}
+            />
             <EventGrid events={siblingEventCards} columns={4} />
           </section>
         )}
 
         {!isParentEvent && !isChildEvent && similarEvents.length > 0 && (
           <section className="mb-16">
-            <SectionHeader title="If you liked this, look at…" />
+            <TailSectionHeader
+              eyebrow="More like this"
+              headline="If you liked this, look at…"
+              accentColor={categoryColor.accent}
+            />
             <EventGrid events={similarEvents} columns={4} />
           </section>
         )}

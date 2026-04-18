@@ -33,7 +33,7 @@ export function OrganizerQuote({
         aria-hidden="true"
       />
       <SectionLabel className="mb-3">From the organizer</SectionLabel>
-      <blockquote className="text-xl md:text-2xl font-medium italic leading-snug text-ink whitespace-pre-wrap">
+      <blockquote className="text-lg md:text-xl font-medium italic leading-snug text-ink whitespace-pre-wrap">
         {body}
       </blockquote>
       {showSignature && (
