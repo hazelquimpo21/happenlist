@@ -42,3 +42,8 @@ export { PastInstances } from './past-instances';
 export { ViewTracker } from './view-tracker';
 export { PastEventBanner } from './past-event-banner';
 export { EventPeek, EventPeekSheet, PeekHost, PeekSkeleton } from './peek';
+// Event detail redesign (2026-04-18) — "The Ticket Stub"
+export { PosterHero } from './poster-hero';
+export { HowItFeelsSection } from './how-it-feels-section';
+export { TicketStub } from './ticket-stub';
+export { MobileActionBar } from './mobile-action-bar';

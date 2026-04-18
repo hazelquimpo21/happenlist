@@ -62,6 +62,8 @@ export {
   DAY_OF_WEEK_SHORT,
   getSeriesTypeInfo,
   getAttendanceModeLabel,
+  getAttendanceModeEventDescription,
+  ATTENDANCE_MODE_EVENT_DESCRIPTIONS,
   getSkillLevelLabel,
   formatAgeRange,
   formatTimeDisplay,

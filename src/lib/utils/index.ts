@@ -66,3 +66,14 @@ export {
 
 // Parent event utilities
 export { getChildEventLabel } from './parent-event-labels';
+
+// Event detail page helpers (used by /event/[slug] — price/age summaries,
+// timing badge, calendar URL, past-event check)
+export {
+  getTimingBadge,
+  formatPriceSummary,
+  formatAgeSummary,
+  isPastEvent,
+  buildGoogleCalendarUrl,
+  type TimingBadge,
+} from './event-detail';

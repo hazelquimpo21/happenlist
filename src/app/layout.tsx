@@ -10,7 +10,7 @@
  */
 
 import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/auth-context';
 import { PeekProvider } from '@/contexts/peek-context';
@@ -30,6 +30,15 @@ const jakarta = Plus_Jakarta_Sans({
   display: 'swap',
   variable: '--font-body',
   weight: ['200', '300', '400', '500', '600', '700', '800'],
+});
+
+// JetBrains Mono — stamped monospace for ticket-stub meta rows, date stamps,
+// and editorial eyebrows. Added 2026-04-18 for the event detail redesign.
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-mono',
+  weight: ['500', '700'],
 });
 
 // ============================================================================
@@ -101,7 +110,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   }
 
   return (
-    <html lang="en" className={jakarta.variable}>
+    <html lang="en" className={`${jakarta.variable} ${jetbrainsMono.variable}`}>
       <head />
       <body className="min-h-screen flex flex-col">
         {/* Skip to content — off-screen until keyboard-focused */}

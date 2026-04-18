@@ -133,6 +133,7 @@ const config: Config = {
       fontFamily: {
         display: ['var(--font-body)', 'Plus Jakarta Sans', 'system-ui', 'sans-serif'],
         body: ['var(--font-body)', 'Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-mono)', 'JetBrains Mono', 'ui-monospace', 'monospace'],
       },
 
       fontSize: {
@@ -179,6 +180,10 @@ const config: Config = {
         'elevated': '0 8px 32px rgba(0,0,0,0.12)',
         'dropdown': '0 8px 32px rgba(0,0,0,0.12)',
         'modal': '0 24px 48px rgba(0,0,0,0.16)',
+        // Hard-offset drop shadow — ticket-stub aesthetic signature.
+        // Added 2026-04-18 for event detail redesign.
+        'stub': '6px 6px 0 #020203',
+        'stub-sm': '3px 3px 0 #020203',
       },
 
       // ==========================================

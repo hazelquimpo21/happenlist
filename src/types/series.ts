@@ -406,6 +406,22 @@ export function getSeriesTypeInfo(type: string): SeriesTypeInfo {
  * Get display label for an attendance mode.
  * Returns null for unrecognized values (defensive).
  */
+// Event-detail-friendly descriptions for an event's `attendance_mode` field.
+// Warmer phrasing than ATTENDANCE_MODE_INFO.description, which is tuned for
+// a SERIES summary. The event-detail page uses these for the "Getting in"
+// section so visitors get a one-line human read of what to expect.
+// Added 2026-04-18 (event detail redesign) — see the Getting In section.
+export const ATTENDANCE_MODE_EVENT_DESCRIPTIONS: Record<AttendanceMode, string> = {
+  drop_in: 'Drop in anytime — no commitment needed',
+  registered: 'Registration required — must sign up',
+  hybrid: 'Drop-in or register — either works',
+};
+
+export function getAttendanceModeEventDescription(mode: string | null | undefined): string | null {
+  if (!mode) return null;
+  return ATTENDANCE_MODE_EVENT_DESCRIPTIONS[mode as AttendanceMode] ?? null;
+}
+
 export function getAttendanceModeLabel(mode: string | null | undefined): string | null {
   if (!mode) return null;
   return ATTENDANCE_MODE_INFO[mode as AttendanceMode]?.label ?? null;
