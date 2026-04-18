@@ -1,13 +1,15 @@
 /**
- * <OrganizerQuote> — pull-quote from organizer_description.
+ * <OrganizerQuote> — collapsible pastel box with organizer_description.
  *
- * Oversized quote glyph + category-accent left rule. No bordered box.
+ * Pastel background tinted from the category accent color (~10% alpha).
+ * Collapsed by default via native <details>; expand to read. Smaller body
+ * font, non-italic, relaxed leading for readability.
+ *
  * Signature only renders when the organizer is a separate entity from the
- * venue (i.e. not organizer_is_venue). Prevents "— Turner Hall" from
- * appearing under a quote that's clearly from Turner Hall already.
+ * venue (i.e. not organizer_is_venue).
  */
 
-import { Quote } from 'lucide-react';
+import { ChevronDown, Quote } from 'lucide-react';
 import { SectionLabel } from '@/components/ui';
 
 interface OrganizerQuoteProps {
@@ -26,21 +28,32 @@ export function OrganizerQuote({
   const showSignature = organizerName && !organizerIsVenue;
 
   return (
-    <figure className="relative pl-6 border-l-4" style={{ borderColor: accentColor }}>
-      <Quote
-        className="w-8 h-8 mb-3"
-        style={{ color: accentColor }}
-        aria-hidden="true"
-      />
-      <SectionLabel className="mb-3">From the organizer</SectionLabel>
-      <blockquote className="text-lg md:text-xl font-medium italic leading-snug text-ink whitespace-pre-wrap">
-        {body}
-      </blockquote>
-      {showSignature && (
-        <figcaption className="mt-4 font-mono text-xs font-bold tracking-[0.1em] uppercase text-zinc">
-          — {organizerName}
-        </figcaption>
-      )}
-    </figure>
+    <details
+      className="group rounded-2xl p-5 md:p-6 [&_summary::-webkit-details-marker]:hidden"
+      style={{ backgroundColor: `${accentColor}15` }}
+    >
+      <summary className="flex items-center gap-3 cursor-pointer list-none">
+        <Quote
+          className="w-5 h-5 shrink-0"
+          style={{ color: accentColor }}
+          aria-hidden="true"
+        />
+        <SectionLabel className="flex-1">From the organizer</SectionLabel>
+        <ChevronDown
+          className="w-4 h-4 text-zinc transition-transform group-open:rotate-180"
+          aria-hidden="true"
+        />
+      </summary>
+      <div className="mt-4">
+        <blockquote className="text-body-sm md:text-body text-slate leading-relaxed whitespace-pre-wrap">
+          {body}
+        </blockquote>
+        {showSignature && (
+          <figcaption className="mt-3 font-mono text-[11px] font-bold tracking-[0.1em] uppercase text-zinc">
+            — {organizerName}
+          </figcaption>
+        )}
+      </div>
+    </details>
   );
 }
