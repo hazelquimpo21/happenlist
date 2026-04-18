@@ -15,6 +15,7 @@ export { OrganizerQuote } from './organizer-quote';
 export { GettingIn } from './getting-in';
 export { SeriesDetailsAccordion } from './series-details-accordion';
 export { MemberBenefits } from './member-benefits';
+export { ProTips } from './pro-tips';
 export { PersonalityStickers } from './personality-stickers';
 export { PriceDetails } from './price-details';
 export { TailSectionHeader } from './tail-section-header';

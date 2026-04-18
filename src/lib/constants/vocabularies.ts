@@ -514,6 +514,55 @@ export const SLIDER_RUBRICS: Record<SliderDimension, SliderRubric> = {
 };
 
 // -----------------------------------------------------------------------------
+// PRO TIP PERSONAS (pro-tips analyzer → events.pro_tips JSONB)
+// -----------------------------------------------------------------------------
+// Closed vocab of attendee personas the analyzer may speak TO when producing
+// insider tips. Each event gets 0–2 tips; each tip is scoped to exactly one
+// persona. Most events return [] — the analyzer is prompted to skip unless
+// something genuinely decision-relevant applies.
+//
+// Stored in events.pro_tips JSONB as:
+//   [{ persona, tip, confidence, source }]
+export const PRO_TIP_PERSONAS = [
+  'parent',
+  'driver',
+  'transit_rider',
+  'concert_goer',
+  'club_goer',
+  'dancer',
+  'dater',
+  'foodie',
+  'solo_goer',
+  'first_timer',
+  'budget_conscious',
+  'pet_owner',
+] as const;
+
+export type ProTipPersona = (typeof PRO_TIP_PERSONAS)[number];
+
+export const PRO_TIP_PERSONA_LABELS: Record<ProTipPersona, string> = {
+  parent: 'Parents',
+  driver: 'Driving / parking',
+  transit_rider: 'Transit & bike',
+  concert_goer: 'Concert-goers',
+  club_goer: 'Club-goers',
+  dancer: 'Dancers',
+  dater: 'Date night',
+  foodie: 'Foodies',
+  solo_goer: 'Going solo',
+  first_timer: 'First-timers',
+  budget_conscious: 'Budget',
+  pet_owner: 'Bringing a dog',
+};
+
+export interface ProTip {
+  persona: ProTipPersona;
+  tip: string;
+  confidence: 'high' | 'medium';
+  source: 'page' | 'general';
+}
+
+// -----------------------------------------------------------------------------
 // SERIES TYPES (event-meta analyzer → series.series_type)
 // -----------------------------------------------------------------------------
 // Classification of what KIND of multi-event grouping this is. Drives UI
@@ -587,6 +636,7 @@ const LEAVE_WITH_SET = new Set<string>(LEAVE_WITH);
 const SOCIAL_MODE_SET = new Set<string>(SOCIAL_MODES);
 const ENERGY_NEEDED_SET = new Set<string>(ENERGY_NEEDED);
 const SLIDER_DIMENSION_SET = new Set<string>(SLIDER_DIMENSIONS);
+const PRO_TIP_PERSONA_SET = new Set<string>(PRO_TIP_PERSONAS);
 
 export function isVibeTag(value: string): value is VibeTag {
   return VIBE_TAG_SET.has(value);
@@ -658,6 +708,10 @@ export function isEnergyNeeded(value: string): value is EnergyNeeded {
 
 export function isSliderDimension(value: string): value is SliderDimension {
   return SLIDER_DIMENSION_SET.has(value);
+}
+
+export function isProTipPersona(value: string): value is ProTipPersona {
+  return PRO_TIP_PERSONA_SET.has(value);
 }
 
 /**

@@ -14,6 +14,7 @@ import type {
   SocialMode,
   EnergyNeeded,
   SliderDimension,
+  ProTip,
 } from '@/lib/constants/vocabularies';
 
 /**
@@ -111,6 +112,8 @@ export interface EventWithDetails extends EventRow {
   social_mode?: SocialMode | null;
   energy_needed?: EnergyNeeded | null;
   inferred_signals?: InferredSignals | null;
+  // Pro tips — 0–2 persona-scoped insider notes (scraper migration 00023).
+  pro_tips?: ProTip[] | null;
 }
 
 /**

@@ -87,6 +87,7 @@ import {
   MemberBenefits,
   PersonalityStickers,
   PriceDetails,
+  ProTips,
   TailSectionHeader,
   Chapter,
 } from './_sections';
@@ -394,6 +395,10 @@ export default async function EventPage({ params }: EventPageProps) {
                 )}
 
               {event.price_details && <PriceDetails details={event.price_details} />}
+
+              {Array.isArray(event.pro_tips) && event.pro_tips.length > 0 && (
+                <ProTips tips={event.pro_tips} accentColor={categoryColor.accent} />
+              )}
 
               {seriesInfo && <SeriesDetailsAccordion seriesInfo={seriesInfo} />}
 
