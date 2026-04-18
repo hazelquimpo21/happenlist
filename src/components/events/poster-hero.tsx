@@ -43,6 +43,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Sticker, MarkerUnderline } from '@/components/ui';
 import { getCategoryIcon } from '@/components/icons/category-icons';
+import { ImageLightbox } from './image-lightbox';
 import { buildVenueUrl } from '@/lib/utils';
 import { formatDate, formatTime } from '@/lib/utils/dates';
 import type { CategoryColor } from '@/lib/constants/category-colors';
@@ -337,41 +338,47 @@ export function PosterHero({ event, categoryColor, timingBadge }: PosterHeroProp
         {hasImage ? (
           // ── MODE A: image + type column grid ──
           <div className="grid grid-cols-1 md:grid-cols-[1fr_1.1fr] gap-8 md:gap-12 items-center">
-            <div
-              className="relative aspect-[3/2] max-w-2xl mx-auto md:mx-0 w-full rounded-xl overflow-hidden"
-              style={{
-                boxShadow: '0 24px 60px -12px rgba(0,0,0,0.4)',
-                transform: 'rotate(-1deg)',
-              }}
+            <ImageLightbox
+              src={event.image_url as string}
+              alt={event.title}
+              label={`Zoom image for ${event.title}`}
             >
-              <Image
-                src={event.image_url as string}
-                alt={event.title}
-                fill
-                className="object-cover"
-                priority
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
-              {event.category && (
-                <div className="absolute top-4 left-4">
-                  <Sticker
-                    variant="category"
-                    bgColor={categoryColor.accent}
-                    textColor={categoryColor.text}
-                    rotate={-3}
-                  >
-                    {event.category.name}
-                  </Sticker>
-                </div>
-              )}
-              {timingBadge && (
-                <div className="absolute bottom-4 right-4">
-                  <Sticker variant="pure" rotate={2}>
-                    {timingBadge.label}
-                  </Sticker>
-                </div>
-              )}
-            </div>
+              <div
+                className="relative aspect-[3/2] max-w-2xl mx-auto md:mx-0 w-full rounded-xl overflow-hidden"
+                style={{
+                  boxShadow: '0 24px 60px -12px rgba(0,0,0,0.4)',
+                  transform: 'rotate(-1deg)',
+                }}
+              >
+                <Image
+                  src={event.image_url as string}
+                  alt={event.title}
+                  fill
+                  className="object-cover"
+                  priority
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+                {event.category && (
+                  <div className="absolute top-4 left-4">
+                    <Sticker
+                      variant="category"
+                      bgColor={categoryColor.accent}
+                      textColor={categoryColor.text}
+                      rotate={-3}
+                    >
+                      {event.category.name}
+                    </Sticker>
+                  </div>
+                )}
+                {timingBadge && (
+                  <div className="absolute bottom-4 right-4">
+                    <Sticker variant="pure" rotate={2}>
+                      {timingBadge.label}
+                    </Sticker>
+                  </div>
+                )}
+              </div>
+            </ImageLightbox>
 
             <TypeColumn
               event={event}

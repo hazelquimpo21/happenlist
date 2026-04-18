@@ -65,7 +65,6 @@ import { checkSingleHeart } from '@/data/user';
 import { getSession, isSuperAdmin } from '@/lib/auth';
 import { getGoodForTags } from '@/types';
 import { getCategoryColor } from '@/lib/constants/category-colors';
-import { getChapterVariant } from '@/lib/constants/category-chapter-variants';
 import {
   parseEventSlug,
   getTimingBadge,
@@ -77,8 +76,6 @@ import {
 } from '@/lib/utils';
 import {
   StampedRow,
-  LineupSection,
-  LegacyTalent,
   AboutSection,
   OrganizerQuote,
   GettingIn,
@@ -308,50 +305,14 @@ export default async function EventPage({ params }: EventPageProps) {
               />
             )}
 
-            {/* ── Part I · The people ──
-                Previously "Part II" — reduced to three parts after the
-                editorial meta (Why we picked + Personality stickers) moved
-                to the sidebar as <EditorsTake>.
-                Variant picked per category: dark (concert-bill feel) for
-                music/nightlife/arts/workshops/classes, cream (warmer) for
-                family/markets/community/etc. See category-chapter-variants.ts. */}
-            {(() => {
-              const partIVariant = getChapterVariant(event.category?.slug);
-              const hasPerformers =
-                event.event_performers && event.event_performers.length > 0;
-              if (hasPerformers) {
-                return (
-                  <Chapter
-                    number="I"
-                    title="The people"
-                    accentColor={categoryColor.accent}
-                    variant={partIVariant}
-                  >
-                    <LineupSection
-                      performers={event.event_performers!}
-                      accentColor={categoryColor.accent}
-                      variant={partIVariant === 'dark' ? 'dark' : 'default'}
-                    />
-                  </Chapter>
-                );
-              }
-              if (event.talent_name) {
-                return (
-                  <Chapter
-                    number="I"
-                    title="The people"
-                    accentColor={categoryColor.accent}
-                    variant={partIVariant}
-                  >
-                    <LegacyTalent name={event.talent_name} bio={event.talent_bio} />
-                  </Chapter>
-                );
-              }
-              return null;
-            })()}
+            {/* Part I ("The people") was dropped — the hero's "ft. X, Y, Z"
+                line (linked to performer pages) carries enough, and a full
+                chapter felt over-dignified for info that lives better on
+                the performer pages themselves. LineupSection + LegacyTalent
+                still exported from _sections/ for potential future use. */}
 
-            {/* ── Part II · The details ── */}
-            <Chapter number="II" title="The details" accentColor={categoryColor.accent}>
+            {/* ── Part I · The details ── */}
+            <Chapter number="I" title="The details" accentColor={categoryColor.accent}>
               {event.description && (
                 <AboutSection description={event.description} accentColor={categoryColor.accent} />
               )}
@@ -402,21 +363,19 @@ export default async function EventPage({ params }: EventPageProps) {
 
           <aside className="space-y-6">
             <div className="lg:sticky lg:top-24 space-y-6">
+              {/* EditorsTake sits ABOVE the ticket stub — it's the "why"
+                  that frames the save action, not a sidebar footnote. */}
+              <EditorsTake
+                summary={event.happenlist_summary}
+                personalityBadges={event.personality_badges}
+                accentColor={categoryColor.accent}
+              />
               <TicketStub
                 event={event}
                 isHearted={isHearted}
                 isPastEvent={isPastEvt}
                 calendarUrl={calendarUrl}
                 categoryColor={categoryColor}
-              />
-              {/* Happenlist's editorial take — compact card below the
-                  ticket stub. Was previously a full-width "Part I · The
-                  pitch" chapter in the main column but over-dignified
-                  editorial meta-commentary. Sidebar is the right home. */}
-              <EditorsTake
-                summary={event.happenlist_summary}
-                personalityBadges={event.personality_badges}
-                accentColor={categoryColor.accent}
               />
             </div>
           </aside>

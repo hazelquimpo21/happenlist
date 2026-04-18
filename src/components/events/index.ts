@@ -47,3 +47,4 @@ export { PosterHero } from './poster-hero';
 export { HowItFeelsSection } from './how-it-feels-section';
 export { TicketStub } from './ticket-stub';
 export { MobileActionBar } from './mobile-action-bar';
+export { ImageLightbox } from './image-lightbox';
