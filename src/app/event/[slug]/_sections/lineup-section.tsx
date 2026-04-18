@@ -13,7 +13,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Mic2 } from 'lucide-react';
-import { SectionLabel } from '@/components/ui';
 import { getPerformerRoleLabel } from '@/types';
 
 interface Performer {
@@ -48,13 +47,9 @@ export function LineupSection({ performers, accentColor, variant = 'default' }: 
 
   return (
     <section>
-      {/* When rendered inside a Chapter (dark variant), the Chapter already
-          carries the eyebrow. Hide the redundant internal label. */}
-      {variant !== 'dark' && (
-        <SectionLabel className="mb-4">
-          {performers.length === 1 ? 'Featured artist' : 'Lineup'}
-        </SectionLabel>
-      )}
+      {/* Internal label intentionally omitted — Part II's Chapter header
+          ("PART II / The people") carries it. Kept the SectionLabel import
+          for potential future standalone use. */}
       <ul className="space-y-5">
         {performers.map((ep) => {
           const isHeadliner = ep.role === 'headliner' || ep.billing_order === 1;

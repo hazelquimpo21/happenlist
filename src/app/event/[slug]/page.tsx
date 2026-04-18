@@ -65,6 +65,7 @@ import { checkSingleHeart } from '@/data/user';
 import { getSession, isSuperAdmin } from '@/lib/auth';
 import { getGoodForTags } from '@/types';
 import { getCategoryColor } from '@/lib/constants/category-colors';
+import { getChapterVariant } from '@/lib/constants/category-chapter-variants';
 import {
   parseEventSlug,
   getTimingBadge,
@@ -323,32 +324,44 @@ export default async function EventPage({ params }: EventPageProps) {
               </Chapter>
             )}
 
-            {/* ── Part II · The lineup ──
-                Dark-bg aside so the performer bill feels like the back of a
-                concert ticket, not another section of running text. */}
-            {event.event_performers && event.event_performers.length > 0 ? (
-              <Chapter
-                number="II"
-                title="The lineup"
-                accentColor={categoryColor.accent}
-                variant="dark"
-              >
-                <LineupSection
-                  performers={event.event_performers}
-                  accentColor={categoryColor.accent}
-                  variant="dark"
-                />
-              </Chapter>
-            ) : event.talent_name ? (
-              <Chapter
-                number="II"
-                title="The featured"
-                accentColor={categoryColor.accent}
-                variant="dark"
-              >
-                <LegacyTalent name={event.talent_name} bio={event.talent_bio} />
-              </Chapter>
-            ) : null}
+            {/* ── Part II · The people ──
+                Variant picked per category: dark (concert-bill feel) for
+                music/nightlife/arts/workshops/classes, cream (warmer) for
+                family/markets/community/etc. See category-chapter-variants.ts. */}
+            {(() => {
+              const partIIVariant = getChapterVariant(event.category?.slug);
+              const hasPerformers =
+                event.event_performers && event.event_performers.length > 0;
+              if (hasPerformers) {
+                return (
+                  <Chapter
+                    number="II"
+                    title="The people"
+                    accentColor={categoryColor.accent}
+                    variant={partIIVariant}
+                  >
+                    <LineupSection
+                      performers={event.event_performers!}
+                      accentColor={categoryColor.accent}
+                      variant={partIIVariant === 'dark' ? 'dark' : 'default'}
+                    />
+                  </Chapter>
+                );
+              }
+              if (event.talent_name) {
+                return (
+                  <Chapter
+                    number="II"
+                    title="The people"
+                    accentColor={categoryColor.accent}
+                    variant={partIIVariant}
+                  >
+                    <LegacyTalent name={event.talent_name} bio={event.talent_bio} />
+                  </Chapter>
+                );
+              }
+              return null;
+            })()}
 
             {/* ── Part III · The details ── */}
             <Chapter number="III" title="The details" accentColor={categoryColor.accent}>
@@ -444,7 +457,7 @@ export default async function EventPage({ params }: EventPageProps) {
           <section className="mb-16">
             <TailSectionHeader
               eyebrow="More like this"
-              headline="If you liked this, look at…"
+              headline="More from around town"
               accentColor={categoryColor.accent}
             />
             <EventGrid events={similarEvents} columns={4} />

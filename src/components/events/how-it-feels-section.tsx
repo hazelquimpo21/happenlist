@@ -157,7 +157,7 @@ export function HowItFeelsSection({ event, accentColor }: HowItFeelsSectionProps
             className="inline-block w-8 h-px bg-current opacity-60"
           />
           <p className="font-mono text-[11px] md:text-xs font-bold uppercase tracking-[0.25em]">
-            Part IV · The thing nobody tells you
+            Part IV · The feel
           </p>
           <span
             aria-hidden="true"
@@ -169,7 +169,7 @@ export function HowItFeelsSection({ event, accentColor }: HowItFeelsSectionProps
       <div className="container mx-auto px-4 md:px-6 py-12 md:py-20">
         <h2 className="font-body text-4xl md:text-6xl font-extrabold leading-[0.95] tracking-tight mb-4">
           How it{' '}
-          <span style={{ color: accentColor }}>feels</span>.
+          <span style={{ color: accentColor }}>feels</span>
         </h2>
         <p className="text-base text-cream/70 max-w-xl mb-12 leading-relaxed">
           The details organizers don&apos;t always put in the description — pulled
