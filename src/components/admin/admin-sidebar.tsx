@@ -21,6 +21,7 @@ import {
   BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ADMIN_ENTITY_LIST } from '@/lib/constants/admin-entities';
 
 interface NavItem {
   label: string;
@@ -87,6 +88,19 @@ export function AdminSidebar({ pendingCount = 0 }: AdminSidebarProps) {
           icon: <Repeat className="w-5 h-5" />,
         },
       ],
+    },
+    {
+      // Directory: the four entity CRUD surfaces (organizers, venues,
+      // performers, membership_orgs). Source of truth: admin-entities.ts.
+      title: 'Directory',
+      items: ADMIN_ENTITY_LIST.map((meta) => {
+        const Icon = meta.icon;
+        return {
+          label: meta.labelPlural,
+          href: `/admin/${meta.urlSlug}`,
+          icon: <Icon className="w-5 h-5" />,
+        };
+      }),
     },
     {
       title: 'Reports',

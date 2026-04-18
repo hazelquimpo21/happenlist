@@ -12,15 +12,25 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { superadminLogger } from '@/lib/utils/logger';
+import { ADMIN_ENTITIES, type AdminEntityKind } from '@/lib/constants/admin-entities';
 import type { SuperadminActionResult } from './superadmin-event-actions';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
+/**
+ * Entity types this module can edit.
+ *
+ * Superset of {@link AdminEntityKind} because 'series' is managed through
+ * superadminEditEntity/superadminDeleteEntity but lives in a different admin
+ * surface (has its own list + merge/bulk-delete UI, not in the Directory).
+ */
+export type SuperadminEntityType = AdminEntityKind | 'series';
+
 export interface EditEntityParams {
   entityId: string;
-  entityType: 'organizer' | 'venue' | 'series';
+  entityType: SuperadminEntityType;
   adminEmail: string;
   updates: Record<string, unknown>;
   notes?: string;
@@ -28,20 +38,35 @@ export interface EditEntityParams {
 
 export interface DeleteEntityParams {
   entityId: string;
-  entityType: 'organizer' | 'venue' | 'series';
+  entityType: SuperadminEntityType;
   adminEmail: string;
   reason: string;
 }
 
-// Table name mapping
-const TABLE_MAP = {
-  organizer: 'organizers',
-  venue: 'locations',
-  series: 'series',
-} as const;
+export interface CreateEntityParams {
+  entityType: AdminEntityKind; // create flow is scoped to the four Directory entities
+  adminEmail: string;
+  values: Record<string, unknown>;
+  notes?: string;
+}
 
-// Fields that support soft-delete via is_active
-const SOFT_DELETE_ENTITIES = new Set(['organizer', 'venue']);
+// Table name mapping. Venues live in the `locations` table — see
+// ADMIN_ENTITIES for the UI ↔ DB mapping rationale.
+const TABLE_MAP: Record<SuperadminEntityType, string> = {
+  organizer: ADMIN_ENTITIES.organizer.tableName,
+  venue: ADMIN_ENTITIES.venue.tableName,
+  performer: ADMIN_ENTITIES.performer.tableName,
+  membership_org: ADMIN_ENTITIES.membership_org.tableName,
+  series: 'series',
+};
+
+// Entities whose soft-delete flips is_active=false (vs. series which uses status=cancelled).
+const SOFT_DELETE_ENTITIES = new Set<SuperadminEntityType>([
+  'organizer',
+  'venue',
+  'performer',
+  'membership_org',
+]);
 
 // ============================================================================
 // EDIT ENTITY
@@ -80,8 +105,11 @@ export async function superadminEditEntity(
     // Use admin client to bypass RLS
     const supabase = createAdminClient();
 
-    // Fetch current entity for audit log
-    const { data: currentEntity, error: fetchError } = await supabase
+    // Fetch current entity for audit log.
+    // `tableName` is a dynamic string (five entity kinds) — the Supabase generic
+    // client types are too strict for this dispatch, so cast once here.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: currentEntity, error: fetchError } = await (supabase as any)
       .from(tableName)
       .select('*')
       .eq('id', entityId)
@@ -215,8 +243,9 @@ export async function superadminDeleteEntity(
   try {
     const supabase = createAdminClient();
 
-    // Fetch current entity for audit
-    const { data: currentEntity, error: fetchError } = await supabase
+    // Fetch current entity for audit. Dynamic tableName — see edit handler.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: currentEntity, error: fetchError } = await (supabase as any)
       .from(tableName)
       .select('*')
       .eq('id', entityId)
@@ -287,6 +316,111 @@ export async function superadminDeleteEntity(
     return {
       success: false,
       message: `Failed to delete ${entityType}`,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp,
+    };
+  }
+}
+
+// ============================================================================
+// CREATE ENTITY
+// ============================================================================
+
+/**
+ * Create a new Directory entity (organizer / venue / performer / membership_org).
+ *
+ * Returns the inserted row's `id` and `slug` so the caller can redirect to
+ * the edit page. Maps Postgres 23505 (unique_violation) onto a friendly
+ * "slug already taken" message — all four tables have a UNIQUE constraint on
+ * `slug` (see `organizers`, `locations`, `performers`, `membership_organizations`).
+ */
+export async function superadminCreateEntity(
+  params: CreateEntityParams
+): Promise<SuperadminActionResult & { slug?: string }> {
+  const { entityType, adminEmail, values, notes } = params;
+  const timestamp = new Date().toISOString();
+  const tableName = TABLE_MAP[entityType];
+
+  try {
+    requireSuperAdmin(adminEmail);
+  } catch {
+    return {
+      success: false,
+      message: 'Unauthorized: Superadmin access required',
+      error: 'Not a superadmin',
+      timestamp,
+    };
+  }
+
+  const timer = superadminLogger.time(`superadminCreate_${entityType}`, {
+    action: 'superadmin_create',
+    entityType,
+    adminEmail,
+  });
+
+  try {
+    const supabase = createAdminClient();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
+      .from(tableName)
+      .insert({
+        ...values,
+        created_at: timestamp,
+        updated_at: timestamp,
+      })
+      .select('id, slug')
+      .single();
+
+    if (error) {
+      // 23505 = Postgres unique_violation. Slug or name collision.
+      const isDuplicate = error.code === '23505';
+      timer.error(
+        isDuplicate ? `${entityType} slug already exists` : `Failed to create ${entityType}`,
+        error
+      );
+      return {
+        success: false,
+        message: isDuplicate
+          ? 'A record with this slug already exists — choose a different name.'
+          : `Failed to create ${entityType}`,
+        error: error.message,
+        timestamp,
+      };
+    }
+
+    // Log to audit trail
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from('admin_audit_log').insert({
+        action: 'superadmin_create',
+        entity_type: entityType,
+        entity_id: data.id,
+        admin_email: adminEmail,
+        changes: { entity_name: values.name || values.title || data.id, fields: Object.keys(values) },
+        notes: notes || `Created ${entityType}`,
+      });
+    } catch (auditError) {
+      superadminLogger.warn('Failed to log audit entry', { metadata: { error: auditError } });
+    }
+
+    timer.success(`${entityType} created successfully`, {
+      entityId: data.id,
+      metadata: { slug: data.slug },
+    });
+
+    return {
+      success: true,
+      message: `${entityType} created successfully`,
+      eventId: data.id,
+      slug: data.slug,
+      timestamp,
+    };
+  } catch (error) {
+    timer.error('Unexpected error', error);
+    return {
+      success: false,
+      message: `Failed to create ${entityType}`,
       error: error instanceof Error ? error.message : 'Unknown error',
       timestamp,
     };

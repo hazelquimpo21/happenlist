@@ -20,6 +20,14 @@ export type {
 export { getAdminSeries } from './get-admin-series';
 export type { AdminSeriesCard, AdminSeriesFilters, AdminSeriesResult } from './get-admin-series';
 
+// Directory entities (organizers, venues, performers, membership_orgs)
+export { getAdminEntities } from './get-admin-entities';
+export type {
+  AdminEntityCard,
+  AdminEntityFilters,
+  AdminEntityResult,
+} from './get-admin-entities';
+
 // Single event
 export { getAdminEvent, getEventAuditHistory } from './get-admin-event';
 export type { AdminEventDetails } from './get-admin-event';

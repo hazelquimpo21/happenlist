@@ -11,7 +11,7 @@ import { AdminHeader, AdminBreadcrumbs } from '@/components/admin';
 import { SuperadminVenueEditForm } from '@/components/superadmin';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { getSession, isSuperAdmin } from '@/lib/auth';
 
 export const metadata = {
@@ -36,8 +36,9 @@ export default async function SuperadminVenueEditPage({ params }: PageProps) {
     redirect('/admin');
   }
 
-  // Fetch venue
-  const supabase = await createClient();
+  // Fetch venue via service-role client — RLS hides is_active=false rows
+  // from the regular client, which would break reactivation of soft-deleted venues.
+  const supabase = createAdminClient();
   const { data: venueData, error } = await supabase
     .from('locations')
     .select('*')
@@ -92,7 +93,7 @@ export default async function SuperadminVenueEditPage({ params }: PageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main content - Edit form */}
           <div className="lg:col-span-2">
-            <SuperadminVenueEditForm venue={venue} />
+            <SuperadminVenueEditForm mode="edit" venue={venue} />
           </div>
 
           {/* Sidebar */}

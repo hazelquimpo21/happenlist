@@ -21,6 +21,8 @@ export async function getPerformer(
     .from('performers')
     .select('id, name, slug, bio, genre, image_url, website_url')
     .eq('slug', params.slug)
+    // is_active added 2026-04-18 — public surfaces must hide admin soft-deletes.
+    .eq('is_active', true)
     .single();
 
   if (error) {

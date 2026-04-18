@@ -11,7 +11,7 @@ import { AdminHeader, AdminBreadcrumbs } from '@/components/admin';
 import { SuperadminOrganizerEditForm } from '@/components/superadmin';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { getSession, isSuperAdmin } from '@/lib/auth';
 
 export const metadata = {
@@ -36,8 +36,9 @@ export default async function SuperadminOrganizerEditPage({ params }: PageProps)
     redirect('/admin');
   }
 
-  // Fetch organizer
-  const supabase = await createClient();
+  // Fetch organizer via service-role client — RLS hides is_active=false rows
+  // from the regular client, which would break reactivation of soft-deleted orgs.
+  const supabase = createAdminClient();
   const { data: organizerData, error } = await supabase
     .from('organizers')
     .select('*')
@@ -87,7 +88,7 @@ export default async function SuperadminOrganizerEditPage({ params }: PageProps)
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main content - Edit form */}
           <div className="lg:col-span-2">
-            <SuperadminOrganizerEditForm organizer={organizer} />
+            <SuperadminOrganizerEditForm mode="edit" organizer={organizer} />
           </div>
 
           {/* Sidebar */}

@@ -32,7 +32,9 @@ export async function getPerformers(
   // Use a two-step approach: get performers, then count events.
   let query = supabase
     .from('performers')
-    .select('id, name, slug, genre, image_url', { count: 'exact' });
+    .select('id, name, slug, genre, image_url', { count: 'exact' })
+    // is_active added 2026-04-18 — exclude admin soft-deletes from public list.
+    .eq('is_active', true);
 
   if (search) {
     query = query.ilike('name', `%${search}%`);
@@ -109,6 +111,7 @@ export async function getPerformerGenres(): Promise<string[]> {
     .from('performers')
     .select('genre')
     .not('genre', 'is', null)
+    .eq('is_active', true)
     .order('genre', { ascending: true });
 
   if (!data) return [];

@@ -19,9 +19,18 @@ export {
   superadminBulkChangeStatus,
 } from './superadmin-event-actions';
 
-// Entity management actions (organizers, venues, series)
-export { superadminEditEntity, superadminDeleteEntity } from './superadmin-entity-actions';
-export type { EditEntityParams, DeleteEntityParams } from './superadmin-entity-actions';
+// Entity management actions (organizers, venues, performers, membership_orgs, series)
+export {
+  superadminEditEntity,
+  superadminDeleteEntity,
+  superadminCreateEntity,
+} from './superadmin-entity-actions';
+export type {
+  EditEntityParams,
+  DeleteEntityParams,
+  CreateEntityParams,
+  SuperadminEntityType,
+} from './superadmin-entity-actions';
 
 // Types
 export type {
