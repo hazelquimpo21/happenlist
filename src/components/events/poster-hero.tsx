@@ -3,31 +3,47 @@
  * <PosterHero> — event detail concert-poster hero
  * =============================================================================
  *
- * Full-bleed category-color slab with an offset, rotated image card and
- * oversized monospace date stamp. Replaces the old 21:9 gradient banner on
- * event/[slug] pages (2026-04-18 redesign).
+ * Full-bleed category-color slab. Two rendering modes depending on whether
+ * the event has a photo-style `image_url`:
+ *
+ *   MODE A — IMAGE        (event.image_url is set)
+ *     ├─ Landscape 3/2 image card with slight rotation + offset shadow
+ *     ├─ Category + timing stickers on the image
+ *     └─ Date stamp + title + performers + venue in right column
+ *
+ *   MODE B — TYPOGRAPHIC  (no image_url, or only flyer_url)
+ *     ├─ No image frame. The slab IS the poster.
+ *     ├─ Giant ghosted category icon behind the type (fills visual space)
+ *     ├─ Stickers float above the headline, rotated
+ *     └─ Date stamp + title + performers + venue, larger than in MODE A
+ *
+ * Image taxonomy convention (enforced by this file):
+ *   - event.image_url → photo / promo graphic (can be cropped to landscape)
+ *   - event.flyer_url → typographic poster (NEVER cropped — lives in the
+ *     sidebar via <FlyerLightbox>, not the hero)
+ *
+ * If an organizer uploads a flyer to image_url by mistake, the 3/2 crop
+ * will clip their poster text. That's the known trade-off of the
+ * convention. Document the distinction when building the admin form.
  *
  * Contrast is delegated to categoryColor.text — yellow/lime categories use
- * ink text, everything else uses white. Don't hardcode colors here.
- *
- * Two stickers render on the image: category (top-left, rotated) + timing
- * (bottom-right, rotated opposite) — timing is optional.
- *
- * Image fallback: when no image, the slab composition itself carries the
- * page — giant date + title + no image frame.
+ * ink text, everything else uses white.
  *
  * Cross-file coupling:
  *   - src/components/ui/sticker.tsx — the sticker primitive
  *   - src/components/ui/marker-underline.tsx — the underline primitive
+ *   - src/components/icons/category-icons.tsx — the ghosted bg icon in MODE B
  *   - src/lib/utils/dates.ts — formatDate / formatTime
  *   - src/lib/constants/category-colors.ts — CategoryColor shape
+ *   - src/components/events/ticket-stub.tsx — renders <FlyerLightbox> when flyer exists
  * =============================================================================
  */
 
 import Image from 'next/image';
 import Link from 'next/link';
 import { Sticker, MarkerUnderline } from '@/components/ui';
-import { getBestImageUrl, buildVenueUrl } from '@/lib/utils';
+import { getCategoryIcon } from '@/components/icons/category-icons';
+import { buildVenueUrl } from '@/lib/utils';
 import { formatDate, formatTime } from '@/lib/utils/dates';
 import type { CategoryColor } from '@/lib/constants/category-colors';
 
@@ -62,7 +78,6 @@ function pickUnderlineToken(title: string): string | null {
   if (!title.trim()) return null;
   const tokens = title.split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return null;
-  // Walk from end → start looking for a good candidate
   for (let i = tokens.length - 1; i >= 0; i--) {
     const raw = tokens[i];
     const normalized = raw.replace(/[^\w]/g, '').toLowerCase();
@@ -70,13 +85,12 @@ function pickUnderlineToken(title: string): string | null {
       return raw;
     }
   }
-  // Nothing matched — fall back to last token so the underline still shows up
   return tokens[tokens.length - 1];
 }
 
 /**
  * Render a title with one occurrence of `word` wrapped in <MarkerUnderline>.
- * We wrap the last occurrence to mirror pickUnderlineToken's walk.
+ * We wrap the LAST occurrence to mirror pickUnderlineToken's walk.
  */
 function TitleWithUnderline({
   title,
@@ -88,12 +102,9 @@ function TitleWithUnderline({
   color: string;
 }) {
   if (!word) return <>{title}</>;
-  // Case-sensitive match of the exact token in the source title to avoid
-  // accidentally underlining mid-word matches ("Park" in "Sparks").
   const tokens = title.split(/(\s+)/); // keep whitespace
   let found = false;
   const rendered: React.ReactNode[] = [];
-  // Walk right-to-left marking the last match only
   const markedIndex = (() => {
     for (let i = tokens.length - 1; i >= 0; i--) {
       if (tokens[i] === word) return i;
@@ -116,6 +127,143 @@ function TitleWithUnderline({
   return <>{rendered}</>;
 }
 
+// -----------------------------------------------------------------------------
+// Sub-component: Type column (date + title + performers + venue).
+// Shared between MODE A and MODE B; size scale is passed in so MODE B can
+// render bigger without duplicating JSX.
+// -----------------------------------------------------------------------------
+
+interface TypeColumnProps {
+  event: PosterHeroProps['event'];
+  categoryColor: CategoryColor;
+  /** Typographic scale — 'regular' for MODE A (image present), 'poster' for MODE B (no image). */
+  scale: 'regular' | 'poster';
+  /** Stickers rendered inline above the date/title (only MODE B — MODE A puts them on the image). */
+  showInlineStickers: boolean;
+  timingBadge: { label: string } | null;
+}
+
+function TypeColumn({
+  event,
+  categoryColor,
+  scale,
+  showInlineStickers,
+  timingBadge,
+}: TypeColumnProps) {
+  const dateText = formatDate(event.start_datetime, 'EEE · MMM d');
+  const monthDay = formatDate(event.start_datetime, 'MM·dd');
+  const timeText = event.is_all_day
+    ? 'ALL DAY'
+    : `${formatTime(event.start_datetime)}${event.end_datetime ? ` – ${formatTime(event.end_datetime)}` : ''}`;
+  const dayLine = `${dateText.toUpperCase()}${event.is_all_day ? '' : ` · ${timeText.toUpperCase()}`}`;
+
+  const underlineWord = pickUnderlineToken(event.title);
+  const markerColor = categoryColor.text === '#020203' ? '#008bd2' : '#d95927';
+  const performers = event.event_performers ?? [];
+
+  // Type scale — MODE B is ~25% larger because it carries the whole composition.
+  const dateStampSize =
+    scale === 'poster' ? 'clamp(44px, 8vw, 96px)' : 'clamp(32px, 5vw, 64px)';
+  const titleSize =
+    scale === 'poster' ? 'clamp(34px, 5.5vw, 64px)' : 'clamp(26px, 3.6vw, 48px)';
+
+  return (
+    <div className="relative">
+      {/* Inline stickers — only in MODE B (in MODE A the stickers are on the image). */}
+      {showInlineStickers && (
+        <div className="flex items-center gap-3 mb-5 flex-wrap">
+          {event.category && (
+            <Sticker
+              variant="category"
+              bgColor={categoryColor.text === '#020203' ? '#020203' : '#FFFFFF'}
+              textColor={categoryColor.text === '#020203' ? '#FFFFFF' : categoryColor.bg}
+              rotate={-3}
+            >
+              {event.category.name}
+            </Sticker>
+          )}
+          {timingBadge && (
+            <Sticker variant="pure" rotate={2}>
+              {timingBadge.label}
+            </Sticker>
+          )}
+        </div>
+      )}
+
+      {/* Date stamp */}
+      <div
+        className="font-mono font-bold leading-[0.9] tracking-tight mb-3"
+        style={{ fontSize: dateStampSize }}
+      >
+        <div
+          className="font-mono font-bold uppercase mb-2"
+          style={{ fontSize: '11px', letterSpacing: '0.25em', opacity: 0.78 }}
+        >
+          {dayLine}
+        </div>
+        <div>{monthDay}</div>
+      </div>
+
+      {/* Title */}
+      <h1
+        className="font-body font-extrabold leading-[0.95] tracking-tight mb-5"
+        style={{ fontSize: titleSize }}
+      >
+        <TitleWithUnderline title={event.title} word={underlineWord} color={markerColor} />
+      </h1>
+
+      {/* Performers or legacy talent_name */}
+      {performers.length > 0 ? (
+        <p className="text-base md:text-lg mb-4 opacity-90">
+          ft.{' '}
+          {performers.slice(0, 3).map((ep, i) => (
+            <span key={ep.id}>
+              {i > 0 && ', '}
+              <Link
+                href={`/performer/${ep.performer.slug}`}
+                className="font-bold underline decoration-2 underline-offset-4 hover:opacity-80 transition-opacity"
+              >
+                {ep.performer.name}
+              </Link>
+            </span>
+          ))}
+          {performers.length > 3 && (
+            <span className="opacity-70"> +{performers.length - 3} more</span>
+          )}
+        </p>
+      ) : event.talent_name ? (
+        <p className="text-base md:text-lg mb-4 opacity-90">
+          ft. <span className="font-bold">{event.talent_name}</span>
+        </p>
+      ) : null}
+
+      {/* Venue line */}
+      {event.location && (
+        <div className="flex items-center gap-3 text-sm md:text-base font-semibold opacity-95">
+          <span
+            aria-hidden="true"
+            className="inline-block w-1.5 h-1.5 rounded-full"
+            style={{ backgroundColor: categoryColor.text }}
+          />
+          <Link
+            href={buildVenueUrl(event.location)}
+            className="underline decoration-1 underline-offset-4 hover:opacity-80 transition-opacity"
+          >
+            {event.location.name}
+          </Link>
+          {event.location.address_line && (
+            <span className="opacity-70 font-normal">· {event.location.address_line}</span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =============================================================================
+// MAIN COMPONENT
+// =============================================================================
+
 interface PosterHeroProps {
   event: {
     title: string;
@@ -124,7 +272,7 @@ interface PosterHeroProps {
     is_all_day?: boolean | null;
     image_url?: string | null;
     flyer_url?: string | null;
-    category?: { name: string; slug: string } | null;
+    category?: { name: string; slug: string; icon?: string | null } | null;
     location?: {
       name: string;
       slug: string;
@@ -147,34 +295,18 @@ interface PosterHeroProps {
 }
 
 export function PosterHero({ event, categoryColor, timingBadge }: PosterHeroProps) {
-  // getBestImageUrl prefers image_url, falls back to flyer_url. On the
-  // detail page the flyer already gets its own FlyerLightbox in the sidebar,
-  // so we prefer image_url here and only use flyer as a last resort.
-  const heroImage = getBestImageUrl(event.image_url, event.flyer_url);
+  // MODE SELECTION — image_url wins. Flyer stays in sidebar via
+  // FlyerLightbox in TicketStub; we never crop a poster here.
+  const hasImage = !!event.image_url;
 
-  const dateText = formatDate(event.start_datetime, 'EEE · MMM d');
-  // Short form for the giant stamp: "04·12"
-  const monthDay = formatDate(event.start_datetime, 'MM·dd');
-  const timeText = event.is_all_day
-    ? 'ALL DAY'
-    : `${formatTime(event.start_datetime)}${event.end_datetime ? ` – ${formatTime(event.end_datetime)}` : ''}`;
-
-  const dayLine = `${dateText.toUpperCase()}${event.is_all_day ? '' : ` · ${timeText.toUpperCase()}`}`;
-
-  const underlineWord = pickUnderlineToken(event.title);
-  // Marker underline color — use a contrasting brand color (not the slab
-  // color, which would be invisible). On dark-text categories (yellow/lime)
-  // use blue; everywhere else use the orange brand accent.
-  const markerColor = categoryColor.text === '#020203' ? '#008bd2' : '#d95927';
-
-  const performers = event.event_performers ?? [];
+  const CategoryIcon = event.category ? getCategoryIcon(event.category.icon ?? null) : null;
 
   return (
     <section
       className="relative w-full overflow-hidden"
       style={{ backgroundColor: categoryColor.bg, color: categoryColor.text }}
     >
-      {/* Subtle radial lighting for visual depth on the slab */}
+      {/* Radial lighting for depth on the slab */}
       <div
         aria-hidden="true"
         className="absolute inset-0 pointer-events-none opacity-60"
@@ -184,19 +316,36 @@ export function PosterHero({ event, categoryColor, timingBadge }: PosterHeroProp
         }}
       />
 
-      <div className="container mx-auto px-4 md:px-6 py-10 md:py-16 relative">
-        <div className="grid grid-cols-1 md:grid-cols-[1.1fr_1fr] gap-8 md:gap-12 items-center">
-          {/* Image card with stickers */}
-          {heroImage ? (
+      {/* Ghosted category icon — MODE B only. Huge, ~8% opacity, parked on the
+          right half so it doesn't collide with type. Uses the tinted variant
+          of the slab color so it's visible on both light and dark slabs. */}
+      {!hasImage && CategoryIcon && (
+        <div
+          aria-hidden="true"
+          className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-[20%] pointer-events-none"
+          style={{
+            width: 'min(720px, 70%)',
+            color: categoryColor.text,
+            opacity: 0.08,
+          }}
+        >
+          <CategoryIcon className="w-full h-auto" />
+        </div>
+      )}
+
+      <div className="container mx-auto px-4 md:px-6 py-8 md:py-12 relative">
+        {hasImage ? (
+          // ── MODE A: image + type column grid ──
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_1.1fr] gap-8 md:gap-12 items-center">
             <div
-              className="relative aspect-[4/5] max-w-md mx-auto md:mx-0 rounded-xl overflow-hidden"
+              className="relative aspect-[3/2] max-w-2xl mx-auto md:mx-0 w-full rounded-xl overflow-hidden"
               style={{
                 boxShadow: '0 24px 60px -12px rgba(0,0,0,0.4)',
-                transform: 'rotate(-1.2deg)',
+                transform: 'rotate(-1deg)',
               }}
             >
               <Image
-                src={heroImage}
+                src={event.image_url as string}
                 alt={event.title}
                 fill
                 className="object-cover"
@@ -223,99 +372,29 @@ export function PosterHero({ event, categoryColor, timingBadge }: PosterHeroProp
                 </div>
               )}
             </div>
-          ) : (
-            // No-image fallback: an empty frame that echoes the sticker placement,
-            // so the composition reads as intentional rather than broken.
-            <div
-              aria-hidden="true"
-              className="hidden md:block relative aspect-[4/5] max-w-md mx-auto md:mx-0 rounded-xl"
-              style={{
-                backgroundColor: `${categoryColor.text === '#020203' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'}`,
-                transform: 'rotate(-1.2deg)',
-              }}
+
+            <TypeColumn
+              event={event}
+              categoryColor={categoryColor}
+              scale="regular"
+              showInlineStickers={false}
+              timingBadge={timingBadge ?? null}
             />
-          )}
-
-          {/* Type column */}
-          <div>
-            {/* Date stamp */}
-            <div
-              className="font-mono font-bold leading-[0.9] tracking-tight mb-3"
-              style={{ fontSize: 'clamp(36px, 6vw, 72px)' }}
-            >
-              <div
-                className="font-mono font-bold uppercase mb-2"
-                style={{
-                  fontSize: '11px',
-                  letterSpacing: '0.25em',
-                  opacity: 0.78,
-                }}
-              >
-                {dayLine}
-              </div>
-              <div>{monthDay}</div>
-            </div>
-
-            <h1
-              className="font-body font-extrabold leading-[0.95] tracking-tight mb-5"
-              style={{ fontSize: 'clamp(28px, 4vw, 52px)' }}
-            >
-              <TitleWithUnderline
-                title={event.title}
-                word={underlineWord}
-                color={markerColor}
-              />
-            </h1>
-
-            {/* Performers or legacy talent_name */}
-            {performers.length > 0 ? (
-              <p className="text-base md:text-lg mb-4 opacity-90">
-                ft.{' '}
-                {performers.slice(0, 3).map((ep, i) => (
-                  <span key={ep.id}>
-                    {i > 0 && ', '}
-                    <Link
-                      href={`/performer/${ep.performer.slug}`}
-                      className="font-bold underline decoration-2 underline-offset-4 hover:opacity-80 transition-opacity"
-                    >
-                      {ep.performer.name}
-                    </Link>
-                  </span>
-                ))}
-                {performers.length > 3 && (
-                  <span className="opacity-70"> +{performers.length - 3} more</span>
-                )}
-              </p>
-            ) : event.talent_name ? (
-              <p className="text-base md:text-lg mb-4 opacity-90">
-                ft.{' '}
-                <span className="font-bold">{event.talent_name}</span>
-              </p>
-            ) : null}
-
-            {/* Venue line */}
-            {event.location && (
-              <div className="flex items-center gap-3 text-sm md:text-base font-semibold opacity-95">
-                <span
-                  aria-hidden="true"
-                  className="inline-block w-1.5 h-1.5 rounded-full"
-                  style={{ backgroundColor: categoryColor.text }}
-                />
-                <Link
-                  href={buildVenueUrl(event.location)}
-                  className="underline decoration-1 underline-offset-4 hover:opacity-80 transition-opacity"
-                >
-                  {event.location.name}
-                </Link>
-                {event.location.address_line && (
-                  <span className="opacity-70 font-normal">
-                    · {event.location.address_line}
-                  </span>
-                )}
-              </div>
-            )}
           </div>
-        </div>
+        ) : (
+          // ── MODE B: typographic-only, single column, left-aligned ──
+          // Max-width constrained so the type stays readable on wide viewports;
+          // the ghosted category icon fills the right side visually.
+          <div className="max-w-3xl">
+            <TypeColumn
+              event={event}
+              categoryColor={categoryColor}
+              scale="poster"
+              showInlineStickers={true}
+              timingBadge={timingBadge ?? null}
+            />
+          </div>
+        )}
       </div>
     </section>
   );
