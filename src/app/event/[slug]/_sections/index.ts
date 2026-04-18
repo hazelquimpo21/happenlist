@@ -20,3 +20,4 @@ export { PersonalityStickers } from './personality-stickers';
 export { PriceDetails } from './price-details';
 export { TailSectionHeader } from './tail-section-header';
 export { Chapter } from './chapter';
+export { EditorsTake } from './editors-take';

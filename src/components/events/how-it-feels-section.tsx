@@ -157,7 +157,7 @@ export function HowItFeelsSection({ event, accentColor }: HowItFeelsSectionProps
             className="inline-block w-8 h-px bg-current opacity-60"
           />
           <p className="font-mono text-[11px] md:text-xs font-bold uppercase tracking-[0.25em]">
-            Part IV · The feel
+            Part III · The feel
           </p>
           <span
             aria-hidden="true"

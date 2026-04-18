@@ -77,7 +77,6 @@ import {
 } from '@/lib/utils';
 import {
   StampedRow,
-  WhyWePicked,
   LineupSection,
   LegacyTalent,
   AboutSection,
@@ -85,11 +84,11 @@ import {
   GettingIn,
   SeriesDetailsAccordion,
   MemberBenefits,
-  PersonalityStickers,
   PriceDetails,
   ProTips,
   TailSectionHeader,
   Chapter,
+  EditorsTake,
 } from './_sections';
 
 interface EventPageProps {
@@ -309,42 +308,29 @@ export default async function EventPage({ params }: EventPageProps) {
               />
             )}
 
-            {/* ── Part I · The pitch ── */}
-            {(event.happenlist_summary ||
-              (event.personality_badges && event.personality_badges.length > 0)) && (
-              <Chapter number="I" title="The pitch" accentColor={categoryColor.accent}>
-                {event.happenlist_summary && (
-                  <WhyWePicked
-                    summary={event.happenlist_summary}
-                    accentColor={categoryColor.accent}
-                  />
-                )}
-                {event.personality_badges && event.personality_badges.length > 0 && (
-                  <PersonalityStickers badges={event.personality_badges} />
-                )}
-              </Chapter>
-            )}
-
-            {/* ── Part II · The people ──
+            {/* ── Part I · The people ──
+                Previously "Part II" — reduced to three parts after the
+                editorial meta (Why we picked + Personality stickers) moved
+                to the sidebar as <EditorsTake>.
                 Variant picked per category: dark (concert-bill feel) for
                 music/nightlife/arts/workshops/classes, cream (warmer) for
                 family/markets/community/etc. See category-chapter-variants.ts. */}
             {(() => {
-              const partIIVariant = getChapterVariant(event.category?.slug);
+              const partIVariant = getChapterVariant(event.category?.slug);
               const hasPerformers =
                 event.event_performers && event.event_performers.length > 0;
               if (hasPerformers) {
                 return (
                   <Chapter
-                    number="II"
+                    number="I"
                     title="The people"
                     accentColor={categoryColor.accent}
-                    variant={partIIVariant}
+                    variant={partIVariant}
                   >
                     <LineupSection
                       performers={event.event_performers!}
                       accentColor={categoryColor.accent}
-                      variant={partIIVariant === 'dark' ? 'dark' : 'default'}
+                      variant={partIVariant === 'dark' ? 'dark' : 'default'}
                     />
                   </Chapter>
                 );
@@ -352,10 +338,10 @@ export default async function EventPage({ params }: EventPageProps) {
               if (event.talent_name) {
                 return (
                   <Chapter
-                    number="II"
+                    number="I"
                     title="The people"
                     accentColor={categoryColor.accent}
-                    variant={partIIVariant}
+                    variant={partIVariant}
                   >
                     <LegacyTalent name={event.talent_name} bio={event.talent_bio} />
                   </Chapter>
@@ -364,8 +350,8 @@ export default async function EventPage({ params }: EventPageProps) {
               return null;
             })()}
 
-            {/* ── Part III · The details ── */}
-            <Chapter number="III" title="The details" accentColor={categoryColor.accent}>
+            {/* ── Part II · The details ── */}
+            <Chapter number="II" title="The details" accentColor={categoryColor.accent}>
               {event.description && (
                 <AboutSection description={event.description} accentColor={categoryColor.accent} />
               )}
@@ -414,14 +400,23 @@ export default async function EventPage({ params }: EventPageProps) {
             </Chapter>
           </main>
 
-          <aside>
-            <div className="lg:sticky lg:top-24">
+          <aside className="space-y-6">
+            <div className="lg:sticky lg:top-24 space-y-6">
               <TicketStub
                 event={event}
                 isHearted={isHearted}
                 isPastEvent={isPastEvt}
                 calendarUrl={calendarUrl}
                 categoryColor={categoryColor}
+              />
+              {/* Happenlist's editorial take — compact card below the
+                  ticket stub. Was previously a full-width "Part I · The
+                  pitch" chapter in the main column but over-dignified
+                  editorial meta-commentary. Sidebar is the right home. */}
+              <EditorsTake
+                summary={event.happenlist_summary}
+                personalityBadges={event.personality_badges}
+                accentColor={categoryColor.accent}
               />
             </div>
           </aside>
