@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Sparkles,
   RefreshCw,
@@ -19,6 +20,7 @@ import {
   ChevronUp,
   Repeat,
   AlertTriangle,
+  Undo2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -47,6 +49,7 @@ interface SeriesEventManagerProps {
 type Phase = 'idle' | 'loading' | 'loaded' | 'error';
 
 export function SeriesEventManager({ seriesId }: SeriesEventManagerProps) {
+  const router = useRouter();
   const [phase, setPhase] = useState<Phase>('idle');
   const [currentEvents, setCurrentEvents] = useState<ManagedEvent[]>([]);
   const [suggestions, setSuggestions] = useState<SuggestedEvent[]>([]);
@@ -57,6 +60,8 @@ export function SeriesEventManager({ seriesId }: SeriesEventManagerProps) {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [showCurrentEvents, setShowCurrentEvents] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [convertLoading, setConvertLoading] = useState(false);
+  const [convertError, setConvertError] = useState('');
 
   const formatDate = (dt: string | null) => {
     if (!dt) return '';
@@ -127,6 +132,43 @@ export function SeriesEventManager({ seriesId }: SeriesEventManagerProps) {
   const selectNoneCurrent = useCallback(() => {
     setSelectedToRemove(new Set());
   }, []);
+
+  // Convert series back to single event (or delete empty series).
+  // Only offered when the series has 0 or 1 non-deleted events.
+  // Server enforces the same rule — this is the friendly UI path.
+  const handleConvertToSingle = useCallback(async () => {
+    const loneEvent = currentEvents.length === 1 ? currentEvents[0] : null;
+    const confirmMsg = loneEvent
+      ? `Convert this series back to a single event?\n\n"${loneEvent.title}" will become standalone and the series will be deleted.`
+      : `Delete this empty series? No events will be affected.`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    setConvertLoading(true);
+    setConvertError('');
+    try {
+      const res = await fetch(`/api/superadmin/series/${seriesId}/convert-to-single`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to convert');
+      }
+
+      // Redirect away — the series no longer exists, so staying on its edit
+      // page would 404. If we detached an event, jump to its edit page;
+      // otherwise go back to the series list.
+      if (data.detachedEventId) {
+        router.push(`/admin/events/${data.detachedEventId}/edit`);
+      } else {
+        router.push('/admin/series');
+      }
+    } catch (err) {
+      setConvertError(err instanceof Error ? err.message : 'Failed to convert');
+      setConvertLoading(false);
+    }
+  }, [seriesId, currentEvents, router]);
 
   const handleAction = useCallback(async (action: 'add' | 'remove') => {
     const eventIds = action === 'add'
@@ -211,7 +253,15 @@ export function SeriesEventManager({ seriesId }: SeriesEventManagerProps) {
         {showCurrentEvents && (
           <div className="mt-3">
             {currentEvents.length === 0 ? (
-              <p className="text-sm text-zinc py-2">No events in this series yet.</p>
+              <div className="py-2 space-y-3">
+                <p className="text-sm text-zinc">No events in this series yet.</p>
+                <ConvertToSingleAction
+                  eventCount={0}
+                  loading={convertLoading}
+                  error={convertError}
+                  onConvert={handleConvertToSingle}
+                />
+              </div>
             ) : (
               <>
                 <div className="flex items-center justify-between mb-2">
@@ -276,6 +326,17 @@ export function SeriesEventManager({ seriesId }: SeriesEventManagerProps) {
                       )}
                       Remove {selectedToRemove.size} event{selectedToRemove.size !== 1 ? 's' : ''} from series
                     </Button>
+                  </div>
+                )}
+
+                {currentEvents.length === 1 && (
+                  <div className="mt-3 pt-3 border-t border-mist">
+                    <ConvertToSingleAction
+                      eventCount={1}
+                      loading={convertLoading}
+                      error={convertError}
+                      onConvert={handleConvertToSingle}
+                    />
                   </div>
                 )}
               </>
@@ -406,6 +467,53 @@ export function SeriesEventManager({ seriesId }: SeriesEventManagerProps) {
           </div>
         )}
       </Card>
+    </div>
+  );
+}
+
+// Recovery action for series created by mistake. Offered only when the
+// series has 0 or 1 non-deleted events — matches the server-side rule in
+// /api/superadmin/series/[id]/convert-to-single.
+function ConvertToSingleAction({
+  eventCount,
+  loading,
+  error,
+  onConvert,
+}: {
+  eventCount: 0 | 1;
+  loading: boolean;
+  error: string;
+  onConvert: () => void;
+}) {
+  const label = eventCount === 1 ? 'Convert back to single event' : 'Delete empty series';
+  const helper =
+    eventCount === 1
+      ? 'Detaches the event and deletes the series. Use if this was promoted to a series by mistake.'
+      : 'No events are attached. Safe to remove.';
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-zinc">{helper}</p>
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={onConvert}
+        disabled={loading}
+        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+      >
+        {loading ? (
+          <RefreshCw className="w-3.5 h-3.5 animate-spin mr-1.5" />
+        ) : (
+          <Undo2 className="w-3.5 h-3.5 mr-1.5" />
+        )}
+        {label}
+      </Button>
+      {error && (
+        <div className="flex items-center gap-2 text-xs text-red-700">
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+          {error}
+        </div>
+      )}
     </div>
   );
 }
