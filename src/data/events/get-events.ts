@@ -721,10 +721,9 @@ export async function getEvents(
 
     return query;
   }
-  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   // ── Build MAIN query (heavy joins, count, pagination) ─────────────────────
-  let mainQuery: any = applyDbPredicates(
+  let mainQuery = applyDbPredicates(
     supabase
       .from('events')
       .select(
