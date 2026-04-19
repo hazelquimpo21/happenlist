@@ -32,9 +32,15 @@ export async function getEvent(
 
   const supabase = await createClient();
 
-  // Slugs in the DB include the date suffix (e.g. "jazz-at-the-lake-2026-04-10").
-  // Reconstruct the full slug if parseEventSlug stripped the date off.
-  const fullSlug = slug.endsWith(instanceDate) ? slug : `${slug}-${instanceDate}`;
+  // DB slugs include the instance date as a segment — sometimes at the end
+  // ("jazz-at-the-lake-2026-04-10"), sometimes followed by extra suffix
+  // like a time ("wisconsin-card-show-2026-06-26-1500"). parseEventSlug
+  // strips the trailing YYYY-MM-DD from the URL, so `slug` arriving here
+  // may already contain a date segment. Only append when the instanceDate
+  // isn't already present as a `-YYYY-MM-DD-` or trailing segment —
+  // otherwise we double-append and miss the lookup.
+  const dateSegment = new RegExp(`(^|-)${instanceDate}(-|$)`);
+  const fullSlug = dateSegment.test(slug) ? slug : `${slug}-${instanceDate}`;
 
   const { data, error } = await supabase
     .from('events')

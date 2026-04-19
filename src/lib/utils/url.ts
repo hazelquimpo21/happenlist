@@ -37,7 +37,11 @@ export function parseEventSlug(
   }
 
   const date = dateMatch[1];
-  const slug = fullSlug.replace(`-${date}`, '');
+  // Strip the TRAILING `-YYYY-MM-DD` specifically. A plain `.replace()`
+  // removes the first occurrence, which is wrong when the slug also
+  // contains the date earlier (e.g. `wisconsin-card-show-2026-06-26-1500`
+  // built into URL `/event/...-1500-2026-06-26`).
+  const slug = fullSlug.slice(0, -(date.length + 1));
 
   return { slug, date };
 }
