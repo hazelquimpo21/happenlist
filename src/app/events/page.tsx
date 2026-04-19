@@ -26,12 +26,14 @@ import { Container, Breadcrumbs } from '@/components/layout';
 import { EventGrid } from '@/components/events';
 import {
   FilterBar,
+  SortSelect,
   EmptyFilterState,
   countActiveFilters,
   parseFiltersFromParams,
   type FilterDrawerCategory,
   type FilterDrawerMembershipOrg,
 } from '@/components/events/filters';
+import type { SortOption } from '@/types';
 import { getEvents } from '@/data/events';
 import { getCategories, getCategoryBySlug } from '@/data/categories';
 import { getMembershipOrgs } from '@/data/membership';
@@ -81,6 +83,7 @@ interface EventsPageProps {
     nearLat?: string;
     nearLng?: string;
     radius?: string;
+    sort?: string;
     page?: string;
   }>;
 }
@@ -128,6 +131,14 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const nearLng = params.nearLng ? parseFloat(params.nearLng) : undefined;
   const radiusMiles = params.radius ? parseInt(params.radius, 10) : undefined;
 
+  // Sort: validate against known options so a stale URL param doesn't crash
+  // the query layer. Default is `date-asc` (soonest first).
+  const VALID_SORTS: SortOption[] = ['date-asc', 'newest', 'popular', 'name-asc', 'date-desc', 'distance-asc'];
+  const sortParam = params.sort;
+  const orderBy: SortOption = (sortParam && (VALID_SORTS as string[]).includes(sortParam))
+    ? (sortParam as SortOption)
+    : 'date-asc';
+
   // Build date range if provided
   const dateRange =
     params.from || params.to
@@ -166,6 +177,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       radiusMiles: radiusMiles != null && !isNaN(radiusMiles) ? radiusMiles : undefined,
       page,
       limit: 24,
+      orderBy,
       collapseSeries: true,
     }),
     getCategories(),
@@ -273,9 +285,12 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
               </span>
             )}
           </div>
-          <p className="text-zinc text-body mt-2">
-            {total} {total === 1 ? 'event' : 'events'} found
-          </p>
+          <div className="mt-2 flex items-center justify-between gap-4 flex-wrap">
+            <p className="text-zinc text-body">
+              {total} {total === 1 ? 'event' : 'events'} found
+            </p>
+            <SortSelect current={orderBy} />
+          </div>
         </div>
 
         {/* Results: empty filter state when zero, otherwise grid */}

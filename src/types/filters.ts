@@ -243,7 +243,7 @@ export interface PaginationParams {
 /**
  * Sort options for events.
  */
-export type SortOption = 'date-asc' | 'date-desc' | 'name-asc' | 'popular' | 'distance-asc';
+export type SortOption = 'date-asc' | 'date-desc' | 'name-asc' | 'popular' | 'distance-asc' | 'newest';
 
 /**
  * Combined query parameters for events.

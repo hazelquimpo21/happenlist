@@ -484,7 +484,7 @@ export async function getEvents(
     .from('events')
     .select(
       `
-      id, title, slug, start_datetime, instance_date,
+      id, title, slug, start_datetime, instance_date, created_at,
       image_url, thumbnail_url, price_type, price_low, price_high,
       is_free, heart_count, good_for,
       short_description, tagline, talent_name,
@@ -745,6 +745,11 @@ export async function getEvents(
       break;
     case 'popular':
       query = query.order('heart_count', { ascending: false });
+      break;
+    case 'newest':
+      // Sort by created_at DESC — newly ingested events first. Useful when
+      // browsing for "what's been added recently" instead of "what's soonest".
+      query = query.order('created_at', { ascending: false });
       break;
     case 'distance-asc':
       // Distance sorting happens post-fetch using the distanceMap from the

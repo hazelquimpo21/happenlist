@@ -5,6 +5,7 @@
  */
 
 export { FilterBar } from './filter-bar';
+export { SortSelect } from './sort-select';
 export { FilterDrawer } from './filter-drawer';
 export { FilterChip } from './filter-chip';
 export { FilterSection } from './filter-section';
