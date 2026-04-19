@@ -117,13 +117,7 @@ export const INTEREST_PRESETS = [
     id: 'budget-friendly',
     label: 'Budget-friendly',
     description: 'Free or cheap — easy on the wallet',
-    goodFor: ['budget_friendly', 'college_crowd'],
-  },
-  {
-    id: 'first-timer',
-    label: 'First-timer',
-    description: 'Beginner-friendly, low barrier, welcoming newcomers',
-    goodFor: ['first_timers'],
+    goodFor: ['budget_friendly'],
   },
   // ── Subculture-driven pills (2026-04) ───────────────────────────────────────
   // These match on `subcultures[]` instead of good_for. The signal lives in the

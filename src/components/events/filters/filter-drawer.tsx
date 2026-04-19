@@ -416,10 +416,10 @@ export function FilterDrawer({
                 onClick={() => toggleBool('soloFriendly')}
               />
               <FilterChip
-                label="Beginner-friendly"
-                active={state.beginnerFriendly}
+                label="Curious minds"
+                active={state.curiousMinds}
                 size="sm"
-                onClick={() => toggleBool('beginnerFriendly')}
+                onClick={() => toggleBool('curiousMinds')}
               />
               <FilterChip
                 label="No tickets needed"

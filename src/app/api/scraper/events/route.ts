@@ -317,7 +317,7 @@ export async function GET() {
       age_high: 'number — maximum age (e.g. 65)',
       age_restriction: 'string — human-readable age note (e.g. "21+", "All ages")',
       is_family_friendly: 'boolean — whether suitable for families/children',
-      good_for: 'string[] — audience tags, e.g. ["date_night", "foodies"]. Valid: date_night, families_young_kids, families_older_kids, pet_friendly, foodies, girls_night, guys_night, solo_friendly, outdoorsy, creatives, music_lovers, active_seniors, college_crowd, first_timers',
+      good_for: 'string[] — audience tags, e.g. ["date_night", "foodies"]. Valid: date_night, first_date, families_young_kids, families_older_kids, pet_friendly, foodies, girls_night, guys_night, occasion_worthy, solo_friendly, meet_people, group_outing, outdoorsy, creatives, music_lovers, curious_minds, tourist_friendly, rainy_day, budget_friendly, after_work, quiet_hangout',
     },
     location_options: [
       'location_id: UUID of existing venue',

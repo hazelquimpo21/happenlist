@@ -77,7 +77,7 @@ export interface FilterState {
 
   // Quick toggles
   soloFriendly: boolean;
-  beginnerFriendly: boolean;
+  curiousMinds: boolean;
   noTicketsNeeded: boolean;
   dropInOk: boolean;
   familyFriendly: boolean;
@@ -116,7 +116,7 @@ export const EMPTY_FILTER_STATE: FilterState = {
   leaveWith: [],
   isFree: false,
   soloFriendly: false,
-  beginnerFriendly: false,
+  curiousMinds: false,
   noTicketsNeeded: false,
   dropInOk: false,
   familyFriendly: false,
@@ -141,7 +141,7 @@ export function countActiveFilters(state: FilterState): number {
   if (state.noiseLevel) n++;
   if (state.accessType) n++;
   if (state.soloFriendly) n++;
-  if (state.beginnerFriendly) n++;
+  if (state.curiousMinds) n++;
   if (state.noTicketsNeeded) n++;
   if (state.dropInOk) n++;
   if (state.familyFriendly) n++;
@@ -210,7 +210,7 @@ export function parseFiltersFromParams(params: SearchParamsLike): FilterState {
     noiseLevel: params.get('noiseLevel') ?? undefined,
     accessType: params.get('accessType') ?? undefined,
     soloFriendly: params.get('soloFriendly') === 'true',
-    beginnerFriendly: params.get('beginnerFriendly') === 'true',
+    curiousMinds: params.get('curiousMinds') === 'true',
     noTicketsNeeded: params.get('noTicketsNeeded') === 'true',
     dropInOk: params.get('dropInOk') === 'true',
     familyFriendly: params.get('familyFriendly') === 'true',
@@ -251,7 +251,7 @@ export function serializeFiltersToParams(
   if (state.noiseLevel) params.set('noiseLevel', state.noiseLevel);
   if (state.accessType) params.set('accessType', state.accessType);
   if (state.soloFriendly) params.set('soloFriendly', 'true');
-  if (state.beginnerFriendly) params.set('beginnerFriendly', 'true');
+  if (state.curiousMinds) params.set('curiousMinds', 'true');
   if (state.noTicketsNeeded) params.set('noTicketsNeeded', 'true');
   if (state.dropInOk) params.set('dropInOk', 'true');
   if (state.familyFriendly) params.set('familyFriendly', 'true');

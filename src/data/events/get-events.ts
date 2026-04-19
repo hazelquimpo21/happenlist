@@ -363,7 +363,7 @@ export async function getEvents(
     energyMin,
     energyMax,
     soloFriendly,
-    beginnerFriendly,
+    curiousMinds,
     noTicketsNeeded,
     dropInOk,
     familyFriendly,
@@ -611,8 +611,8 @@ export async function getEvents(
       query = query.contains('good_for', ['solo_friendly']);
     }
 
-    if (beginnerFriendly) {
-      query = query.contains('good_for', ['first_timers']);
+    if (curiousMinds) {
+      query = query.contains('good_for', ['curious_minds']);
     }
 
     if (noTicketsNeeded) {
@@ -698,7 +698,6 @@ export async function getEvents(
             break;
           case 'college':
             ageClauses.push('and(age_low.gte.18,age_low.lte.25)');
-            ageClauses.push('good_for.cs.{college_crowd}');
             break;
           case 'twenty_one_plus':
             ageClauses.push('age_low.gte.21');

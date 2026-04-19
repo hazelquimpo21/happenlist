@@ -61,7 +61,7 @@ interface EventsPageProps {
     noiseLevel?: string;
     accessType?: string;
     soloFriendly?: string;
-    beginnerFriendly?: string;
+    curiousMinds?: string;
     noTicketsNeeded?: string;
     dropInOk?: string;
     familyFriendly?: string;
@@ -121,7 +121,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const noiseLevel = params.noiseLevel;
   const accessType = params.accessType;
   const soloFriendly = params.soloFriendly === 'true';
-  const beginnerFriendly = params.beginnerFriendly === 'true';
+  const curiousMinds = params.curiousMinds === 'true';
   const noTicketsNeeded = params.noTicketsNeeded === 'true';
   const dropInOk = params.dropInOk === 'true';
   const familyFriendly = params.familyFriendly === 'true';
@@ -166,7 +166,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       noiseLevel,
       accessType,
       soloFriendly: soloFriendly || undefined,
-      beginnerFriendly: beginnerFriendly || undefined,
+      curiousMinds: curiousMinds || undefined,
       noTicketsNeeded: noTicketsNeeded || undefined,
       dropInOk: dropInOk || undefined,
       familyFriendly: familyFriendly || undefined,

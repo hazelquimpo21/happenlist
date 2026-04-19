@@ -217,7 +217,7 @@ function buildActiveChips(
 
   const boolToggles: Array<[keyof FilterState, string]> = [
     ['soloFriendly', 'Solo-friendly'],
-    ['beginnerFriendly', 'Beginner-friendly'],
+    ['curiousMinds', 'Curious minds'],
     ['noTicketsNeeded', 'No tickets'],
     ['dropInOk', 'Drop-in OK'],
     ['familyFriendly', 'Family-friendly'],

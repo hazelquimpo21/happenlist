@@ -19,8 +19,7 @@
  *     (NULL = organizer didn't specify = assumed all-ages).
  *   - "families_young_kids" matches age_low <= 5 OR age_low IS NULL
  *     (unspecified events are presumed accessible to families).
- *   - "college" also checks good_for @> ['college_crowd'] as an OR
- *     condition, since many college-friendly events don't set age_low.
+ *   - "college" matches age_low 18–25 (age range only).
  *   - Events with NULL age_low are NOT excluded from browse — they just
  *     won't match age-restricted tier filters (teens, 21+).
  *

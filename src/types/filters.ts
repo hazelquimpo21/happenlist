@@ -108,8 +108,8 @@ export interface EventFilters {
   energyMin?: number;
   /** Quick toggle: solo-friendly (good_for contains solo_friendly). */
   soloFriendly?: boolean;
-  /** Quick toggle: beginner-friendly (good_for contains first_timers). */
-  beginnerFriendly?: boolean;
+  /** Quick toggle: talks/lectures/learning events (good_for contains curious_minds). */
+  curiousMinds?: boolean;
   /** Quick toggle: no tickets needed. */
   noTicketsNeeded?: boolean;
   /** Quick toggle: drop-in OK. */
