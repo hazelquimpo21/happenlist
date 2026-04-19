@@ -484,260 +484,22 @@ export async function getEvents(
     }
   }
 
-  // Over-fetch when ANY post-fetch filter is active so we still have enough
-  // cards after JS-side filtering. Both `collapseSeries` and `timeOfDay`
-  // shrink the result set after the DB fetch — without over-fetch the page
-  // would be sparse or empty.
+  // Over-fetch the MAIN query when post-fetch JS filters can shrink the set,
+  // so we still have enough cards to fill `limit`. Lifestyle exclusion (the
+  // common default), `collapseSeries`, and `timeOfDay` are all post-fetch.
   //
-  // 3x is a heuristic, not a proof. If you add another post-fetch filter,
-  // bump this multiplier OR move the filter into a real DB predicate.
-  // Distance-asc sort is NOT a post-fetch filter (it doesn't shrink the set,
-  // just reorders), but geo filtering via .in('id', geoEventIds) already
-  // restricts the DB result. No extra over-fetch needed for geo.
-  const needsOverFetch = collapseSeries || timeOfDayBuckets.length > 0;
+  // The accurate `total` shown to the user is computed by a SEPARATE
+  // lightweight count query below — over-fetch sizing only affects card
+  // density on the page, not count correctness.
+  const lifestyleShrinks = includeLifestyle !== true;
+  const needsOverFetch = collapseSeries || timeOfDayBuckets.length > 0 || lifestyleShrinks;
   const fetchLimit = needsOverFetch ? limit * 3 : limit;
   const fetchOffset = needsOverFetch ? 0 : offset;
 
-  // Build query — joins series table for recurrence info
-  let query = supabase
-    .from('events')
-    .select(
-      `
-      id, title, slug, start_datetime, instance_date, created_at,
-      image_url, thumbnail_url, price_type, price_low, price_high,
-      is_free, heart_count, good_for,
-      short_description, tagline, talent_name,
-      access_type, noise_level, vibe_tags,
-      accessibility_tags, sensory_tags, leave_with,
-      social_mode, energy_needed,
-      organizer_name, organizer_is_venue,
-      age_restriction, is_family_friendly,
-      parent_event_id,
-      series_id, series_sequence,
-      category:categories(name, slug),
-      location:locations(name, slug),
-      series(title, slug, series_type, recurrence_rule),
-      children:events!parent_event_id(count),
-      event_performers(role, billing_order, performer:performers(name)),
-      event_membership_benefits(benefit_type, member_price, benefit_details)
-    `,
-      { count: 'exact' }
-    )
-    .eq('status', 'published')
-    .is('deleted_at', null)
-    .is('parent_event_id', null); // Hide child events from main feed
+  // Pre-resolve awaited values so the predicate-application closure stays sync.
+  const categoryId = categorySlug ? await getCategoryIdBySlug(categorySlug) : null;
 
-  // Default: only future events. Archive pages pass includePast=true to
-  // bypass this filter and show historical events with a dateRange.
-  if (!includePast) {
-    query = query.gte('instance_date', new Date().toISOString().split('T')[0]);
-  }
-
-  // Apply filters
-  if (search) {
-    query = query.textSearch('title', search, { type: 'websearch' });
-  }
-
-  // Filter by category (cached slug→ID lookup avoids a waterfall query)
-  if (categorySlug) {
-    const categoryId = await getCategoryIdBySlug(categorySlug);
-    if (categoryId) {
-      query = query.eq('category_id', categoryId);
-    }
-  }
-
-  if (dateRange?.start) {
-    query = query.gte('instance_date', dateRange.start);
-  }
-
-  if (dateRange?.end) {
-    query = query.lte('instance_date', dateRange.end);
-  }
-
-  if (isFree) {
-    query = query.eq('is_free', true);
-  }
-
-  // good_for: ANY-match. PostgREST `.overlaps()` maps to PG's `&&` operator
-  // on text[] — returns rows where good_for shares at least one element with
-  // the requested set. Single-value calls produce a 1-element array, which
-  // behaves identically to the old `.contains([slug])` form.
-  if (goodForSlugs.length > 0) {
-    query = query.overlaps('good_for', goodForSlugs);
-  }
-
-  if (locationId) {
-    query = query.eq('location_id', locationId);
-  }
-
-  if (organizerId) {
-    query = query.eq('organizer_id', organizerId);
-  }
-
-  if (excludeEventId) {
-    query = query.neq('id', excludeEventId);
-  }
-
-  // New atmosphere/access filters (migrations 00010, 00011)
-  if (vibeTag) {
-    query = query.contains('vibe_tags', [vibeTag]);
-  }
-
-  // Apply the merged subculture filter computed at the top of the function.
-  // Single value → cheaper .contains() path; multi → .overlaps() for OR.
-  if (allSubcultures.length === 1) {
-    // Single value keeps the cheaper .contains() path (equivalent semantics
-    // for array @> array[value]).
-    query = query.contains('subcultures', allSubcultures);
-  } else if (allSubcultures.length > 1) {
-    query = query.overlaps('subcultures', allSubcultures);
-  }
-
-  if (noiseLevel) {
-    query = query.eq('noise_level', noiseLevel);
-  }
-
-  if (accessType) {
-    query = query.eq('access_type', accessType);
-  }
-
-  if (excludeMembership) {
-    query = query.eq('membership_required', false);
-  }
-
-  if (energyMin) {
-    query = query.gte('energy_level', energyMin);
-  }
-
-  if (energyMax) {
-    query = query.lte('energy_level', energyMax);
-  }
-
-  if (soloFriendly) {
-    query = query.contains('good_for', ['solo_friendly']);
-  }
-
-  if (beginnerFriendly) {
-    query = query.contains('good_for', ['first_timers']);
-  }
-
-  if (noTicketsNeeded) {
-    query = query.or('access_type.in.(open,pay_at_door),is_free.eq.true');
-  }
-
-  if (dropInOk) {
-    query = query.or('attendance_mode.in.(drop_in,hybrid),attendance_mode.is.null');
-  }
-
-  if (familyFriendly) {
-    query = query.eq('is_family_friendly', true);
-  }
-
-  // Tagging-expansion filters (scraper migrations 00016–00019).
-  // Arrays use `&&` (PG) / `.overlaps()` (PostgREST) for ANY-match semantics —
-  // matches the vibe_tags / good_for pattern. Enums use `.eq()`. Unknown
-  // values were already dropped by the isX guards above, so queries only ever
-  // see valid vocab values even when URL params are stale or typo'd.
-  if (accessibilityTags.length > 0) {
-    query = query.overlaps('accessibility_tags', accessibilityTags);
-  }
-
-  if (sensoryTags.length > 0) {
-    query = query.overlaps('sensory_tags', sensoryTags);
-  }
-
-  if (leaveWithSlugs.length > 0) {
-    query = query.overlaps('leave_with', leaveWithSlugs);
-  }
-
-  if (socialModeValue) {
-    query = query.eq('social_mode', socialModeValue);
-  }
-
-  if (energyNeededValue) {
-    query = query.eq('energy_needed', energyNeededValue);
-  }
-
-  // Price tier: each tier maps to a specific predicate. Multi-select = OR.
-  // Built as a single .or() clause combining all selected tier predicates.
-  if (priceTierSlugs.length > 0) {
-    const priceClauses: string[] = [];
-    for (const tier of priceTierSlugs) {
-      switch (tier) {
-        case 'free':
-          priceClauses.push('is_free.eq.true');
-          break;
-        case 'under_10':
-          // Inclusive of free events — people searching cheap stuff want free too
-          priceClauses.push('is_free.eq.true');
-          priceClauses.push('price_low.lte.10');
-          break;
-        case '10_to_25':
-          priceClauses.push('and(price_low.gte.10,price_low.lte.25)');
-          break;
-        case '25_to_50':
-          priceClauses.push('and(price_low.gte.25,price_low.lte.50)');
-          break;
-        case 'over_50':
-          priceClauses.push('price_low.gt.50');
-          break;
-        case 'donation':
-          priceClauses.push('price_type.eq.donation');
-          break;
-      }
-    }
-    if (priceClauses.length > 0) {
-      // Dedupe in case multiple tiers produce the same clause (e.g. free + under_10)
-      const uniqueClauses = [...new Set(priceClauses)];
-      query = query.or(uniqueClauses.join(','));
-    }
-  }
-
-  // Age group: each group maps to a predicate using age_low only.
-  // age_high is empty in the DB — see age-groups.ts header comment.
-  // Multi-select = OR, built as a single .or() clause.
-  if (ageGroupSlugs.length > 0) {
-    const ageClauses: string[] = [];
-    for (const group of ageGroupSlugs) {
-      switch (group) {
-        case 'all_ages':
-          // NULL age_low = organizer didn't specify = assumed all-ages
-          ageClauses.push('age_low.is.null');
-          ageClauses.push('age_low.eq.0');
-          break;
-        case 'families_young_kids':
-          // age_low <= 5 OR NULL (unspecified = presumed accessible)
-          ageClauses.push('age_low.lte.5');
-          ageClauses.push('age_low.is.null');
-          break;
-        case 'elementary':
-          ageClauses.push('and(age_low.gte.6,age_low.lte.11)');
-          break;
-        case 'teens':
-          ageClauses.push('and(age_low.gte.12,age_low.lte.17)');
-          break;
-        case 'college':
-          // age_low 18-25 OR tagged as college_crowd in good_for
-          ageClauses.push('and(age_low.gte.18,age_low.lte.25)');
-          ageClauses.push('good_for.cs.{college_crowd}');
-          break;
-        case 'twenty_one_plus':
-          ageClauses.push('age_low.gte.21');
-          break;
-      }
-    }
-    if (ageClauses.length > 0) {
-      const uniqueClauses = [...new Set(ageClauses)];
-      query = query.or(uniqueClauses.join(','));
-    }
-  }
-
-  // Geo filter: restrict to event IDs returned by the RPC
-  if (geoEventIds) {
-    query = query.in('id', geoEventIds);
-  }
-
-  // Membership benefit filters — requires subquery to get event IDs
+  let benefitEventIds: string[] | null = null;
   if (hasMemberBenefits || membershipOrgId) {
     let benefitQuery = supabase
       .from('event_membership_benefits')
@@ -746,57 +508,306 @@ export async function getEvents(
       benefitQuery = benefitQuery.eq('membership_org_id', membershipOrgId);
     }
     const { data: benefitRows } = await benefitQuery;
-    const eventIds = benefitRows?.map((r) => (r as { event_id: string }).event_id) ?? [];
-    if (eventIds.length > 0) {
-      query = query.in('id', eventIds);
-    } else {
-      // No events match — return empty
+    benefitEventIds = benefitRows?.map((r) => (r as { event_id: string }).event_id) ?? [];
+    if (benefitEventIds.length === 0) {
       return { events: [], total: 0 };
     }
   }
 
-  // Apply sorting
+  /**
+   * Apply every DB-side predicate to a Supabase query builder.
+   *
+   * Shared between the main fetch (with heavy joins + pagination) and the
+   * lightweight count query below so both see identical filters. If you add a
+   * new DB-side predicate, add it HERE — never inline on a single query — or
+   * the displayed count will drift from the rendered cards.
+   *
+   * Post-fetch JS filters (lifestyle, time-of-day, series collapse) are
+   * applied separately to BOTH query results below; that's how the count
+   * stays accurate.
+   *
+   * Loosely typed (`any`) because Supabase's filter-builder type narrows on
+   * each chained call and refuses to round-trip through a generic. Single
+   * source of truth for predicates wins over TS strictness inside the closure.
+   */
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  function applyDbPredicates(q: any): any {
+    let query = q
+      .eq('status', 'published')
+      .is('deleted_at', null)
+      .is('parent_event_id', null);
+
+    if (!includePast) {
+      query = query.gte('instance_date', new Date().toISOString().split('T')[0]);
+    }
+
+    if (search) {
+      query = query.textSearch('title', search, { type: 'websearch' });
+    }
+
+    if (categoryId) {
+      query = query.eq('category_id', categoryId);
+    }
+
+  if (dateRange?.start) {
+    query = query.gte('instance_date', dateRange.start);
+  }
+
+    if (dateRange?.end) {
+      query = query.lte('instance_date', dateRange.end);
+    }
+
+    if (isFree) {
+      query = query.eq('is_free', true);
+    }
+
+    if (goodForSlugs.length > 0) {
+      query = query.overlaps('good_for', goodForSlugs);
+    }
+
+    if (locationId) {
+      query = query.eq('location_id', locationId);
+    }
+
+    if (organizerId) {
+      query = query.eq('organizer_id', organizerId);
+    }
+
+    if (excludeEventId) {
+      query = query.neq('id', excludeEventId);
+    }
+
+    if (vibeTag) {
+      query = query.contains('vibe_tags', [vibeTag]);
+    }
+
+    if (allSubcultures.length === 1) {
+      query = query.contains('subcultures', allSubcultures);
+    } else if (allSubcultures.length > 1) {
+      query = query.overlaps('subcultures', allSubcultures);
+    }
+
+    if (noiseLevel) {
+      query = query.eq('noise_level', noiseLevel);
+    }
+
+    if (accessType) {
+      query = query.eq('access_type', accessType);
+    }
+
+    if (excludeMembership) {
+      query = query.eq('membership_required', false);
+    }
+
+    if (energyMin) {
+      query = query.gte('energy_level', energyMin);
+    }
+
+    if (energyMax) {
+      query = query.lte('energy_level', energyMax);
+    }
+
+    if (soloFriendly) {
+      query = query.contains('good_for', ['solo_friendly']);
+    }
+
+    if (beginnerFriendly) {
+      query = query.contains('good_for', ['first_timers']);
+    }
+
+    if (noTicketsNeeded) {
+      query = query.or('access_type.in.(open,pay_at_door),is_free.eq.true');
+    }
+
+    if (dropInOk) {
+      query = query.or('attendance_mode.in.(drop_in,hybrid),attendance_mode.is.null');
+    }
+
+    if (familyFriendly) {
+      query = query.eq('is_family_friendly', true);
+    }
+
+    if (accessibilityTags.length > 0) {
+      query = query.overlaps('accessibility_tags', accessibilityTags);
+    }
+
+    if (sensoryTags.length > 0) {
+      query = query.overlaps('sensory_tags', sensoryTags);
+    }
+
+    if (leaveWithSlugs.length > 0) {
+      query = query.overlaps('leave_with', leaveWithSlugs);
+    }
+
+    if (socialModeValue) {
+      query = query.eq('social_mode', socialModeValue);
+    }
+
+    if (energyNeededValue) {
+      query = query.eq('energy_needed', energyNeededValue);
+    }
+
+    if (priceTierSlugs.length > 0) {
+      const priceClauses: string[] = [];
+      for (const tier of priceTierSlugs) {
+        switch (tier) {
+          case 'free':
+            priceClauses.push('is_free.eq.true');
+            break;
+          case 'under_10':
+            priceClauses.push('is_free.eq.true');
+            priceClauses.push('price_low.lte.10');
+            break;
+          case '10_to_25':
+            priceClauses.push('and(price_low.gte.10,price_low.lte.25)');
+            break;
+          case '25_to_50':
+            priceClauses.push('and(price_low.gte.25,price_low.lte.50)');
+            break;
+          case 'over_50':
+            priceClauses.push('price_low.gt.50');
+            break;
+          case 'donation':
+            priceClauses.push('price_type.eq.donation');
+            break;
+        }
+      }
+      if (priceClauses.length > 0) {
+        const uniqueClauses = [...new Set(priceClauses)];
+        query = query.or(uniqueClauses.join(','));
+      }
+    }
+
+    if (ageGroupSlugs.length > 0) {
+      const ageClauses: string[] = [];
+      for (const group of ageGroupSlugs) {
+        switch (group) {
+          case 'all_ages':
+            ageClauses.push('age_low.is.null');
+            ageClauses.push('age_low.eq.0');
+            break;
+          case 'families_young_kids':
+            ageClauses.push('age_low.lte.5');
+            ageClauses.push('age_low.is.null');
+            break;
+          case 'elementary':
+            ageClauses.push('and(age_low.gte.6,age_low.lte.11)');
+            break;
+          case 'teens':
+            ageClauses.push('and(age_low.gte.12,age_low.lte.17)');
+            break;
+          case 'college':
+            ageClauses.push('and(age_low.gte.18,age_low.lte.25)');
+            ageClauses.push('good_for.cs.{college_crowd}');
+            break;
+          case 'twenty_one_plus':
+            ageClauses.push('age_low.gte.21');
+            break;
+        }
+      }
+      if (ageClauses.length > 0) {
+        const uniqueClauses = [...new Set(ageClauses)];
+        query = query.or(uniqueClauses.join(','));
+      }
+    }
+
+    if (geoEventIds) {
+      query = query.in('id', geoEventIds);
+    }
+
+    if (benefitEventIds) {
+      query = query.in('id', benefitEventIds);
+    }
+
+    return query;
+  }
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+
+  // ── Build MAIN query (heavy joins, count, pagination) ─────────────────────
+  let mainQuery: any = applyDbPredicates(
+    supabase
+      .from('events')
+      .select(
+        `
+        id, title, slug, start_datetime, instance_date, created_at,
+        image_url, thumbnail_url, price_type, price_low, price_high,
+        is_free, heart_count, good_for,
+        short_description, tagline, talent_name,
+        access_type, noise_level, vibe_tags,
+        accessibility_tags, sensory_tags, leave_with,
+        social_mode, energy_needed,
+        organizer_name, organizer_is_venue,
+        age_restriction, is_family_friendly,
+        parent_event_id,
+        series_id, series_sequence,
+        category:categories(name, slug),
+        location:locations(name, slug),
+        series(title, slug, series_type, recurrence_rule),
+        children:events!parent_event_id(count),
+        event_performers(role, billing_order, performer:performers(name)),
+        event_membership_benefits(benefit_type, member_price, benefit_details)
+      `
+      )
+  );
+
+  // Apply sorting (main query only — count query doesn't care about order)
   switch (orderBy) {
     case 'date-asc':
-      query = query
+      mainQuery = mainQuery
         .order('instance_date', { ascending: true })
         .order('start_datetime', { ascending: true });
       break;
     case 'date-desc':
-      query = query.order('instance_date', { ascending: false });
+      mainQuery = mainQuery.order('instance_date', { ascending: false });
       break;
     case 'name-asc':
-      query = query.order('title', { ascending: true });
+      mainQuery = mainQuery.order('title', { ascending: true });
       break;
     case 'popular':
-      query = query.order('heart_count', { ascending: false });
+      mainQuery = mainQuery.order('heart_count', { ascending: false });
       break;
     case 'newest':
-      // Sort by created_at DESC — newly ingested events first. Useful when
-      // browsing for "what's been added recently" instead of "what's soonest".
-      query = query.order('created_at', { ascending: false });
+      mainQuery = mainQuery.order('created_at', { ascending: false });
       break;
     case 'distance-asc':
-      // Distance sorting happens post-fetch using the distanceMap from the
-      // geo RPC. DB-side sort falls back to date-asc so results are stable
-      // when distances are equal or when no geo anchor is set.
-      query = query
+      mainQuery = mainQuery
         .order('instance_date', { ascending: true })
         .order('start_datetime', { ascending: true });
       break;
   }
 
-  // Apply pagination
-  query = query.range(fetchOffset, fetchOffset + fetchLimit - 1);
+  mainQuery = mainQuery.range(fetchOffset, fetchOffset + fetchLimit - 1);
 
-  const { data, error, count } = await query;
+  // ── Build COUNT query (lightweight: just enough to apply post-fetch JS) ──
+  // Selects only the columns post-fetch filters (lifestyle/timeOfDay/collapse)
+  // need. No pagination — we must see EVERY matching row to count accurately
+  // after JS filtering. Cost: ~few KB per page request even at full DB size.
+  const countQuery = applyDbPredicates(
+    supabase
+      .from('events')
+      .select('id, series_id, start_datetime, series(series_type)')
+  );
 
-  if (error) {
-    console.error('❌ [getEvents] Error fetching events:', error);
-    throw error;
+  const [mainResult, countResult] = await Promise.all([mainQuery, countQuery]);
+
+  if (mainResult.error) {
+    console.error('❌ [getEvents] Error fetching events:', mainResult.error);
+    throw mainResult.error;
+  }
+  if (countResult.error) {
+    console.error('❌ [getEvents] Error fetching count:', countResult.error);
+    throw countResult.error;
   }
 
-  let events = (data || []).map(transformToEventCard);
+  const data = mainResult.data;
+  const countRows = (countResult.data || []) as Array<{
+    id: string;
+    series_id: string | null;
+    start_datetime: string;
+    series: { series_type: string | null } | null;
+  }>;
+
+  let events: EventCard[] = ((data as Record<string, unknown>[] | null) || []).map(transformToEventCard);
 
   // Attach distance_miles from the geo RPC result map. Done immediately after
   // transform so all downstream filters (lifestyle, time-of-day, collapse)
@@ -858,32 +869,57 @@ export async function getEvents(
     });
   }
 
-  // Manual pagination when ANY post-fetch filter shrunk the result set.
-  // The DB-level .range() can't account for events removed by the JS filters
-  // above, so we re-paginate the filtered list here. Without this, an
-  // over-fetched call would return 3x the requested limit.
-  if (needsOverFetch) {
-    const totalAfterFilters = events.length;
-    events = events.slice(offset, offset + limit);
-
-    console.log(
-      `[get-events] returning ${events.length} events ` +
-      `(${totalAfterFilters} after post-fetch filters, ${count ?? 0} raw)`
+  // ── Accurate total ────────────────────────────────────────────────────────
+  // Apply the SAME post-fetch filters to the lightweight count rows so the
+  // total reflects what the user will actually see. Without this, the count
+  // diverges from rendered cards (the bug this whole refactor exists to fix).
+  let countFiltered = countRows;
+  if (includeLifestyle === 'only') {
+    countFiltered = countFiltered.filter(
+      (r) => r.series?.series_type && LIFESTYLE_SERIES_TYPES.has(r.series.series_type)
     );
-
-    return {
-      events,
-      // If we exhausted the over-fetch we can't trust totalAfterFilters as a
-      // true total — fall back to the raw DB count as an upper bound. Real
-      // pagination accuracy needs a DB-side predicate (future migration).
-      total: totalAfterFilters < fetchLimit ? totalAfterFilters : (count || 0),
-    };
+  } else if (!includeLifestyle) {
+    countFiltered = countFiltered.filter(
+      (r) => !r.series?.series_type || !LIFESTYLE_SERIES_TYPES.has(r.series.series_type)
+    );
+  }
+  if (timeOfDayBuckets.length > 0) {
+    countFiltered = countFiltered.filter((r) =>
+      matchesTimeOfDay(r.start_datetime, timeOfDayBuckets)
+    );
+  }
+  let total: number;
+  if (collapseSeries) {
+    // Count distinct collapsible series + standalone events. Mirrors
+    // collapseSeriesInstances(): festivals/seasons (non-collapsible types)
+    // each count as a separate row.
+    const seenSeries = new Set<string>();
+    let standaloneCount = 0;
+    for (const r of countFiltered) {
+      const sid = r.series_id;
+      const stype = r.series?.series_type ?? null;
+      if (!sid || !stype || !COLLAPSIBLE_SERIES_TYPES.has(stype)) {
+        standaloneCount++;
+      } else {
+        seenSeries.add(sid);
+      }
+    }
+    total = standaloneCount + seenSeries.size;
+  } else {
+    total = countFiltered.length;
   }
 
-  console.log(`[get-events] returning ${events.length} events (total: ${count ?? 0})`);
+  // Manual pagination on the events array. The DB .range() over-fetched 3x
+  // when post-fetch filters were active, so we re-slice here to return
+  // exactly `limit` cards. Without this, the over-fetch would leak through.
+  if (needsOverFetch) {
+    events = events.slice(offset, offset + limit);
+  }
 
-  return {
-    events,
-    total: count || 0,
-  };
+  console.log(
+    `[get-events] returning ${events.length} events ` +
+    `(total ${total}, raw ${countRows.length})`
+  );
+
+  return { events, total };
 }
