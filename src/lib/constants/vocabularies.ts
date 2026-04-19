@@ -671,6 +671,7 @@ export const RECURRENCE_WEEK_OF_MONTH_VALUES = [1, 2, 3, 4, -1] as const;
 const VIBE_TAG_SET = new Set<string>(VIBE_TAGS);
 const SUBCULTURE_SET = new Set<string>(SUBCULTURES);
 const NOISE_LEVEL_SET = new Set<string>(NOISE_LEVELS);
+const MUSIC_GENRE_SET = new Set<string>(MUSIC_GENRES);
 const GOOD_FOR_SLUG_SET = new Set<string>(GOOD_FOR_SLUGS);
 const ATTENDANCE_MODE_SET = new Set<string>(ATTENDANCE_MODES);
 const ACCESS_TYPE_SET = new Set<string>(ACCESS_TYPES);
@@ -698,6 +699,10 @@ export function isSubculture(value: string): value is Subculture {
 
 export function isNoiseLevel(value: string): value is NoiseLevel {
   return NOISE_LEVEL_SET.has(value);
+}
+
+export function isMusicGenre(value: string): value is MusicGenre {
+  return MUSIC_GENRE_SET.has(value);
 }
 
 export function isGoodForSlug(value: string): value is GoodForSlug {

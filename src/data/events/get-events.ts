@@ -303,6 +303,7 @@ function transformToEventCard(row: Record<string, unknown>): EventCard {
     leave_with: ((row.leave_with as string[] | null) ?? []) as EventCard['leave_with'],
     social_mode: (row.social_mode as EventCard['social_mode']) ?? null,
     energy_needed: (row.energy_needed as EventCard['energy_needed']) ?? null,
+    music_genres: ((row.music_genres as string[] | null) ?? []) as EventCard['music_genres'],
     organizer_name: row.organizer_name as string | null ?? null,
     organizer_is_venue: (row.organizer_is_venue as boolean | null) ?? false,
     // Parent event fields
@@ -733,7 +734,7 @@ export async function getEvents(
         short_description, tagline, talent_name,
         access_type, noise_level, vibe_tags,
         accessibility_tags, sensory_tags, leave_with,
-        social_mode, energy_needed,
+        social_mode, energy_needed, music_genres,
         organizer_name, organizer_is_venue,
         age_restriction, is_family_friendly,
         parent_event_id,

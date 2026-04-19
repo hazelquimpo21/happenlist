@@ -42,6 +42,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { RecurrenceBuilder } from './recurrence-builder';
 import { SeriesSearch } from './series-search';
+import { ChipToggleGroup } from './chip-toggle-group';
 import { GOOD_FOR_TAGS } from '@/types';
 import {
   ACCESSIBILITY_TAGS,
@@ -54,6 +55,8 @@ import {
   SOCIAL_MODE_LABELS,
   ENERGY_NEEDED,
   ENERGY_NEEDED_LABELS,
+  MUSIC_GENRES,
+  MUSIC_GENRE_LABELS,
 } from '@/lib/constants/vocabularies';
 import type { AdminEventDetails } from '@/data/admin/get-admin-event';
 import type { RecurrenceRule } from '@/lib/supabase/types';
@@ -121,6 +124,10 @@ interface FormState {
   leave_with: string[];
   social_mode: string;
   energy_needed: string;
+  // Music genres (scraper migration 00024). Array field, same chip-toggle
+  // pattern. Analyzer under-tags deliberately, so manual override is the
+  // usual way this fills in for mis-categorized music events.
+  music_genres: string[];
   // Category
   category_id: string;
   // Status
@@ -179,6 +186,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
     leave_with: ((event as { leave_with?: string[] | null }).leave_with) || [],
     social_mode: ((event as { social_mode?: string | null }).social_mode) || '',
     energy_needed: ((event as { energy_needed?: string | null }).energy_needed) || '',
+    music_genres: ((event as { music_genres?: string[] | null }).music_genres) || [],
     category_id: event.category_id || '',
     status: event.status || 'draft',
   });
@@ -439,6 +447,11 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
       const evEnergyNeeded = ((event as { energy_needed?: string | null }).energy_needed) || '';
       if (formState.energy_needed !== evEnergyNeeded) {
         updates.energy_needed = formState.energy_needed || null;
+      }
+
+      const evMusicGenres = ((event as { music_genres?: string[] | null }).music_genres) || [];
+      if (arrayDiffer(formState.music_genres, evMusicGenres)) {
+        updates.music_genres = formState.music_genres;
       }
 
       // Category
@@ -1011,110 +1024,54 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
             </p>
           </div>
 
-          {/* Accessibility */}
-          <div>
-            <p className="text-xs font-medium text-zinc mb-2">
-              Accessibility {formState.accessibility_tags.length > 0 && `(${formState.accessibility_tags.length})`}
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {ACCESSIBILITY_TAGS.map((tag) => {
-                const isSelected = formState.accessibility_tags.includes(tag);
-                return (
-                  <button
-                    key={tag}
-                    type="button"
-                    aria-pressed={isSelected}
-                    onClick={() => {
-                      setFormState((prev) => ({
-                        ...prev,
-                        accessibility_tags: isSelected
-                          ? prev.accessibility_tags.filter((s) => s !== tag)
-                          : [...prev.accessibility_tags, tag],
-                      }));
-                      resetStatus();
-                    }}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
-                      isSelected
-                        ? 'bg-blue text-white'
-                        : 'bg-cloud/50 text-zinc hover:bg-cloud'
-                    }`}
-                  >
-                    {ACCESSIBILITY_TAG_LABELS[tag]}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <ChipToggleGroup
+            label="Accessibility"
+            options={ACCESSIBILITY_TAGS}
+            optionLabels={ACCESSIBILITY_TAG_LABELS}
+            selected={formState.accessibility_tags}
+            onChange={(next) =>
+              setFormState((prev) => ({ ...prev, accessibility_tags: next }))
+            }
+            onAfterToggle={resetStatus}
+            selectedClassName="bg-blue text-white"
+          />
 
-          {/* Sensory */}
-          <div>
-            <p className="text-xs font-medium text-zinc mb-2">
-              Sensory {formState.sensory_tags.length > 0 && `(${formState.sensory_tags.length})`}
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {SENSORY_TAGS.map((tag) => {
-                const isSelected = formState.sensory_tags.includes(tag);
-                return (
-                  <button
-                    key={tag}
-                    type="button"
-                    aria-pressed={isSelected}
-                    onClick={() => {
-                      setFormState((prev) => ({
-                        ...prev,
-                        sensory_tags: isSelected
-                          ? prev.sensory_tags.filter((s) => s !== tag)
-                          : [...prev.sensory_tags, tag],
-                      }));
-                      resetStatus();
-                    }}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
-                      isSelected
-                        ? 'bg-stone-700 text-white'
-                        : 'bg-cloud/50 text-zinc hover:bg-cloud'
-                    }`}
-                  >
-                    {SENSORY_TAG_LABELS[tag]}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <ChipToggleGroup
+            label="Sensory"
+            options={SENSORY_TAGS}
+            optionLabels={SENSORY_TAG_LABELS}
+            selected={formState.sensory_tags}
+            onChange={(next) =>
+              setFormState((prev) => ({ ...prev, sensory_tags: next }))
+            }
+            onAfterToggle={resetStatus}
+            selectedClassName="bg-stone-700 text-white"
+          />
 
-          {/* Leave with */}
-          <div>
-            <p className="text-xs font-medium text-zinc mb-2">
-              Leave with {formState.leave_with.length > 0 && `(${formState.leave_with.length})`}
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {LEAVE_WITH.map((tag) => {
-                const isSelected = formState.leave_with.includes(tag);
-                return (
-                  <button
-                    key={tag}
-                    type="button"
-                    aria-pressed={isSelected}
-                    onClick={() => {
-                      setFormState((prev) => ({
-                        ...prev,
-                        leave_with: isSelected
-                          ? prev.leave_with.filter((s) => s !== tag)
-                          : [...prev.leave_with, tag],
-                      }));
-                      resetStatus();
-                    }}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
-                      isSelected
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-cloud/50 text-zinc hover:bg-cloud'
-                    }`}
-                  >
-                    {LEAVE_WITH_LABELS[tag]}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <ChipToggleGroup
+            label="Leave with"
+            options={LEAVE_WITH}
+            optionLabels={LEAVE_WITH_LABELS}
+            selected={formState.leave_with}
+            onChange={(next) =>
+              setFormState((prev) => ({ ...prev, leave_with: next }))
+            }
+            onAfterToggle={resetStatus}
+            selectedClassName="bg-emerald-600 text-white"
+          />
+
+          <ChipToggleGroup
+            label="Music genres"
+            options={MUSIC_GENRES}
+            optionLabels={MUSIC_GENRE_LABELS}
+            selected={formState.music_genres}
+            onChange={(next) =>
+              setFormState((prev) => ({ ...prev, music_genres: next }))
+            }
+            onAfterToggle={resetStatus}
+            selectedClassName="bg-blue text-white"
+          />
+
 
           {/* Social mode + energy needed (single-value enums) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

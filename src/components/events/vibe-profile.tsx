@@ -25,14 +25,17 @@ import {
   LEAVE_WITH_LABELS,
   SOCIAL_MODE_LABELS,
   ENERGY_NEEDED_LABELS,
+  MUSIC_GENRE_LABELS,
   isSensoryTag,
   isLeaveWith,
   isSocialMode,
   isEnergyNeeded,
+  isMusicGenre,
   type SensoryTag,
   type LeaveWith,
   type SocialMode,
   type EnergyNeeded,
+  type MusicGenre,
 } from '@/lib/constants/vocabularies';
 
 // =============================================================================
@@ -457,6 +460,37 @@ export function pickTopSensoryTag(
 // columns (sensory_tags, leave_with, social_mode, energy_needed) aren't in the
 // generated Database types yet. The runtime payload comes from
 // EventWithDetails which carries them as TS-only overlays.
+// =============================================================================
+// MUSIC GENRE PILL
+// =============================================================================
+// Brand-blue palette — ties visually to the Music category color. Genres are
+// a music-only signal, so this pill is scoped tightly: only rendered on
+// events where `music_genres` is populated (typically category=music).
+// Sub-genres (deep house, post-punk, etc.) live on the performer record.
+
+export function MusicGenrePill({
+  genre,
+  size = 'sm',
+  className,
+}: {
+  genre: MusicGenre;
+  size?: 'sm' | 'xs';
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full font-medium',
+        'bg-blue/10 text-blue',
+        size === 'sm' ? 'px-2.5 py-0.5 text-xs' : 'px-2 py-0.5 text-[10px]',
+        className
+      )}
+    >
+      {MUSIC_GENRE_LABELS[genre]}
+    </span>
+  );
+}
+
 type VibeEvent = Pick<
   EventRow,
   | 'energy_level'
@@ -469,6 +503,7 @@ type VibeEvent = Pick<
   leave_with?: readonly string[] | null;
   social_mode?: string | null;
   energy_needed?: string | null;
+  music_genres?: readonly string[] | null;
 };
 
 export function VibeProfileSection({
@@ -501,10 +536,14 @@ export function VibeProfileSection({
     event.energy_needed && isEnergyNeeded(event.energy_needed)
       ? event.energy_needed
       : null;
+  const musicGenres: MusicGenre[] = (event.music_genres ?? []).filter(
+    (g): g is MusicGenre => typeof g === 'string' && isMusicGenre(g)
+  );
 
   const hasSensory = sensoryTags.length > 0;
   const hasLeaveWith = leaveWithTags.length > 0;
   const hasSocialEnergy = socialMode != null || energyNeeded != null;
+  const hasMusicGenres = musicGenres.length > 0;
 
   if (
     !hasDimensions &&
@@ -512,7 +551,8 @@ export function VibeProfileSection({
     !hasCrowd &&
     !hasSensory &&
     !hasLeaveWith &&
-    !hasSocialEnergy
+    !hasSocialEnergy &&
+    !hasMusicGenres
   )
     return null;
 
@@ -559,6 +599,23 @@ export function VibeProfileSection({
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Music genres — only populated for music events. Under-tag bias
+          baked into the analyzer means this section hides for non-music
+          events and also for music events where the model couldn't tag
+          confidently (empty array beats a wrong guess). */}
+      {hasMusicGenres && (
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium text-zinc uppercase tracking-wide">
+            Music
+          </h3>
+          <div className="flex flex-wrap gap-1.5">
+            {musicGenres.map((genre) => (
+              <MusicGenrePill key={genre} genre={genre} />
+            ))}
+          </div>
         </div>
       )}
 

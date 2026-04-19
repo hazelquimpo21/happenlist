@@ -15,6 +15,7 @@ import type {
   EnergyNeeded,
   SliderDimension,
   ProTip,
+  MusicGenre,
 } from '@/lib/constants/vocabularies';
 
 /**
@@ -111,6 +112,8 @@ export interface EventWithDetails extends EventRow {
   leave_with?: LeaveWith[] | null;
   social_mode?: SocialMode | null;
   energy_needed?: EnergyNeeded | null;
+  // Music genres (scraper migration 00024). Only populated for music events.
+  music_genres?: MusicGenre[] | null;
   inferred_signals?: InferredSignals | null;
   // Pro tips — 0–2 persona-scoped insider notes (scraper migration 00023).
   pro_tips?: ProTip[] | null;
@@ -187,4 +190,6 @@ export interface EventCard {
   leave_with?: LeaveWith[];
   social_mode?: SocialMode | null;
   energy_needed?: EnergyNeeded | null;
+  // Music genres (scraper migration 00024). Only populated for music events.
+  music_genres?: MusicGenre[];
 }
