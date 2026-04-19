@@ -126,6 +126,8 @@ export interface EventCard {
   slug: string;
   start_datetime: string;
   instance_date: string;
+  /** When the row was inserted. Used by orderBy='newest'. */
+  created_at?: string | null;
   image_url: string | null;
   thumbnail_url: string | null;
   price_type: string;

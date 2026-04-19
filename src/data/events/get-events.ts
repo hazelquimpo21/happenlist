@@ -269,6 +269,7 @@ function transformToEventCard(row: Record<string, unknown>): EventCard {
     slug: row.slug as string,
     start_datetime: row.start_datetime as string,
     instance_date: row.instance_date as string,
+    created_at: (row.created_at as string | null) ?? null,
     image_url: row.image_url as string | null,
     thumbnail_url: row.thumbnail_url as string | null,
     price_type: row.price_type as string,
@@ -817,6 +818,20 @@ export async function getEvents(
   // we sorted earlier. This is the final ordering before pagination.
   if (orderBy === 'distance-asc' && distanceMap) {
     events.sort((a, b) => (a.distance_miles ?? Infinity) - (b.distance_miles ?? Infinity));
+  }
+
+  // Newest sort: same story — collapseSeriesInstances re-sorts by instance_date,
+  // so we have to re-apply created_at DESC after collapse or the slice below
+  // returns the soonest-dated events instead of the most-recently-added ones.
+  // (This was the bug behind "I added events and they don't show in the feed"
+  //  — newest events tend to have the FURTHEST future instance_date and were
+  //  getting pushed past the first-page cutoff.)
+  if (orderBy === 'newest') {
+    events.sort((a, b) => {
+      const ca = a.created_at ?? '';
+      const cb = b.created_at ?? '';
+      return cb.localeCompare(ca);
+    });
   }
 
   // Manual pagination when ANY post-fetch filter shrunk the result set.
