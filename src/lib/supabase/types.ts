@@ -1528,6 +1528,11 @@ export type Database = {
           image_hosted: boolean | null
           image_storage_path: string | null
           image_url: string | null
+          image_visual_score: number | null
+          raw_image_url: string | null
+          flyer_url: string | null
+          flyer_storage_path: string | null
+          flyer_hosted: boolean | null
           is_featured: boolean | null
           is_free: boolean | null
           location_id: string | null
@@ -1585,6 +1590,11 @@ export type Database = {
           image_hosted?: boolean | null
           image_storage_path?: string | null
           image_url?: string | null
+          image_visual_score?: number | null
+          raw_image_url?: string | null
+          flyer_url?: string | null
+          flyer_storage_path?: string | null
+          flyer_hosted?: boolean | null
           is_featured?: boolean | null
           is_free?: boolean | null
           location_id?: string | null
@@ -1642,6 +1652,11 @@ export type Database = {
           image_hosted?: boolean | null
           image_storage_path?: string | null
           image_url?: string | null
+          image_visual_score?: number | null
+          raw_image_url?: string | null
+          flyer_url?: string | null
+          flyer_storage_path?: string | null
+          flyer_hosted?: boolean | null
           is_featured?: boolean | null
           is_free?: boolean | null
           location_id?: string | null
