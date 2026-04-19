@@ -41,12 +41,27 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { ExternalLink } from 'lucide-react';
 import { Sticker, MarkerUnderline } from '@/components/ui';
 import { getCategoryIcon } from '@/components/icons/category-icons';
+import { HeartButton } from '@/components/hearts';
 import { ImageLightbox } from './image-lightbox';
 import { buildVenueUrl } from '@/lib/utils';
 import { formatDate, formatTime } from '@/lib/utils/dates';
 import type { CategoryColor } from '@/lib/constants/category-colors';
+import type { GoodForTag } from '@/types';
+
+// Access-type labels — kept inline so the dark hero can render its own pill
+// styling without pulling AccessBadge's light-mode color tokens.
+const ACCESS_LABELS: Record<string, string> = {
+  open: 'Just Show Up',
+  ticketed: 'Tickets',
+  rsvp: 'RSVP Required',
+  pay_at_door: 'Pay at Door',
+  registration: 'Register',
+  membership: 'Members Only',
+  invite_only: 'Invite Only',
+};
 
 // Stopwords we won't pick for the marker underline — common articles,
 // prepositions, and "happenlist"-meta words. Picks the last long
@@ -159,7 +174,7 @@ function TypeColumn({
   const dayLine = `${dateText.toUpperCase()}${event.is_all_day ? '' : ` · ${timeText.toUpperCase()}`}`;
 
   const underlineWord = pickUnderlineToken(event.title);
-  const markerColor = categoryColor.text === '#020203' ? '#008bd2' : '#d95927';
+  const markerColor = categoryColor.accent;
   const performers = event.event_performers ?? [];
 
   // Type scale — MODE B is ~25% larger because it carries the whole composition.
@@ -176,8 +191,8 @@ function TypeColumn({
           {event.category && (
             <Sticker
               variant="category"
-              bgColor={categoryColor.text === '#020203' ? '#020203' : '#FFFFFF'}
-              textColor={categoryColor.text === '#020203' ? '#FFFFFF' : categoryColor.bg}
+              bgColor={categoryColor.accent}
+              textColor="#FAFAFA"
               rotate={-3}
             >
               {event.category.name}
@@ -244,7 +259,7 @@ function TypeColumn({
           <span
             aria-hidden="true"
             className="inline-block w-1.5 h-1.5 rounded-full"
-            style={{ backgroundColor: categoryColor.text }}
+            style={{ backgroundColor: categoryColor.accent }}
           />
           <Link
             href={buildVenueUrl(event.location)}
@@ -267,12 +282,17 @@ function TypeColumn({
 
 interface PosterHeroProps {
   event: {
+    id: string;
     title: string;
     start_datetime: string;
     end_datetime?: string | null;
     is_all_day?: boolean | null;
     image_url?: string | null;
     flyer_url?: string | null;
+    heart_count?: number | null;
+    ticket_url?: string | null;
+    registration_url?: string | null;
+    website_url?: string | null;
     category?: { name: string; slug: string; icon?: string | null } | null;
     location?: {
       name: string;
@@ -293,41 +313,66 @@ interface PosterHeroProps {
   categoryColor: CategoryColor;
   /** Optional timing badge — renders as a sticker when present */
   timingBadge?: { label: string } | null;
+  /** Whether the current viewer has already hearted this event */
+  isHearted?: boolean;
+  /** Pill-row content (was the old StampedRow under the hero) */
+  priceSummary?: string | null;
+  ageSummary?: string | null;
+  accessType?: string | null;
+  isFree?: boolean;
+  goodForTags?: GoodForTag[];
 }
 
-export function PosterHero({ event, categoryColor, timingBadge }: PosterHeroProps) {
+export function PosterHero({
+  event,
+  categoryColor,
+  timingBadge,
+  isHearted = false,
+  priceSummary = null,
+  ageSummary = null,
+  accessType = null,
+  isFree = false,
+  goodForTags = [],
+}: PosterHeroProps) {
   // MODE SELECTION — image_url wins. Flyer stays in sidebar via
   // FlyerLightbox in TicketStub; we never crop a poster here.
   const hasImage = !!event.image_url;
 
   const CategoryIcon = event.category ? getCategoryIcon(event.category.icon ?? null) : null;
 
+  // Hero is now ALWAYS dark (#141416 night). Category color is preserved via
+  // categoryColor.accent for marker underline + accent dot + CTA fill.
+  const heroText = '#FAFAFA';
+  const accent = categoryColor.accent;
+
+  // Primary external link — same precedence as TicketStub's primary CTA.
+  const primaryLink = event.ticket_url || event.registration_url || event.website_url || null;
+  const primaryLabel = event.ticket_url ? 'Get Tickets' : event.registration_url ? 'RSVP' : 'Visit Site';
+
   return (
     <section
       className="relative w-full overflow-hidden"
-      style={{ backgroundColor: categoryColor.bg, color: categoryColor.text }}
+      style={{ backgroundColor: '#141416', color: heroText }}
     >
-      {/* Radial lighting for depth on the slab */}
+      {/* Radial lighting for depth — tinted with the category accent so the
+          dark slab still feels category-coded. */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 pointer-events-none opacity-60"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage:
-            'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.08) 0%, transparent 40%), radial-gradient(circle at 20% 80%, rgba(0,0,0,0.08) 0%, transparent 40%)',
+          backgroundImage: `radial-gradient(circle at 80% 20%, ${accent}26 0%, transparent 45%), radial-gradient(circle at 20% 90%, rgba(255,255,255,0.04) 0%, transparent 50%)`,
         }}
       />
 
-      {/* Ghosted category icon — MODE B only. Huge, ~8% opacity, parked on the
-          right half so it doesn't collide with type. Uses the tinted variant
-          of the slab color so it's visible on both light and dark slabs. */}
+      {/* Ghosted category icon — MODE B only. */}
       {!hasImage && CategoryIcon && (
         <div
           aria-hidden="true"
           className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-[20%] pointer-events-none"
           style={{
             width: 'min(720px, 70%)',
-            color: categoryColor.text,
-            opacity: 0.08,
+            color: accent,
+            opacity: 0.12,
           }}
         >
           <CategoryIcon className="w-full h-auto" />
@@ -402,7 +447,131 @@ export function PosterHero({ event, categoryColor, timingBadge }: PosterHeroProp
             />
           </div>
         )}
+
+        {/* Pill row + actions — replaces the old StampedRow that lived under
+            the hero. Lives inside the hero now so the dark slab carries
+            everything the visitor needs at a glance. */}
+        <HeroActions
+          eventId={event.id}
+          isHearted={isHearted}
+          heartCount={event.heart_count ?? 0}
+          primaryLink={primaryLink}
+          primaryLabel={primaryLabel}
+          accent={accent}
+          priceSummary={priceSummary}
+          ageSummary={ageSummary}
+          accessType={accessType}
+          isFree={isFree}
+          goodForTags={goodForTags}
+        />
       </div>
     </section>
+  );
+}
+
+// -----------------------------------------------------------------------------
+// HeroActions — pill row (price/age/access/good-for) + heart + primary link.
+// Designed against the dark hero slab; pills use white/10 surface + white
+// border for affordance, primary CTA uses the category accent.
+// -----------------------------------------------------------------------------
+
+interface HeroActionsProps {
+  eventId: string;
+  isHearted: boolean;
+  heartCount: number;
+  primaryLink: string | null;
+  primaryLabel: string;
+  accent: string;
+  priceSummary: string | null;
+  ageSummary: string | null;
+  accessType: string | null;
+  isFree: boolean;
+  goodForTags: GoodForTag[];
+}
+
+function HeroActions({
+  eventId,
+  isHearted,
+  heartCount,
+  primaryLink,
+  primaryLabel,
+  accent,
+  priceSummary,
+  ageSummary,
+  accessType,
+  isFree,
+  goodForTags,
+}: HeroActionsProps) {
+  const pills: React.ReactNode[] = [];
+
+  if (priceSummary) {
+    const isFreePill = priceSummary === 'FREE';
+    pills.push(
+      <Pill
+        key="price"
+        className={isFreePill ? 'bg-emerald/20 border-emerald/40 text-emerald-light' : ''}
+      >
+        {priceSummary}
+      </Pill>,
+    );
+  }
+  if (ageSummary) pills.push(<Pill key="age">{ageSummary}</Pill>);
+  if (accessType && ACCESS_LABELS[accessType]) {
+    const label = isFree && accessType === 'open' ? 'Free · Just Show Up' : ACCESS_LABELS[accessType];
+    pills.push(<Pill key="access">{label}</Pill>);
+  }
+  goodForTags.slice(0, 4).forEach((tag) => {
+    pills.push(
+      <Link
+        key={`gf-${tag.slug}`}
+        href={`/events?goodFor=${tag.slug}`}
+        className="inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-bold tracking-[0.08em] uppercase border border-white/20 bg-white/5 text-white/85 hover:bg-white/15 hover:text-white transition-colors"
+      >
+        {tag.label}
+      </Link>,
+    );
+  });
+
+  const hasPills = pills.length > 0;
+  const hasActions = !!primaryLink || true; // heart is always present
+
+  if (!hasPills && !hasActions) return null;
+
+  return (
+    <div className="mt-8 md:mt-10 flex flex-col gap-5">
+      {hasPills && <div className="flex flex-wrap gap-2">{pills}</div>}
+      <div className="flex flex-wrap items-center gap-3">
+        <HeartButton
+          eventId={eventId}
+          initialHearted={isHearted}
+          initialCount={heartCount}
+          showCount={true}
+          size="md"
+          className="!bg-white/10 !text-white !border !border-white/25 !rounded-full !px-4 !py-2 hover:!bg-white/20"
+        />
+        {primaryLink && (
+          <a
+            href={primaryLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold tracking-wide text-white shadow-lg hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: accent }}
+          >
+            {primaryLabel}
+            <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Pill({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <span
+      className={`inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-bold tracking-[0.08em] uppercase border border-white/20 bg-white/5 text-white/90 ${className}`}
+    >
+      {children}
+    </span>
   );
 }

@@ -75,7 +75,6 @@ import {
   getChildEventLabel,
 } from '@/lib/utils';
 import {
-  StampedRow,
   AboutSection,
   OrganizerQuote,
   GettingIn,
@@ -214,11 +213,13 @@ export default async function EventPage({ params }: EventPageProps) {
       />
       {adminToolbarEvent && <AdminToolbar event={adminToolbarEvent} isSuperAdmin={userIsSuperAdmin} />}
 
-      {/* 1. POSTER HERO */}
-      <PosterHero event={event} categoryColor={categoryColor} timingBadge={timingBadge} />
-
-      {/* 2. STAMPED QUICK-HITS ROW */}
-      <StampedRow
+      {/* 1. POSTER HERO — now carries the pill row + heart + primary CTA
+          that used to live in the StampedRow + TicketStub. */}
+      <PosterHero
+        event={event}
+        categoryColor={categoryColor}
+        timingBadge={timingBadge}
+        isHearted={isHearted}
         priceSummary={priceSummary}
         ageSummary={ageSummary}
         accessType={event.access_type ?? null}
