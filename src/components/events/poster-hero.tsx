@@ -351,9 +351,16 @@ export function PosterHero({
   const heroText = '#FAFAFA';
   const accent = categoryColor.accent;
 
-  // Primary external link — same precedence as TicketStub's primary CTA.
-  const primaryLink = event.ticket_url || event.registration_url || event.website_url || null;
-  const primaryLabel = event.ticket_url ? 'Get Tickets' : event.registration_url ? 'RSVP' : 'Visit Site';
+  // Primary external link — prefer the organizer's website (canonical source)
+  // over tickets. Happenlist is a directory; sending people to the ticket
+  // vendor first skips context. Falls through to registration / ticket url if
+  // no website exists. Label matches the destination.
+  const primaryLink = event.website_url || event.registration_url || event.ticket_url || null;
+  const primaryLabel = event.website_url
+    ? 'Visit Site'
+    : event.registration_url
+      ? 'RSVP'
+      : 'Get Tickets';
 
   return (
     <section
@@ -387,7 +394,8 @@ export function PosterHero({
 
       <div className="container mx-auto px-4 md:px-6 py-8 md:py-12 relative">
         {hasImage ? (
-          // ── MODE A: image + type column grid ──
+          // ── MODE A: image + type column grid. Pills + actions live INSIDE
+          // the right column so they sit next to the image, not below it. ──
           <div className="grid grid-cols-1 md:grid-cols-[1fr_1.1fr] gap-8 md:gap-12 items-center">
             <ImageLightbox
               src={event.image_url as string}
@@ -431,18 +439,32 @@ export function PosterHero({
               </div>
             </ImageLightbox>
 
-            <TypeColumn
-              event={event}
-              categoryColor={categoryColor}
-              scale="regular"
-              showInlineStickers={false}
-              timingBadge={timingBadge ?? null}
-            />
+            <div>
+              <TypeColumn
+                event={event}
+                categoryColor={categoryColor}
+                scale="regular"
+                showInlineStickers={false}
+                timingBadge={timingBadge ?? null}
+              />
+              <HeroActions
+                eventId={event.id}
+                isHearted={isHearted}
+                heartCount={event.heart_count ?? 0}
+                primaryLink={primaryLink}
+                primaryLabel={primaryLabel}
+                accent={accent}
+                priceSummary={priceSummary}
+                ageSummary={ageSummary}
+                accessType={accessType}
+                isFree={isFree}
+                goodForTags={goodForTags}
+              />
+            </div>
           </div>
         ) : (
-          // ── MODE B: typographic-only, single column, left-aligned ──
-          // Max-width constrained so the type stays readable on wide viewports;
-          // the ghosted category icon fills the right side visually.
+          // ── MODE B: typographic-only, single column, left-aligned. Actions
+          // sit below the type block since there's no image to anchor them. ──
           <div className="max-w-3xl">
             <TypeColumn
               event={event}
@@ -451,25 +473,21 @@ export function PosterHero({
               showInlineStickers={true}
               timingBadge={timingBadge ?? null}
             />
+            <HeroActions
+              eventId={event.id}
+              isHearted={isHearted}
+              heartCount={event.heart_count ?? 0}
+              primaryLink={primaryLink}
+              primaryLabel={primaryLabel}
+              accent={accent}
+              priceSummary={priceSummary}
+              ageSummary={ageSummary}
+              accessType={accessType}
+              isFree={isFree}
+              goodForTags={goodForTags}
+            />
           </div>
         )}
-
-        {/* Pill row + actions — replaces the old StampedRow that lived under
-            the hero. Lives inside the hero now so the dark slab carries
-            everything the visitor needs at a glance. */}
-        <HeroActions
-          eventId={event.id}
-          isHearted={isHearted}
-          heartCount={event.heart_count ?? 0}
-          primaryLink={primaryLink}
-          primaryLabel={primaryLabel}
-          accent={accent}
-          priceSummary={priceSummary}
-          ageSummary={ageSummary}
-          accessType={accessType}
-          isFree={isFree}
-          goodForTags={goodForTags}
-        />
       </div>
     </section>
   );
