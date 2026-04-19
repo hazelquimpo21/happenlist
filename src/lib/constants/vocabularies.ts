@@ -16,6 +16,7 @@
  *   - VIBE_TAGS          (atmosphere analyzer → events.vibe_tags TEXT[])
  *   - SUBCULTURES        (atmosphere analyzer → events.subcultures TEXT[])
  *   - NOISE_LEVELS       (atmosphere analyzer → events.noise_level TEXT)
+ *   - MUSIC_GENRES       (atmosphere analyzer → events.music_genres TEXT[])
  *   - GOOD_FOR_SLUGS     (event-meta analyzer → events.good_for TEXT[])
  *   - ATTENDANCE_MODES   (event-meta analyzer → events.attendance_mode TEXT)
  *   - ACCESS_TYPES       (pricing analyzer → events.access_type TEXT)
@@ -127,6 +128,57 @@ export type Subculture = (typeof SUBCULTURES)[number];
 export const NOISE_LEVELS = ['quiet', 'conversational', 'loud', 'deafening'] as const;
 
 export type NoiseLevel = (typeof NOISE_LEVELS)[number];
+
+// -----------------------------------------------------------------------------
+// MUSIC GENRES (atmosphere analyzer → events.music_genres)
+// -----------------------------------------------------------------------------
+// Broad musical-style tags for events where music IS the content (concerts,
+// DJ sets, music festivals). Empty array for non-music events and for events
+// where music is incidental.
+//
+// Kept coarse on purpose — sub-genres (deep house, post-punk, etc.) belong on
+// the performer record, not the event. Source of truth:
+// happenlist_scraper/backend/lib/vocabularies.js (MUSIC_GENRES).
+// Migration 00024 adds events.music_genres TEXT[] with a GIN index.
+export const MUSIC_GENRES = [
+  'rock',
+  'indie',
+  'jazz',
+  'hip_hop',
+  'electronic',
+  'country',
+  'folk',
+  'classical',
+  'metal',
+  'pop',
+  'r_and_b',
+  'latin',
+  'world_global',
+  'punk',
+  'blues',
+  'experimental',
+] as const;
+
+export type MusicGenre = (typeof MUSIC_GENRES)[number];
+
+export const MUSIC_GENRE_LABELS: Record<MusicGenre, string> = {
+  rock: 'Rock',
+  indie: 'Indie',
+  jazz: 'Jazz',
+  hip_hop: 'Hip-hop',
+  electronic: 'Electronic',
+  country: 'Country',
+  folk: 'Folk',
+  classical: 'Classical',
+  metal: 'Metal',
+  pop: 'Pop',
+  r_and_b: 'R&B / Soul',
+  latin: 'Latin',
+  world_global: 'Global',
+  punk: 'Punk',
+  blues: 'Blues',
+  experimental: 'Experimental',
+};
 
 // -----------------------------------------------------------------------------
 // GOOD FOR SLUGS (event-meta analyzer)
