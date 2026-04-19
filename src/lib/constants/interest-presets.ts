@@ -33,7 +33,7 @@
  * =============================================================================
  */
 
-import type { GoodForSlug } from './vocabularies';
+import type { GoodForSlug, Subculture } from './vocabularies';
 
 /**
  * A single interest preset definition.
@@ -44,6 +44,13 @@ import type { GoodForSlug } from './vocabularies';
  * @property description One-line explanation, used for tooltips and a11y.
  * @property goodFor     Union of `good_for` slugs this preset expands into.
  *                       The query layer ORs these together (any-match).
+ *                       Can be empty if the preset is subculture-driven.
+ * @property subcultures Optional union of `subcultures` slugs. Events whose
+ *                       `subcultures` column overlaps this set pass the
+ *                       filter. Used for scene-based pills (Comedy, Queer,
+ *                       Theater) where the signal lives in subcultures, not
+ *                       good_for. Merged into the user's direct subculture
+ *                       selection at query time.
  * @property vibeTags    Reserved for Phase 3 (Session B7). Currently unused —
  *                       see file header. Type kept open so adding presets
  *                       later is a one-line change, not a refactor.
@@ -53,6 +60,7 @@ export interface InterestPreset {
   label: string;
   description: string;
   goodFor: readonly GoodForSlug[];
+  subcultures?: readonly Subculture[];
   vibeTags?: readonly string[];
 }
 
@@ -117,6 +125,32 @@ export const INTEREST_PRESETS = [
     description: 'Beginner-friendly, low barrier, welcoming newcomers',
     goodFor: ['first_timers'],
   },
+  // ── Subculture-driven pills (2026-04) ───────────────────────────────────────
+  // These match on `subcultures[]` instead of good_for. The signal lives in the
+  // scene/identity tag, not the audience tag. Audit on the live dataset showed
+  // queer (44/188), theater-kids (6/188), and comedy (added to vocab same ship)
+  // were the strongest non-music clusters with no pill exposure.
+  {
+    id: 'comedy',
+    label: 'Comedy',
+    description: 'Stand-up, improv, comedy clubs, open mic comedy',
+    goodFor: [],
+    subcultures: ['comedy'],
+  },
+  {
+    id: 'queer',
+    label: 'Queer',
+    description: 'LGBTQ+ events, drag, queer-centered programming',
+    goodFor: [],
+    subcultures: ['queer'],
+  },
+  {
+    id: 'theater',
+    label: 'Theater',
+    description: 'Plays, musicals, performances for theater lovers',
+    goodFor: [],
+    subcultures: ['theater-kids'],
+  },
 ] as const satisfies readonly InterestPreset[];
 
 export type InterestPresetId = (typeof INTEREST_PRESETS)[number]['id'];
@@ -142,4 +176,15 @@ export function getInterestPreset(id: string): InterestPreset | null {
 export function resolveInterestPresetGoodFor(id: string): GoodForSlug[] {
   const preset = PRESET_BY_ID.get(id);
   return preset ? [...preset.goodFor] : [];
+}
+
+/**
+ * Resolve a preset id to its underlying subcultures union.
+ * Returns an empty array when the preset has no subcultures (the goodFor-only
+ * pills) OR when the id is unknown. Callers merge with any direct subculture
+ * filter at query time.
+ */
+export function resolveInterestPresetSubcultures(id: string): Subculture[] {
+  const preset = PRESET_BY_ID.get(id);
+  return preset?.subcultures ? [...preset.subcultures] : [];
 }

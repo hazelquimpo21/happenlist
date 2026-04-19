@@ -115,6 +115,7 @@ export const SUBCULTURES = [
   'vintage',
   'academia',
   'maker',
+  'comedy',
 ] as const;
 
 export type Subculture = (typeof SUBCULTURES)[number];

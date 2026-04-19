@@ -29,7 +29,10 @@ import {
   matchesTimeOfDay,
   type TimeOfDay,
 } from '@/lib/constants/time-of-day';
-import { resolveInterestPresetGoodFor } from '@/lib/constants/interest-presets';
+import {
+  resolveInterestPresetGoodFor,
+  resolveInterestPresetSubcultures,
+} from '@/lib/constants/interest-presets';
 import {
   DEFAULT_RADIUS_MILES,
   MAX_RADIUS_MILES,
@@ -385,6 +388,21 @@ export async function getEvents(
   // Normalize the new multi-value params up front so the rest of the function
   // works against typed, deduped, validated arrays.
   const goodForSlugs = resolveGoodForFilter(goodFor, interestPreset);
+  // Subculture-driven presets (Comedy, Queer, Theater) resolve to an array
+  // here. Merged with any direct single-value `subculture` filter so the two
+  // inputs compose naturally: (direct OR preset) via PostgREST `.overlaps()`.
+  // Stale ids resolve empty and fall through to the direct single-value path.
+  const presetSubcultures = interestPreset
+    ? resolveInterestPresetSubcultures(interestPreset)
+    : [];
+  // Merge direct subculture param (single value, legacy) with any subcultures
+  // contributed by the active interest preset. Used both for query-time filter
+  // (.contains / .overlaps below) and the active-filters log above. Computed
+  // here so it's in scope for both.
+  const allSubcultures = Array.from(new Set<string>([
+    ...(subculture ? [subculture] : []),
+    ...presetSubcultures,
+  ]));
   const timeOfDayBuckets = normalizeStringArray<TimeOfDay>(timeOfDay, isTimeOfDay);
   const priceTierSlugs = normalizeStringArray(priceTier, isPriceTierSlug);
   const ageGroupSlugs = normalizeStringArray(ageGroup, isAgeGroupSlug);
@@ -409,7 +427,7 @@ export async function getEvents(
   if (locationId) activeFilters.locationId = locationId;
   if (organizerId) activeFilters.organizerId = organizerId;
   if (vibeTag) activeFilters.vibeTag = vibeTag;
-  if (subculture) activeFilters.subculture = subculture;
+  if (allSubcultures.length > 0) activeFilters.subcultures = allSubcultures;
   if (noiseLevel) activeFilters.noiseLevel = noiseLevel;
   if (accessType) activeFilters.accessType = accessType;
   if (familyFriendly) activeFilters.familyFriendly = familyFriendly;
@@ -565,8 +583,14 @@ export async function getEvents(
     query = query.contains('vibe_tags', [vibeTag]);
   }
 
-  if (subculture) {
-    query = query.contains('subcultures', [subculture]);
+  // Apply the merged subculture filter computed at the top of the function.
+  // Single value → cheaper .contains() path; multi → .overlaps() for OR.
+  if (allSubcultures.length === 1) {
+    // Single value keeps the cheaper .contains() path (equivalent semantics
+    // for array @> array[value]).
+    query = query.contains('subcultures', allSubcultures);
+  } else if (allSubcultures.length > 1) {
+    query = query.overlaps('subcultures', allSubcultures);
   }
 
   if (noiseLevel) {
