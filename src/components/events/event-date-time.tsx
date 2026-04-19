@@ -27,7 +27,7 @@
  */
 
 import { Clock, Calendar, Sun } from 'lucide-react';
-import { format, parseISO, isSameDay } from 'date-fns';
+import { formatMKEPattern, isSameMKEDay } from '@/lib/utils/dates';
 import { cn } from '@/lib/utils';
 
 // ============================================================================
@@ -58,42 +58,26 @@ interface EventDateTimeProps {
 // ============================================================================
 
 /**
- * Formats a time from a datetime string.
- * Returns format like "7:00 PM"
+ * Formats a time from a datetime string in America/Chicago.
+ * Returns format like "7:00 PM".
  */
 function formatTime(datetime: string): string {
-  try {
-    const date = parseISO(datetime);
-    return format(date, 'h:mm a');
-  } catch (error) {
-    console.error('⚠️ [EventDateTime] Error formatting time:', error);
-    return '';
-  }
+  return formatMKEPattern(datetime, 'h:mm a');
 }
 
 /**
- * Formats a date from a datetime string.
- * Returns format like "Feb 14" or "Friday, Feb 14"
+ * Formats a date from a datetime string in America/Chicago.
+ * Returns format like "Feb 14" or "Friday, Feb 14".
  */
 function formatDate(datetime: string, includeDay = false): string {
-  try {
-    const date = parseISO(datetime);
-    return includeDay ? format(date, 'EEEE, MMM d') : format(date, 'MMM d');
-  } catch (error) {
-    console.error('⚠️ [EventDateTime] Error formatting date:', error);
-    return '';
-  }
+  return formatMKEPattern(datetime, includeDay ? 'EEEE, MMM d' : 'MMM d');
 }
 
 /**
- * Checks if two datetimes are on the same day.
+ * Checks if two datetimes fall on the same Chicago calendar day.
  */
 function areSameDay(datetime1: string, datetime2: string): boolean {
-  try {
-    return isSameDay(parseISO(datetime1), parseISO(datetime2));
-  } catch {
-    return false;
-  }
+  return isSameMKEDay(datetime1, datetime2);
 }
 
 // ============================================================================

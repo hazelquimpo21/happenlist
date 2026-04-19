@@ -4,16 +4,22 @@
  * Formatting and manipulation functions for dates.
  *
  * TIMEZONE HANDLING:
- * All display formatting uses America/Chicago (Milwaukee) timezone via
- * Intl.DateTimeFormat. This ensures server (UTC) and client (local TZ)
- * produce identical strings, preventing React hydration mismatches.
+ * All event times are America/Chicago. Every formatter in this file renders
+ * in Chicago regardless of runtime TZ (Vercel server = UTC, client = whatever).
+ *
+ * The core primitive is `toMKE(date)` which returns a "proxy" Date whose
+ * local-time accessors (getHours/getDate/etc.) return Chicago wall-clock
+ * values. Passing that proxy to date-fns's `format()` or `isToday()` then
+ * yields Chicago-correct output even though date-fns itself is TZ-naive.
+ *
+ * Do NOT call date-fns `format()` on a raw `new Date(iso)` — on UTC runtimes
+ * it renders UTC hours. Always go through toMKE() or the helpers here.
  */
 
 import {
   format,
-  parseISO,
-  isToday,
-  isTomorrow,
+  isSameDay,
+  differenceInCalendarDays,
   startOfDay,
   endOfDay,
   startOfWeek,
@@ -30,6 +36,114 @@ import {
 // ---------------------------------------------------------------------------
 
 const MKE_TZ = 'America/Chicago';
+
+/**
+ * Convert any Date (an instant) to a proxy Date whose **local** accessors
+ * (getHours, getDate, getDay, …) return Chicago wall-clock values.
+ *
+ * This is the foundation for passing a Date to date-fns formatters that
+ * only know about the runtime's local TZ. The proxy is NOT the same instant
+ * as the input — don't use it for anything except display formatting.
+ */
+export function toMKE(input: Date | string): Date {
+  // Date-only strings ("YYYY-MM-DD" from e.g. instance_date) have no time
+  // or zone component. Treat them as a Chicago calendar date — don't shift
+  // them through a TZ conversion, or midnight UTC slides to the previous day.
+  if (typeof input === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(input)) {
+    return new Date(`${input}T00:00:00`);
+  }
+
+  const d = typeof input === 'string' ? new Date(input) : input;
+  if (isNaN(d.getTime())) return d;
+
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: MKE_TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  })
+    .formatToParts(d)
+    .reduce<Record<string, string>>((acc, p) => {
+      if (p.type !== 'literal') acc[p.type] = p.value;
+      return acc;
+    }, {});
+
+  // Intl returns "24" for midnight under hourCycle h23 on some locales.
+  const hour = parts.hour === '24' ? '00' : parts.hour;
+  return new Date(
+    `${parts.year}-${parts.month}-${parts.day}T${hour}:${parts.minute}:${parts.second}`
+  );
+}
+
+/**
+ * date-fns `format()` wrapper that renders in America/Chicago.
+ * Pass any datetime-shaped input (ISO string, Date, or parseable string).
+ */
+export function formatMKEPattern(input: Date | string, pattern: string): string {
+  try {
+    return format(toMKE(input), pattern);
+  } catch {
+    return '';
+  }
+}
+
+/** True iff the given instant falls on today's Chicago calendar date. */
+export function isMKEToday(input: Date | string): boolean {
+  try {
+    return isSameDay(toMKE(input), toMKE(new Date()));
+  } catch {
+    return false;
+  }
+}
+
+/** True iff the given instant falls on tomorrow's Chicago calendar date. */
+export function isMKETomorrow(input: Date | string): boolean {
+  try {
+    return isSameDay(toMKE(input), toMKE(new Date(Date.now() + 86_400_000)));
+  } catch {
+    return false;
+  }
+}
+
+/** True iff both instants fall on the same Chicago calendar date. */
+export function isSameMKEDay(a: Date | string, b: Date | string): boolean {
+  try {
+    return isSameDay(toMKE(a), toMKE(b));
+  } catch {
+    return false;
+  }
+}
+
+/** Calendar-day delta between two instants, measured in Chicago. */
+export function mkeDifferenceInCalendarDays(
+  later: Date | string,
+  earlier: Date | string
+): number {
+  try {
+    return differenceInCalendarDays(toMKE(later), toMKE(earlier));
+  } catch {
+    return 0;
+  }
+}
+
+/** True iff the instant's Chicago wall-clock is exactly 00:00. */
+export function isMKEMidnight(input: Date | string): boolean {
+  const d = toMKE(input);
+  return d.getHours() === 0 && d.getMinutes() === 0;
+}
+
+/**
+ * Today's Chicago calendar date as "YYYY-MM-DD". Use this for comparing
+ * against date-only columns like `instance_date` where the value has no
+ * time component and shouldn't be shifted by a timezone conversion.
+ */
+export function mkeTodayDateOnly(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: MKE_TZ });
+}
 
 /**
  * Common date format presets for display.
@@ -172,27 +286,27 @@ export function formatEventDate(
   options: FormatEventDateOptions = {}
 ): string {
   const { format: fmt = 'short', includeTime = true } = options;
-  const date = parseISO(dateString);
+  const mke = toMKE(dateString);
 
   // Relative format
   if (fmt === 'relative') {
-    if (isToday(date)) {
-      return includeTime ? `Today at ${format(date, 'h:mm a')}` : 'Today';
+    if (isMKEToday(dateString)) {
+      return includeTime ? `Today at ${format(mke, 'h:mm a')}` : 'Today';
     }
-    if (isTomorrow(date)) {
-      return includeTime ? `Tomorrow at ${format(date, 'h:mm a')}` : 'Tomorrow';
+    if (isMKETomorrow(dateString)) {
+      return includeTime ? `Tomorrow at ${format(mke, 'h:mm a')}` : 'Tomorrow';
     }
   }
 
   // Short format: "Feb 14 - 7:00 PM"
   if (fmt === 'short') {
-    const dateStr = format(date, 'MMM d');
-    return includeTime ? `${dateStr} - ${format(date, 'h:mm a')}` : dateStr;
+    const dateStr = format(mke, 'MMM d');
+    return includeTime ? `${dateStr} - ${format(mke, 'h:mm a')}` : dateStr;
   }
 
   // Long format: "Friday, February 14, 2025 at 7:00 PM"
-  const dateStr = format(date, 'EEEE, MMMM d, yyyy');
-  return includeTime ? `${dateStr} at ${format(date, 'h:mm a')}` : dateStr;
+  const dateStr = format(mke, 'EEEE, MMMM d, yyyy');
+  return includeTime ? `${dateStr} at ${format(mke, 'h:mm a')}` : dateStr;
 }
 
 /**
@@ -204,11 +318,11 @@ export function formatEventDate(
  */
 export function formatDateRange(start?: string, end?: string): string {
   if (!start && !end) return '';
-  if (!start) return `Until ${format(parseISO(end!), 'MMM d')}`;
-  if (!end) return `From ${format(parseISO(start), 'MMM d')}`;
+  if (!start) return `Until ${format(toMKE(end!), 'MMM d')}`;
+  if (!end) return `From ${format(toMKE(start), 'MMM d')}`;
 
-  const startDate = parseISO(start);
-  const endDate = parseISO(end);
+  const startDate = toMKE(start);
+  const endDate = toMKE(end);
 
   if (format(startDate, 'MMM') === format(endDate, 'MMM')) {
     // Same month: "Feb 14 - 16"
@@ -319,8 +433,7 @@ export function parseMonthName(monthName: string): number {
  */
 export function formatDate(dateString: string, pattern: string = 'MMM d, yyyy'): string {
   try {
-    const date = parseISO(dateString);
-    return format(date, pattern);
+    return format(toMKE(dateString), pattern);
   } catch {
     return dateString;
   }
@@ -335,8 +448,7 @@ export function formatDate(dateString: string, pattern: string = 'MMM d, yyyy'):
  */
 export function formatTime(datetimeString: string, pattern: string = 'h:mm a'): string {
   try {
-    const date = parseISO(datetimeString);
-    return format(date, pattern);
+    return format(toMKE(datetimeString), pattern);
   } catch {
     return '';
   }

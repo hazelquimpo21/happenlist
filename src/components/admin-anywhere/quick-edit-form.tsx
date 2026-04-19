@@ -19,7 +19,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { format } from 'date-fns';
+import { formatMKEPattern } from '@/lib/utils/dates';
 import {
   Save,
   Trash2,
@@ -104,8 +104,7 @@ const PRICE_TYPES = [
 function formatDateTimeLocal(dateString: string | null): string {
   if (!dateString) return '';
   try {
-    const date = new Date(dateString);
-    return format(date, "yyyy-MM-dd'T'HH:mm");
+    return formatMKEPattern(dateString, "yyyy-MM-dd'T'HH:mm");
   } catch {
     return '';
   }

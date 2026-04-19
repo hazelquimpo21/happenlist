@@ -25,7 +25,7 @@
 
 import Link from 'next/link';
 import { History } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatMKEPattern } from '@/lib/utils/dates';
 import { getPastSeriesInstances } from '@/data/series';
 import { buildEventUrl } from '@/lib/utils/url';
 
@@ -46,14 +46,8 @@ interface PastInstancesProps {
  * crash the detail page.
  */
 function formatPastDate(instance_date: string | null, start_datetime: string): string {
-  try {
-    const dateStr = instance_date ?? start_datetime;
-    const date = new Date(dateStr);
-    if (Number.isNaN(date.getTime())) return dateStr;
-    return format(date, 'EEE, MMM d, yyyy');
-  } catch {
-    return instance_date ?? start_datetime;
-  }
+  const dateStr = instance_date ?? start_datetime;
+  return formatMKEPattern(dateStr, 'EEE, MMM d, yyyy') || dateStr;
 }
 
 export async function PastInstances({

@@ -39,13 +39,13 @@ import Link from 'next/link';
 import { usePeek } from '@/contexts/peek-context';
 import { MapPin, Baby, Users, Repeat } from 'lucide-react';
 import {
-  isToday,
-  isTomorrow,
-  differenceInCalendarDays,
-  format,
-  getHours,
-  getMinutes,
-} from 'date-fns';
+  toMKE,
+  isMKEToday,
+  isMKETomorrow,
+  isMKEMidnight,
+  mkeDifferenceInCalendarDays,
+  formatMKEPattern,
+} from '@/lib/utils/dates';
 import { buildEventUrl } from '@/lib/utils/url';
 import { cn } from '@/lib/utils';
 import { getChildEventLabel } from '@/lib/utils/parent-event-labels';
@@ -94,25 +94,18 @@ interface EventCardProps {
 
 /**
  * Format time portion: "7pm", "12pm", "7:30pm".
- * Drops minutes when they're :00.
+ * Drops minutes when they're :00. Always in America/Chicago.
  */
-function formatTime(date: Date): string {
-  const minutes = getMinutes(date);
-  if (minutes === 0) {
-    return format(date, 'haaa'); // "7pm"
+function formatTime(dateString: string): string {
+  const mke = toMKE(dateString);
+  if (mke.getMinutes() === 0) {
+    return formatMKEPattern(dateString, 'haaa'); // "7pm"
   }
-  return format(date, 'h:mmaaa'); // "7:30pm"
+  return formatMKEPattern(dateString, 'h:mmaaa'); // "7:30pm"
 }
 
 /**
- * Check whether the event time is midnight (all-day proxy).
- */
-function isMidnightOrAllDay(date: Date): boolean {
-  return getHours(date) === 0 && getMinutes(date) === 0;
-}
-
-/**
- * Format event date for card display.
+ * Format event date for card display. All comparisons in America/Chicago.
  *
  * Rules:
  *   Today → "Today · 7pm"
@@ -123,28 +116,26 @@ function isMidnightOrAllDay(date: Date): boolean {
  */
 function formatEventDate(dateString: string): string {
   try {
-    const date = new Date(dateString);
-    const now = new Date();
-    const allDay = isMidnightOrAllDay(date);
-    const timePart = allDay ? '' : ` · ${formatTime(date)}`;
+    const allDay = isMKEMidnight(dateString);
+    const timePart = allDay ? '' : ` · ${formatTime(dateString)}`;
 
-    if (isToday(date)) {
+    if (isMKEToday(dateString)) {
       return allDay ? 'Today' : `Today${timePart}`;
     }
 
-    if (isTomorrow(date)) {
+    if (isMKETomorrow(dateString)) {
       return allDay ? 'Tomorrow' : `Tomorrow${timePart}`;
     }
 
-    const daysOut = differenceInCalendarDays(date, now);
+    const daysOut = mkeDifferenceInCalendarDays(dateString, new Date());
 
     if (daysOut >= 2 && daysOut <= 6) {
       // Within this week — abbreviated day name
-      return `${format(date, 'EEE')}${timePart}`;
+      return `${formatMKEPattern(dateString, 'EEE')}${timePart}`;
     }
 
     // Further out — "Apr 12" format
-    return `${format(date, 'MMM d')}${timePart}`;
+    return `${formatMKEPattern(dateString, 'MMM d')}${timePart}`;
   } catch {
     console.warn(`⚠️ [EventCard] Invalid date: ${dateString}`);
     return '';

@@ -5,7 +5,7 @@
  */
 
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { formatMKEPattern } from '@/lib/utils/dates';
 import {
   Clock,
   CheckCircle,
@@ -174,7 +174,7 @@ export default async function AdminDashboardPage() {
                           {event.title}
                         </p>
                         <p className="text-sm text-zinc mt-0.5">
-                          {format(new Date(event.start_datetime), 'MMM d, yyyy')}
+                          {formatMKEPattern(event.start_datetime, 'MMM d, yyyy')}
                           {event.location_name && ` • ${event.location_name}`}
                         </p>
                       </div>
@@ -249,7 +249,7 @@ export default async function AdminDashboardPage() {
                         {activity.action.replace('_', ' ')}
                       </p>
                       <p className="text-xs text-zinc mt-0.5">
-                        {format(new Date(activity.created_at!), 'MMM d, h:mm a')}
+                        {formatMKEPattern(activity.created_at!, 'MMM d, h:mm a')}
                       </p>
                     </div>
                   </div>

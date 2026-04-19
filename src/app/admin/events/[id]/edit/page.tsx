@@ -13,7 +13,7 @@
 
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { formatMKEPattern } from '@/lib/utils/dates';
 import {
   ArrowLeft,
   Shield,
@@ -86,8 +86,8 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
   timer.success(`Loaded event for editing: ${event.title}`);
 
   // Format dates for display
-  const eventDate = format(new Date(event.start_datetime), 'EEEE, MMMM d, yyyy');
-  const eventTime = format(new Date(event.start_datetime), 'h:mm a');
+  const eventDate = formatMKEPattern(event.start_datetime, 'EEEE, MMMM d, yyyy');
+  const eventTime = formatMKEPattern(event.start_datetime, 'h:mm a');
 
   return (
     <div className="min-h-screen">
@@ -198,13 +198,13 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
                 <div className="flex justify-between">
                   <dt className="text-zinc">Created</dt>
                   <dd className="text-ink">
-                    {format(new Date(event.created_at!), 'MMM d, yyyy')}
+                    {formatMKEPattern(event.created_at!, 'MMM d, yyyy')}
                   </dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-zinc">Updated</dt>
                   <dd className="text-ink">
-                    {format(new Date(event.updated_at!), 'MMM d, yyyy')}
+                    {formatMKEPattern(event.updated_at!, 'MMM d, yyyy')}
                   </dd>
                 </div>
                 {event.reviewed_by && (
@@ -244,7 +244,7 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
                           </p>
                         )}
                         <p className="text-zinc/70 text-xs mt-1">
-                          {format(new Date(entry.created_at!), 'MMM d, h:mm a')}
+                          {formatMKEPattern(entry.created_at!, 'MMM d, h:mm a')}
                         </p>
                       </div>
                     </div>

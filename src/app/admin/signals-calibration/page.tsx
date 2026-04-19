@@ -29,7 +29,7 @@
 
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { formatMKEPattern } from '@/lib/utils/dates';
 import { Activity, BarChart3, Users, AlertTriangle } from 'lucide-react';
 import { AdminHeader, AdminBreadcrumbs } from '@/components/admin';
 import { Card } from '@/components/ui/card';
@@ -191,7 +191,7 @@ export default async function SignalsCalibrationPage() {
         )}
 
         <p className="text-[11px] text-zinc/70">
-          Generated {format(new Date(data.generatedAt), 'MMM d, yyyy h:mm a')}
+          Generated {formatMKEPattern(data.generatedAt, 'MMM d, yyyy h:mm a')}
         </p>
       </div>
     </div>
@@ -295,7 +295,7 @@ function ActivityRow({ row }: { row: CalibrationActivityRow }) {
         {row.note && <p className="text-xs text-zinc mt-0.5 truncate">{row.note}</p>}
       </div>
       <p className="text-[11px] text-zinc/70 flex-shrink-0">
-        {format(new Date(row.reviewed_at), 'MMM d, h:mm a')}
+        {formatMKEPattern(row.reviewed_at, 'MMM d, h:mm a')}
       </p>
     </li>
   );

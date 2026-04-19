@@ -11,7 +11,7 @@
 
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { formatMKEPattern } from '@/lib/utils/dates';
 import { PlusCircle, Clock, CheckCircle, AlertCircle, XCircle, Edit2 } from 'lucide-react';
 import { getSession } from '@/lib/auth';
 import { getUserSubmissions, getSubmissionCounts } from '@/data/submit';
@@ -192,7 +192,7 @@ export default async function MySubmissionsPage() {
 
                     <div className="flex items-center space-x-4 mt-1 text-sm text-zinc">
                       <span>
-                        {format(new Date(submission.instance_date), 'MMM d, yyyy')}
+                        {formatMKEPattern(submission.instance_date, 'MMM d, yyyy')}
                       </span>
                       {submission.location_name && (
                         <span>• {submission.location_name}</span>
@@ -266,7 +266,7 @@ export default async function MySubmissionsPage() {
                   )}
 
                   <span className="text-xs text-zinc ml-auto">
-                    Submitted {format(new Date(submission.created_at), 'MMM d, yyyy')}
+                    Submitted {formatMKEPattern(submission.created_at, 'MMM d, yyyy')}
                   </span>
                 </div>
               </div>

@@ -4,7 +4,7 @@
  * Admin audit log showing all recent admin actions.
  */
 
-import { format } from 'date-fns';
+import { formatMKEPattern } from '@/lib/utils/dates';
 import {
   CheckCircle,
   XCircle,
@@ -140,7 +140,7 @@ export default async function ActivityLogPage({ searchParams }: PageProps) {
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-zinc">
-                        {format(new Date(activity.created_at!), 'MMM d, h:mm a')}
+                        {formatMKEPattern(activity.created_at!, 'MMM d, h:mm a')}
                       </span>
                     </td>
                   </tr>

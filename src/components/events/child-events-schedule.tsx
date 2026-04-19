@@ -16,7 +16,11 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { MapPin, Clock } from 'lucide-react';
-import { format, isToday, parseISO } from 'date-fns';
+import {
+  toMKE,
+  formatMKEPattern,
+  mkeTodayDateOnly,
+} from '@/lib/utils/dates';
 import { buildEventUrl } from '@/lib/utils/url';
 import { getCategoryColor } from '@/lib/constants/category-colors';
 import { cn } from '@/lib/utils';
@@ -46,13 +50,13 @@ function groupByDate(events: EventCard[]): Map<string, EventCard[]> {
 
 /**
  * Format time from a datetime string — "7pm", "7:30pm".
+ * Always renders in America/Chicago.
  */
 function formatTime(datetime: string): string {
   try {
-    const date = parseISO(datetime);
-    const minutes = date.getMinutes();
-    if (minutes === 0) return format(date, 'haaa');
-    return format(date, 'h:mmaaa');
+    const mke = toMKE(datetime);
+    if (mke.getMinutes() === 0) return formatMKEPattern(datetime, 'haaa');
+    return formatMKEPattern(datetime, 'h:mmaaa');
   } catch {
     return '';
   }
@@ -183,8 +187,9 @@ export function ChildEventsSchedule({
       {/* Date-grouped schedule */}
       <div className="space-y-8">
         {Array.from(dateGroups.entries()).map(([dateKey, dayEvents]) => {
-          const date = parseISO(dateKey);
-          const isTodayDate = isToday(date);
+          // dateKey is a date-only string ("YYYY-MM-DD") from instance_date.
+          // "Today" compares against today's Chicago calendar date.
+          const isTodayDate = dateKey.slice(0, 10) === mkeTodayDateOnly();
 
           return (
             <div
@@ -204,7 +209,7 @@ export function ChildEventsSchedule({
                   aria-hidden="true"
                 />
                 <h3 className="font-body text-lg md:text-xl text-ink">
-                  {format(date, 'EEEE, MMMM d')}
+                  {formatMKEPattern(dateKey, 'EEEE, MMMM d')}
                 </h3>
                 {isTodayDate && (
                   <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue text-white">

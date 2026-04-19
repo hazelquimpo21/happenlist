@@ -22,7 +22,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
+import { formatMKEPattern } from '@/lib/utils/dates';
 import {
   Save,
   Trash2,
@@ -1766,6 +1766,5 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
 // ============================================================================
 
 function formatDateTimeLocal(dateString: string): string {
-  const date = new Date(dateString);
-  return format(date, "yyyy-MM-dd'T'HH:mm");
+  return formatMKEPattern(dateString, "yyyy-MM-dd'T'HH:mm");
 }
