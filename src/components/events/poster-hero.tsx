@@ -177,11 +177,11 @@ function TypeColumn({
   const markerColor = categoryColor.accent;
   const performers = event.event_performers ?? [];
 
-  // Type scale — MODE B is ~25% larger because it carries the whole composition.
-  const dateStampSize =
-    scale === 'poster' ? 'clamp(44px, 8vw, 96px)' : 'clamp(32px, 5vw, 64px)';
+  // Type scale — MODE B carries the whole composition (big MM·DD stamp is the
+  // centerpiece). MODE A's title is the hero; date is eyebrow only.
   const titleSize =
-    scale === 'poster' ? 'clamp(34px, 5.5vw, 64px)' : 'clamp(26px, 3.6vw, 48px)';
+    scale === 'poster' ? 'clamp(34px, 5.5vw, 64px)' : 'clamp(32px, 4.5vw, 56px)';
+  const monthDaySize = 'clamp(44px, 8vw, 96px)';
 
   return (
     <div className="relative">
@@ -206,19 +206,25 @@ function TypeColumn({
         </div>
       )}
 
-      {/* Date stamp */}
+      {/* Eyebrow — date + time line. In MODE A this IS the date display; in
+          MODE B it sits above the big MM·DD stamp. */}
       <div
-        className="font-mono font-bold leading-[0.9] tracking-tight mb-3"
-        style={{ fontSize: dateStampSize }}
+        className="font-mono font-bold uppercase mb-3"
+        style={{ fontSize: '11px', letterSpacing: '0.25em', opacity: 0.78 }}
       >
-        <div
-          className="font-mono font-bold uppercase mb-2"
-          style={{ fontSize: '11px', letterSpacing: '0.25em', opacity: 0.78 }}
-        >
-          {dayLine}
-        </div>
-        <div>{monthDay}</div>
+        {dayLine}
       </div>
+
+      {/* MODE B only — big MM·DD poster stamp (in MODE A the title is the
+          centerpiece; there the huge date duplicated the eyebrow). */}
+      {scale === 'poster' && (
+        <div
+          className="font-mono font-bold leading-[0.9] tracking-tight mb-4"
+          style={{ fontSize: monthDaySize }}
+        >
+          {monthDay}
+        </div>
+      )}
 
       {/* Title */}
       <h1
@@ -502,44 +508,52 @@ function HeroActions({
   isFree,
   goodForTags,
 }: HeroActionsProps) {
-  const pills: React.ReactNode[] = [];
-
-  if (priceSummary) {
-    const isFreePill = priceSummary === 'FREE';
-    pills.push(
-      <Pill
-        key="price"
-        className={isFreePill ? 'bg-emerald/20 border-emerald/40 text-emerald-light' : ''}
-      >
-        {priceSummary}
-      </Pill>,
-    );
-  }
-  if (ageSummary) pills.push(<Pill key="age">{ageSummary}</Pill>);
+  // Meta row: inline dot-separated facts (price/age/access). Low-hierarchy
+  // info that doesn't earn a pill. FREE breaks out below as a pill because
+  // it's high-signal.
+  const isFreePill = priceSummary === 'FREE';
+  const metaBits: string[] = [];
+  if (priceSummary && !isFreePill) metaBits.push(priceSummary);
+  if (ageSummary) metaBits.push(ageSummary);
   if (accessType && ACCESS_LABELS[accessType]) {
-    const label = isFree && accessType === 'open' ? 'Free · Just Show Up' : ACCESS_LABELS[accessType];
-    pills.push(<Pill key="access">{label}</Pill>);
+    const label =
+      isFree && accessType === 'open' ? 'Free · Just Show Up' : ACCESS_LABELS[accessType];
+    metaBits.push(label);
   }
-  goodForTags.slice(0, 4).forEach((tag) => {
-    pills.push(
-      <Link
-        key={`gf-${tag.slug}`}
-        href={`/events?goodFor=${tag.slug}`}
-        className="inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-bold tracking-[0.08em] uppercase border border-white/20 bg-white/5 text-white/85 hover:bg-white/15 hover:text-white transition-colors"
-      >
-        {tag.label}
-      </Link>,
-    );
-  });
 
-  const hasPills = pills.length > 0;
-  const hasActions = !!primaryLink || true; // heart is always present
-
-  if (!hasPills && !hasActions) return null;
+  // Pills: only FREE + goodFor tags. Pills mean "discovery hook" here —
+  // the meta row carries the non-browsy facts.
+  const hasFreePill = isFreePill;
+  const hasGoodFor = goodForTags.length > 0;
+  const hasPills = hasFreePill || hasGoodFor;
+  const hasMeta = metaBits.length > 0;
 
   return (
-    <div className="mt-8 md:mt-10 flex flex-col gap-5">
-      {hasPills && <div className="flex flex-wrap gap-2">{pills}</div>}
+    <div className="mt-6 md:mt-8 flex flex-col gap-4">
+      {hasMeta && (
+        <div
+          className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-white/65"
+          aria-label="Event details"
+        >
+          {metaBits.join(' · ')}
+        </div>
+      )}
+      {hasPills && (
+        <div className="flex flex-wrap gap-2">
+          {hasFreePill && (
+            <Pill className="bg-emerald/20 border-emerald/40 text-emerald-light">FREE</Pill>
+          )}
+          {goodForTags.slice(0, 4).map((tag) => (
+            <Link
+              key={`gf-${tag.slug}`}
+              href={`/events?goodFor=${tag.slug}`}
+              className="inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-bold tracking-[0.08em] uppercase border border-white/20 bg-white/5 text-white/85 hover:bg-white/15 hover:text-white transition-colors"
+            >
+              {tag.label}
+            </Link>
+          ))}
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3">
         <HeartButton
           eventId={eventId}
