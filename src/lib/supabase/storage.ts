@@ -301,6 +301,29 @@ export function getStorageUrl(path: string): string {
   return `${supabaseUrl}/storage/v1/object/public/${EVENT_IMAGES_BUCKET}/${path}`;
 }
 
+// Default image transforms applied to event images:
+// - width=1600 caps the long edge so we never serve oversized originals
+// - quality=80 is the sweet spot before visible artifacts
+// - WebP is auto-served via Accept header negotiation (no format param needed)
+const DEFAULT_RENDER_PARAMS = 'width=1600&quality=80';
+
+/**
+ * Converts a Supabase storage `/object/public/...` URL to a `/render/image/public/...`
+ * URL with transform params, so the served image is resized + auto-converted to WebP
+ * for browsers that accept it. If the URL is already a render URL or not a Supabase
+ * URL at all, returns it unchanged.
+ *
+ * If you change the default params, every newly-saved image_url will use the new
+ * settings — old image_urls keep whatever params they were saved with.
+ */
+export function toRenderUrl(publicUrl: string, params: string = DEFAULT_RENDER_PARAMS): string {
+  if (!isHostedImage(publicUrl)) return publicUrl;
+  if (publicUrl.includes('/storage/v1/render/image/')) return publicUrl;
+  const rendered = publicUrl.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
+  if (rendered === publicUrl) return publicUrl;
+  return `${rendered}?${params}`;
+}
+
 /**
  * Checks if a URL is a Supabase Storage URL (already hosted by us)
  */

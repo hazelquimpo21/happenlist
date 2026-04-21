@@ -43,6 +43,7 @@ import { Button } from '@/components/ui/button';
 import { RecurrenceBuilder } from './recurrence-builder';
 import { SeriesSearch } from './series-search';
 import { ChipToggleGroup } from './chip-toggle-group';
+import { EventImageEditor } from './event-image-editor';
 import { GOOD_FOR_TAGS } from '@/types';
 import {
   ACCESSIBILITY_TAGS,
@@ -128,6 +129,8 @@ interface FormState {
   // pattern. Analyzer under-tags deliberately, so manual override is the
   // usual way this fills in for mis-categorized music events.
   music_genres: string[];
+  // Image (Supabase Storage render URL with width+quality params)
+  image_url: string;
   // Category
   category_id: string;
   // Status
@@ -187,6 +190,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
     social_mode: ((event as { social_mode?: string | null }).social_mode) || '',
     energy_needed: ((event as { energy_needed?: string | null }).energy_needed) || '',
     music_genres: ((event as { music_genres?: string[] | null }).music_genres) || [],
+    image_url: event.image_url || '',
     category_id: event.category_id || '',
     status: event.status || 'draft',
   });
@@ -452,6 +456,11 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
       const evMusicGenres = ((event as { music_genres?: string[] | null }).music_genres) || [];
       if (arrayDiffer(formState.music_genres, evMusicGenres)) {
         updates.music_genres = formState.music_genres;
+      }
+
+      // Image
+      if (formState.image_url !== (event.image_url || '')) {
+        updates.image_url = formState.image_url || null;
       }
 
       // Category
@@ -738,6 +747,18 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
             onChange={handleInputChange}
             className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
             placeholder="Enter event title..."
+          />
+        </div>
+
+        {/* Image */}
+        <div className="p-4 bg-white/50 rounded-lg border border-mist/50">
+          <EventImageEditor
+            eventId={event.id}
+            value={formState.image_url}
+            onChange={(next) => {
+              setFormState((prev) => ({ ...prev, image_url: next }));
+              resetStatus();
+            }}
           />
         </div>
 

@@ -7,6 +7,7 @@
  */
 
 export { SuperadminEventEditForm } from './event-edit-form';
+export { EventImageEditor } from './event-image-editor';
 export { SuperadminOrganizerEditForm } from './organizer-edit-form';
 export { SuperadminVenueEditForm } from './venue-edit-form';
 export { SuperadminSeriesEditForm } from './series-edit-form';

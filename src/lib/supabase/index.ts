@@ -19,6 +19,7 @@ export {
   deleteImage,
   deleteEventImages,
   getStorageUrl,
+  toRenderUrl,
   isHostedImage,
   type UploadResult,
 } from './storage';
