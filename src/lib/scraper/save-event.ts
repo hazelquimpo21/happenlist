@@ -113,6 +113,63 @@ export type SaveEventResult =
   | { ok: false; code: 'insert_failed'; error: string };
 
 // ============================================================================
+// FUZZY DUPLICATE DETECTION (pre-save warning)
+// ============================================================================
+
+/**
+ * A candidate near-match returned by the `find_duplicate_events` RPC.
+ * The UI shows these as "might be the same as..." warnings so the admin can
+ * skip, or explicitly save-anyway if it's legitimately a different event.
+ */
+export interface DuplicateCandidate {
+  id: string;
+  title: string;
+  slug: string;
+  start_datetime: string;
+  status: string;
+  venue_name: string | null;
+  title_similarity: number;
+  venue_similarity: number;
+  overall_score: number;
+}
+
+/**
+ * Look up potential duplicates for a scraped event. Uses the
+ * `find_duplicate_events` Postgres RPC (pg_trgm similarity on title + same
+ * calendar-day window + optional venue bonus).
+ *
+ * Returns [] on any error — dedupe is advisory, never fatal to the save path.
+ */
+export async function findDuplicates(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: SupabaseClient<any, any, any>,
+  candidate: {
+    title: string;
+    start_datetime: string;
+    venue_name?: string | null;
+  },
+  limit = 5
+): Promise<DuplicateCandidate[]> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc('find_duplicate_events', {
+      candidate_title: candidate.title,
+      candidate_start_datetime: candidate.start_datetime,
+      candidate_venue_name: candidate.venue_name ?? null,
+      result_limit: limit,
+    });
+    if (error) {
+      console.warn(`[dedupe:fuzzy] RPC failed: ${error.message}`);
+      return [];
+    }
+    return (data ?? []) as DuplicateCandidate[];
+  } catch (err) {
+    console.warn(`[dedupe:fuzzy] unexpected error: ${err instanceof Error ? err.message : err}`);
+    return [];
+  }
+}
+
+// ============================================================================
 // VALIDATION
 // ============================================================================
 

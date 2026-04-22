@@ -38,6 +38,7 @@ import type {
   ScraperEvent,
   ScraperAnalyzeResponse,
 } from '@/lib/scraper/types';
+import type { DuplicateCandidate } from '@/lib/scraper/save-event';
 
 // ============================================================================
 // TYPES
@@ -130,6 +131,13 @@ export function ImportForm({ categories }: ImportFormProps) {
 
   const [saveResults, setSaveResults] = useState<SaveResultEntry[]>([]);
 
+  /**
+   * Fuzzy duplicate candidates per preview index. Populated asynchronously
+   * after analyze completes — the UI renders immediately without them and
+   * decorates when they arrive. Keyed by preview index; absent key = none.
+   */
+  const [duplicateMap, setDuplicateMap] = useState<Record<number, DuplicateCandidate[]>>({});
+
   // --------------------------------------------------------------------------
   // Actions
   // --------------------------------------------------------------------------
@@ -141,6 +149,36 @@ export function ImportForm({ categories }: ImportFormProps) {
     setSelected(new Set());
     setSaveResults([]);
     setEdits(new Map());
+    setDuplicateMap({});
+  }, []);
+
+  /**
+   * After analyze returns, fire a background POST to /check-duplicates. The
+   * preview is already visible — we just decorate it with warnings when the
+   * RPC comes back. Failure is silent (dedupe is advisory, not fatal).
+   */
+  const fetchDuplicateHints = useCallback(async (events: ScraperEvent[]) => {
+    const candidates = events
+      .map((ev, i) => ({
+        index: i,
+        title: (ev.title ?? '').trim(),
+        start_datetime: ev.start_datetime,
+        venue_name: ev.venue?.name ?? null,
+      }))
+      .filter(c => c.title && c.start_datetime);
+    if (candidates.length === 0) return;
+    try {
+      const res = await fetch('/api/superadmin/import/check-duplicates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ candidates }),
+      });
+      if (!res.ok) return;
+      const data = (await res.json()) as { duplicates?: Record<number, DuplicateCandidate[]> };
+      setDuplicateMap(data.duplicates ?? {});
+    } catch {
+      // Silent — dedupe is informational.
+    }
   }, []);
 
   const analyze = useCallback(async () => {
@@ -178,7 +216,10 @@ export function ImportForm({ categories }: ImportFormProps) {
       setFallbackSourceUrl(fallback);
       setSelected(new Set(events.map((_, i) => i)));
       setEdits(new Map());
+      setDuplicateMap({});
       setStage('preview');
+      // Fire-and-forget — preview renders immediately, decoration arrives after.
+      void fetchDuplicateHints(events);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Network error');
       setStage('input');
@@ -419,6 +460,7 @@ export function ImportForm({ categories }: ImportFormProps) {
                 edit={edits.get(i)}
                 categories={categories}
                 selected={selected.has(i)}
+                duplicates={duplicateMap[i] ?? []}
                 onToggle={() => toggleSelected(i)}
                 onPatch={(patch) => patchEdit(i, patch)}
                 onReset={() => resetEdit(i)}
@@ -516,6 +558,7 @@ function EventPreviewEditable({
   edit,
   categories,
   selected,
+  duplicates,
   onToggle,
   onPatch,
   onReset,
@@ -524,6 +567,7 @@ function EventPreviewEditable({
   edit: EventEdits | undefined;
   categories: CategoryOption[];
   selected: boolean;
+  duplicates: DuplicateCandidate[];
   onToggle: () => void;
   onPatch: (patch: Partial<EventEdits>) => void;
   onReset: () => void;
@@ -553,6 +597,49 @@ function EventPreviewEditable({
         />
 
         <div className="flex-1 min-w-0 space-y-3">
+          {/* Fuzzy duplicate warning — shows when the pg_trgm RPC finds
+              existing events with similar title + same calendar day. Lets the
+              operator deselect this card (skip the import) or click into the
+              existing event to verify. Doesn't block saving — purely advisory. */}
+          {duplicates.length > 0 && (
+            <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md text-sm">
+              <AlertTriangle className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-amber-900">
+                  {duplicates.length === 1
+                    ? 'Might be a duplicate'
+                    : `Might be a duplicate (${duplicates.length} possible matches)`}
+                </div>
+                <div className="mt-1 space-y-1">
+                  {duplicates.slice(0, 3).map((dup) => (
+                    <Link
+                      key={dup.id}
+                      href={`/admin/events/${dup.id}`}
+                      target="_blank"
+                      className="flex items-center justify-between gap-2 text-xs text-amber-900 hover:text-amber-700 hover:underline"
+                    >
+                      <span className="truncate">
+                        {dup.title}
+                        {dup.venue_name ? ` · ${dup.venue_name}` : ''}
+                        {' · '}
+                        {new Date(dup.start_datetime).toLocaleString('en-US', {
+                          month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+                          timeZone: 'America/Chicago',
+                        })}
+                      </span>
+                      <span className="flex-shrink-0 font-mono">
+                        {Math.round(dup.overall_score * 100)}% match
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-amber-800/80">
+                  Uncheck this card if it's the same event, or keep it selected to save anyway.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Title */}
           <div>
             <label className="block text-xs font-medium text-zinc mb-1">Title</label>
