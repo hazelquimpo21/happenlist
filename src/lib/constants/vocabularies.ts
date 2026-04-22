@@ -234,6 +234,33 @@ export const GOOD_FOR_SLUGS = [
   'game_night',
   'networking_pros',
   'fancy_night',
+
+  // For kids & families (added 2026-04-21) — flagged via `family_only: true`
+  // in types/good-for.ts so the filter drawer groups them separately.
+  // Mirror entries in happenlist_scraper/backend/lib/vocabularies.js.
+  'baby_storytime',
+  'baby_music_class',
+  'toddler_storytime',
+  'toddler_music_movement',
+  'toddler_art_messy',
+  'kids_art_class',
+  'kids_stem',
+  'kids_cooking',
+  'kids_theater_dance',
+  'kids_music_lessons',
+  'kids_nature_adventure',
+  'youth_sports_league',
+  'youth_sports_clinic',
+  'swim_lessons',
+  'gymnastics_tumbling',
+  'summer_camp_day',
+  'summer_camp_overnight',
+  'school_break_camp',
+  'specialty_camp',
+  'tween_maker_workshop',
+  'teen_creative_workshop',
+  'teen_career_college',
+  'birthday_party_worthy',
 ] as const;
 
 export type GoodForSlug = (typeof GOOD_FOR_SLUGS)[number];

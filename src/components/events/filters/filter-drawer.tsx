@@ -34,7 +34,7 @@
 
 import * as Dialog from '@radix-ui/react-dialog';
 import { SlidersHorizontal, X } from 'lucide-react';
-import { GOOD_FOR_TAGS } from '@/types/good-for';
+import { GENERAL_GOOD_FOR_TAGS, FAMILY_GOOD_FOR_TAGS } from '@/types/good-for';
 import { PRICE_TIERS } from '@/lib/constants/price-tiers';
 import { AGE_GROUPS } from '@/lib/constants/age-groups';
 import {
@@ -218,14 +218,51 @@ export function FilterDrawer({
               ))}
             </FilterSection>
 
-            {/* Audience (good_for) */}
+            {/* Audience — general (good_for, non-family tags).
+                Family-programming tags live in a separate section below so
+                this chip cloud stays adult-focused and manageable. */}
             <FilterSection
               label="Good for"
               hint="Multi-select — events match if they fit any selected audience"
-              showClear={state.goodFor.length > 0}
-              onClear={() => setSingle('goodFor', [])}
+              showClear={state.goodFor.some((s) => GENERAL_GOOD_FOR_TAGS.some((t) => t.slug === s))}
+              onClear={() =>
+                setSingle(
+                  'goodFor',
+                  state.goodFor.filter(
+                    (s) => !GENERAL_GOOD_FOR_TAGS.some((t) => t.slug === s)
+                  )
+                )
+              }
             >
-              {GOOD_FOR_TAGS.map((tag) => (
+              {GENERAL_GOOD_FOR_TAGS.map((tag) => (
+                <FilterChip
+                  key={tag.slug}
+                  label={tag.label}
+                  title={tag.description}
+                  active={state.goodFor.includes(tag.slug)}
+                  size="sm"
+                  onClick={() => toggleArrayValue('goodFor', tag.slug)}
+                />
+              ))}
+            </FilterSection>
+
+            {/* Audience — For Kids & Families (good_for, family_only tags).
+                Age-graded: babies → toddlers → kids → youth sports → camps →
+                tweens/teens. Flagged via `family_only: true` in types/good-for.ts. */}
+            <FilterSection
+              label="For kids & families"
+              hint="Age-graded programming — storytime, camps, youth sports, teen workshops"
+              showClear={state.goodFor.some((s) => FAMILY_GOOD_FOR_TAGS.some((t) => t.slug === s))}
+              onClear={() =>
+                setSingle(
+                  'goodFor',
+                  state.goodFor.filter(
+                    (s) => !FAMILY_GOOD_FOR_TAGS.some((t) => t.slug === s)
+                  )
+                )
+              }
+            >
+              {FAMILY_GOOD_FOR_TAGS.map((tag) => (
                 <FilterChip
                   key={tag.slug}
                   label={tag.label}

@@ -32,6 +32,13 @@ export interface GoodForTag {
   description: string;
   icon: string; // Lucide icon name
   color: string; // Tailwind bg class for pills
+  /**
+   * True for kid/teen/family-programming tags (storytime, camps, youth sports,
+   * teen workshops). The filter drawer renders these in a dedicated "For Kids
+   * & Families" section so adult browsers aren't cluttered with them, and
+   * kids-oriented pages can surface them front-and-center.
+   */
+  family_only?: boolean;
 }
 
 /**
@@ -334,7 +341,233 @@ export const GOOD_FOR_TAGS: GoodForTag[] = [
     icon: 'Gem',
     color: 'bg-violet-100 text-violet-800',
   },
+
+  // ==========================================================================
+  // For Kids & Families — age-graded programming (added 2026-04-21)
+  // `family_only: true` flags these for a dedicated drawer section.
+  // Slugs mirrored in happenlist_scraper/backend/lib/vocabularies.js.
+  // ==========================================================================
+
+  // -- Babies (0–2) --
+  {
+    slug: 'baby_storytime',
+    label: 'Baby Storytime',
+    description: 'Infant and baby storytime at libraries, bookstores, and family centers',
+    icon: 'BookOpen',
+    color: 'bg-sky-100 text-sky-800',
+    family_only: true,
+  },
+  {
+    slug: 'baby_music_class',
+    label: 'Baby Music Class',
+    description: 'Music Together, Kindermusik, lullaby singalongs for 0–2',
+    icon: 'Music',
+    color: 'bg-sky-100 text-sky-800',
+    family_only: true,
+  },
+
+  // -- Toddlers (2–4) --
+  {
+    slug: 'toddler_storytime',
+    label: 'Toddler Storytime',
+    description: 'Picture-book readings, library storytimes for ages 2–4',
+    icon: 'BookOpen',
+    color: 'bg-teal-100 text-teal-800',
+    family_only: true,
+  },
+  {
+    slug: 'toddler_music_movement',
+    label: 'Toddler Music & Movement',
+    description: 'Music-and-motion classes, sing + dance programs for 2–4',
+    icon: 'Music2',
+    color: 'bg-teal-100 text-teal-800',
+    family_only: true,
+  },
+  {
+    slug: 'toddler_art_messy',
+    label: 'Toddler Art (Messy)',
+    description: 'Toddler art classes, messy play, finger paint, sensory tables',
+    icon: 'Palette',
+    color: 'bg-teal-100 text-teal-800',
+    family_only: true,
+  },
+
+  // -- Kids (5–10) --
+  {
+    slug: 'kids_art_class',
+    label: 'Kids Art Class',
+    description: 'Art classes, pottery, craft workshops for elementary-age kids',
+    icon: 'Paintbrush',
+    color: 'bg-violet-100 text-violet-800',
+    family_only: true,
+  },
+  {
+    slug: 'kids_stem',
+    label: 'Kids STEM & Science',
+    description: 'Robotics, coding, science, maker programs for kids',
+    icon: 'FlaskConical',
+    color: 'bg-emerald-100 text-emerald-800',
+    family_only: true,
+  },
+  {
+    slug: 'kids_cooking',
+    label: 'Kids Cooking Class',
+    description: 'Junior chef classes, baking workshops, kid culinary camps',
+    icon: 'ChefHat',
+    color: 'bg-orange-100 text-orange-800',
+    family_only: true,
+  },
+  {
+    slug: 'kids_theater_dance',
+    label: 'Kids Theater & Dance',
+    description: 'Youth theater, dance classes, performance programs',
+    icon: 'Drama',
+    color: 'bg-pink-100 text-pink-800',
+    family_only: true,
+  },
+  {
+    slug: 'kids_music_lessons',
+    label: 'Kids Music Lessons',
+    description: 'Instrument lessons, kids choir, youth orchestra programs',
+    icon: 'Music',
+    color: 'bg-fuchsia-100 text-fuchsia-800',
+    family_only: true,
+  },
+  {
+    slug: 'kids_nature_adventure',
+    label: 'Kids Nature & Outdoors',
+    description: 'Nature programs, junior naturalist, scouting outdoor events',
+    icon: 'TreePine',
+    color: 'bg-green-100 text-green-800',
+    family_only: true,
+  },
+
+  // -- Youth sports --
+  {
+    slug: 'youth_sports_league',
+    label: 'Youth Sports League',
+    description: 'Organized kids leagues — soccer, basketball, baseball, volleyball, hockey',
+    icon: 'Trophy',
+    color: 'bg-red-100 text-red-800',
+    family_only: true,
+  },
+  {
+    slug: 'youth_sports_clinic',
+    label: 'Youth Sports Clinic',
+    description: 'One-off skill clinics, "try it" days, athlete-led workshops for kids',
+    icon: 'Medal',
+    color: 'bg-red-100 text-red-800',
+    family_only: true,
+  },
+  {
+    slug: 'swim_lessons',
+    label: 'Swim Lessons',
+    description: 'Parent-tot swim, youth swim lessons, water-safety programs',
+    icon: 'Waves',
+    color: 'bg-cyan-100 text-cyan-800',
+    family_only: true,
+  },
+  {
+    slug: 'gymnastics_tumbling',
+    label: 'Gymnastics & Tumbling',
+    description: 'Gymnastics classes, tumbling, open-gym, Ninja Warrior for kids',
+    icon: 'Zap',
+    color: 'bg-yellow-100 text-yellow-800',
+    family_only: true,
+  },
+
+  // -- Camps --
+  {
+    slug: 'summer_camp_day',
+    label: 'Summer Day Camp',
+    description: 'Weeklong day camps, full-day and half-day summer programs',
+    icon: 'Sun',
+    color: 'bg-amber-100 text-amber-800',
+    family_only: true,
+  },
+  {
+    slug: 'summer_camp_overnight',
+    label: 'Overnight Camp',
+    description: 'Sleep-away summer camps, residential youth programs',
+    icon: 'Tent',
+    color: 'bg-amber-100 text-amber-800',
+    family_only: true,
+  },
+  {
+    slug: 'school_break_camp',
+    label: 'School Break Camp',
+    description: 'Winter break, spring break, and no-school-day camps',
+    icon: 'CalendarDays',
+    color: 'bg-amber-100 text-amber-800',
+    family_only: true,
+  },
+  {
+    slug: 'specialty_camp',
+    label: 'Specialty Camp',
+    description: 'Art, STEM, theater, music, sports camps — single-focus camps',
+    icon: 'Star',
+    color: 'bg-amber-100 text-amber-800',
+    family_only: true,
+  },
+
+  // -- Tweens / Teens --
+  {
+    slug: 'tween_maker_workshop',
+    label: 'Tween Maker Workshop',
+    description: 'Makerspace programs, DIY and craft workshops for ages 9–12',
+    icon: 'Wrench',
+    color: 'bg-indigo-100 text-indigo-800',
+    family_only: true,
+  },
+  {
+    slug: 'teen_creative_workshop',
+    label: 'Teen Workshop',
+    description: 'Art, music, filmmaking, writing workshops for teens 13–17',
+    icon: 'Sparkles',
+    color: 'bg-indigo-100 text-indigo-800',
+    family_only: true,
+  },
+  {
+    slug: 'teen_career_college',
+    label: 'Teen Career & College',
+    description: 'College fairs, internship programs, career panels, campus visits',
+    icon: 'GraduationCap',
+    color: 'bg-indigo-100 text-indigo-800',
+    family_only: true,
+  },
+
+  // -- All-family --
+  {
+    slug: 'birthday_party_worthy',
+    label: 'Birthday Party Worthy',
+    description: 'Great for hosting a kid birthday party — has the space, staff, or format for it',
+    icon: 'PartyPopper',
+    color: 'bg-rose-100 text-rose-800',
+    family_only: true,
+  },
 ];
+
+// ============================================================================
+// PARTITIONS
+// ============================================================================
+// Centralized subsets so consumers don't hand-roll the filter.
+// Whenever a new tag is added above, these exports update automatically.
+
+/**
+ * Kid/teen/family-programming tags only. Used by the "For Kids & Families"
+ * filter drawer section and any family-facing landing pages.
+ */
+export const FAMILY_GOOD_FOR_TAGS: GoodForTag[] = GOOD_FOR_TAGS.filter(
+  (t) => t.family_only === true
+);
+
+/**
+ * Everything else — general audience/vibe tags. This is what adult-facing
+ * browse views should show by default.
+ */
+export const GENERAL_GOOD_FOR_TAGS: GoodForTag[] = GOOD_FOR_TAGS.filter(
+  (t) => t.family_only !== true
+);
 
 /**
  * Look up a tag by slug.
