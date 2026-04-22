@@ -16,6 +16,7 @@ import { AdminHeader, AdminBreadcrumbs } from '@/components/admin';
 import { getSession } from '@/lib/auth';
 import { isSuperAdmin } from '@/lib/auth/is-superadmin';
 import { scraperHealth } from '@/lib/scraper/client';
+import { getCategories } from '@/data/categories';
 import { ImportForm } from './import-form';
 
 export const metadata = {
@@ -31,7 +32,14 @@ export default async function AdminImportPage() {
     redirect('/admin');
   }
 
-  const health = await scraperHealth();
+  // Fetch both in parallel — categories drive the inline category picker in
+  // the preview step, health drives the status dot.
+  const [health, categoriesResult] = await Promise.allSettled([
+    scraperHealth(),
+    getCategories(),
+  ]);
+  const healthValue = health.status === 'fulfilled' ? health.value : { ok: false, message: 'check failed' };
+  const categories = categoriesResult.status === 'fulfilled' ? categoriesResult.value : [];
 
   return (
     <div className="min-h-screen">
@@ -51,17 +59,17 @@ export default async function AdminImportPage() {
         {/* Health status */}
         <div className="mt-4 mb-6 flex items-center gap-2 text-sm">
           <span
-            className={`inline-block w-2 h-2 rounded-full ${health.ok ? 'bg-emerald' : 'bg-red-500'}`}
+            className={`inline-block w-2 h-2 rounded-full ${healthValue.ok ? 'bg-emerald' : 'bg-red-500'}`}
             aria-hidden="true"
           />
-          <span className={health.ok ? 'text-zinc' : 'text-red-700'}>
-            {health.ok
+          <span className={healthValue.ok ? 'text-zinc' : 'text-red-700'}>
+            {healthValue.ok
               ? 'Scraper backend reachable'
-              : `Scraper backend unreachable${health.message ? ` (${health.message})` : ''}. Check SCRAPER_API_URL.`}
+              : `Scraper backend unreachable${healthValue.message ? ` (${healthValue.message})` : ''}. Check SCRAPER_API_URL.`}
           </span>
         </div>
 
-        <ImportForm />
+        <ImportForm categories={categories} />
       </div>
     </div>
   );

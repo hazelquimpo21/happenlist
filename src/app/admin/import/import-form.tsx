@@ -3,24 +3,35 @@
 /**
  * IMPORT FORM
  * ===========
- * Client UI for /admin/import. Two-tab flow:
- *   1. URL tab — paste an event page URL.
- *   2. Text tab — paste raw text (flyer, email, season lineup) + optional source URL.
- *
- * Calls /api/superadmin/import/analyze to extract, then shows a preview.
- * Calls /api/superadmin/import/save to persist selected events as pending_review.
+ * Client UI for /admin/import. Three-stage flow:
+ *   1. Input   — URL tab or Text tab.
+ *   2. Preview — inline-editable per-event card. Each card shows title, date,
+ *                category, price, ticket URL, venue name as live inputs so the
+ *                operator can fix scraper mistakes BEFORE committing.
+ *   3. Done    — save results with links into the admin review queue.
  *
  * Coupling notes:
  * - Response shapes match lib/scraper/types (single vs multi).
  * - Save route expects ScraperEvent[] + fallbackSourceUrl.
+ * - Inline edits are captured into an `edits` map keyed by event index and
+ *   merged over the scraper payload at save time — the original `analyzed`
+ *   array is never mutated (so "Reset" can restore scraper values).
  *
  * @module app/admin/import/import-form
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Link as LinkIcon, FileText, Loader2, CheckCircle, AlertTriangle, ExternalLink } from 'lucide-react';
+import {
+  Link as LinkIcon,
+  FileText,
+  Loader2,
+  CheckCircle,
+  AlertTriangle,
+  ExternalLink,
+  RotateCcw,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type {
@@ -28,8 +39,23 @@ import type {
   ScraperAnalyzeResponse,
 } from '@/lib/scraper/types';
 
+// ============================================================================
+// TYPES
+// ============================================================================
+
 type Tab = 'url' | 'text';
 type Stage = 'input' | 'analyzing' | 'preview' | 'saving' | 'done';
+
+interface CategoryOption {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string | null;
+}
+
+interface ImportFormProps {
+  categories: CategoryOption[];
+}
 
 interface SaveResultEntry {
   index: number;
@@ -45,7 +71,37 @@ interface SaveResultEntry {
   existingStatus?: string;
 }
 
-export function ImportForm() {
+/**
+ * Fields the operator can edit inline. Deliberately narrow — these are the
+ * five places scraper mistakes happen most often. Anything more nuanced
+ * (organizer, description, tags, etc.) is fixed post-save via the full
+ * event edit form.
+ */
+interface EventEdits {
+  title?: string;
+  start_datetime?: string; // ISO — we build from a local-datetime input
+  category_slug?: string | null;
+  price_type?: string;
+  price_low?: number | null;
+  price_high?: number | null;
+  ticket_url?: string;
+  venue_name?: string;
+}
+
+const PRICE_TYPE_OPTIONS: { value: string; label: string }[] = [
+  { value: 'free', label: 'Free' },
+  { value: 'fixed', label: 'Fixed' },
+  { value: 'range', label: 'Range' },
+  { value: 'varies', label: 'Varies' },
+  { value: 'donation', label: 'Donation' },
+  { value: 'per_session', label: 'Per session' },
+];
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
+
+export function ImportForm({ categories }: ImportFormProps) {
   const router = useRouter();
 
   const [tab, setTab] = useState<Tab>('url');
@@ -66,8 +122,17 @@ export function ImportForm() {
   const [fallbackSourceUrl, setFallbackSourceUrl] = useState('');
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
-  // Save result
+  /**
+   * Inline edits per event index. Overrides the scraper values at save time.
+   * Never mutate the analyzed array — keeps "reset" trivial and predictable.
+   */
+  const [edits, setEdits] = useState<Map<number, EventEdits>>(new Map());
+
   const [saveResults, setSaveResults] = useState<SaveResultEntry[]>([]);
+
+  // --------------------------------------------------------------------------
+  // Actions
+  // --------------------------------------------------------------------------
 
   const resetToInput = useCallback(() => {
     setStage('input');
@@ -75,6 +140,7 @@ export function ImportForm() {
     setAnalyzed([]);
     setSelected(new Set());
     setSaveResults([]);
+    setEdits(new Map());
   }, []);
 
   const analyze = useCallback(async () => {
@@ -111,6 +177,7 @@ export function ImportForm() {
       setAnalyzed(events);
       setFallbackSourceUrl(fallback);
       setSelected(new Set(events.map((_, i) => i)));
+      setEdits(new Map());
       setStage('preview');
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Network error');
@@ -123,7 +190,9 @@ export function ImportForm() {
     setStage('saving');
     setErrorMsg(null);
 
-    const events = analyzed.filter((_, i) => selected.has(i));
+    const events = analyzed
+      .map((ev, i) => (selected.has(i) ? applyEdits(ev, edits.get(i)) : null))
+      .filter((ev): ev is ScraperEvent => ev !== null);
 
     try {
       const res = await fetch('/api/superadmin/import/save', {
@@ -146,16 +215,39 @@ export function ImportForm() {
       setErrorMsg(err instanceof Error ? err.message : 'Network error');
       setStage('preview');
     }
-  }, [selected, analyzed, fallbackSourceUrl, router]);
+  }, [selected, analyzed, edits, fallbackSourceUrl, router]);
 
-  const toggleSelected = (i: number) => {
+  const toggleSelected = useCallback((i: number) => {
     setSelected(prev => {
       const next = new Set(prev);
       if (next.has(i)) next.delete(i);
       else next.add(i);
       return next;
     });
-  };
+  }, []);
+
+  const patchEdit = useCallback((i: number, patch: Partial<EventEdits>) => {
+    setEdits(prev => {
+      const next = new Map(prev);
+      const current = next.get(i) ?? {};
+      next.set(i, { ...current, ...patch });
+      return next;
+    });
+  }, []);
+
+  const resetEdit = useCallback((i: number) => {
+    setEdits(prev => {
+      const next = new Map(prev);
+      next.delete(i);
+      return next;
+    });
+  }, []);
+
+  // Count how many cards have any edits for the top banner.
+  const editedCount = useMemo(
+    () => Array.from(edits.values()).filter(e => Object.keys(e).length > 0).length,
+    [edits]
+  );
 
   // --------------------------------------------------------------------------
   // Render
@@ -302,7 +394,12 @@ export function ImportForm() {
                   : `${analyzed.length} events extracted`}
               </h2>
               <p className="text-sm text-zinc">
-                Review and pick which to save as pending review.
+                Fix anything the scraper got wrong inline. Changes apply only on save.
+                {editedCount > 0 && (
+                  <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-900 text-xs rounded">
+                    {editedCount} edited
+                  </span>
+                )}
               </p>
             </div>
             <button
@@ -316,11 +413,15 @@ export function ImportForm() {
 
           <div className="space-y-3">
             {analyzed.map((event, i) => (
-              <EventPreview
+              <EventPreviewEditable
                 key={i}
                 event={event}
+                edit={edits.get(i)}
+                categories={categories}
                 selected={selected.has(i)}
                 onToggle={() => toggleSelected(i)}
+                onPatch={(patch) => patchEdit(i, patch)}
+                onReset={() => resetEdit(i)}
               />
             ))}
           </div>
@@ -404,65 +505,211 @@ function TabButton({
   );
 }
 
-function EventPreview({
+/**
+ * Card that lets the operator edit scraper output inline. Five fields:
+ * title, date, category, price, ticket URL, venue name. Edits never mutate
+ * the original scraper event — they're captured in the parent's edit map
+ * and applied only at save time.
+ */
+function EventPreviewEditable({
   event,
+  edit,
+  categories,
   selected,
   onToggle,
+  onPatch,
+  onReset,
 }: {
   event: ScraperEvent;
+  edit: EventEdits | undefined;
+  categories: CategoryOption[];
   selected: boolean;
   onToggle: () => void;
+  onPatch: (patch: Partial<EventEdits>) => void;
+  onReset: () => void;
 }) {
-  const startDate = formatDate(event.start_datetime);
+  const effective = applyEdits(event, edit);
+  const isEdited = !!edit && Object.keys(edit).length > 0;
+  const dateLocal = toDatetimeLocal(effective.start_datetime);
+
+  const changedFields = edit
+    ? (Object.keys(edit) as (keyof EventEdits)[]).filter(k => edit[k] !== undefined && edit[k] !== '')
+    : [];
+
   return (
-    <label
+    <div
       className={cn(
-        'flex gap-4 p-4 rounded-lg border cursor-pointer transition-colors',
-        selected ? 'bg-blue/5 border-blue' : 'bg-pure border-mist hover:border-silver'
+        'rounded-lg border transition-colors',
+        selected ? 'bg-blue/5 border-blue' : 'bg-pure border-mist'
       )}
     >
-      <input
-        type="checkbox"
-        checked={selected}
-        onChange={onToggle}
-        className="mt-1 w-4 h-4 accent-blue flex-shrink-0"
-      />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="font-semibold text-ink truncate">{event.title}</h3>
-          {event.category_slug && (
-            <span className="text-xs text-zinc bg-cloud px-2 py-0.5 rounded">
-              {event.category_slug}
-            </span>
+      <div className="flex gap-3 p-4">
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggle}
+          aria-label="Include this event"
+          className="mt-2 w-4 h-4 accent-blue flex-shrink-0"
+        />
+
+        <div className="flex-1 min-w-0 space-y-3">
+          {/* Title */}
+          <div>
+            <label className="block text-xs font-medium text-zinc mb-1">Title</label>
+            <input
+              type="text"
+              value={effective.title ?? ''}
+              onChange={(e) => onPatch({ title: e.target.value })}
+              className="w-full px-3 py-1.5 border border-mist rounded-md text-base font-semibold text-ink focus:border-blue focus:ring-1 focus:ring-blue outline-none bg-white"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Start datetime */}
+            <div>
+              <label className="block text-xs font-medium text-zinc mb-1">Start date & time</label>
+              <input
+                type="datetime-local"
+                value={dateLocal}
+                onChange={(e) => {
+                  const iso = fromDatetimeLocal(e.target.value, event.timezone || 'America/Chicago');
+                  onPatch({ start_datetime: iso });
+                }}
+                className="w-full px-3 py-1.5 border border-mist rounded-md text-sm focus:border-blue focus:ring-1 focus:ring-blue outline-none bg-white"
+              />
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="block text-xs font-medium text-zinc mb-1">Category</label>
+              <select
+                value={effective.category_slug ?? ''}
+                onChange={(e) => onPatch({ category_slug: e.target.value || null })}
+                className="w-full px-3 py-1.5 border border-mist rounded-md text-sm focus:border-blue focus:ring-1 focus:ring-blue outline-none bg-white"
+              >
+                <option value="">— No category —</option>
+                {categories.map(c => (
+                  <option key={c.id} value={c.slug}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Venue name */}
+            <div>
+              <label className="block text-xs font-medium text-zinc mb-1">Venue</label>
+              <input
+                type="text"
+                value={effective.venue?.name ?? ''}
+                onChange={(e) => onPatch({ venue_name: e.target.value })}
+                placeholder="Venue name"
+                className="w-full px-3 py-1.5 border border-mist rounded-md text-sm focus:border-blue focus:ring-1 focus:ring-blue outline-none bg-white"
+              />
+            </div>
+
+            {/* Ticket URL */}
+            <div>
+              <label className="block text-xs font-medium text-zinc mb-1">Ticket URL</label>
+              <input
+                type="url"
+                value={effective.ticket_url ?? ''}
+                onChange={(e) => onPatch({ ticket_url: e.target.value })}
+                placeholder="https://..."
+                className="w-full px-3 py-1.5 border border-mist rounded-md text-sm focus:border-blue focus:ring-1 focus:ring-blue outline-none bg-white"
+              />
+            </div>
+          </div>
+
+          {/* Price row */}
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-zinc mb-1">Price type</label>
+              <select
+                value={effective.price_type ?? 'free'}
+                onChange={(e) => onPatch({ price_type: e.target.value })}
+                className="w-full px-3 py-1.5 border border-mist rounded-md text-sm focus:border-blue focus:ring-1 focus:ring-blue outline-none bg-white"
+              >
+                {PRICE_TYPE_OPTIONS.map(p => (
+                  <option key={p.value} value={p.value}>{p.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc mb-1">Low ($)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={effective.price_low ?? ''}
+                onChange={(e) => onPatch({
+                  price_low: e.target.value === '' ? null : parseFloat(e.target.value),
+                })}
+                disabled={effective.price_type === 'free'}
+                className="w-full px-3 py-1.5 border border-mist rounded-md text-sm focus:border-blue focus:ring-1 focus:ring-blue outline-none bg-white disabled:bg-cloud disabled:text-silver"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc mb-1">High ($)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={effective.price_high ?? ''}
+                onChange={(e) => onPatch({
+                  price_high: e.target.value === '' ? null : parseFloat(e.target.value),
+                })}
+                disabled={effective.price_type === 'free' || effective.price_type === 'fixed'}
+                className="w-full px-3 py-1.5 border border-mist rounded-md text-sm focus:border-blue focus:ring-1 focus:ring-blue outline-none bg-white disabled:bg-cloud disabled:text-silver"
+              />
+            </div>
+          </div>
+
+          {/* Meta row: short description preview + reset button + source link */}
+          <div className="flex items-start justify-between gap-3 pt-1 text-xs text-zinc">
+            <div className="flex-1 min-w-0">
+              {event.short_description && (
+                <p className="line-clamp-2">{event.short_description}</p>
+              )}
+              {event.organizer_name && (
+                <div className="mt-1">by {event.organizer_name}</div>
+              )}
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {event.source_url && (
+                <a
+                  href={event.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-blue hover:text-blue-dark"
+                >
+                  <ExternalLink className="w-3 h-3" /> source
+                </a>
+              )}
+              {isEdited && (
+                <button
+                  type="button"
+                  onClick={onReset}
+                  className="inline-flex items-center gap-1 text-amber-700 hover:text-amber-900 font-medium"
+                  aria-label="Reset to scraper values"
+                >
+                  <RotateCcw className="w-3 h-3" /> reset
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* "Changed fields" summary pill — reassures the operator that
+              their edits are captured without forcing them to remember. */}
+          {isEdited && (
+            <div className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1 inline-flex flex-wrap gap-1 items-center">
+              <span className="font-medium">Edited:</span>
+              {changedFields.map(f => (
+                <code key={f} className="bg-amber-100 px-1 rounded">{f}</code>
+              ))}
+            </div>
           )}
         </div>
-        <div className="mt-1 text-sm text-zinc">
-          {startDate}
-          {event.venue?.name ? ` · ${event.venue.name}` : ''}
-          {event.price_type === 'free' ? ' · Free' : ''}
-          {event.price_low != null && event.price_type !== 'free'
-            ? ` · $${event.price_low}${event.price_high && event.price_high !== event.price_low ? `–${event.price_high}` : ''}`
-            : ''}
-        </div>
-        {event.short_description && (
-          <p className="mt-2 text-sm text-slate line-clamp-2">{event.short_description}</p>
-        )}
-        {event.organizer_name && (
-          <div className="mt-1 text-xs text-zinc">by {event.organizer_name}</div>
-        )}
-        {event.source_url && (
-          <a
-            href={event.source_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 mt-2 text-xs text-blue hover:text-blue-dark"
-            onClick={e => e.stopPropagation()}
-          >
-            <ExternalLink className="w-3 h-3" /> source
-          </a>
-        )}
       </div>
-    </label>
+    </div>
   );
 }
 
@@ -522,19 +769,86 @@ function SaveResultRow({ result, title }: { result: SaveResultEntry; title: stri
 // Helpers
 // ============================================================================
 
-function formatDate(iso: string | undefined): string {
-  if (!iso) return '(no date)';
-  try {
-    const d = new Date(iso);
-    return d.toLocaleString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      timeZone: 'America/Chicago',
-    });
-  } catch {
-    return iso;
+/**
+ * Merge an edit patch over a scraper event. Fields set to undefined in the
+ * edit are treated as "not touched" — they pass through from the original.
+ * Venue-name edit rebuilds the venue object so the save resolver treats it
+ * as a new-or-fuzzy-match candidate.
+ */
+function applyEdits(event: ScraperEvent, edit: EventEdits | undefined): ScraperEvent {
+  if (!edit) return event;
+  const merged: ScraperEvent = { ...event };
+  if (edit.title !== undefined) merged.title = edit.title;
+  if (edit.start_datetime !== undefined) merged.start_datetime = edit.start_datetime;
+  if (edit.category_slug !== undefined) merged.category_slug = edit.category_slug;
+  if (edit.price_type !== undefined) merged.price_type = edit.price_type;
+  if (edit.price_low !== undefined) merged.price_low = edit.price_low;
+  if (edit.price_high !== undefined) merged.price_high = edit.price_high;
+  if (edit.ticket_url !== undefined) merged.ticket_url = edit.ticket_url;
+  if (edit.venue_name !== undefined) {
+    merged.venue = {
+      ...(event.venue ?? { name: '' }),
+      name: edit.venue_name,
+    };
   }
+  return merged;
+}
+
+/**
+ * ISO 8601 → "YYYY-MM-DDTHH:MM" for a <input type="datetime-local">.
+ * Treats the ISO as already-in-Chicago time; we pass through raw components
+ * so the input shows 7pm for an event at 19:00 CT regardless of the admin
+ * user's browser timezone. This matches how other admin forms in this app
+ * handle datetime input/output.
+ */
+function toDatetimeLocal(iso: string | undefined): string {
+  if (!iso) return '';
+  // If the ISO has an offset, strip it — datetime-local wants naive wall-clock.
+  const match = iso.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
+  return match ? `${match[1]}T${match[2]}` : '';
+}
+
+/**
+ * "YYYY-MM-DDTHH:MM" back to an ISO string WITH the Chicago offset. We need
+ * to preserve timezone so the DB stores the correct absolute moment. Uses
+ * Intl to compute the offset at that specific date (handles DST).
+ */
+function fromDatetimeLocal(localValue: string, timezone: string): string {
+  if (!localValue) return '';
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(localValue)) return localValue;
+  const offsetMinutes = getTimezoneOffsetMinutes(localValue, timezone);
+  const sign = offsetMinutes >= 0 ? '+' : '-';
+  const abs = Math.abs(offsetMinutes);
+  const hh = String(Math.floor(abs / 60)).padStart(2, '0');
+  const mm = String(abs % 60).padStart(2, '0');
+  return `${localValue}:00${sign}${hh}:${mm}`;
+}
+
+/**
+ * Offset (minutes) of `timezone` at the moment `localValue` describes, in
+ * that timezone. E.g. returns -300 for CDT, -360 for CST.
+ */
+function getTimezoneOffsetMinutes(localValue: string, timezone: string): number {
+  // Treat localValue as already-in-timezone → compute what that UTC moment is.
+  const [datePart, timePart] = localValue.split('T');
+  const [y, m, d] = datePart.split('-').map(Number);
+  const [hh, mm] = timePart.split(':').map(Number);
+  const asUtcMs = Date.UTC(y, m - 1, d, hh, mm, 0);
+
+  // What the wall-clock in `timezone` was at that UTC moment.
+  const utcDate = new Date(asUtcMs);
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(utcDate);
+  const get = (t: string) => Number(parts.find(p => p.type === t)?.value ?? '0');
+  const tzMs = Date.UTC(get('year'), get('month') - 1, get('day'), get('hour'), get('minute'), 0);
+
+  // Difference = the timezone's offset from UTC at that moment (inverted).
+  return -(asUtcMs - tzMs) / 60000;
 }
