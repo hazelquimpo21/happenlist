@@ -1,16 +1,17 @@
 /**
- * HOME PAGE — v3 Redesign
+ * HOME PAGE — B1 Redesign
  * =======================
- * Jamie opens Happenlist on a Thursday evening. She doesn't know
- * what she wants to do — she just wants to discover something cool.
+ * Flow (per B1 spec, 2026-04-22):
+ *   1. HERO — ice band + centered segmented picker
+ *   2. ROW 1 — HeroFeaturedCard (big) + TabbedDiscovery (Popular / New / This weekend)
+ *   3. EVENTS BY CATEGORY — real events grouped by top categories (locked display order)
+ *   4. THIS WEEKEND — dark section, horizontal scroll compact cards
+ *   5. JUST ADDED — numbered list rows
+ *   6. CTA — brand blue block
  *
- * Flow:
- * 1. HERO — "Good evening, Milwaukee" + the best event right now
- * 2. EDITOR'S PICKS — 3-4 handpicked featured events
- * 3. EVENTS BY CATEGORY — real events grouped by top categories
- * 4. THIS WEEKEND — dark section, horizontal scroll
- * 5. JUST ADDED — numbered list of new events
- * 6. CTA — brand blue block
+ * The old HeroSlideshow + FilterPills experience was replaced in the B1
+ * redesign — the spec calls for a single ice-band hero with the picker as
+ * the primary discovery surface.
  */
 
 export const revalidate = 60; // ISR: rebuild homepage every 60 seconds
@@ -20,113 +21,28 @@ import Image from 'next/image';
 import { ChevronRight, ArrowRight, Repeat } from 'lucide-react';
 import { Container } from '@/components/layout';
 import {
-  HeroSlideshow,
+  HomeHero,
+  HeroFeaturedCard,
+  TabbedDiscovery,
   JustAddedRows,
-  FilterPills,
 } from '@/components/homepage';
-import { getEvents, getFeaturedEvents } from '@/data/events';
+import {
+  getEvents,
+  getFeaturedEvents,
+  getPopularEvents,
+  getNewEvents,
+  getThisWeekendEvents,
+} from '@/data/events';
 import { getCategories } from '@/data/categories';
 import { getThisWeekendRange } from '@/lib/utils';
 import { ROUTES } from '@/lib/constants';
 import { getCategoryColor } from '@/lib/constants/category-colors';
+import { sortCategoriesByDisplayOrder } from '@/lib/constants/category-order';
 import type { EventCard as EventCardType } from '@/types';
+import type { CategoryPopoverItem } from '@/components/events/filters/b1/segments/category-popover';
 
 // ---------------------------------------------------------------------------
-// EVENT CARD (inline for homepage — compact, no external dependency)
-// ---------------------------------------------------------------------------
-
-function HomepageEventCard({ event }: { event: EventCardType }) {
-  const colors = getCategoryColor(event.category_slug);
-  const d = new Date(event.start_datetime);
-  const now = new Date();
-  const isToday = d.toDateString() === now.toDateString();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const isTomorrow = d.toDateString() === tomorrow.toDateString();
-
-  const month = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-  const day = d.getDate();
-  const dayLabel = isToday ? 'TODAY' : isTomorrow ? 'TMR' : month;
-  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
-
-  return (
-    <Link
-      href={`/event/${event.slug}`}
-      className="group bg-pure rounded-lg overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-base focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2"
-    >
-      {/* Image */}
-      <div className="relative aspect-[3/2] bg-cloud overflow-hidden">
-        {event.image_url ? (
-          <Image
-            src={event.image_url}
-            alt={event.title}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-slow"
-            sizes="(max-width: 640px) 85vw, (max-width: 1024px) 45vw, 30vw"
-          />
-        ) : (
-          /* PLACEHOLDER: Event needs a real image */
-          <div
-            className="absolute inset-0 flex items-center justify-center"
-            style={{ backgroundColor: colors.light }}
-          >
-            <span className="text-h1 font-bold" style={{ color: colors.accent }}>
-              {event.title.charAt(0)}
-            </span>
-          </div>
-        )}
-        {/* Category badge */}
-        {event.category_name && (
-          <span
-            className="absolute top-3 left-3 px-2.5 py-1 rounded-sm text-caption uppercase font-semibold tracking-wider"
-            style={{ backgroundColor: colors.bg, color: colors.text }}
-          >
-            {event.category_name}
-          </span>
-        )}
-        {/* Price badge */}
-        {event.is_free && (
-          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-sm text-caption uppercase font-semibold tracking-wider bg-emerald text-pure">
-            Free
-          </span>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="p-4">
-        <div className="flex items-start gap-3">
-          {/* Date block */}
-          <div className="flex-shrink-0 text-center w-10">
-            <span className="block text-caption text-blue font-semibold leading-tight">{dayLabel}</span>
-            <span className="block text-h2 font-bold text-ink leading-none">{day}</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-h4 font-bold text-ink line-clamp-2 group-hover:text-blue transition-colors">
-              {event.title}
-            </h3>
-            <p className="text-body-sm text-zinc mt-1 truncate">
-              {event.location_name && `${event.location_name} · `}{time}
-            </p>
-            {event.recurrence_label && (
-              <p className="flex items-center gap-1 text-[11px] text-zinc/80 mt-0.5">
-                <Repeat className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
-                <span>
-                  {event.recurrence_label}
-                  {event.upcoming_count != null && event.upcoming_count > 0 && (
-                    <span className="text-zinc/60"> &middot; {event.upcoming_count} more</span>
-                  )}
-                </span>
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// COMPACT CARD (for horizontal scroll on mobile — smaller, tighter)
+// COMPACT CARD (for horizontal scroll — weekend section)
 // ---------------------------------------------------------------------------
 
 function CompactEventCard({ event, dark = false }: { event: EventCardType; dark?: boolean }) {
@@ -162,7 +78,6 @@ function CompactEventCard({ event, dark = false }: { event: EventCardType; dark?
             </div>
           </div>
         )}
-        {/* Time badge overlay */}
         <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-sm bg-ink/80 backdrop-blur-sm text-caption text-pure font-medium">
           {dayName} · {time}
         </span>
@@ -201,73 +116,150 @@ function CompactEventCard({ event, dark = false }: { event: EventCardType; dark?
 }
 
 // ---------------------------------------------------------------------------
+// HOMEPAGE EVENT CARD (used in category browse sections)
+// ---------------------------------------------------------------------------
+
+function HomepageEventCard({ event }: { event: EventCardType }) {
+  const colors = getCategoryColor(event.category_slug);
+  const d = new Date(event.start_datetime);
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const isTomorrow = d.toDateString() === tomorrow.toDateString();
+  const month = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+  const day = d.getDate();
+  const dayLabel = isToday ? 'TODAY' : isTomorrow ? 'TMR' : month;
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+
+  return (
+    <Link
+      href={`/event/${event.slug}`}
+      className="group bg-pure rounded-lg overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-base focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2"
+    >
+      <div className="relative aspect-[3/2] bg-cloud overflow-hidden">
+        {event.image_url ? (
+          <Image
+            src={event.image_url}
+            alt={event.title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-slow"
+            sizes="(max-width: 640px) 85vw, (max-width: 1024px) 45vw, 30vw"
+          />
+        ) : (
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ backgroundColor: colors.light }}
+          >
+            <span className="text-h1 font-bold" style={{ color: colors.accent }}>
+              {event.title.charAt(0)}
+            </span>
+          </div>
+        )}
+        {event.category_name && (
+          <span
+            className="absolute top-3 left-3 px-2.5 py-1 rounded-sm text-caption uppercase font-semibold tracking-wider"
+            style={{ backgroundColor: colors.bg, color: colors.text }}
+          >
+            {event.category_name}
+          </span>
+        )}
+        {event.is_free && (
+          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-sm text-caption uppercase font-semibold tracking-wider bg-emerald text-pure">
+            Free
+          </span>
+        )}
+      </div>
+      <div className="p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 text-center w-10">
+            <span className="block text-caption text-blue font-semibold leading-tight">{dayLabel}</span>
+            <span className="block text-h2 font-bold text-ink leading-none">{day}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-h4 font-bold text-ink line-clamp-2 group-hover:text-blue transition-colors">
+              {event.title}
+            </h3>
+            <p className="text-body-sm text-zinc mt-1 truncate">
+              {event.location_name && `${event.location_name} · `}{time}
+            </p>
+            {event.recurrence_label && (
+              <p className="flex items-center gap-1 text-[11px] text-zinc/80 mt-0.5">
+                <Repeat className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+                <span>
+                  {event.recurrence_label}
+                  {event.upcoming_count != null && event.upcoming_count > 0 && (
+                    <span className="text-zinc/60"> &middot; {event.upcoming_count} more</span>
+                  )}
+                </span>
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // PAGE
 // ---------------------------------------------------------------------------
 
 export default async function HomePage() {
-  // Fetch data in parallel
-  const [featuredEvents, categories, weekendData, recentData] = await Promise.all([
+  // Fetch everything in parallel. The three trending feeds are independent
+  // queries with small fetchLimits; doubling up the network cost is cheap
+  // compared to serializing them.
+  const [
+    featuredEvents,
+    categories,
+    weekendData,
+    recentData,
+    popularEvents,
+    newEvents,
+    weekendTabEvents,
+    totalEventsData,
+  ] = await Promise.all([
     getFeaturedEvents({ limit: 5 }),
     getCategories(),
     getEvents({ dateRange: getThisWeekendRange(), limit: 8 }),
-    // Just Added: collapse series so a recurring yoga class with 50 ingested
-    // instances doesn't push everything else off the list. Each series shows
-    // its next upcoming date with a "N more dates" chip.
     getEvents({ limit: 6, orderBy: 'date-desc', collapseSeries: true }),
+    getPopularEvents(4),
+    getNewEvents(4),
+    getThisWeekendEvents(4),
+    // Lightweight count-only fetch for the hero subtitle.
+    getEvents({ limit: 1, collapseSeries: true }),
   ]);
 
   const weekendEvents = weekendData.events;
   const recentEvents = recentData.events;
 
-  // Pick the top 3 categories that have events — fetch events for each
-  const topCategories = categories.slice(0, 3);
+  // Picker needs a lean category shape.
+  const pickerCategories: CategoryPopoverItem[] = categories.map((c) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+  }));
+
+  // Category browse sections — walk the canonical display order, pick the
+  // first 3 that have events. This replaces the prior "first 3 by DB order"
+  // behavior with a design-locked order per B1 spec.
+  const orderedCategories = sortCategoriesByDisplayOrder(categories, (c) => c.slug);
   const categoryEventsResults = await Promise.all(
-    topCategories.map(cat =>
+    orderedCategories.slice(0, 6).map((cat) =>
       getEvents({ categorySlug: cat.slug, limit: 4, collapseSeries: true })
     )
   );
-  const categoryEvents = topCategories.map((cat, i) => ({
-    category: cat,
-    events: categoryEventsResults[i].events,
-    total: categoryEventsResults[i].total,
-  })).filter(c => c.events.length > 0);
+  const categoryEvents = orderedCategories
+    .slice(0, 6)
+    .map((cat, i) => ({
+      category: cat,
+      events: categoryEventsResults[i].events,
+      total: categoryEventsResults[i].total,
+    }))
+    .filter((c) => c.events.length > 0)
+    .slice(0, 3);
 
-  // Hero slideshow
-  const heroEvents = featuredEvents.slice(0, 5).map(e => ({
-    id: e.id,
-    slug: e.slug,
-    title: e.title,
-    image_url: e.image_url,
-    category_slug: e.category_slug,
-    category_name: e.category_name,
-    venue_name: e.location_name,
-    start_datetime: e.start_datetime,
-    price_type: e.price_type,
-    price_min: e.price_low,
-  }));
-
-  // Weekend sidebar
-  const weekendSidebar = weekendEvents.slice(0, 5).map(e => ({
-    title: e.title,
-    slug: e.slug,
-    category_slug: e.category_slug,
-    start_datetime: e.start_datetime,
-    venue_name: e.location_name,
-  }));
-
-  // Filter pills
-  const filterPills = [
-    { label: 'Today', href: ROUTES.eventsToday },
-    { label: 'This Weekend', href: ROUTES.eventsWeekend },
-    { label: 'Free Events', href: `${ROUTES.events}?free=true` },
-    ...categories.slice(0, 6).map(c => ({
-      label: c.name,
-      href: `${ROUTES.events}/${c.slug}`,
-    })),
-  ];
-
-  // Just Added
-  const justAddedEvents = recentEvents.map(e => ({
+  const justAddedEvents = recentEvents.map((e) => ({
     slug: e.slug,
     title: e.title,
     category_slug: e.category_slug,
@@ -276,70 +268,40 @@ export default async function HomePage() {
     price_type: e.price_type,
     price_min: e.price_low,
     venue_name: e.location_name,
-    // Surface recurrence so the list can show "· weekly" next to a series
-    // event — otherwise a collapsed series row looks like a one-off.
     recurrence_label: e.recurrence_label,
   }));
+
+  const heroFeatured = featuredEvents[0];
 
   return (
     <>
       {/* ============================================
-          1. HERO — dark, slideshow, greeting
+          1. HERO — ice band + segmented picker
           ============================================ */}
-      <section>
-        <HeroSlideshow
-          events={heroEvents}
-          weekendEvents={weekendSidebar}
-          weekendTotal={weekendData.total}
-        />
-        <div className="bg-ink pb-6">
-          <div className="container-page">
-            <FilterPills pills={filterPills} />
+      <HomeHero eventCount={totalEventsData.total} categories={pickerCategories} />
+
+      {/* ============================================
+          2. ROW 1 — featured card + tabbed discovery
+          ============================================ */}
+      <section className="py-10 md:py-12">
+        <Container>
+          <div className="flex flex-col gap-5 md:flex-row">
+            {heroFeatured && <HeroFeaturedCard event={heroFeatured} />}
+            <TabbedDiscovery
+              popular={popularEvents}
+              newest={newEvents}
+              weekend={weekendTabEvents}
+            />
           </div>
-        </div>
+        </Container>
       </section>
 
       {/* ============================================
-          2. EDITOR'S PICKS — the best events this week
-          Clean row of cards. No stats, no gimmicks.
-          ============================================ */}
-      {featuredEvents.length > 0 && (
-        <section className="py-12 md:py-16 bg-white">
-          <Container>
-            <div className="flex items-end justify-between mb-6">
-              <h2 className="text-h2 text-ink font-bold">Editor&apos;s Picks</h2>
-              <Link
-                href={ROUTES.events}
-                className="text-body-sm text-blue font-semibold hover:underline flex items-center gap-1"
-              >
-                See all <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {/* Desktop: grid. Mobile: horizontal scroll */}
-            <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {featuredEvents.slice(0, 3).map((event) => (
-                <HomepageEventCard key={event.id} event={event} />
-              ))}
-            </div>
-            <div className="flex gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:hidden scroll-fade-r snap-x-mandatory">
-              {featuredEvents.slice(0, 4).map((event) => (
-                <CompactEventCard key={event.id} event={event} />
-              ))}
-            </div>
-          </Container>
-        </section>
-      )}
-
-      {/* ============================================
           3. EVENTS BY CATEGORY
-          Real events grouped by their top categories.
-          Jamie browses by interest, not by taxonomy.
           ============================================ */}
       {categoryEvents.map((section, sectionIdx) => {
         const colors = getCategoryColor(section.category.slug);
         const isAlt = sectionIdx % 2 === 1;
-
         return (
           <section
             key={section.category.id}
@@ -352,9 +314,7 @@ export default async function HomePage() {
                     className="w-3 h-3 rounded-full flex-shrink-0"
                     style={{ backgroundColor: colors.accent }}
                   />
-                  <h2 className="text-h2 text-ink font-bold">
-                    {section.category.name}
-                  </h2>
+                  <h2 className="text-h2 text-ink font-bold">{section.category.name}</h2>
                 </div>
                 <Link
                   href={`${ROUTES.events}/${section.category.slug}`}
@@ -363,8 +323,6 @@ export default async function HomePage() {
                   See all {section.category.name.toLowerCase()} <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
-
-              {/* Desktop: grid. Mobile: horizontal scroll */}
               <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {section.events.slice(0, 4).map((event) => (
                   <HomepageEventCard key={event.id} event={event} />
@@ -382,7 +340,6 @@ export default async function HomePage() {
 
       {/* ============================================
           4. THIS WEEKEND — dark section
-          "What should I do this weekend?"
           ============================================ */}
       {weekendEvents.length > 0 && (
         <section className="py-12 md:py-16 bg-ink">
@@ -396,8 +353,6 @@ export default async function HomePage() {
                 See all <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
-
-            {/* Desktop: 4-col grid. Mobile: horizontal scroll */}
             <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-5">
               {weekendEvents.slice(0, 8).map((event) => (
                 <CompactEventCard key={event.id} event={event} dark />
@@ -414,7 +369,6 @@ export default async function HomePage() {
 
       {/* ============================================
           5. JUST ADDED — numbered list rows
-          Quick scan of what's new
           ============================================ */}
       {recentEvents.length > 0 && (
         <section className="py-12 md:py-16 bg-white">

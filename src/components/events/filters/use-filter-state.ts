@@ -59,6 +59,14 @@ interface UseFilterStateApi {
   /** Replace the entire state. Used by "Apply" buttons and clear-all. */
   setState: (next: FilterState) => void;
 
+  /**
+   * Merge a partial patch into the current state. Used by the B1 segmented
+   * picker — a single popover may update multiple FilterState fields at once
+   * (e.g. the When popover patches {dateFrom, dateTo}). Undefined values in
+   * the patch DO get merged (so `patch({ dateFrom: undefined })` clears it).
+   */
+  patch: (partial: Partial<FilterState>) => void;
+
   /** Toggle a single string in a multi-value field (goodFor / timeOfDay / priceTier / ageGroup). */
   toggleArrayValue: (field: 'goodFor' | 'timeOfDay' | 'priceTier' | 'ageGroup' | 'accessibility' | 'sensory' | 'leaveWith', value: string) => void;
 
@@ -96,6 +104,13 @@ export function useFilterState(): UseFilterStateApi {
   const setState = useCallback(
     (next: FilterState) => replaceUrl(next),
     [replaceUrl]
+  );
+
+  const patch = useCallback(
+    (partial: Partial<FilterState>) => {
+      replaceUrl({ ...state, ...partial });
+    },
+    [state, replaceUrl]
   );
 
   const toggleArrayValue = useCallback(
@@ -153,5 +168,5 @@ export function useFilterState(): UseFilterStateApi {
     replaceUrl({ ...EMPTY_FILTER_STATE, q: state.q });
   }, [state.q, replaceUrl]);
 
-  return { state, setState, toggleArrayValue, setSingle, toggleBool, removeOne, clearAll };
+  return { state, setState, patch, toggleArrayValue, setSingle, toggleBool, removeOne, clearAll };
 }

@@ -1,40 +1,43 @@
 /**
  * =============================================================================
- * FilterDrawer — advanced filters in a Radix Dialog
+ * MORE DRAWER — B1 long-tail filter drawer
  * =============================================================================
  *
- * Holds the long-tail filters that don't earn a slot in the persistent
- * FilterBar: categories, raw audience tags, vibes, noise level, quick
- * toggles, and membership filters.
+ * Sibling to the B1 segmented picker. The 4 picker segments (Category / When
+ * / Good for / Budget) cover the high-frequency filters; this drawer covers
+ * EVERYTHING ELSE that used to live in the old FilterDrawer:
+ *   - Neighborhood + distance
+ *   - Fine-grained price tiers (beyond the 4 Budget tiles)
+ *   - Age groups
+ *   - Accessibility, Sensory, Leave-with
+ *   - Social mode + Energy needed
+ *   - Quick toggles (Solo-friendly, Curious minds, No tickets, Drop-in, Family)
+ *   - Vibe / Noise / Access (legacy)
+ *   - Membership benefits
  *
- * Layout:
- *   - Mobile: full-width bottom sheet, slides up from bottom, ~85vh tall.
- *   - Desktop (md+): right-side panel, fixed width 420px, slides in from right.
+ * Layout: Radix Dialog, right-side panel on desktop (420px wide), bottom
+ * sheet on mobile — same behavior as the old drawer.
  *
- * Footer is sticky: "Clear all" left, "Done" right. Done just closes the
- * dialog — every chip click already wrote to the URL via router.replace,
- * so there is nothing to "submit". The Done button exists because mobile
- * users expect it; without it the bottom sheet feels stranded.
- *
- * Why Radix Dialog and not a custom drawer?
- *   - Free focus trap, scroll lock, ESC to close, click-outside, ARIA roles
- *   - Battle-tested overlay/portal handling for mobile webview quirks
- *   - Already a project dependency (@radix-ui/react-dialog)
+ * Why a new file instead of extending FilterDrawer?
+ *   - FilterDrawer had "Category" + "Good for" sections that duplicated the
+ *     picker's segments; removing those without breaking the old bar required
+ *     a clean rewrite. Killing FilterDrawer gives us a sharper file.
+ *   - The old drawer used the word "filters" in its trigger; the new one uses
+ *     "More" to echo the picker spec.
  *
  * Cross-file coupling:
- *   - filter-bar.tsx — renders the trigger inline
- *   - filter-section.tsx, filter-chip.tsx — building blocks
- *   - use-filter-state.ts — every chip click calls this
- *   - src/lib/constants/vocabularies.ts — VIBE_TAGS, NOISE_LEVELS
- *   - src/types/good-for.ts — GOOD_FOR_TAGS (rich metadata)
+ *   - src/components/events/filters/b1/picker-bar.tsx — mounts this drawer
+ *     to the right of the picker
+ *   - Shared primitives: filter-chip, filter-section, collapsible-filter-section,
+ *     neighborhood-picker — still in src/components/events/filters/
+ *   - Shared state: use-filter-state.ts
  * =============================================================================
  */
 
 'use client';
 
 import * as Dialog from '@radix-ui/react-dialog';
-import { SlidersHorizontal, X } from 'lucide-react';
-import { GENERAL_GOOD_FOR_TAGS, FAMILY_GOOD_FOR_TAGS } from '@/types/good-for';
+import { X } from 'lucide-react';
 import { PRICE_TIERS } from '@/lib/constants/price-tiers';
 import { AGE_GROUPS } from '@/lib/constants/age-groups';
 import {
@@ -51,131 +54,101 @@ import {
   ENERGY_NEEDED,
   ENERGY_NEEDED_LABELS,
 } from '@/lib/constants/vocabularies';
-import { FilterChip } from './filter-chip';
-import { FilterSection } from './filter-section';
-import { CollapsibleFilterSection } from './collapsible-filter-section';
-import { NeighborhoodPicker } from './neighborhood-picker';
-import { useFilterState } from './use-filter-state';
+import { FilterChip } from '../filter-chip';
+import { FilterSection } from '../filter-section';
+import { CollapsibleFilterSection } from '../collapsible-filter-section';
+import { NeighborhoodPicker } from '../neighborhood-picker';
+import { useFilterState } from '../use-filter-state';
 import { cn } from '@/lib/utils/cn';
+import { IconChevronDown } from './picker-icons';
 
-// -----------------------------------------------------------------------------
-// PROP TYPES
-// -----------------------------------------------------------------------------
-
-/** Minimal category shape needed by the drawer (avoids the heavy DB type). */
-export interface FilterDrawerCategory {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-/** Minimal membership-org shape. */
-export interface FilterDrawerMembershipOrg {
+export interface MoreDrawerMembershipOrg {
   id: string;
   name: string;
   event_count: number;
 }
 
-interface FilterDrawerProps {
-  categories: FilterDrawerCategory[];
-  membershipOrgs: FilterDrawerMembershipOrg[];
-  /** Active filter count, used for the trigger button badge. */
+interface MoreDrawerProps {
+  membershipOrgs: readonly MoreDrawerMembershipOrg[];
+  /** Active filter count — renders as a badge on the More button. */
   activeCount: number;
 }
 
-// -----------------------------------------------------------------------------
-// COMPONENT
-// -----------------------------------------------------------------------------
-
-/**
- * Title-case a kebab-or-snake-cased vocabulary slug for display.
- * "festival-energy" → "Festival Energy"
- * "yoga-wellness"   → "Yoga Wellness"
- */
 function slugToLabel(slug: string): string {
   return slug
     .replace(/[-_]/g, ' ')
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export function FilterDrawer({
-  categories,
-  membershipOrgs,
-  activeCount,
-}: FilterDrawerProps) {
+export function MoreDrawer({ membershipOrgs, activeCount }: MoreDrawerProps) {
   const { state, toggleArrayValue, setSingle, toggleBool, clearAll } = useFilterState();
 
   return (
     <Dialog.Root>
-      {/* ── Trigger ───────────────────────────────────────────────────────── */}
       <Dialog.Trigger asChild>
         <button
           type="button"
           className={cn(
-            'inline-flex items-center gap-2 px-4 py-2 rounded-full',
-            'border font-body text-body-sm font-semibold',
-            'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-1',
+            'inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border px-4 py-2.5',
+            'font-body text-[13px] font-semibold transition-colors',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-1',
             activeCount > 0
-              ? 'bg-blue text-pure border-blue hover:bg-blue-dark'
-              : 'bg-pure text-ink border-mist hover:border-blue hover:text-blue'
+              ? 'border-blue bg-blue text-pure hover:bg-blue-dark'
+              : 'border-mist bg-pure text-ink hover:border-ink/40'
           )}
-          aria-label={`Open all filters${activeCount > 0 ? `, ${activeCount} active` : ''}`}
+          aria-label={`Open more filters${activeCount > 0 ? `, ${activeCount} active` : ''}`}
         >
-          <SlidersHorizontal className="w-4 h-4" aria-hidden="true" />
-          <span>Filters</span>
+          More
+          <IconChevronDown size={14} />
           {activeCount > 0 && (
-            <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-pure text-blue text-[11px] font-bold">
+            <span
+              className={cn(
+                'ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-bold',
+                activeCount > 0 ? 'bg-pure text-blue' : 'bg-blue text-pure'
+              )}
+            >
               {activeCount}
             </span>
           )}
         </button>
       </Dialog.Trigger>
 
-      {/* ── Overlay + Content ─────────────────────────────────────────────── */}
       <Dialog.Portal>
         <Dialog.Overlay
           className={cn(
-            'fixed inset-0 z-50 bg-ink/50 backdrop-blur-sm',
+            'fixed inset-0 z-[60] bg-ink/50 backdrop-blur-sm',
             'data-[state=open]:animate-in data-[state=closed]:animate-out',
             'data-[state=open]:fade-in data-[state=closed]:fade-out'
           )}
         />
         <Dialog.Content
           className={cn(
-            'fixed z-50 bg-pure shadow-2xl flex flex-col',
-            // Mobile: bottom sheet
+            'fixed z-[60] flex flex-col bg-pure shadow-2xl',
             'inset-x-0 bottom-0 h-[85vh] rounded-t-2xl',
-            // Desktop: right side panel
             'md:inset-y-0 md:right-0 md:left-auto md:bottom-auto md:h-full md:w-[420px] md:rounded-none md:rounded-l-2xl',
-            // Animations (Tailwind animate plugin used elsewhere; fall back to none if missing)
             'data-[state=open]:animate-in data-[state=closed]:animate-out',
             'data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom',
             'md:data-[state=open]:slide-in-from-right md:data-[state=closed]:slide-out-to-right'
           )}
           aria-describedby={undefined}
         >
-          {/* Header (sticky) */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-mist">
+          <div className="flex items-center justify-between border-b border-mist px-5 py-4">
             <Dialog.Title className="font-body text-h4 font-semibold text-ink">
-              All filters
+              More filters
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
                 type="button"
                 aria-label="Close filters"
-                className="p-2 -mr-2 rounded-full text-zinc hover:bg-cloud focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue"
+                className="-mr-2 rounded-full p-2 text-zinc hover:bg-cloud focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue"
               >
-                <X className="w-5 h-5" aria-hidden="true" />
+                <X className="h-5 w-5" aria-hidden="true" />
               </button>
             </Dialog.Close>
           </div>
 
-          {/* Scrollable body */}
           <div className="flex-1 overflow-y-auto px-5">
-            {/* Access — at the TOP of the drawer because accessibility is the
-                most trustworthy field in the new tagging set (explicit-only,
-                never inferred) and the most load-bearing for users who need
-                it. Do not bury it under "Vibe". */}
+            {/* Accessibility FIRST — most load-bearing for users who need it */}
             <FilterSection
               label="Access"
               hint="Multi-select — events match if the listing states any selected feature"
@@ -193,91 +166,11 @@ export function FilterDrawer({
               ))}
             </FilterSection>
 
-            {/* Neighborhood / distance */}
             <NeighborhoodPicker />
 
-            {/* Categories */}
             <FilterSection
-              label="Category"
-              showClear={!!state.category}
-              onClear={() => setSingle('category', undefined)}
-            >
-              {categories.map((cat) => (
-                <FilterChip
-                  key={cat.id}
-                  label={cat.name}
-                  active={state.category === cat.slug}
-                  size="sm"
-                  onClick={() =>
-                    setSingle(
-                      'category',
-                      state.category === cat.slug ? undefined : cat.slug
-                    )
-                  }
-                />
-              ))}
-            </FilterSection>
-
-            {/* Audience — general (good_for, non-family tags).
-                Family-programming tags live in a separate section below so
-                this chip cloud stays adult-focused and manageable. */}
-            <FilterSection
-              label="Good for"
-              hint="Multi-select — events match if they fit any selected audience"
-              showClear={state.goodFor.some((s) => GENERAL_GOOD_FOR_TAGS.some((t) => t.slug === s))}
-              onClear={() =>
-                setSingle(
-                  'goodFor',
-                  state.goodFor.filter(
-                    (s) => !GENERAL_GOOD_FOR_TAGS.some((t) => t.slug === s)
-                  )
-                )
-              }
-            >
-              {GENERAL_GOOD_FOR_TAGS.map((tag) => (
-                <FilterChip
-                  key={tag.slug}
-                  label={tag.label}
-                  title={tag.description}
-                  active={state.goodFor.includes(tag.slug)}
-                  size="sm"
-                  onClick={() => toggleArrayValue('goodFor', tag.slug)}
-                />
-              ))}
-            </FilterSection>
-
-            {/* Audience — For Kids & Families (good_for, family_only tags).
-                Age-graded: babies → toddlers → kids → youth sports → camps →
-                tweens/teens. Flagged via `family_only: true` in types/good-for.ts. */}
-            <FilterSection
-              label="For kids & families"
-              hint="Age-graded programming — storytime, camps, youth sports, teen workshops"
-              showClear={state.goodFor.some((s) => FAMILY_GOOD_FOR_TAGS.some((t) => t.slug === s))}
-              onClear={() =>
-                setSingle(
-                  'goodFor',
-                  state.goodFor.filter(
-                    (s) => !FAMILY_GOOD_FOR_TAGS.some((t) => t.slug === s)
-                  )
-                )
-              }
-            >
-              {FAMILY_GOOD_FOR_TAGS.map((tag) => (
-                <FilterChip
-                  key={tag.slug}
-                  label={tag.label}
-                  title={tag.description}
-                  active={state.goodFor.includes(tag.slug)}
-                  size="sm"
-                  onClick={() => toggleArrayValue('goodFor', tag.slug)}
-                />
-              ))}
-            </FilterSection>
-
-            {/* Price tier (B5) */}
-            <FilterSection
-              label="Price"
-              hint="Multi-select — events match if they fit any selected tier"
+              label="Price (fine-grained)"
+              hint="Use the Budget picker above for quick picks. This is for custom tiers."
               showClear={state.priceTier.length > 0}
               onClear={() => setSingle('priceTier', [])}
             >
@@ -293,7 +186,6 @@ export function FilterDrawer({
               ))}
             </FilterSection>
 
-            {/* Age group (B5) */}
             <FilterSection
               label="Ages"
               hint="Multi-select — events match if they fit any selected age group"
@@ -312,7 +204,6 @@ export function FilterDrawer({
               ))}
             </FilterSection>
 
-            {/* Vibes */}
             <FilterSection
               label="Vibe"
               showClear={!!state.vibeTag}
@@ -324,14 +215,11 @@ export function FilterDrawer({
                   label={slugToLabel(tag)}
                   active={state.vibeTag === tag}
                   size="sm"
-                  onClick={() =>
-                    setSingle('vibeTag', state.vibeTag === tag ? undefined : tag)
-                  }
+                  onClick={() => setSingle('vibeTag', state.vibeTag === tag ? undefined : tag)}
                 />
               ))}
             </FilterSection>
 
-            {/* Noise level */}
             <FilterSection
               label="Noise level"
               showClear={!!state.noiseLevel}
@@ -350,9 +238,6 @@ export function FilterDrawer({
               ))}
             </FilterSection>
 
-            {/* Sensory (Stage 3) — collapsible because the list is long and
-                most users only need it some of the time. Default open on
-                first visit so the section is discoverable. */}
             <CollapsibleFilterSection
               id="sensory"
               label="Sensory"
@@ -371,8 +256,6 @@ export function FilterDrawer({
               ))}
             </CollapsibleFilterSection>
 
-            {/* Leave with (Stage 3) — what an attendee walks out with.
-                Structural answer (a thing, a skill, a connection, etc.). */}
             <CollapsibleFilterSection
               id="leave_with"
               label="Leave with"
@@ -391,9 +274,6 @@ export function FilterDrawer({
               ))}
             </CollapsibleFilterSection>
 
-            {/* Social + Energy (Stage 3) — single-value enums. Two grouped
-                pickers in one collapsible to save vertical space. Each enum
-                toggles off if you click the active value again. */}
             <CollapsibleFilterSection
               id="social_energy"
               label="Social + Energy"
@@ -405,7 +285,7 @@ export function FilterDrawer({
               }}
             >
               <div className="w-full">
-                <p className="text-xs text-zinc mb-2">Social style</p>
+                <p className="mb-2 text-xs text-zinc">Social style</p>
                 <div className="flex flex-wrap gap-2">
                   {SOCIAL_MODES.map((mode) => (
                     <FilterChip
@@ -414,17 +294,14 @@ export function FilterDrawer({
                       active={state.socialMode === mode}
                       size="sm"
                       onClick={() =>
-                        setSingle(
-                          'socialMode',
-                          state.socialMode === mode ? undefined : mode
-                        )
+                        setSingle('socialMode', state.socialMode === mode ? undefined : mode)
                       }
                     />
                   ))}
                 </div>
               </div>
-              <div className="w-full mt-3">
-                <p className="text-xs text-zinc mb-2">Energy needed</p>
+              <div className="mt-3 w-full">
+                <p className="mb-2 text-xs text-zinc">Energy needed</p>
                 <div className="flex flex-wrap gap-2">
                   {ENERGY_NEEDED.map((energy) => (
                     <FilterChip
@@ -433,10 +310,7 @@ export function FilterDrawer({
                       active={state.energyNeeded === energy}
                       size="sm"
                       onClick={() =>
-                        setSingle(
-                          'energyNeeded',
-                          state.energyNeeded === energy ? undefined : energy
-                        )
+                        setSingle('energyNeeded', state.energyNeeded === energy ? undefined : energy)
                       }
                     />
                   ))}
@@ -444,7 +318,6 @@ export function FilterDrawer({
               </div>
             </CollapsibleFilterSection>
 
-            {/* Quick toggles */}
             <FilterSection label="Quick filters">
               <FilterChip
                 label="Solo-friendly"
@@ -478,7 +351,6 @@ export function FilterDrawer({
               />
             </FilterSection>
 
-            {/* Membership */}
             {membershipOrgs.length > 0 && (
               <FilterSection
                 label="Membership benefits"
@@ -515,8 +387,7 @@ export function FilterDrawer({
             )}
           </div>
 
-          {/* Sticky footer */}
-          <div className="flex items-center justify-between gap-3 px-5 py-4 border-t border-mist bg-pure">
+          <div className="flex items-center justify-between gap-3 border-t border-mist bg-pure px-5 py-4">
             <button
               type="button"
               onClick={clearAll}
@@ -527,7 +398,7 @@ export function FilterDrawer({
             <Dialog.Close asChild>
               <button
                 type="button"
-                className="px-6 py-2.5 rounded-full bg-blue text-pure font-semibold text-body-sm hover:bg-blue-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2"
+                className="rounded-full bg-blue px-6 py-2.5 text-body-sm font-semibold text-pure hover:bg-blue-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue focus-visible:ring-offset-2"
               >
                 Done
               </button>

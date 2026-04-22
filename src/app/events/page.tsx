@@ -25,13 +25,13 @@ import Link from 'next/link';
 import { Container, Breadcrumbs } from '@/components/layout';
 import { EventGrid } from '@/components/events';
 import {
-  FilterBar,
+  PickerBar,
   SortSelect,
   EmptyFilterState,
   countActiveFilters,
   parseFiltersFromParams,
-  type FilterDrawerCategory,
-  type FilterDrawerMembershipOrg,
+  type CategoryPopoverItem,
+  type MoreDrawerMembershipOrg,
 } from '@/components/events/filters';
 import type { SortOption } from '@/types';
 import { getEvents } from '@/data/events';
@@ -224,12 +224,12 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
 
   // Project the heavier categories/orgs results down to the props the filter
   // UI actually needs. Keeps the client bundle small (no full row payloads).
-  const drawerCategories: FilterDrawerCategory[] = categories.map((c) => ({
+  const pickerCategories: CategoryPopoverItem[] = categories.map((c) => ({
     id: c.id,
     name: c.name,
     slug: c.slug,
   }));
-  const drawerMembershipOrgs: FilterDrawerMembershipOrg[] = membershipOrgsList.map((o) => ({
+  const drawerMembershipOrgs: MoreDrawerMembershipOrg[] = membershipOrgsList.map((o) => ({
     id: o.id,
     name: o.name,
     event_count: o.event_count,
@@ -238,7 +238,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   // Lookup maps for the empty state's chip labels (so we don't ship the
   // whole row data through props just to render a name).
   const categoryNameById: Record<string, string> = {};
-  for (const c of drawerCategories) categoryNameById[c.id] = c.name;
+  for (const c of pickerCategories) categoryNameById[c.id] = c.name;
   const membershipOrgNameById: Record<string, string> = {};
   for (const o of drawerMembershipOrgs) membershipOrgNameById[o.id] = o.name;
 
@@ -260,8 +260,12 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
 
   return (
     <>
-      {/* Persistent filter bar — sticky-friendly, full-width */}
-      <FilterBar categories={drawerCategories} membershipOrgs={drawerMembershipOrgs} />
+      {/* Persistent B1 picker bar — sticky, full-width */}
+      <PickerBar
+        categories={pickerCategories}
+        membershipOrgs={drawerMembershipOrgs}
+        totalResults={total}
+      />
 
       <Container className="py-8">
         {/* Breadcrumbs */}

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Happenlist — Filter redesign</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #0a0a0d; color: #020203; }
+  * { box-sizing: border-box; }
+  input::placeholder { color: #71717A; }
+  button { font-family: inherit; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="shared.jsx"></script>
+<script type="text/babel" src="variation-a.jsx"></script>
+<script type="text/babel" src="variation-b.jsx"></script>
+<script type="text/babel" src="variation-c.jsx"></script>
+<script type="text/babel" src="home-views.jsx"></script>
+<script type="text/babel" src="variation-b-refined.jsx"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+function App() {
+  return (
+    <DesignCanvas title="Happenlist — Filtering System" subtitle="B is refined below with 3 new home treatments. Tabbed Popular / New / This weekend replaces the dotted list.">
+      <DCSection id="a" title="A · Smart Summary Bar" subtitle="Home has the search hero; archive becomes a slim refine bar. Active filters always visible as removable tokens. Sheet opens from the right for granular fields.">
+        <DCArtboard id="a-home" label="Home — desktop" width={1280} height={900}>
+          <VarA_Home />
+        </DCArtboard>
+        <DCArtboard id="a-home-mobile" label="Home — mobile" width={390} height={820}>
+          <VarA_Home_Mobile />
+        </DCArtboard>
+        <DCArtboard id="a-archive" label="Archive — slim (no hero search)" width={1280} height={820}>
+          <VarA_Archive_Slim />
+        </DCArtboard>
+        <DCArtboard id="a-archive-mobile" label="Archive — mobile" width={390} height={820}>
+          <VarA_Mobile />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="b-refined" title="B · Refined — 3 new home treatments" subtitle="Segmented picker stays. Dotted list is replaced with a tabbed Popular / New / This weekend panel. Three hero treatments for the segmented picker itself.">
+        <DCArtboard id="b-home-v2" label="B1 · Centered hero + tabbed discovery" width={1280} height={960}>
+          <VarB_Home_v2 />
+        </DCArtboard>
+        <DCArtboard id="b-home-v3" label="B2 · Editorial image hero, picker overlaid" width={1280} height={1080}>
+          <VarB_Home_v3 />
+        </DCArtboard>
+        <DCArtboard id="b-home-v4" label="B3 · Mood-first, picker refines" width={1280} height={1040}>
+          <VarB_Home_v4 />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="b" title="B · Original (for reference)" subtitle="Original segmented picker — archive + mobile unchanged.">
+        <DCArtboard id="b-home" label="Home — original" width={1280} height={900}>
+          <VarB_Home />
+        </DCArtboard>
+        <DCArtboard id="b-home-mobile" label="Home — mobile" width={390} height={820}>
+          <VarB_Home_Mobile />
+        </DCArtboard>
+        <DCArtboard id="b-archive" label="Archive — desktop" width={1280} height={820}>
+          <VarB_Desktop />
+        </DCArtboard>
+        <DCArtboard id="b-archive-mobile" label="Archive — mobile" width={390} height={820}>
+          <VarB_Mobile />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="c" title="C · Smart Search + Drawer" subtitle="Home has the full command bar with suggestions. Archive strips it down to an applied-summary row + 'Refine' drawer trigger — the big search bar is no longer needed once you've arrived.">
+        <DCArtboard id="c-home" label="Home — desktop" width={1280} height={900}>
+          <VarC_Home />
+        </DCArtboard>
+        <DCArtboard id="c-home-mobile" label="Home — mobile" width={390} height={820}>
+          <VarC_Home_Mobile />
+        </DCArtboard>
+        <DCArtboard id="c-archive" label="Archive — slim applied-summary" width={1280} height={820}>
+          <VarC_Archive_Slim />
+        </DCArtboard>
+        <DCArtboard id="c-archive-mobile" label="Archive — mobile" width={390} height={820}>
+          <VarC_Mobile />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

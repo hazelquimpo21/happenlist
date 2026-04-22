@@ -58,6 +58,14 @@ export interface FilterState {
   // Category (single)
   category?: string;
 
+  // Date range — ISO date strings (YYYY-MM-DD) or empty. Owned by the B1
+  // picker's "When" segment. Shorthand labels like "This weekend" are computed
+  // into concrete dates at selection time so the server query stays pure.
+  // Added 2026-04-22 during B1 redesign (previously read directly off URL
+  // params in /events/page.tsx, not tracked in FilterState).
+  dateFrom?: string;
+  dateTo?: string;
+
   // Interest preset — one preset at a time, expands server-side via B1
   interestPreset?: string;
 
@@ -133,6 +141,9 @@ export const EMPTY_FILTER_STATE: FilterState = {
 export function countActiveFilters(state: FilterState): number {
   let n = 0;
   if (state.category) n++;
+  // Date range counts as one active filter regardless of whether one or both
+  // edges are set — matches the "When" segment's behavior in the B1 picker.
+  if (state.dateFrom || state.dateTo) n++;
   if (state.interestPreset) n++;
   n += state.goodFor.length;
   n += state.timeOfDay.length;
@@ -195,6 +206,8 @@ export function parseFiltersFromParams(params: SearchParamsLike): FilterState {
   return {
     q: params.get('q') ?? undefined,
     category: params.get('category') ?? undefined,
+    dateFrom: params.get('from') ?? undefined,
+    dateTo: params.get('to') ?? undefined,
     interestPreset: params.get('interestPreset') ?? undefined,
     goodFor: params.getAll('goodFor'),
     timeOfDay: params.getAll('timeOfDay'),
@@ -236,6 +249,8 @@ export function serializeFiltersToParams(
 
   if (state.q) params.set('q', state.q);
   if (state.category) params.set('category', state.category);
+  if (state.dateFrom) params.set('from', state.dateFrom);
+  if (state.dateTo) params.set('to', state.dateTo);
   if (state.interestPreset) params.set('interestPreset', state.interestPreset);
   for (const slug of state.goodFor) params.append('goodFor', slug);
   for (const bucket of state.timeOfDay) params.append('timeOfDay', bucket);

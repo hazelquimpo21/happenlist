@@ -1,12 +1,20 @@
 /**
  * Filter UI barrel — re-exports for the /events filter components.
  *
+ * B1 redesign (2026-04-22): the `FilterBar` + `FilterDrawer` were replaced
+ * by `PickerBar` (which composes `SegmentedPicker` + `MoreDrawer`). The
+ * surviving primitives (FilterChip, FilterSection, EmptyFilterState,
+ * NeighborhoodPicker) stay in-place — the new drawer uses them.
+ *
  * Cross-file coupling: src/app/events/page.tsx imports from here.
  */
 
-export { FilterBar } from './filter-bar';
+export { PickerBar } from './b1/picker-bar';
+export { MoreDrawer } from './b1/more-drawer';
+export type { CategoryPopoverItem } from './b1/segments/category-popover';
+export type { MoreDrawerMembershipOrg } from './b1/more-drawer';
+
 export { SortSelect } from './sort-select';
-export { FilterDrawer } from './filter-drawer';
 export { FilterChip } from './filter-chip';
 export { FilterSection } from './filter-section';
 export { EmptyFilterState } from './empty-filter-state';
@@ -25,4 +33,3 @@ export {
   parseFiltersFromParams,
   serializeFiltersToParams,
 } from './types';
-export type { FilterDrawerCategory, FilterDrawerMembershipOrg } from './filter-drawer';
