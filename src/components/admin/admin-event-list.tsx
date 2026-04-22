@@ -19,6 +19,7 @@ import {
   AlertTriangle,
   GitMerge,
   Repeat,
+  FolderInput,
 } from 'lucide-react';
 import { AdminEventCard } from './admin-event-card';
 import { MergeEventsModal } from './merge-events-modal';
@@ -26,15 +27,23 @@ import { BulkSeriesModal } from './bulk-series-modal';
 import { Button } from '@/components/ui/button';
 import type { AdminEventCard as AdminEventCardType } from '@/data/admin';
 
+interface CategoryOption {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface AdminEventListProps {
   events: AdminEventCardType[];
   /** Show approve/reject buttons (for pending pages) */
   showApproveReject?: boolean;
   /** Show delete/status change buttons (superadmin) */
   showSuperadminActions?: boolean;
+  /** Categories for the bulk "assign category" action. Omit to hide the picker. */
+  categories?: CategoryOption[];
 }
 
-type BulkAction = 'approve' | 'reject' | 'delete' | 'change_status';
+type BulkAction = 'approve' | 'reject' | 'delete' | 'change_status' | 'change_category';
 type ActionState = 'idle' | 'confirming' | 'executing' | 'done' | 'error';
 
 const STATUS_OPTIONS = [
@@ -48,6 +57,7 @@ export function AdminEventList({
   events,
   showApproveReject = true,
   showSuperadminActions = false,
+  categories = [],
 }: AdminEventListProps) {
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -55,8 +65,10 @@ export function AdminEventList({
   const [pendingAction, setPendingAction] = useState<BulkAction | null>(null);
   const [reason, setReason] = useState('');
   const [targetStatus, setTargetStatus] = useState('published');
+  const [targetCategoryId, setTargetCategoryId] = useState<string | null>(null);
   const [resultMessage, setResultMessage] = useState('');
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [showMergeModal, setShowMergeModal] = useState(false);
   const [showSeriesModal, setShowSeriesModal] = useState(false);
@@ -118,6 +130,10 @@ export function AdminEventList({
       if (pendingAction === 'change_status') {
         body.status = targetStatus;
       }
+      if (pendingAction === 'change_category') {
+        // null → clear category on selected events.
+        body.categoryId = targetCategoryId;
+      }
 
       const response = await fetch('/api/admin/events/bulk', {
         method: 'POST',
@@ -160,6 +176,10 @@ export function AdminEventList({
       case 'reject': return 'Reject';
       case 'delete': return 'Delete';
       case 'change_status': return `Change to ${STATUS_OPTIONS.find(s => s.value === targetStatus)?.label || targetStatus}`;
+      case 'change_category': {
+        const cat = categories.find(c => c.id === targetCategoryId);
+        return cat ? `Assign to ${cat.name}` : 'Clear category';
+      }
     }
   };
 
@@ -265,6 +285,48 @@ export function AdminEventList({
                     </div>
                   )}
                 </div>
+
+                {/* Category dropdown — superadmin-only bulk assign */}
+                {categories.length > 0 && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                      className="flex items-center gap-1.5 text-sm text-blue-400 hover:text-white transition-colors"
+                    >
+                      <FolderInput className="w-4 h-4" />
+                      Category
+                      <ChevronDown className="w-3 h-3" />
+                    </button>
+                    {showCategoryDropdown && (
+                      <div className="absolute bottom-full left-0 mb-2 bg-white rounded-lg shadow-lg border border-mist py-1 min-w-[200px] max-h-64 overflow-y-auto">
+                        <button
+                          onClick={() => {
+                            setTargetCategoryId(null);
+                            setShowCategoryDropdown(false);
+                            startAction('change_category');
+                          }}
+                          className="block w-full text-left px-3 py-2 text-sm text-red-700 hover:bg-red-50 transition-colors italic"
+                        >
+                          Clear category
+                        </button>
+                        <div className="border-t border-mist my-1" />
+                        {categories.map(cat => (
+                          <button
+                            key={cat.id}
+                            onClick={() => {
+                              setTargetCategoryId(cat.id);
+                              setShowCategoryDropdown(false);
+                              startAction('change_category');
+                            }}
+                            className="block w-full text-left px-3 py-2 text-sm text-ink hover:bg-cloud transition-colors"
+                          >
+                            {cat.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Merge & Series buttons (need 2+ selected) */}
                 {selectedCount >= 2 && (

@@ -115,6 +115,8 @@ export default async function PendingEventsPage({ searchParams }: PageProps) {
           <>
             {/* Events list with bulk selection */}
             <div className="mb-8">
+              {/* Pending page shows approve/reject only. Bulk "assign category"
+                  is superadmin-gated — use /admin/events after approving. */}
               <AdminEventList events={result.events} showApproveReject />
             </div>
 

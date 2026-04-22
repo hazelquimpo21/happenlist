@@ -13,11 +13,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth, requireSuperadminAuth } from '@/lib/auth';
 import { bulkApproveEvents, bulkRejectEvents } from '@/data/admin';
-import { superadminBulkDelete, superadminBulkChangeStatus } from '@/data/superadmin';
+import {
+  superadminBulkDelete,
+  superadminBulkChangeStatus,
+  superadminBulkChangeCategory,
+} from '@/data/superadmin';
 
-type BulkAction = 'approve' | 'reject' | 'delete' | 'change_status';
+type BulkAction = 'approve' | 'reject' | 'delete' | 'change_status' | 'change_category';
 
-const VALID_ACTIONS: BulkAction[] = ['approve', 'reject', 'delete', 'change_status'];
+const VALID_ACTIONS: BulkAction[] = [
+  'approve',
+  'reject',
+  'delete',
+  'change_status',
+  'change_category',
+];
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,12 +41,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { action, eventIds, reason, status, notes } = body as {
+    const { action, eventIds, reason, status, notes, categoryId } = body as {
       action: string;
       eventIds: string[];
       reason?: string;
       status?: string;
       notes?: string;
+      categoryId?: string | null;
     };
 
     // Validate action
@@ -115,6 +126,25 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           success: true,
           message: `Updated ${result.succeeded.length} events to ${status}`,
+          succeeded: result.succeeded,
+          failed: result.failed,
+        });
+      }
+
+      case 'change_category': {
+        // categoryId is optional — pass null/empty to clear the category.
+        const session = await requireSuperadminAuth();
+        const result = await superadminBulkChangeCategory(
+          eventIds,
+          session.email,
+          categoryId || null,
+          notes
+        );
+        return NextResponse.json({
+          success: true,
+          message: categoryId
+            ? `Assigned category to ${result.succeeded.length} events`
+            : `Cleared category from ${result.succeeded.length} events`,
           succeeded: result.succeeded,
           failed: result.failed,
         });

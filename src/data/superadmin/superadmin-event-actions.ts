@@ -19,6 +19,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { requireSuperAdmin, isSuperAdmin } from '@/lib/auth';
 import { superadminLogger } from '@/lib/utils/logger';
 import type { Database } from '@/lib/supabase/types';
@@ -764,6 +765,93 @@ export async function superadminBulkDelete(
 
   timer.success(`Bulk delete: ${succeeded.length}/${eventIds.length} succeeded`, {
     metadata: { succeeded: succeeded.length, failed: failed.length },
+  });
+
+  return { succeeded, failed };
+}
+
+/**
+ * Bulk category assignment (or clear) as superadmin. One Postgres UPDATE
+ * covers all eventIds; a single audit-log row captures the batch so per-event
+ * history stays lightweight.
+ *
+ * Pass null/empty categoryId to clear the category on all selected events.
+ */
+export async function superadminBulkChangeCategory(
+  eventIds: string[],
+  adminEmail: string,
+  categoryId: string | null,
+  notes?: string
+): Promise<{ succeeded: string[]; failed: string[] }> {
+  if (!isSuperAdmin(adminEmail)) {
+    superadminLogger.warn('Bulk category change attempted by non-superadmin', {
+      metadata: { adminEmail, count: eventIds.length },
+    });
+    return { succeeded: [], failed: eventIds };
+  }
+  if (!Array.isArray(eventIds) || eventIds.length === 0) {
+    return { succeeded: [], failed: [] };
+  }
+
+  const timer = superadminLogger.time('superadminBulkChangeCategory', {
+    action: 'superadmin_bulk_category',
+    adminEmail,
+    metadata: { count: eventIds.length, categoryId },
+  });
+
+  const supabase = createAdminClient();
+
+  // Validate the category exists up-front (skip when clearing).
+  if (categoryId) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: cat, error: catError } = await (supabase as any)
+      .from('categories')
+      .select('id')
+      .eq('id', categoryId)
+      .maybeSingle();
+    if (catError || !cat) {
+      timer.error('Category not found', catError);
+      return { succeeded: [], failed: eventIds };
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: updated, error: updateError } = await (supabase as any)
+    .from('events')
+    .update({
+      category_id: categoryId,
+      updated_at: new Date().toISOString(),
+    })
+    .in('id', eventIds)
+    .select('id');
+
+  if (updateError) {
+    timer.error(`Bulk category UPDATE failed: ${updateError.message}`, updateError);
+    return { succeeded: [], failed: eventIds };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const succeeded = (updated ?? []).map((r: any) => r.id);
+  const failed = eventIds.filter(id => !succeeded.includes(id));
+
+  // One audit entry for the batch. entity_id is the first event so admin UI
+  // can still link through; changes.event_ids captures the rest.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase as any).from('admin_audit_log').insert({
+    action: 'superadmin_bulk_change_category',
+    entity_type: 'event',
+    entity_id: succeeded[0] ?? eventIds[0],
+    admin_email: adminEmail,
+    changes: {
+      event_ids: succeeded,
+      category_id: categoryId,
+      failed_event_ids: failed,
+    },
+    notes: notes || `Bulk assigned category to ${succeeded.length} events`,
+  });
+
+  timer.success(`Bulk category change: ${succeeded.length}/${eventIds.length} succeeded`, {
+    metadata: { succeeded: succeeded.length, failed: failed.length, categoryId },
   });
 
   return { succeeded, failed };

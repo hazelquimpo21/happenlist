@@ -17,6 +17,7 @@ export {
   superadminChangeStatus,
   superadminBulkDelete,
   superadminBulkChangeStatus,
+  superadminBulkChangeCategory,
 } from './superadmin-event-actions';
 
 // Entity management actions (organizers, venues, performers, membership_orgs, series)

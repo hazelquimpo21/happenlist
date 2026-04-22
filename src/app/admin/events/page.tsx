@@ -12,6 +12,7 @@ import {
 import { AdminHeader, AdminBreadcrumbs, AdminEventList } from '@/components/admin';
 import { Button } from '@/components/ui/button';
 import { getAllAdminEvents } from '@/data/admin';
+import { getCategories } from '@/data/categories';
 import { adminDataLogger } from '@/lib/utils/logger';
 import type { EventStatus, EventSource } from '@/lib/supabase/types';
 
@@ -39,18 +40,21 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
   const seriesFilter = (typeof resolvedSearchParams.series === 'string' && resolvedSearchParams.series) ? resolvedSearchParams.series as 'in_series' | 'no_series' : undefined;
   const showDeleted = status === 'deleted';
 
-  // Fetch all events
-  const result = await getAllAdminEvents({
-    status: showDeleted ? undefined : status as EventStatus | undefined,
-    source: source as EventSource | undefined,
-    search,
-    page,
-    limit: 20,
-    orderBy,
-    orderDir,
-    showDeleted,
-    seriesFilter,
-  });
+  // Fetch all events + categories (for the bulk "assign category" picker) in parallel
+  const [result, categories] = await Promise.all([
+    getAllAdminEvents({
+      status: showDeleted ? undefined : status as EventStatus | undefined,
+      source: source as EventSource | undefined,
+      search,
+      page,
+      limit: 20,
+      orderBy,
+      orderDir,
+      showDeleted,
+      seriesFilter,
+    }),
+    getCategories(),
+  ]);
 
   timer.success('Loaded all events', {
     metadata: { total: result.total, page: result.page, status },
@@ -208,7 +212,12 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
           <>
             {/* Events list with bulk selection */}
             <div className="mb-8">
-              <AdminEventList events={result.events} showApproveReject showSuperadminActions />
+              <AdminEventList
+                events={result.events}
+                showApproveReject
+                showSuperadminActions
+                categories={categories}
+              />
             </div>
 
             {/* Pagination */}
