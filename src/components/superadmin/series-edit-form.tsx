@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RecurrenceNaturalInput } from './recurrence-natural-input';
+import { RegenerateDatesPanel } from './regenerate-dates-panel';
 import type { SeriesRow } from '@/types/series';
 import type { RecurrenceRule } from '@/lib/supabase/types';
 
@@ -426,6 +427,11 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
         startDate={series.start_date}
         onSaved={() => router.refresh()}
       />
+
+      {/* Regenerate instance dates from a pasted list / description. Previews
+          the diff (keep/add/drop) before any DB write; apply clones a template
+          instance for each new date and soft-cancels the drops. */}
+      <RegenerateDatesPanel seriesId={series.id} />
 
       {/* Action buttons */}
       <div className="flex items-center justify-between">
