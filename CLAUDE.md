@@ -395,3 +395,26 @@ The Render-hosted `happenlist_scraper` backend is now a first-class admin tool i
 - **Response types** (`happenlist/src/lib/scraper/types.ts`) mirror shapes produced by scraper routes. If a scraper route grows a field, update types here too.
 - **Controlled vocab drift** is still caught by the existing `vocabularies.ts` mirror (see Phase 1 Smart Filters notes). The recurrence parser passes through `buildRecurrenceRule()` so its output uses the same enums.
 - **One writer** for events: `src/lib/scraper/save-event.ts`. Routes are thin; dedupe/resolve/insert logic is shared.
+
+---
+
+# Admin UX Improvements (2026-04-22)
+
+Seven targeted UX improvements on top of the scraper integration, aimed at reducing friction and surfacing data-quality issues. Full report: `docs/phase-reports/admin-ux-improvements-report.md`.
+
+| # | Improvement | Primary file |
+|---|---|---|
+| 1 | Inline-editable import preview | `src/app/admin/import/import-form.tsx` |
+| 2 | Worklists dashboard + `/admin/worklists/[slug]` pages | `src/data/admin/get-worklists.ts` + `WorklistsTile` |
+| 3 | Fuzzy dedupe detective (pg_trgm) on import preview | RPC `find_duplicate_events` + `/api/superadmin/import/check-duplicates` |
+| 4 | Series "regenerate dates from text" panel with preview/apply diff | `src/app/api/superadmin/series/[id]/regenerate-dates/route.ts` + `RegenerateDatesPanel` |
+| 5 | Low-confidence field heuristic flags on event editor | `src/lib/admin/field-heuristics.ts` + `FieldHeuristicFlag` |
+| 6 | Bulk "assign category" action on events list | `superadminBulkChangeCategory` + `AdminEventList` dropdown |
+| 7 | Recurrence preview in import (scraper-description → parsed-rule side-by-side) | ImportForm `recurrenceMap` + banner |
+
+**Design invariants across all 7:**
+- Dedupe hints, confidence flags, and recurrence parsing are **advisory** — they decorate the UI but never block a save. Admin stays in control.
+- Every superadmin batch mutation writes a `admin_audit_log` row (single row per batch for bulk operations — IDs in `changes.event_ids`).
+- Heuristics are client-safe pure functions; swap to real scraper per-field confidence when the scraper ships it.
+
+**Data-quality baseline surfaced by worklists**: 246 events missing image, 290 non-free missing price_low. Clean on short_description / category / venue.
