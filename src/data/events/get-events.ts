@@ -39,6 +39,11 @@ import {
 } from '@/lib/constants/milwaukee-neighborhoods';
 import { isPriceTierSlug } from '@/lib/constants/price-tiers';
 import { isAgeGroupSlug } from '@/lib/constants/age-groups';
+import {
+  buildRecurrenceLabel,
+  collapseSeriesInstances,
+  isCollapsibleSeriesType,
+} from '@/lib/events/collapse';
 
 /**
  * Coerce a loose `string | string[] | undefined` param into a deduped,
@@ -107,120 +112,8 @@ const getCategoryIdBySlug = unstable_cache(
   { revalidate: 86400, tags: ['categories'] }
 );
 
-// =============================================================================
-// SERIES COLLAPSING TYPES & HELPERS
-// =============================================================================
-
-/** Day of week labels (0 = Sunday) for recurrence display. */
-const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
-
-/** Frequency labels for recurrence display. */
-const FREQUENCY_LABELS: Record<string, string> = {
-  daily: 'Every day',
-  weekly: 'Every week',
-  biweekly: 'Every 2 weeks',
-  monthly: 'Every month',
-  yearly: 'Every year',
-};
-
-/** Series types that should be collapsed (repeating content). */
-const COLLAPSIBLE_SERIES_TYPES = new Set(['recurring', 'class', 'workshop', 'lifestyle', 'ongoing', 'exhibit']);
-
-/**
- * Series types considered "lifestyle" — recurring low-urgency events that
- * should be hidden from the main browse feed by default (yoga, trivia,
- * happy hour, exhibits, etc.) but discoverable via filters or dedicated pages.
- */
-const LIFESTYLE_SERIES_TYPES = new Set(['lifestyle', 'ongoing', 'exhibit']);
-
-/**
- * Build a human-readable recurrence label from a series recurrence_rule JSON.
- * Examples: "Every Tuesday", "Every other Friday", "Monthly on the 15th"
- */
-function buildRecurrenceLabel(rule: Record<string, unknown> | null, seriesType: string | null): string | null {
-  if (!rule) {
-    // Fallback: if no rule but it's a known collapsible type, return a generic label
-    if (seriesType === 'class') return 'Ongoing class';
-    if (seriesType === 'workshop') return 'Ongoing workshop';
-    if (seriesType === 'lifestyle') return 'Recurring';
-    if (seriesType === 'ongoing') return 'Ongoing';
-    if (seriesType === 'exhibit') return 'On view';
-    return 'Recurring';
-  }
-
-  const frequency = rule.frequency as string | undefined;
-  const daysOfWeek = rule.days_of_week as number[] | undefined;
-  const dayOfMonth = rule.day_of_month as number | undefined;
-
-  if (frequency === 'weekly' && daysOfWeek?.length === 1) {
-    return `Every ${DAY_LABELS[daysOfWeek[0]]}`;
-  }
-  if (frequency === 'weekly' && daysOfWeek && daysOfWeek.length > 1) {
-    const dayNames = daysOfWeek.map((d) => DAY_LABELS[d]);
-    return `Every ${dayNames.slice(0, -1).join(', ')} & ${dayNames[dayNames.length - 1]}`;
-  }
-  if (frequency === 'biweekly' && daysOfWeek?.length === 1) {
-    return `Every other ${DAY_LABELS[daysOfWeek[0]]}`;
-  }
-  if (frequency === 'monthly' && dayOfMonth) {
-    const suffix = ['th', 'st', 'nd', 'rd'];
-    const v = dayOfMonth % 100;
-    const ord = dayOfMonth + (suffix[(v - 20) % 10] || suffix[v] || suffix[0]);
-    return `Monthly on the ${ord}`;
-  }
-
-  return FREQUENCY_LABELS[frequency ?? ''] || 'Recurring';
-}
-
-/**
- * Collapse series instances: keep only the soonest event per series,
- * annotating it with the recurrence label and count of remaining dates.
- *
- * Events without a series_id pass through unchanged. Festivals and
- * seasons are never collapsed (each date is distinct content).
- */
-function collapseSeriesInstances(events: EventCard[]): EventCard[] {
-  // Group by series_id (null series_id events go straight to output)
-  const seriesGroups = new Map<string, EventCard[]>();
-  const standalone: EventCard[] = [];
-
-  for (const event of events) {
-    const sid = event.series_id;
-    const stype = event.series_type;
-
-    // Don't collapse festivals/seasons or non-series events
-    if (!sid || !stype || !COLLAPSIBLE_SERIES_TYPES.has(stype)) {
-      standalone.push(event);
-      continue;
-    }
-
-    const group = seriesGroups.get(sid);
-    if (group) {
-      group.push(event);
-    } else {
-      seriesGroups.set(sid, [event]);
-    }
-  }
-
-  // For each series group, keep earliest and annotate
-  const collapsed: EventCard[] = [];
-  for (const [, group] of seriesGroups) {
-    // Already sorted by date from the query, so first is soonest
-    const representative = { ...group[0] };
-    representative.upcoming_count = group.length - 1;
-    collapsed.push(representative);
-  }
-
-  // Merge standalone + collapsed, then re-sort by instance_date to maintain order
-  const merged = [...standalone, ...collapsed];
-  merged.sort((a, b) => {
-    const da = a.instance_date || a.start_datetime;
-    const db = b.instance_date || b.start_datetime;
-    return da.localeCompare(db);
-  });
-
-  return merged;
-}
+// Series collapsing helpers now live in src/lib/events/collapse.ts.
+// Same source-of-truth keeps feed logic + future admin/search paths aligned.
 
 // =============================================================================
 // TRANSFORM
@@ -309,6 +202,9 @@ function transformToEventCard(row: Record<string, unknown>): EventCard {
     // Parent event fields
     parent_event_id: row.parent_event_id as string | null ?? null,
     child_event_count: childCount > 0 ? childCount : undefined,
+    // Ongoing-Single signals (wide date range + weekly hours, e.g. exhibits)
+    hours: (row.hours as Record<string, unknown> | null) ?? null,
+    prior_edition_event_id: (row.prior_edition_event_id as string | null) ?? null,
     // Series fields
     series_id: row.series_id as string | null ?? null,
     series_title: series?.title as string | null ?? null,
@@ -316,7 +212,7 @@ function transformToEventCard(row: Record<string, unknown>): EventCard {
     series_type: seriesType,
     series_sequence: row.series_sequence as number | null ?? null,
     is_series_instance: !!(row.series_id),
-    recurrence_label: (row.series_id && COLLAPSIBLE_SERIES_TYPES.has(seriesType ?? ''))
+    recurrence_label: (row.series_id && isCollapsibleSeriesType(seriesType))
       ? recurrenceLabel
       : null,
     // Performers (top 2 for card display)
@@ -737,6 +633,7 @@ export async function getEvents(
         social_mode, energy_needed, music_genres,
         organizer_name, organizer_is_venue,
         age_restriction, is_family_friendly,
+        hours, prior_edition_event_id,
         parent_event_id,
         series_id, series_sequence,
         category:categories(name, slug),
@@ -784,7 +681,7 @@ export async function getEvents(
   const countQuery = applyDbPredicates(
     supabase
       .from('events')
-      .select('id, series_id, start_datetime, series(series_type)')
+      .select('id, series_id, start_datetime, hours, series(series_type)')
   );
 
   const [mainResult, countResult] = await Promise.all([mainQuery, countQuery]);
@@ -803,6 +700,7 @@ export async function getEvents(
     id: string;
     series_id: string | null;
     start_datetime: string;
+    hours: unknown | null;
     series: { series_type: string | null } | null;
   }>;
 
@@ -820,17 +718,26 @@ export async function getEvents(
     }
   }
 
-  // Lifestyle filtering: exclude lifestyle/ongoing/exhibit series from main feeds
-  // unless explicitly included. This is post-fetch because we can't easily express
-  // "series IS NULL OR series.series_type NOT IN (...)" in a single PostgREST filter.
+  // Lifestyle / ongoing filter.
+  //
+  // Historically this split the feed by series_type IN ('lifestyle','ongoing',
+  // 'exhibit'). Post-migration (2026-04-22) those series_type values no longer
+  // exist — every series is 'recurring' / 'class' / 'workshop'. The new
+  // "ongoing" signal is `events.hours IS NOT NULL` (wide date range + weekly
+  // hours; exhibits, happy hour, daily specials).
+  //
+  // Semantics preserved:
+  //   - `includeLifestyle: 'only'` → only events with `hours` populated
+  //   - `includeLifestyle: false/undefined` → exclude events with `hours`
+  //   - `includeLifestyle: true` → include everything
+  //
+  // Param name kept for back-compat with existing callers (types/filters.ts,
+  // /events/lifestyle/page.tsx). Rename to `includeOngoing` in a follow-up.
   if (includeLifestyle === 'only') {
-    // Show ONLY lifestyle events
-    events = events.filter((e) => e.series_type && LIFESTYLE_SERIES_TYPES.has(e.series_type));
+    events = events.filter((e) => e.hours != null);
   } else if (!includeLifestyle) {
-    // Default: exclude lifestyle events from feed
-    events = events.filter((e) => !e.series_type || !LIFESTYLE_SERIES_TYPES.has(e.series_type));
+    events = events.filter((e) => e.hours == null);
   }
-  // includeLifestyle === true: no filtering, show everything
 
   // Time-of-day post-fetch filter. See src/lib/constants/time-of-day.ts header
   // for why this runs in JS rather than as a DB predicate (no PostgREST support
@@ -871,16 +778,12 @@ export async function getEvents(
   // ── Accurate total ────────────────────────────────────────────────────────
   // Apply the SAME post-fetch filters to the lightweight count rows so the
   // total reflects what the user will actually see. Without this, the count
-  // diverges from rendered cards (the bug this whole refactor exists to fix).
+  // diverges from rendered cards.
   let countFiltered = countRows;
   if (includeLifestyle === 'only') {
-    countFiltered = countFiltered.filter(
-      (r) => r.series?.series_type && LIFESTYLE_SERIES_TYPES.has(r.series.series_type)
-    );
+    countFiltered = countFiltered.filter((r) => r.hours != null);
   } else if (!includeLifestyle) {
-    countFiltered = countFiltered.filter(
-      (r) => !r.series?.series_type || !LIFESTYLE_SERIES_TYPES.has(r.series.series_type)
-    );
+    countFiltered = countFiltered.filter((r) => r.hours == null);
   }
   if (timeOfDayBuckets.length > 0) {
     countFiltered = countFiltered.filter((r) =>
@@ -889,15 +792,12 @@ export async function getEvents(
   }
   let total: number;
   if (collapseSeries) {
-    // Count distinct collapsible series + standalone events. Mirrors
-    // collapseSeriesInstances(): festivals/seasons (non-collapsible types)
-    // each count as a separate row.
+    // Count distinct series + standalone events. Mirrors collapseSeriesInstances().
     const seenSeries = new Set<string>();
     let standaloneCount = 0;
     for (const r of countFiltered) {
       const sid = r.series_id;
-      const stype = r.series?.series_type ?? null;
-      if (!sid || !stype || !COLLAPSIBLE_SERIES_TYPES.has(stype)) {
+      if (!sid || !isCollapsibleSeriesType(r.series?.series_type ?? null)) {
         standaloneCount++;
       } else {
         seenSeries.add(sid);

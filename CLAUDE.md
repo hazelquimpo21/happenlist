@@ -94,33 +94,82 @@ Jamie opens Happenlist on a Thursday evening. She doesn't know what she wants �
 `src/components/icons/category-icons.tsx` — 15 bold geometric SVGs, `currentColor`, 24x24 viewBox.
 Use `getCategoryIcon(iconName)` to get the component.
 
-## Parent Events
-Events support one level of parent-child nesting (festivals → acts, theatrical runs → performances).
+## Event Shapes — Canonical Model (v4, 2026-04-22)
 
-- `getChildEvents`, `getParentEventInfo`, `getChildEventCount` in data layer
-- Main feeds filter `WHERE parent_event_id IS NULL` to hide children
-- **ChildEventsSchedule**: date-grouped program view with filter pills, today indicator, auto-scroll
-- Parent detail: shows schedule below description
-- Child detail: shows parent breadcrumb + sibling events
+> **This section replaces the old "Parent Events" + "Recurring Event Collapsing" + "Lifestyle / Ongoing Events" sections.** They conflated three different concepts into one overloaded `series` table. Going forward, we think in **three kinds** of event shape. Admin-facing version of this lives at [docs/event-shapes-onepager.md](docs/event-shapes-onepager.md).
 
-## Recurring Event Collapsing (Series)
+Every event in Happenlist is exactly one of **three shapes**:
 
-Events can belong to a **series** (linked via `series_id` → `series` table). Series have a `series_type` (`recurring`, `class`, `workshop`, `camp`, `festival`, `season`) and an optional `recurrence_rule` JSON with frequency, days_of_week, etc.
+| Shape | Mental model | When to use |
+|---|---|---|
+| **Single** | One event with a date (or date range) and optional weekly `hours`. | Concert Saturday, one-off pop-up, museum exhibit Oct–Feb, recurring happy hour (wide date range + hours), semester-long class. |
+| **Recurring** | One event concept, repeated on a schedule. Instances are materialized rows that share a `series_id`. | Weekly storytime, monthly free day, identical theatre run (same show 8 nights), weekly trivia night. |
+| **Collection** | Umbrella event with distinct sub-events. Parent has its own landing page; children belong to it via `parent_event_id`. | Summerfest (acts), Brewers season (games), multi-night theatre run with variable cast. |
 
-### How collapsing works
-When `collapseSeries: true` is passed to `getEvents()`, recurring series instances are grouped so only the **next upcoming date** appears in the feed. The card shows a recurrence line:
+**There is no separate "Ongoing" shape.** What we used to call Ongoing (exhibits, happy hour, always-around things) is just a Single event with a wide date range and an `events.hours` JSONB field describing weekly availability.
+
+### Rule of thumb
+
+1. **Does it have distinct sub-events with their own landing pages?** → **Collection** (parent/child)
+2. **Does the same thing repeat on a schedule?** → **Recurring** (series-linked instances)
+3. **Otherwise** → **Single.** If it's "always kinda happening" (happy hour, exhibit), that's a Single with a wide date range + weekly `hours`.
+
+### DB mapping
+
+| Shape | `parent_event_id` | `series_id` | `events.hours` | Collapsed in feed? | Main feed? |
+|---|---|---|---|---|---|
+| Single | null | null | optional (present for "ongoing" like exhibits/happy hour) | N/A | ✅ |
+| Recurring | null | set | null | ✅ | ✅ |
+| Collection (parent) | null | optional | optional | ❌ | ✅ |
+| Collection (child) | set → parent | optional | optional | ❌ | ❌ — shown on parent page |
+
+**`series_type` is now a display label only**, not a structural switch. `recurring` is the only canonical value; `class`/`workshop` retained as labels for admin categorization. Obsolete values (`lifestyle`, `ongoing`, `exhibit`, `camp`, `season`, `annual`, `festival`) are being retired in the cleanup migration (see `docs/phase-reports/event-shapes-cleanup-plan.md`).
+
+### Worked examples
+
+| Event | Shape | Why |
+|---|---|---|
+| Summerfest | Collection | Distinct acts, landing page, sub-programming |
+| Brewers home season | Collection | Each game is distinct content (different opponent) — deserves a season landing page |
+| Hamilton, 8 identical nights | Recurrence | Same show repeating; collapse to "Thu 7pm · 7 more dates" |
+| Hamilton, different cast nights | Collection | Each night is distinct content |
+| Weekly storytime | Recurrence | Same event, repeats |
+| Monthly museum free day | Recurrence | Same event, monthly rule |
+| Summer camp (one enrollment, 5 days) | Single w/ date range | One conceptual event; don't list 5 rows |
+| Camp that runs annually | Single; optional `series_id` linking this year to last year (type `annual`) | Enables "previous years" navigation without modeling it as recurrence |
+| Happy hour every Friday | Ongoing | Always-around; excluded from main feed |
+| Museum exhibit Oct–Feb | Ongoing | Long window, not an instance-per-day |
+
+### `series_type` values and which shape they belong to
+
+| `series_type` | Shape | Collapsed? | Notes |
+|---|---|---|---|
+| `recurring` | Recurrence | ✅ | Default recurring event |
+| `class` | Recurrence | ✅ | Multi-session class with drop-in instances |
+| `workshop` | Recurrence | ✅ | Same as class |
+| `festival` | Collection (on parent) | ❌ | Children live via `parent_event_id` |
+| `season` | Collection (on parent) | ❌ | Children via `parent_event_id` — **audit: many current `season` rows are flat (no parent); migrate to parent/child** |
+| `annual` | Collection (on parent) | ❌ | Marks a parent that recurs yearly; link via `series_id` to prior-year parent |
+| `camp` | Legacy — avoid | N/A | Prefer Single w/ date range. Existing rows kept for now. |
+| `lifestyle` | Ongoing | N/A | Excluded from main feed |
+| `ongoing` | Ongoing | N/A | Excluded from main feed |
+| `exhibit` | Ongoing | N/A | Excluded from main feed |
+
+### How collapsing works (Recurrence only)
+
+When `collapseSeries: true` on `getEvents()`, the query over-fetches 3x, then post-processes in [src/data/events/get-events.ts:182](src/data/events/get-events.ts) to dedupe by `series_id` — keeping only the next upcoming instance. The card shows:
 
 > **Story Time at the Library**
 > Sat · 10am
 > *Every Saturday · 28 more dates*
 
-- **Collapsible types**: `recurring`, `class`, `workshop`, `lifestyle`, `ongoing`, `exhibit` — repeating content, same event
-- **Never collapsed**: `festival`, `season` — each date is distinct content
-- **Implementation**: Post-processing in `src/data/events/get-events.ts` — over-fetches 3x, deduplicates by `series_id`, re-sorts by date
-- **Recurrence label**: Built from `series.recurrence_rule` JSON via `buildRecurrenceLabel()` — e.g. "Every Tuesday", "Every other Friday", "Monthly on the 15th"
-- **EventCard fields**: `recurrence_label` (human-readable string) and `upcoming_count` (remaining dates)
+- **Collapsible types**: `recurring`, `class`, `workshop`, `lifestyle`, `ongoing`, `exhibit`
+- **Never collapsed**: `festival`, `season`, `annual`, `camp` — each date is distinct content
+- **Recurrence label** built from `series.recurrence_rule` JSON via `buildRecurrenceLabel()`
+- **EventCard fields added**: `recurrence_label`, `upcoming_count`
 
 ### Where collapsing is enabled
+
 | Page / Section | `collapseSeries` | Reason |
 |---|---|---|
 | `/events` (main listing) | `true` | Primary browse feed — avoid clutter |
@@ -137,30 +186,40 @@ When `collapseSeries: true` is passed to `getEvents()`, recurring series instanc
 | `/events/archive` | `false` | Historical |
 | `/events/lifestyle` | `true` | Lifestyle-only feed |
 
-### Lifestyle / Ongoing Events (v3.1)
+### Main-feed filtering rules
 
-Three new series types for low-urgency, always-around events:
+Main browse feeds apply all three filters together:
 
-| Type | Slug | Examples |
-|------|------|----------|
-| Lifestyle | `lifestyle` | Yoga class, trivia night, happy hour |
-| Ongoing | `ongoing` | Brunch specials, daily deals |
-| Exhibit | `exhibit` | Museum/gallery exhibits |
+1. `WHERE parent_event_id IS NULL` — hide collection children
+2. `WHERE series.series_type NOT IN ('lifestyle', 'ongoing', 'exhibit')` unless `includeLifestyle` overrides
+3. `collapseSeries` post-process if enabled
 
-**Feed behavior**: These are **excluded from the main event feed by default**. They appear:
-- On `/events/lifestyle` ("Things to Do Anytime") dedicated page
-- When explicitly requested via `includeLifestyle: true` or `includeLifestyle: 'only'` in `getEvents()`
-- On event detail pages (always accessible by direct URL)
-
-**Filter param**: `includeLifestyle` on `EventQueryParams`:
-- `undefined` / `false` — exclude lifestyle events (default for all browse feeds)
+`includeLifestyle` param on `EventQueryParams`:
+- `undefined` / `false` — exclude Ongoing shape (default for all browse feeds)
 - `true` — include everything
-- `'only'` — show only lifestyle events
+- `'only'` — show only Ongoing events (used by `/events/lifestyle`)
 
-### UI treatment
-- **EventCard** (`src/components/events/event-card.tsx`): Repeat icon + label + "N more dates" below the date line, `text-[11px] text-zinc`
-- **HomepageEventCard** (inline in `page.tsx`): Same treatment below location/time line
-- **CompactEventCard** (inline in `page.tsx`): Smaller variant `text-[10px]`
+### UI treatment of recurrence label
+
+- **EventCard** ([src/components/events/event-card.tsx](src/components/events/event-card.tsx)): Repeat icon + label + "N more dates" below date line, `text-[11px] text-zinc`
+- **HomepageEventCard** (inline in `page.tsx`): Same treatment below location/time
+- **CompactEventCard** (inline): Smaller variant `text-[10px]`
+
+### Parent/child (Collection) data layer
+
+- [src/data/events/child-events.ts](src/data/events/child-events.ts): `getChildEvents`, `getParentEventInfo`, `getChildEventCount`
+- **ChildEventsSchedule** component: date-grouped program view with filter pills, today indicator, auto-scroll
+- Parent detail page: shows schedule below description
+- Child detail page: shows parent breadcrumb + sibling events
+
+### Known debt (see `docs/event-shapes-onepager.md` for audit status)
+
+1. **`parent_event_id` is overloaded as "collection parent."** If we ever materialize variable-content recurring instances (trivia with weekly themes), we'll need a separate `recurrence_parent_id` to distinguish "child of festival" from "instance of recurring event."
+2. **`series.start_date`/`end_date`/`total_sessions`** — semantics unclear. `total_sessions` is unreferenced in queries; candidate for removal. `start_date`/`end_date` should be authoritative for the run's bookends; document this.
+3. **`recurrence_rule` JSON has no Zod schema.** Structure inferred from `buildRecurrenceLabel()`. Type it.
+4. **No `series_kind` column.** The three-kind distinction (recurrence/collection/ongoing) lives only in our heads + this doc. Adding `series.series_kind` would make it queryable and would let the admin UI branch on it.
+5. **No EXDATE (skip dates) or modified-instance support.** "Every Saturday except 12/24" has no mechanism. Add when needed.
+6. **Admin UI cannot create collections.** Parent/child relationships are read-only in the edit form. Blocker for non-scraper festival entry. See admin redesign plan.
 
 ## Key Conventions
 - Tailwind tokens defined in `tailwind.config.ts` — neutrals, brand, category, legacy aliases

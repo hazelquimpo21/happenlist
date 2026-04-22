@@ -174,6 +174,13 @@ export interface EventCard {
   parent_event_id?: string | null;
   parent_group?: string | null;
   child_event_count?: number;
+  // Ongoing-Single signals (event shape v4: 2026-04-22).
+  // `hours` set = this is a Single with a weekly availability pattern (exhibit,
+  // happy hour). Main feed excludes these unless `includeLifestyle` overrides.
+  // Shape validated by src/lib/events/hours-schema.ts.
+  hours?: Record<string, unknown> | null;
+  /** For events that recur yearly (Summerfest 2026 -> Summerfest 2025). */
+  prior_edition_event_id?: string | null;
   // Performers (max 2 for card display)
   performers?: { name: string; role: string }[];
   // Membership benefit summary for card badge
