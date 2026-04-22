@@ -31,6 +31,7 @@ import {
   AlertTriangle,
   ExternalLink,
   RotateCcw,
+  Repeat,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -138,6 +139,18 @@ export function ImportForm({ categories }: ImportFormProps) {
    */
   const [duplicateMap, setDuplicateMap] = useState<Record<number, DuplicateCandidate[]>>({});
 
+  /**
+   * Parsed recurrence rules per preview index, for events whose scraper
+   * output includes a `recurrence_description`. We run the NL→structured
+   * parser in the background so the admin can verify the scraper's
+   * interpretation BEFORE saving. Value shape:
+   *   { description: "Every other Tuesday at 7pm" }  — normalized label
+   *   { error: string }                              — parser rejected it
+   */
+  const [recurrenceMap, setRecurrenceMap] = useState<
+    Record<number, { description: string } | { error: string }>
+  >({});
+
   // --------------------------------------------------------------------------
   // Actions
   // --------------------------------------------------------------------------
@@ -150,6 +163,51 @@ export function ImportForm({ categories }: ImportFormProps) {
     setSaveResults([]);
     setEdits(new Map());
     setDuplicateMap({});
+    setRecurrenceMap({});
+  }, []);
+
+  /**
+   * For each preview event with a natural-language recurrence_description,
+   * call the existing /api/superadmin/parse-recurrence proxy. Fire all
+   * requests in parallel and accumulate into recurrenceMap. Failures are
+   * captured per-event so the card shows a warning (not silently dropped).
+   */
+  const fetchRecurrenceHints = useCallback(async (events: ScraperEvent[]) => {
+    const withRecurrence: { index: number; description: string; startDate: string | undefined }[] = [];
+    events.forEach((ev, i) => {
+      const desc = ev.recurrence_description;
+      if (typeof desc === 'string' && desc.trim().length >= 4) {
+        withRecurrence.push({
+          index: i,
+          description: desc,
+          startDate: ev.start_datetime?.split('T')[0],
+        });
+      }
+    });
+    if (withRecurrence.length === 0) return;
+
+    await Promise.all(
+      withRecurrence.map(async ({ index, description, startDate }) => {
+        try {
+          const res = await fetch('/api/superadmin/parse-recurrence', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ description, startDate }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            setRecurrenceMap(prev => ({ ...prev, [index]: { error: data.error || 'Parse failed' } }));
+            return;
+          }
+          setRecurrenceMap(prev => ({
+            ...prev,
+            [index]: { description: data.recurrence_description ?? description },
+          }));
+        } catch {
+          setRecurrenceMap(prev => ({ ...prev, [index]: { error: 'Network error' } }));
+        }
+      })
+    );
   }, []);
 
   /**
@@ -217,9 +275,11 @@ export function ImportForm({ categories }: ImportFormProps) {
       setSelected(new Set(events.map((_, i) => i)));
       setEdits(new Map());
       setDuplicateMap({});
+      setRecurrenceMap({});
       setStage('preview');
-      // Fire-and-forget — preview renders immediately, decoration arrives after.
+      // Fire-and-forget — preview renders immediately, decorations arrive after.
       void fetchDuplicateHints(events);
+      void fetchRecurrenceHints(events);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Network error');
       setStage('input');
@@ -461,6 +521,7 @@ export function ImportForm({ categories }: ImportFormProps) {
                 categories={categories}
                 selected={selected.has(i)}
                 duplicates={duplicateMap[i] ?? []}
+                recurrence={recurrenceMap[i]}
                 onToggle={() => toggleSelected(i)}
                 onPatch={(patch) => patchEdit(i, patch)}
                 onReset={() => resetEdit(i)}
@@ -559,6 +620,7 @@ function EventPreviewEditable({
   categories,
   selected,
   duplicates,
+  recurrence,
   onToggle,
   onPatch,
   onReset,
@@ -568,6 +630,7 @@ function EventPreviewEditable({
   categories: CategoryOption[];
   selected: boolean;
   duplicates: DuplicateCandidate[];
+  recurrence: { description: string } | { error: string } | undefined;
   onToggle: () => void;
   onPatch: (patch: Partial<EventEdits>) => void;
   onReset: () => void;
@@ -597,6 +660,44 @@ function EventPreviewEditable({
         />
 
         <div className="flex-1 min-w-0 space-y-3">
+          {/* Recurrence verification — scraper flagged this event as recurring
+              with a plain-English description. We ran /parse/recurrence to
+              convert that to a structured rule and show both so the operator
+              can spot misreads before saving. Informational only — the card
+              saves as a single event (series structure is built post-save via
+              the series editor). */}
+          {event.is_series && event.recurrence_description && (
+            <div className="flex items-start gap-2 p-3 bg-indigo-50 border border-indigo-200 rounded-md text-sm">
+              <Repeat className="w-4 h-4 text-indigo-700 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-indigo-900">Scraper detected a recurring event</div>
+                <div className="mt-1 space-y-0.5 text-xs">
+                  <div className="text-indigo-900">
+                    <span className="text-indigo-700/80">Scraper said:</span>{' '}
+                    <span className="italic">&ldquo;{event.recurrence_description}&rdquo;</span>
+                  </div>
+                  {recurrence && 'description' in recurrence && (
+                    <div className="text-indigo-900">
+                      <span className="text-indigo-700/80">Parsed rule:</span>{' '}
+                      <strong>{recurrence.description}</strong>
+                    </div>
+                  )}
+                  {recurrence && 'error' in recurrence && (
+                    <div className="text-red-700">
+                      <span className="text-red-600/80">Parser failed:</span> {recurrence.error}
+                    </div>
+                  )}
+                  {!recurrence && (
+                    <div className="text-indigo-700/60 italic">Parsing…</div>
+                  )}
+                </div>
+                <p className="mt-2 text-[11px] text-indigo-800/70">
+                  Saves as a single event. Build the series + instances afterwards via the series editor.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Fuzzy duplicate warning — shows when the pg_trgm RPC finds
               existing events with similar title + same calendar day. Lets the
               operator deselect this card (skip the import) or click into the
