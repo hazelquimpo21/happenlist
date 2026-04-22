@@ -51,6 +51,7 @@ import { checkField, type HeuristicEvent } from '@/lib/admin/field-heuristics';
 import { GOOD_FOR_TAGS } from '@/types';
 import { ShapeBadge } from '@/components/admin/shape-badge';
 import { HoursEditor } from '@/components/admin/hours-editor';
+import { ParentEventPicker } from '@/components/admin/parent-event-picker';
 import { isHours, type Hours } from '@/lib/events/hours-schema';
 import {
   ACCESSIBILITY_TAGS,
@@ -738,7 +739,12 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
 
   const isDeleted = !!event.deleted_at;
 
-  const childEventCount = ((event as { child_event_count?: number | null }).child_event_count) ?? 0;
+  // Supabase returns the joined count as `child_count: [{ count: N }]`; unwrap
+  // defensively so missing/empty relationships degrade to 0.
+  const childEventCount = (() => {
+    const raw = (event as { child_count?: { count: number }[] | null }).child_count;
+    return raw?.[0]?.count ?? 0;
+  })();
 
   return (
     <div className="space-y-6">
@@ -1697,43 +1703,29 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
         {/* (festival, season, conference). Setting this hides the event from */}
         {/* the main feed; it displays only on the parent's landing page.     */}
         {/* ------------------------------------------------------------------ */}
-        <div className="p-4 bg-pink-50/50 border border-pink-200/50 rounded-lg">
-          <div className="flex items-start gap-3">
-            <Layers className="w-5 h-5 text-pink-600 mt-0.5 flex-shrink-0" />
-            <div className="flex-1 space-y-2">
-              <div>
-                <p className="text-sm font-medium text-pink-800">Parent Event</p>
-                <p className="text-xs text-pink-700/80 mt-0.5">
-                  Paste a parent event&apos;s UUID to make this a Collection child. Leave empty for a standalone event.
-                  Full event picker coming in a follow-up — UUID works for now.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  name="parent_event_id"
-                  value={formState.parent_event_id}
-                  onChange={handleInputChange}
-                  placeholder="00000000-0000-0000-0000-000000000000"
-                  className="flex-1 px-3 py-1.5 text-sm font-mono border border-pink-300 rounded bg-pure focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none"
-                />
-                {formState.parent_event_id && (
-                  <button
-                    type="button"
-                    onClick={() => setFormState((prev) => ({ ...prev, parent_event_id: '' }))}
-                    className="text-xs text-pink-700 hover:text-pink-900 px-2 py-1"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-              {childEventCount > 0 && (
-                <p className="text-xs text-pink-700">
-                  This event has <span className="font-semibold">{childEventCount}</span> {childEventCount === 1 ? 'child' : 'children'} — it&apos;s a Collection parent.
-                </p>
-              )}
-            </div>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-pink-600" />
+            <p className="text-sm font-medium text-ink">Parent Event</p>
           </div>
+          <p className="text-xs text-zinc">
+            Link this to a Collection parent (festival, season, conference).
+            Children are hidden from the main feed and display on the parent&apos;s page.
+          </p>
+          <ParentEventPicker
+            value={formState.parent_event_id}
+            currentEventId={event.id}
+            initialParent={(() => {
+              const raw = (event as { parent_event?: { id: string; title: string; slug: string } | null }).parent_event;
+              return raw ?? null;
+            })()}
+            onChange={(nextId) => setFormState((prev) => ({ ...prev, parent_event_id: nextId }))}
+          />
+          {childEventCount > 0 && (
+            <p className="text-xs text-pink-700">
+              This event has <span className="font-semibold">{childEventCount}</span> {childEventCount === 1 ? 'child' : 'children'} — it&apos;s a Collection parent.
+            </p>
+          )}
         </div>
 
         {/* Status */}

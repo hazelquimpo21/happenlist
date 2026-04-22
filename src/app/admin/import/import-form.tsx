@@ -40,6 +40,7 @@ import type {
   ScraperAnalyzeResponse,
 } from '@/lib/scraper/types';
 import type { DuplicateCandidate } from '@/lib/scraper/save-event';
+import { ShapeBadge } from '@/components/admin/shape-badge';
 
 // ============================================================================
 // TYPES
@@ -660,6 +661,26 @@ function EventPreviewEditable({
         />
 
         <div className="flex-1 min-w-0 space-y-3">
+          {/* Detected shape — derive from scraper payload so the admin sees
+              upfront whether this will save as Single or Recurring. Today the
+              scraper never emits Collection payloads (children array); if
+              that lands, extend this to 'collection'. Hours-based Ongoing is
+              also future work — the admin toggles that in the edit form. */}
+          <div className="flex items-center gap-2">
+            <ShapeBadge
+              seriesId={event.is_series ? 'pending' : null}
+              parentEventId={null}
+              childEventCount={0}
+              hours={null}
+              compact
+            />
+            {event.is_series && (
+              <span className="text-[11px] text-zinc">
+                Scraper detected a series — saves as a single event now, build the series after.
+              </span>
+            )}
+          </div>
+
           {/* Recurrence verification — scraper flagged this event as recurring
               with a plain-English description. We ran /parse/recurrence to
               convert that to a structured rule and show both so the operator

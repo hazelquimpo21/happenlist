@@ -82,7 +82,9 @@ export async function getAdminEvent(eventId: string): Promise<AdminEventDetails 
         *,
         category:categories(id, name, slug, icon),
         location:locations(id, name, slug, address_line, city, state, venue_type),
-        organizer:organizers(id, name, slug, logo_url, website_url)
+        organizer:organizers(id, name, slug, logo_url, website_url),
+        parent_event:events!parent_event_id(id, title, slug),
+        child_count:events!parent_event_id(count)
       `
       )
       .eq('id', eventId)
