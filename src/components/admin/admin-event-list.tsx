@@ -168,7 +168,7 @@ export function AdminEventList({
       setActionState('error');
       setResultMessage(error instanceof Error ? error.message : 'Action failed');
     }
-  }, [pendingAction, selectedIds, selectedCount, reason, targetStatus, clearSelection, router]);
+  }, [pendingAction, selectedIds, selectedCount, reason, targetStatus, targetCategoryId, clearSelection, router]);
 
   const getActionLabel = (action: BulkAction): string => {
     switch (action) {

@@ -284,7 +284,7 @@ export function ImportForm({ categories }: ImportFormProps) {
       setErrorMsg(err instanceof Error ? err.message : 'Network error');
       setStage('input');
     }
-  }, [tab, url, urlHint, text, textSourceUrl, textHint]);
+  }, [tab, url, urlHint, text, textSourceUrl, textHint, fetchDuplicateHints, fetchRecurrenceHints]);
 
   const saveSelected = useCallback(async () => {
     if (selected.size === 0) return;
@@ -735,7 +735,7 @@ function EventPreviewEditable({
                   ))}
                 </div>
                 <p className="mt-2 text-xs text-amber-800/80">
-                  Uncheck this card if it's the same event, or keep it selected to save anyway.
+                  Uncheck this card if it&apos;s the same event, or keep it selected to save anyway.
                 </p>
               </div>
             </div>
