@@ -51,6 +51,9 @@ export interface PendingEventsFilters {
   showDeleted?: boolean;
   /** Filter by series membership: 'in_series' | 'no_series' | undefined (all) */
   seriesFilter?: 'in_series' | 'no_series';
+  /** Filter by event shape (v4 three-shape model). 'collection' = parent or
+   *  child of a Collection (parent_event_id IS NOT NULL OR has children). */
+  shapeFilter?: 'collection';
 }
 
 export interface PendingEventsResult {
@@ -154,6 +157,31 @@ export async function getPendingEvents(
       query = query.not('series_id', 'is', null);
     } else if (filters.seriesFilter === 'no_series') {
       query = query.is('series_id', null);
+    }
+
+    // Apply shape filter. Collection = any event with `parent_event_id` set
+    // (= child) or an event whose id appears in another event's
+    // parent_event_id (= parent). We pre-resolve parent IDs with a small
+    // side-query, then OR them with `.in()`. Empty parent list degrades to
+    // "children only" which is fine.
+    if (filters.shapeFilter === 'collection') {
+      const { data: parentRows } = await supabase
+        .from('events')
+        .select('parent_event_id')
+        .not('parent_event_id', 'is', null);
+      const parentIds = Array.from(
+        new Set(
+          ((parentRows || []) as { parent_event_id: string | null }[])
+            .map((r) => r.parent_event_id)
+            .filter((v): v is string => !!v)
+        )
+      );
+      if (parentIds.length > 0) {
+        const ids = parentIds.join(',');
+        query = query.or(`parent_event_id.not.is.null,id.in.(${ids})`);
+      } else {
+        query = query.not('parent_event_id', 'is', null);
+      }
     }
 
     // Apply ordering

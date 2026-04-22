@@ -38,6 +38,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
   const orderBy = ((typeof resolvedSearchParams.orderBy === 'string' && resolvedSearchParams.orderBy) || 'created_at') as 'scraped_at' | 'created_at' | 'start_datetime' | 'title';
   const orderDir = ((typeof resolvedSearchParams.orderDir === 'string' && resolvedSearchParams.orderDir) || 'desc') as 'asc' | 'desc';
   const seriesFilter = (typeof resolvedSearchParams.series === 'string' && resolvedSearchParams.series) ? resolvedSearchParams.series as 'in_series' | 'no_series' : undefined;
+  const shapeFilter = resolvedSearchParams.shape === 'collection' ? 'collection' as const : undefined;
   const showDeleted = status === 'deleted';
 
   // Fetch all events + categories (for the bulk "assign category" picker) in parallel
@@ -52,6 +53,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
       orderDir,
       showDeleted,
       seriesFilter,
+      shapeFilter,
     }),
     getCategories(),
   ]);
@@ -63,7 +65,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
   // Build filter URL helper
   const buildFilterUrl = (params: Record<string, string | undefined>) => {
     const newParams = new URLSearchParams();
-    Object.entries({ status, source, q: search, series: seriesFilter, orderBy, orderDir, ...params }).forEach(([key, value]) => {
+    Object.entries({ status, source, q: search, series: seriesFilter, shape: shapeFilter, orderBy, orderDir, ...params }).forEach(([key, value]) => {
       if (value) newParams.set(key, value);
     });
     return `/admin/events?${newParams.toString()}`;
@@ -107,6 +109,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
           {/* Carry forward params that aren't in a visible dropdown */}
           {status && <input type="hidden" name="status" value={status} />}
           {search && <input type="hidden" name="q" value={search} />}
+          {shapeFilter && <input type="hidden" name="shape" value={shapeFilter} />}
 
           <select
             name="series"

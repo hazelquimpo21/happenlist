@@ -21,6 +21,7 @@ import {
   BarChart3,
   Download,
   ListChecks,
+  Layers,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ADMIN_ENTITY_LIST } from '@/lib/constants/admin-entities';
@@ -85,6 +86,14 @@ export function AdminSidebar({ pendingCount = 0 }: AdminSidebarProps) {
           label: 'Import',
           href: '/admin/import',
           icon: <Download className="w-5 h-5" />,
+        },
+        {
+          // Collections: events that are either a parent (with children) or a
+          // child of one. Currently empty — gating surface for the new
+          // Collection shape workflow.
+          label: 'Collections',
+          href: '/admin/events?shape=collection',
+          icon: <Layers className="w-5 h-5" />,
         },
       ],
     },

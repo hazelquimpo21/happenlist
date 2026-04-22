@@ -49,6 +49,9 @@ import { RecheckPanel } from './recheck-panel';
 import { FieldHeuristicFlag } from './field-heuristic-flag';
 import { checkField, type HeuristicEvent } from '@/lib/admin/field-heuristics';
 import { GOOD_FOR_TAGS } from '@/types';
+import { ShapeBadge } from '@/components/admin/shape-badge';
+import { HoursEditor } from '@/components/admin/hours-editor';
+import { isHours, type Hours } from '@/lib/events/hours-schema';
 import {
   ACCESSIBILITY_TAGS,
   ACCESSIBILITY_TAG_LABELS,
@@ -139,6 +142,11 @@ interface FormState {
   category_id: string;
   // Status
   status: string;
+  // Event shape v4 (2026-04-22). `hours` populated = Single · Ongoing;
+  // `parent_event_id` populated = Collection child. Shape is DERIVED from
+  // these + series_id — never set directly by the admin.
+  hours: Hours | null;
+  parent_event_id: string;
 }
 
 // ============================================================================
@@ -197,6 +205,11 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
     image_url: event.image_url || '',
     category_id: event.category_id || '',
     status: event.status || 'draft',
+    hours: (() => {
+      const raw = (event as { hours?: unknown }).hours;
+      return isHours(raw) ? raw : null;
+    })(),
+    parent_event_id: ((event as { parent_event_id?: string | null }).parent_event_id) || '',
   });
 
   // Heuristic event snapshot — recomputed on each formState change so flags
@@ -506,6 +519,25 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
         updates.organizer_id = newOrganizerId;
       }
 
+      // Event shape v4 — hours (Ongoing-Single signal) + parent_event_id
+      // (Collection linkage). Compared against stable JSON for hours, string
+      // for parent_event_id. Hours edits go through the HoursEditor component
+      // which always emits Hours | null; we serialize to JSON only for diff.
+      const rawExistingHours = (event as { hours?: unknown }).hours ?? null;
+      const existingHoursJson = rawExistingHours == null ? '' : JSON.stringify(rawExistingHours);
+      const newHoursJson = formState.hours == null ? '' : JSON.stringify(formState.hours);
+      if (existingHoursJson !== newHoursJson) {
+        updates.hours = formState.hours; // null or Hours object
+      }
+
+      const currentParentId = ((event as { parent_event_id?: string | null }).parent_event_id) || '';
+      const nextParentId = formState.parent_event_id.trim();
+      if (currentParentId !== nextParentId) {
+        // Empty string → clear the FK; non-empty → expected to be a UUID.
+        // Server-side FK constraint will reject bad values.
+        updates.parent_event_id = nextParentId || null;
+      }
+
       // Check if anything changed
       if (Object.keys(updates).length === 0 && formState.status === event.status) {
         setStatus('idle');
@@ -706,8 +738,22 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
 
   const isDeleted = !!event.deleted_at;
 
+  const childEventCount = ((event as { child_event_count?: number | null }).child_event_count) ?? 0;
+
   return (
     <div className="space-y-6">
+      {/* Event shape — live-derived display. Never a user choice; it emerges
+          from series_id / parent_event_id / child_event_count / hours. */}
+      <div className="flex items-center justify-between bg-pure border border-mist rounded-lg p-3">
+        <div className="text-xs text-zinc">Event shape</div>
+        <ShapeBadge
+          seriesId={(event as { series_id?: string | null }).series_id ?? null}
+          parentEventId={formState.parent_event_id || null}
+          childEventCount={childEventCount}
+          hours={formState.hours}
+        />
+      </div>
+
       {/* Deletion success overlay */}
       {justDeleted && (
         <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center animate-in fade-in duration-300">
@@ -1639,27 +1685,51 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
         )}
 
         {/* ------------------------------------------------------------------ */}
-        {/* PARENT EVENT — link this event to a parent (festival, conference) */}
+        {/* WEEKLY HOURS — for always-on Singles (exhibits, happy hour)       */}
+        {/* ------------------------------------------------------------------ */}
+        <HoursEditor
+          value={formState.hours}
+          onChange={(next) => setFormState((prev) => ({ ...prev, hours: next }))}
+        />
+
+        {/* ------------------------------------------------------------------ */}
+        {/* PARENT EVENT — links this event as a child of a Collection parent */}
+        {/* (festival, season, conference). Setting this hides the event from */}
+        {/* the main feed; it displays only on the parent's landing page.     */}
         {/* ------------------------------------------------------------------ */}
         <div className="p-4 bg-pink-50/50 border border-pink-200/50 rounded-lg">
           <div className="flex items-start gap-3">
             <Layers className="w-5 h-5 text-pink-600 mt-0.5 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-pink-800">Parent Event</p>
-              {(event as unknown as Record<string, unknown>).parent_event_id ? (
-                <div className="mt-1">
-                  <p className="text-sm text-pink-700">
-                    Child of: <span className="font-medium">{(event as unknown as Record<string, unknown>).parent_event_id as string}</span>
-                  </p>
-                  {(event as unknown as Record<string, unknown>).parent_group ? (
-                    <p className="text-sm text-pink-600 mt-0.5">
-                      Group: {String((event as unknown as Record<string, unknown>).parent_group)}
-                    </p>
-                  ) : null}
-                </div>
-              ) : (
-                <p className="text-sm text-zinc mt-0.5">
-                  Not linked to a parent event. Use the scraper extension to set parent relationships.
+            <div className="flex-1 space-y-2">
+              <div>
+                <p className="text-sm font-medium text-pink-800">Parent Event</p>
+                <p className="text-xs text-pink-700/80 mt-0.5">
+                  Paste a parent event&apos;s UUID to make this a Collection child. Leave empty for a standalone event.
+                  Full event picker coming in a follow-up — UUID works for now.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  name="parent_event_id"
+                  value={formState.parent_event_id}
+                  onChange={handleInputChange}
+                  placeholder="00000000-0000-0000-0000-000000000000"
+                  className="flex-1 px-3 py-1.5 text-sm font-mono border border-pink-300 rounded bg-pure focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none"
+                />
+                {formState.parent_event_id && (
+                  <button
+                    type="button"
+                    onClick={() => setFormState((prev) => ({ ...prev, parent_event_id: '' }))}
+                    className="text-xs text-pink-700 hover:text-pink-900 px-2 py-1"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              {childEventCount > 0 && (
+                <p className="text-xs text-pink-700">
+                  This event has <span className="font-semibold">{childEventCount}</span> {childEventCount === 1 ? 'child' : 'children'} — it&apos;s a Collection parent.
                 </p>
               )}
             </div>
