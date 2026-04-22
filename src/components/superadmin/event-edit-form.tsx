@@ -46,6 +46,8 @@ import { SeriesSearch } from './series-search';
 import { ChipToggleGroup } from './chip-toggle-group';
 import { EventImageEditor } from './event-image-editor';
 import { RecheckPanel } from './recheck-panel';
+import { FieldHeuristicFlag } from './field-heuristic-flag';
+import { checkField, type HeuristicEvent } from '@/lib/admin/field-heuristics';
 import { GOOD_FOR_TAGS } from '@/types';
 import {
   ACCESSIBILITY_TAGS,
@@ -196,6 +198,26 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
     category_id: event.category_id || '',
     status: event.status || 'draft',
   });
+
+  // Heuristic event snapshot — recomputed on each formState change so flags
+  // disappear as soon as the operator fixes a field. Pulls mutable fields from
+  // formState and read-only fields (organizer, venue, ai-gen flag) from the
+  // original event prop.
+  const heuristicEvent: HeuristicEvent = {
+    title: formState.title,
+    short_description: formState.short_description,
+    description: formState.description,
+    category_id: formState.category_id || null,
+    organizer_name: (event as { organizer_name?: string | null }).organizer_name ?? null,
+    organizer_is_venue: (event as { organizer_is_venue?: boolean | null }).organizer_is_venue ?? null,
+    price_type: formState.price_type,
+    price_low: formState.price_low ? parseFloat(formState.price_low) : null,
+    price_high: formState.price_high ? parseFloat(formState.price_high) : null,
+    ticket_url: formState.ticket_url,
+    image_url: formState.image_url,
+    image_ai_generated: (event as { image_ai_generated?: boolean | null }).image_ai_generated ?? null,
+    location: event.location ? { name: event.location.name } : null,
+  };
 
   // UI state
   const [status, setStatus] = useState<FormStatus>('idle');
@@ -766,6 +788,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-ink mb-2">
             Event Title
+            <FieldHeuristicFlag flag={checkField(heuristicEvent, 'title')} />
           </label>
           <input
             type="text"
@@ -795,6 +818,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
           <label htmlFor="short_description" className="block text-sm font-medium text-ink mb-2">
             Short Description
             <span className="text-zinc font-normal ml-2">(for cards, max 160 chars)</span>
+            <FieldHeuristicFlag flag={checkField(heuristicEvent, 'short_description')} />
           </label>
           <textarea
             id="short_description"
@@ -876,6 +900,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
           <div>
             <label htmlFor="price_type" className="block text-sm font-medium text-ink mb-2">
               Price Type
+              <FieldHeuristicFlag flag={checkField(heuristicEvent, 'price')} />
             </label>
             <select
               id="price_type"
@@ -1176,6 +1201,7 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
           <div>
             <label htmlFor="category_id" className="block text-sm font-medium text-ink mb-2">
               Category
+              <FieldHeuristicFlag flag={checkField(heuristicEvent, 'category')} />
             </label>
             <div className="relative">
               <select
