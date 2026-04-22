@@ -52,6 +52,7 @@ import { GOOD_FOR_TAGS } from '@/types';
 import { ShapeBadge } from '@/components/admin/shape-badge';
 import { HoursEditor } from '@/components/admin/hours-editor';
 import { ParentEventPicker } from '@/components/admin/parent-event-picker';
+import { CollectionChildrenPanel } from '@/components/admin/collection-children-panel';
 import { isHours, type Hours } from '@/lib/events/hours-schema';
 import {
   ACCESSIBILITY_TAGS,
@@ -1655,34 +1656,52 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
             <div className="flex items-start gap-3">
               <Layers className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-blue-800">Part of a Series</p>
-                <p className="text-sm text-blue-700 mt-0.5">
-                  Choose which occurrences to apply shared field changes to
-                  (title, description, pricing, venue, organizer, category, links, tags).
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-blue-900">Part of a recurring series</p>
+                  <a
+                    href={`/admin/series/${event.series_id}/edit`}
+                    className="text-xs text-blue-700 hover:text-blue-900 underline"
+                  >
+                    Edit the series →
+                  </a>
+                </div>
+                <p className="text-sm text-blue-800/90 mt-1">
+                  You&apos;re editing a single date in this series. Changes to title, description,
+                  pricing, venue, organizer, category, links, or tags can optionally propagate
+                  to sibling dates. <strong>Date/time edits always stay on this row only.</strong>
                 </p>
                 <div className="mt-3 space-y-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label className="flex items-start gap-2 cursor-pointer">
                     <input type="radio" name="occurrenceScope" value="single"
                       checked={occurrenceScope === 'single'} onChange={() => setOccurrenceScope('single')}
-                      className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
-                    <span className="text-sm text-blue-800">This occurrence only</span>
+                      className="w-4 h-4 mt-0.5 text-blue-600 focus:ring-blue-500" />
+                    <span className="text-sm text-blue-900">
+                      <span className="font-medium">Just this date</span>
+                      <span className="block text-xs text-blue-700/80">Only this occurrence changes. Siblings untouched.</span>
+                    </span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label className="flex items-start gap-2 cursor-pointer">
                     <input type="radio" name="occurrenceScope" value="all"
                       checked={occurrenceScope === 'all'} onChange={() => setOccurrenceScope('all')}
-                      className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
-                    <span className="text-sm text-blue-800">All occurrences in this series</span>
+                      className="w-4 h-4 mt-0.5 text-blue-600 focus:ring-blue-500" />
+                    <span className="text-sm text-blue-900">
+                      <span className="font-medium">This date + every other date in the series</span>
+                      <span className="block text-xs text-blue-700/80">Applies shared fields to all siblings.</span>
+                    </span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label className="flex items-start gap-2 cursor-pointer">
                     <input type="radio" name="occurrenceScope" value="future"
                       checked={occurrenceScope === 'future'} onChange={() => setOccurrenceScope('future')}
-                      className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
-                    <span className="text-sm text-blue-800">This and future occurrences</span>
+                      className="w-4 h-4 mt-0.5 text-blue-600 focus:ring-blue-500" />
+                    <span className="text-sm text-blue-900">
+                      <span className="font-medium">This date + all future dates</span>
+                      <span className="block text-xs text-blue-700/80">Past siblings stay as-is. New copy applies going forward.</span>
+                    </span>
                   </label>
                 </div>
                 {occurrenceScope !== 'single' && (
-                  <p className="text-xs text-blue-600 mt-2">
-                    Date/time changes will NOT be applied to other occurrences.
+                  <p className="text-xs text-blue-800 mt-2 bg-blue-100 border border-blue-200 rounded px-2 py-1.5">
+                    ⓘ Date + time changes always stay on this row. To change the schedule for the whole series, use the series editor.
                   </p>
                 )}
               </div>
@@ -1727,6 +1746,15 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
             </p>
           )}
         </div>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* COLLECTION CHILDREN — inline manager. Writes (attach/detach) are   */}
+        {/* immediate via PATCH, NOT part of this form's save cycle.           */}
+        {/* ------------------------------------------------------------------ */}
+        <CollectionChildrenPanel
+          parentEventId={event.id}
+          initialChildCount={childEventCount}
+        />
 
         {/* Status */}
         <div>

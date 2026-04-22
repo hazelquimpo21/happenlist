@@ -27,10 +27,30 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const query = (searchParams.get('q') || '').trim();
+    const lookupId = (searchParams.get('id') || '').trim();
+    const parentId = (searchParams.get('parentId') || '').trim();
     const excludeId = searchParams.get('exclude') || null;
-    const limit = Math.min(parseInt(searchParams.get('limit') || '12', 10), 50);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '12', 10), 100);
 
     const supabase = await createClient();
+
+    // By-id lookup (single event resolve, used by picker when a draft loads
+    // with a parent id but no pre-joined details). Short-circuit path — no
+    // search, no ordering, just the one row.
+    if (lookupId) {
+      const { data, error } = await supabase
+        .from('events')
+        .select('id, title, slug, instance_date, series_id, parent_event_id')
+        .eq('id', lookupId)
+        .is('deleted_at', null)
+        .maybeSingle();
+      if (error) {
+        timer.error('Failed to lookup event by id', error);
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      }
+      timer.success(`Resolved event by id: ${lookupId}`);
+      return NextResponse.json({ success: true, events: data ? [data] : [] });
+    }
 
     let builder = supabase
       .from('events')
@@ -38,15 +58,21 @@ export async function GET(request: NextRequest) {
       .is('deleted_at', null)
       .limit(limit);
 
-    if (query.length > 0) {
-      builder = builder.ilike('title', `%${query}%`);
+    // Collection-children listing: return every event whose parent_event_id
+    // matches. Oldest-first so a festival programme reads chronologically.
+    if (parentId) {
+      builder = builder.eq('parent_event_id', parentId);
+      builder = builder.order('instance_date', { ascending: true, nullsFirst: true });
+    } else {
+      if (query.length > 0) {
+        builder = builder.ilike('title', `%${query}%`);
+      }
+      // Upcoming first, then older
+      builder = builder.order('instance_date', { ascending: false, nullsFirst: false });
     }
     if (excludeId) {
       builder = builder.neq('id', excludeId);
     }
-
-    // Upcoming first, then older
-    builder = builder.order('instance_date', { ascending: false, nullsFirst: false });
 
     const { data, error } = await builder;
     if (error) {

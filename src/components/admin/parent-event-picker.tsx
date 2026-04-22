@@ -49,7 +49,8 @@ export function ParentEventPicker({ value, onChange, currentEventId, initialPare
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch parent title when value is set externally (e.g. restored draft) and
-  // we don't have details for it yet. Keeps the chip readable.
+  // we don't have details for it yet. Keeps the chip readable. Uses the
+  // search endpoint's by-id path (?id=<uuid>).
   useEffect(() => {
     if (!value) {
       setParentDetails(null);
@@ -59,19 +60,19 @@ export function ParentEventPicker({ value, onChange, currentEventId, initialPare
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/admin/events/search?q=&limit=1&exclude=${encodeURIComponent(currentEventId)}`, { cache: 'no-store' });
-        if (!res.ok) return;
-        // Cheap lookup by id: search endpoint doesn't support by-id; fall back
-        // to single-row fetch via the public event-by-slug path isn't right
-        // either. For now, display the UUID truncated if we don't have a
-        // cached title — admin can re-pick to refresh. TODO: tiny by-id
-        // endpoint in a follow-up.
-      } finally {
-        if (cancelled) return;
+        const res = await fetch(`/api/admin/events/search?id=${encodeURIComponent(value)}`, { cache: 'no-store' });
+        if (!res.ok || cancelled) return;
+        const payload = await res.json();
+        const hit = (payload?.events ?? [])[0];
+        if (hit && !cancelled) {
+          setParentDetails({ id: hit.id, title: hit.title, slug: hit.slug });
+        }
+      } catch (err) {
+        if (!cancelled) console.warn('[parent-picker] lookup failed', err);
       }
     })();
     return () => { cancelled = true; };
-  }, [value, currentEventId, parentDetails]);
+  }, [value, parentDetails]);
 
   const runSearch = useCallback(async (q: string) => {
     setLoading(true);
