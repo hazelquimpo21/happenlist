@@ -10,6 +10,7 @@ export { StatCard, StatCardGrid } from './stat-card';
 export { AdminEventCard, AdminEventCardSkeleton } from './admin-event-card';
 export { AdminEventFilters } from './admin-event-filters';
 export { AdminEventList } from './admin-event-list';
+export { WorklistsTile } from './worklists-tile';
 
 // Directory entity primitives (organizers, venues, performers, membership_orgs)
 export { EntityCardGrid } from './entity-card-grid';

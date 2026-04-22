@@ -20,6 +20,7 @@ import {
   ChevronRight,
   BarChart3,
   Download,
+  ListChecks,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ADMIN_ENTITY_LIST } from '@/lib/constants/admin-entities';
@@ -117,6 +118,11 @@ export function AdminSidebar({ pendingCount = 0 }: AdminSidebarProps) {
           label: 'Activity Log',
           href: '/admin/activity',
           icon: <FileText className="w-5 h-5" />,
+        },
+        {
+          label: 'Cleanup Worklists',
+          href: '/admin/worklists',
+          icon: <ListChecks className="w-5 h-5" />,
         },
         {
           label: 'Signals Calibration',

@@ -17,7 +17,8 @@ import {
 import { AdminHeader, StatCard, StatCardGrid } from '@/components/admin';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { getAdminStats, getRecentActivity, getPendingEvents } from '@/data/admin';
+import { getAdminStats, getRecentActivity, getPendingEvents, getWorklistCounts } from '@/data/admin';
+import { WorklistsTile } from '@/components/admin/worklists-tile';
 import { adminDataLogger } from '@/lib/utils/logger';
 
 export const metadata = {
@@ -29,10 +30,11 @@ export default async function AdminDashboardPage() {
 
   // Fetch all data in parallel with error handling
   // RLS policies require superadmin auth — queries fail without it
-  const [statsResult, activityResult, pendingResult] = await Promise.allSettled([
+  const [statsResult, activityResult, pendingResult, worklistsResult] = await Promise.allSettled([
     getAdminStats(),
     getRecentActivity(5),
     getPendingEvents({ limit: 5 }),
+    getWorklistCounts(),
   ]);
 
   const stats = statsResult.status === 'fulfilled'
@@ -52,6 +54,7 @@ export default async function AdminDashboardPage() {
   const pendingEvents = pendingResult.status === 'fulfilled'
     ? pendingResult.value
     : { events: [], total: 0, page: 1, limit: 5, totalPages: 0 };
+  const worklistCounts = worklistsResult.status === 'fulfilled' ? worklistsResult.value : [];
 
   const hasErrors = [statsResult, activityResult, pendingResult].some(r => r.status === 'rejected');
   if (hasErrors) {
@@ -138,6 +141,10 @@ export default async function AdminDashboardPage() {
             }
           />
         </StatCardGrid>
+
+        {/* Worklists — data-quality cleanup surfaces. Counts are cheap HEAD
+            queries; data lives in src/data/admin/get-worklists.ts. */}
+        <WorklistsTile counts={worklistCounts} />
 
         {/* Two column layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

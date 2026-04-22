@@ -8,6 +8,15 @@
 export { getAdminStats, getRecentActivity } from './get-admin-stats';
 export type { AdminStats, AuditLogEntry } from './get-admin-stats';
 
+// Worklists (data-quality cleanup surfaces)
+export {
+  WORKLISTS,
+  getWorklistCounts,
+  getWorklistItems,
+  getWorklistMeta,
+} from './get-worklists';
+export type { WorklistSlug, WorklistCount, WorklistItem } from './get-worklists';
+
 // Pending events
 export { getPendingEvents, getAllAdminEvents } from './get-pending-events';
 export type {
