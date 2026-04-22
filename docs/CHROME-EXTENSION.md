@@ -67,7 +67,9 @@ Authorization: Bearer <SCRAPER_API_SECRET>
 POST /api/scraper/events
 ```
 
-Creates a new event from scraped data. The event is always created with status `pending_review`.
+Creates a new event from scraped data. Events from this path are auto-published (`status='published'`) — the Chrome extension is a trusted channel. For admin-initiated imports that require review, use the `/admin/import` UI instead, which routes through `/api/superadmin/import/save` and creates events as `pending_review`.
+
+> **Implementation note**: as of 2026-04-21, this route delegates to the shared `src/lib/scraper/save-event.ts` helper. That same helper powers the admin import flow, so dedupe-by-source-url, venue/organizer resolution, and category-by-slug lookup behave identically on both paths. Change that file — not the route — if you need to tweak save behavior.
 
 ### Required Fields
 

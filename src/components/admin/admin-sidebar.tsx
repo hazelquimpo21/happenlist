@@ -19,6 +19,7 @@ import {
   LogOut,
   ChevronRight,
   BarChart3,
+  Download,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ADMIN_ENTITY_LIST } from '@/lib/constants/admin-entities';
@@ -76,6 +77,13 @@ export function AdminSidebar({ pendingCount = 0 }: AdminSidebarProps) {
           label: 'Rejected',
           href: '/admin/events?status=rejected',
           icon: <XCircle className="w-5 h-5" />,
+        },
+        {
+          // Superadmin-only in the page, but we surface the link to everyone in
+          // the sidebar and let the page handle the redirect for non-superadmins.
+          label: 'Import',
+          href: '/admin/import',
+          icon: <Download className="w-5 h-5" />,
         },
       ],
     },

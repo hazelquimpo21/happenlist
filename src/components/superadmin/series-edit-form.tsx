@@ -18,7 +18,9 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { RecurrenceNaturalInput } from './recurrence-natural-input';
 import type { SeriesRow } from '@/types/series';
+import type { RecurrenceRule } from '@/lib/supabase/types';
 
 interface SeriesEditFormProps {
   series: SeriesRow;
@@ -415,6 +417,16 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
         </div>
       </div>
 
+      {/* Recurrence editor — separate block with its own save so the NL
+          parser can write recurrence_rule without requiring the operator to
+          also touch price/description/etc. */}
+      <RecurrenceSection
+        seriesId={series.id}
+        currentRule={series.recurrence_rule as RecurrenceRule | null}
+        startDate={series.start_date}
+        onSaved={() => router.refresh()}
+      />
+
       {/* Action buttons */}
       <div className="flex items-center justify-between">
         <Button
@@ -437,7 +449,7 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
         </Button>
       </div>
 
-      {/* Delete confirmation modal */}
+      {/* Delete confirmation modal (see bottom of file for RecurrenceSection) */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-charcoal/50 flex items-center justify-center z-50 p-4">
           <div className="bg-pure rounded-xl shadow-xl max-w-md w-full p-6">
@@ -509,6 +521,106 @@ export function SuperadminSeriesEditForm({ series }: SeriesEditFormProps) {
             </div>
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// RECURRENCE SECTION
+// ============================================================================
+// Split out so the NL parser can write recurrence_rule independently of the
+// main series form's "Save Changes" button. Uses the same PATCH route as the
+// rest of the form.
+// ----------------------------------------------------------------------------
+
+interface RecurrenceSectionProps {
+  seriesId: string;
+  currentRule: RecurrenceRule | null;
+  startDate: string | null;
+  onSaved: () => void;
+}
+
+function RecurrenceSection({ seriesId, currentRule, startDate, onSaved }: RecurrenceSectionProps) {
+  const [pendingRule, setPendingRule] = useState<RecurrenceRule | null>(null);
+  const [pendingLabel, setPendingLabel] = useState<string>('');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const applyPending = async () => {
+    if (!pendingRule) return;
+    setSaveStatus('saving');
+    setErrorMsg(null);
+    try {
+      const response = await fetch(`/api/superadmin/series/${seriesId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          updates: { recurrence_rule: pendingRule },
+          notes: `Recurrence updated via NL parser: "${pendingLabel}"`,
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || `Failed (${response.status})`);
+      }
+      setSaveStatus('saved');
+      setPendingRule(null);
+      setPendingLabel('');
+      onSaved();
+    } catch (err) {
+      setSaveStatus('error');
+      setErrorMsg(err instanceof Error ? err.message : 'Network error');
+    }
+  };
+
+  return (
+    <div className="bg-pure border border-mist rounded-lg p-6 space-y-4">
+      <div>
+        <h3 className="text-base font-semibold text-ink">Recurrence</h3>
+        <p className="text-sm text-zinc mt-1">
+          Current pattern:{' '}
+          {currentRule
+            ? <code className="text-xs bg-cloud px-1.5 py-0.5 rounded">{JSON.stringify(currentRule)}</code>
+            : <span className="italic text-silver">None set</span>}
+        </p>
+      </div>
+
+      <RecurrenceNaturalInput
+        startDate={startDate}
+        onParsed={({ rule, description }) => {
+          setPendingRule(rule);
+          setPendingLabel(description);
+          setSaveStatus('idle');
+          setErrorMsg(null);
+        }}
+      />
+
+      {pendingRule && (
+        <div className="flex items-center justify-between gap-3 pt-3 border-t border-mist">
+          <div className="text-sm text-zinc">
+            Ready to save: <strong className="text-ink">{pendingLabel}</strong>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => { setPendingRule(null); setPendingLabel(''); }}
+              disabled={saveStatus === 'saving'}
+            >
+              Discard
+            </Button>
+            <Button onClick={applyPending} disabled={saveStatus === 'saving'}>
+              {saveStatus === 'saving' ? 'Saving…' : 'Save recurrence'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {saveStatus === 'saved' && (
+        <p className="text-sm text-emerald">Recurrence saved.</p>
+      )}
+      {saveStatus === 'error' && errorMsg && (
+        <p className="text-sm text-red-700">{errorMsg}</p>
       )}
     </div>
   );

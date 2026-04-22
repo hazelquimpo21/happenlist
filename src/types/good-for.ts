@@ -188,6 +188,152 @@ export const GOOD_FOR_TAGS: GoodForTag[] = [
     icon: 'Coffee',
     color: 'bg-stone-100 text-stone-800',
   },
+
+  // ==========================================================================
+  // Situational / persona tags added 2026-04-21
+  // (Thrillist/Infatuation-style specificity. Match slugs with the scraper
+  // vocab at happenlist_scraper/backend/lib/vocabularies.js.)
+  // ==========================================================================
+  {
+    slug: 'sports_fans',
+    label: 'Sports Fans',
+    description: 'Game watches, team viewings, tailgates — Brewers, Bucks, Marquette, anything with a scoreboard',
+    icon: 'Medal',
+    color: 'bg-red-100 text-red-800',
+  },
+  {
+    slug: 'dancefloor',
+    label: 'On the Dancefloor',
+    description: 'DJ nights, dance classes, salsa, house — anywhere people are actually dancing',
+    icon: 'Disc3',
+    color: 'bg-fuchsia-100 text-fuchsia-800',
+  },
+  {
+    slug: 'late_night',
+    label: 'Up All Night',
+    description: 'After-hours energy — 11pm start times, parties that run past last call',
+    icon: 'Moon',
+    color: 'bg-indigo-100 text-indigo-800',
+  },
+  {
+    slug: 'wellness_seekers',
+    label: 'Wellness & Yoga',
+    description: 'Yoga, breathwork, meditation, sound baths, wellness workshops',
+    icon: 'Flower2',
+    color: 'bg-green-100 text-green-800',
+  },
+  {
+    slug: 'coffee_snobs',
+    label: 'Coffee Snobs',
+    description: 'Specialty coffee tastings, roasters, pour-over demos, third-wave nerdery',
+    icon: 'Coffee',
+    color: 'bg-amber-100 text-amber-800',
+  },
+  {
+    slug: 'beer_drinkers',
+    label: 'Beer Drinkers',
+    description: 'Brewery events, tap takeovers, beer festivals, brewery tours',
+    icon: 'Beer',
+    color: 'bg-yellow-100 text-yellow-800',
+  },
+  {
+    slug: 'cocktail_nerds',
+    label: 'Cocktail Nerds',
+    description: 'Craft cocktails, tiki bars, spirit tastings, mixology classes',
+    icon: 'Martini',
+    color: 'bg-pink-100 text-pink-800',
+  },
+  {
+    slug: 'wine_lovers',
+    label: 'Wine Lovers',
+    description: 'Tastings, flights, vineyard trips, winemaker dinners',
+    icon: 'Wine',
+    color: 'bg-rose-100 text-rose-800',
+  },
+  {
+    slug: 'bookworms',
+    label: 'Bookworms',
+    description: 'Book clubs, author readings, literary festivals, poetry nights',
+    icon: 'BookMarked',
+    color: 'bg-stone-100 text-stone-800',
+  },
+  {
+    slug: 'film_buffs',
+    label: 'Film Buffs',
+    description: 'Indie and repertory cinema, film festivals, director Q&As, cult classics',
+    icon: 'Film',
+    color: 'bg-neutral-100 text-neutral-800',
+  },
+  {
+    slug: 'theater_kids',
+    label: 'Theater Kids',
+    description: 'Plays, musicals, live theater, opera',
+    icon: 'Drama',
+    color: 'bg-red-100 text-red-800',
+  },
+  {
+    slug: 'comedy_fans',
+    label: 'Comedy Fans',
+    description: 'Stand-up, improv shows, sketch comedy, open mics',
+    icon: 'Mic',
+    color: 'bg-orange-100 text-orange-800',
+  },
+  {
+    slug: 'vintage_hunters',
+    label: 'Vintage Hunters',
+    description: 'Flea markets, estate sales, antique fairs, thrift pop-ups',
+    icon: 'ShoppingBag',
+    color: 'bg-amber-100 text-amber-800',
+  },
+  {
+    slug: 'history_buffs',
+    label: 'History Buffs',
+    description: 'Historic walking tours, heritage events, museum exhibits, reenactments',
+    icon: 'Landmark',
+    color: 'bg-zinc-100 text-zinc-800',
+  },
+  {
+    slug: 'early_birds',
+    label: 'Early Birds',
+    description: '5k runs, farmers markets, breakfast clubs, sunrise sessions — done by noon',
+    icon: 'Sunrise',
+    color: 'bg-orange-100 text-orange-800',
+  },
+  {
+    slug: 'trivia_lovers',
+    label: 'Trivia Nights',
+    description: 'Pub quizzes, trivia leagues, bar trivia',
+    icon: 'Lightbulb',
+    color: 'bg-purple-100 text-purple-800',
+  },
+  {
+    slug: 'karaoke_singalongs',
+    label: 'Karaoke & Sing-Alongs',
+    description: 'Karaoke nights, sing-along screenings, piano bars',
+    icon: 'Mic2',
+    color: 'bg-pink-100 text-pink-800',
+  },
+  {
+    slug: 'game_night',
+    label: 'Game Night',
+    description: 'Board game cafes, D&D, video game tournaments, tabletop nights',
+    icon: 'Dices',
+    color: 'bg-indigo-100 text-indigo-800',
+  },
+  {
+    slug: 'networking_pros',
+    label: 'Networking',
+    description: 'Professional mixers, industry meetups, career panels, founders events',
+    icon: 'Briefcase',
+    color: 'bg-slate-100 text-slate-800',
+  },
+  {
+    slug: 'fancy_night',
+    label: 'Fancy Night Out',
+    description: 'Black tie, galas, upscale tastings — a reason to dress up',
+    icon: 'Gem',
+    color: 'bg-violet-100 text-violet-800',
+  },
 ];
 
 /**

@@ -319,3 +319,79 @@ Not fixed (accepted trade-offs):
 - **Override form closes immediately on save:** No "saved!" beat. Acceptable for admin tooling.
 - **Generated Supabase types don't include the new tables/columns:** every consumer casts. Regenerating types via `npx supabase gen types typescript` is a follow-up — would replace ~15 `as any` / `as unknown as X` casts across `signal-reviews.ts`, `get-admin-event.ts`, `get-events.ts`, `get-signals-calibration.ts`. Not blocking.
 - **Override → flat column promotion:** Overrides on `accessibility_tags` etc. live only in `signal_overrides` JSONB. Public detail page + cards still read flat columns. If overrides see meaningful traffic, add a write-through trigger or a view that COALESCEs override over flat. Not needed yet.
+
+---
+
+# Scraper Integration (Phases 1–4, 2026-04-21)
+
+The Render-hosted `happenlist_scraper` backend is now a first-class admin tool inside Happenlist — not just an inbound endpoint for the Chrome extension. Full design + gotchas in `docs/phase-reports/scraper-integration-report.md`.
+
+## Surface area
+
+| Capability | Entry point (happenlist) | Scraper endpoint |
+|---|---|---|
+| Import event from URL | `/admin/import` → URL tab | `POST /analyze/url` |
+| Import event(s) from pasted text | `/admin/import` → Text tab | `POST /analyze/text` |
+| Rescrape existing event + per-field diff | "Re-fetch from source" button on `SuperadminEventEditForm` | `POST /recheck` |
+| Plain-English recurrence → structured rule | `RecurrenceNaturalInput` in event + series editors | `POST /parse/recurrence` |
+| Nightly sold-out sweep | Vercel cron: `/api/cron/recheck-sold-out` @ 08:00 UTC | `POST /check-sold-out` |
+
+## Key files (happenlist side)
+
+- `src/lib/scraper/types.ts` — **MIRROR** of scraper response shapes. Update both sides together.
+- `src/lib/scraper/client.ts` — server-only typed client. `X-API-Secret` auth, 60s default timeout, throws `ScraperClientError`.
+- `src/lib/scraper/save-event.ts` — single source of truth for turning a scraper-analyzed event into a Supabase insert. Used by BOTH `/api/scraper/events` (Chrome extension) and `/api/superadmin/import/save` (admin UI). **Do not duplicate this logic — always extend here.**
+- `src/app/admin/import/page.tsx` + `import-form.tsx` — superadmin import UI.
+- `src/components/superadmin/recheck-panel.tsx` — diff modal on event edit form.
+- `src/components/superadmin/recurrence-natural-input.tsx` — plain-English → structured rule input.
+- `src/app/api/cron/recheck-sold-out/route.ts` — nightly cron.
+- `vercel.json` — cron schedule.
+
+## Key files (scraper side)
+
+- `backend/services/text-extraction.js` — shared extraction core (prompt + GPT call + post-process). Both `analyze-text` and `analyze-url` wrap this.
+- `backend/routes/analyze-text.js` — thin HTTP wrapper.
+- `backend/routes/analyze-url.js` — fetches URL via `lib/url-context.js`, then wraps the core.
+- `backend/routes/recheck.js` — re-analyzes + diffs against caller snapshot.
+- `backend/routes/parse-recurrence.js` — NL → `recurrence_rule` JSONB, validated via `lib/recurrence-rule.js`.
+- `backend/routes/check-sold-out.js` — thin wrapper over `services/ticket-page.js → followTicketLink()`.
+
+## Auth + secrets
+
+| Secret | Set on | Set on | Used for |
+|---|---|---|---|
+| `SCRAPER_API_SECRET` | Vercel (Happenlist) | Render (Scraper) | Both directions — Render→Vercel uses Bearer, Vercel→Render uses `X-API-Secret`. Same value, rotate together. |
+| `SCRAPER_API_URL` | Vercel (Happenlist) | — | Base URL of the Render service (no trailing slash), e.g. `https://happenlist-scraper.onrender.com`. |
+| `CRON_SECRET` | Vercel (Happenlist, auto-generated when you add `vercel.json` crons) | — | Vercel injects on scheduled runs. Local dev: leave blank; route allows unauth'd. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Vercel (Happenlist), Render (Scraper) | — | Server-only writes on both sides. The scraper uses it to create venues/organizers during its own Chrome-extension save path; Happenlist uses it for every admin write. |
+| `SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_URL` | both | — | Same project, same URL. |
+| `OPENAI_API_KEY` | Render (Scraper) | — | LLM extraction. Happenlist does NOT need this. |
+| `SUPERADMIN_EMAILS` | Vercel (Happenlist) | — | Gate for `/admin/import`, recheck button, recurrence parser. |
+
+## Credentials checklist (what to add where)
+
+**On Vercel → Happenlist project → Settings → Environment Variables:**
+
+- [ ] `SCRAPER_API_URL` = your Render service URL (e.g. `https://happenlist-scraper.onrender.com`). No trailing slash.
+- [ ] `SCRAPER_API_SECRET` = the same secret set on Render. If not already set, generate one (`openssl rand -hex 32`) and use the same value in both places.
+- [ ] `CRON_SECRET` = Vercel auto-generates this on first deploy with `vercel.json` crons; manually set for local dev if desired.
+- [ ] Verify `SUPERADMIN_EMAILS` includes the operators who should access `/admin/import` and the rescrape button.
+
+**On Render → happenlist_scraper service → Environment:**
+
+- [ ] `API_SECRET` = the same `SCRAPER_API_SECRET` you set on Vercel. (The scraper uses the var name `API_SECRET`; Happenlist uses `SCRAPER_API_SECRET`. Values match; names differ.)
+- [ ] `ALLOWED_ORIGINS` = if you use CORS for the Chrome extension, keep existing. Happenlist→Render calls are server-side so CORS doesn't matter for them.
+- [ ] `OPENAI_API_KEY` should already be there.
+- [ ] `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` should already be there.
+
+**After config is set:**
+
+- [ ] Deploy Happenlist (picks up `vercel.json` cron schedule automatically).
+- [ ] Smoke test: open `/admin/import`; the green/red status dot indicates scraper reachability.
+- [ ] Smoke test cron locally: `curl -X GET http://localhost:3000/api/cron/recheck-sold-out` (no CRON_SECRET → allowed in dev).
+
+## Cross-repo coupling rules
+
+- **Response types** (`happenlist/src/lib/scraper/types.ts`) mirror shapes produced by scraper routes. If a scraper route grows a field, update types here too.
+- **Controlled vocab drift** is still caught by the existing `vocabularies.ts` mirror (see Phase 1 Smart Filters notes). The recurrence parser passes through `buildRecurrenceRule()` so its output uses the same enums.
+- **One writer** for events: `src/lib/scraper/save-event.ts`. Routes are thin; dedupe/resolve/insert logic is shared.

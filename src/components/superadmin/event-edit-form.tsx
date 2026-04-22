@@ -41,9 +41,11 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RecurrenceBuilder } from './recurrence-builder';
+import { RecurrenceNaturalInput } from './recurrence-natural-input';
 import { SeriesSearch } from './series-search';
 import { ChipToggleGroup } from './chip-toggle-group';
 import { EventImageEditor } from './event-image-editor';
+import { RecheckPanel } from './recheck-panel';
 import { GOOD_FOR_TAGS } from '@/types';
 import {
   ACCESSIBILITY_TAGS,
@@ -705,6 +707,32 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
             <p className="text-sm font-medium text-red-800">This event has been deleted</p>
             <p className="text-xs text-red-600 mt-0.5">You can restore it using the button below.</p>
           </div>
+        </div>
+      )}
+
+      {/* Re-fetch from source (superadmin convenience) — only when we have a
+          source_url to rescrape. Hidden on soft-deleted events since they can't
+          be edited anyway. */}
+      {!isDeleted && !justDeleted && (
+        <div className="flex items-center justify-between bg-pure border border-mist rounded-lg px-4 py-3">
+          <div className="text-sm text-zinc">
+            {event.source_url ? (
+              <>
+                Source:{' '}
+                <a
+                  href={event.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue hover:text-blue-dark underline break-all"
+                >
+                  {event.source_url}
+                </a>
+              </>
+            ) : (
+              <span className="text-silver">No source URL on this event.</span>
+            )}
+          </div>
+          <RecheckPanel eventId={event.id} hasSourceUrl={!!event.source_url} />
         </div>
       )}
 
@@ -1481,7 +1509,15 @@ export function SuperadminEventEditForm({ event, categories = [], onSuccess }: E
                 )}
 
                 {seriesPanel === 'make-recurring' && (
-                  <div className="mt-3">
+                  <div className="mt-3 space-y-3">
+                    <RecurrenceNaturalInput
+                      startDate={event.start_datetime?.split('T')[0] || null}
+                      defaultTime={event.start_datetime?.split('T')[1]?.substring(0, 5) || null}
+                      onParsed={({ rule }) => handleMakeRecurring(rule)}
+                    />
+                    <div className="text-xs text-zinc text-center">
+                      — or fill in the structured form below —
+                    </div>
                     <RecurrenceBuilder
                       firstDate={event.start_datetime?.split('T')[0] || new Date().toISOString().split('T')[0]}
                       defaultTime={event.start_datetime?.split('T')[1]?.substring(0, 5) || '19:00'}

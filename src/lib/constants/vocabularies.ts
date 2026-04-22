@@ -211,6 +211,29 @@ export const GOOD_FOR_SLUGS = [
   'budget_friendly',
   'after_work',
   'quiet_hangout',
+
+  // Situational / persona tags added 2026-04-21. Mirror entries exist in
+  // happenlist_scraper/backend/lib/vocabularies.js — change both together.
+  'sports_fans',
+  'dancefloor',
+  'late_night',
+  'wellness_seekers',
+  'coffee_snobs',
+  'beer_drinkers',
+  'cocktail_nerds',
+  'wine_lovers',
+  'bookworms',
+  'film_buffs',
+  'theater_kids',
+  'comedy_fans',
+  'vintage_hunters',
+  'history_buffs',
+  'early_birds',
+  'trivia_lovers',
+  'karaoke_singalongs',
+  'game_night',
+  'networking_pros',
+  'fancy_night',
 ] as const;
 
 export type GoodForSlug = (typeof GOOD_FOR_SLUGS)[number];
