@@ -67,22 +67,25 @@ export interface InterestPreset {
 /**
  * All interest presets, in display order.
  *
- * Phase 1 ships goodFor-only presets. Phase 3 / B7 will fill in vibeTags
+ * 2026-04-22 — reshaped as the "Good for" row. Rationale:
+ *   - Occasion-framed (Date night, Girls' night, After work, Rainy day)
+ *     beats topic-framed (Live music, Theater, Comedy) because topics
+ *     overlap the Category row and create "which one do I pick?" confusion.
+ *   - Topic-framed presets removed: crafty-and-artsy → Arts/Workshops categories;
+ *     live-music → Music category; outdoors → Outdoors category;
+ *     comedy → Nightlife category; theater → Arts category; budget-friendly →
+ *     dedicated Budget row. Queer is an identity filter — moved to the drawer.
+ *   - family-chaos replaced by `with-kids`, which triggers a progressive
+ *     disclosure for age-bucket chips + a "remember for next visit" toggle
+ *     (see with-kids-expander.tsx + use-kid-ages.ts).
+ *
+ * Stale URLs from the old presets fail open (getInterestPreset returns null,
+ * no filter applied) rather than crashing.
+ *
+ * Phase 1 shipped goodFor-only presets. Phase 3 / B7 will fill in vibeTags
  * once the atmosphere data is clean and the vibe filter UI ships.
  */
 export const INTEREST_PRESETS = [
-  {
-    id: 'crafty-and-artsy',
-    label: 'Crafty & artsy',
-    description: 'Workshops, open mics, maker meetups, gallery nights',
-    goodFor: ['creatives'],
-  },
-  {
-    id: 'foodies',
-    label: 'Foodies',
-    description: 'Tastings, pop-ups, food tours, culinary classes',
-    goodFor: ['foodies'],
-  },
   {
     id: 'date-night',
     label: 'Date night',
@@ -91,61 +94,66 @@ export const INTEREST_PRESETS = [
   },
   {
     id: 'solo-friendly',
-    label: 'Solo-friendly',
+    label: 'Solo',
     description: 'Easy to attend alone — meetups, drop-ins, classes',
     goodFor: ['solo_friendly'],
   },
   {
-    id: 'family-chaos',
-    label: 'Family chaos',
-    description: 'Kid-friendly mayhem, all ages, both age brackets',
+    id: 'with-kids',
+    label: 'With kids',
+    description: 'Kid-friendly events — pick ages for a finer fit',
     goodFor: ['families_young_kids', 'families_older_kids'],
   },
   {
-    id: 'live-music',
-    label: 'Live music',
-    description: 'Concerts, DJ sets, open jams, music-forward events',
-    goodFor: ['music_lovers'],
+    id: 'after-work',
+    label: 'After work',
+    description: 'Happy hours, weeknight drop-ins, post-5pm',
+    goodFor: ['after_work'],
   },
   {
-    id: 'outdoors',
-    label: 'Outdoors',
-    description: 'Parks, gardens, hikes, outdoor markets',
-    goodFor: ['outdoorsy'],
+    id: 'girls-night',
+    label: "Girls' night",
+    description: 'Paint nights, drag brunches, group-friendly fun',
+    goodFor: ['girls_night'],
   },
   {
-    id: 'budget-friendly',
-    label: 'Budget-friendly',
-    description: 'Free or cheap — easy on the wallet',
-    goodFor: ['budget_friendly'],
-  },
-  // ── Subculture-driven pills (2026-04) ───────────────────────────────────────
-  // These match on `subcultures[]` instead of good_for. The signal lives in the
-  // scene/identity tag, not the audience tag. Audit on the live dataset showed
-  // queer (44/188), theater-kids (6/188), and comedy (added to vocab same ship)
-  // were the strongest non-music clusters with no pill exposure.
-  {
-    id: 'comedy',
-    label: 'Comedy',
-    description: 'Stand-up, improv, comedy clubs, open mic comedy',
-    goodFor: [],
-    subcultures: ['comedy'],
+    id: 'foodies',
+    label: 'Foodies',
+    description: 'Tastings, pop-ups, food tours, culinary experiences',
+    goodFor: ['foodies'],
   },
   {
-    id: 'queer',
-    label: 'Queer',
-    description: 'LGBTQ+ events, drag, queer-centered programming',
-    goodFor: [],
-    subcultures: ['queer'],
+    id: 'rainy-day',
+    label: 'Rainy day',
+    description: 'Indoor activities perfect for bad weather',
+    goodFor: ['rainy_day'],
   },
   {
-    id: 'theater',
-    label: 'Theater',
-    description: 'Plays, musicals, performances for theater lovers',
-    goodFor: [],
-    subcultures: ['theater-kids'],
+    id: 'occasion-worthy',
+    label: 'Occasion',
+    description: "Birthdays, anniversaries, bachelorette — when it's a big deal",
+    goodFor: ['occasion_worthy'],
+  },
+  {
+    id: 'game-night',
+    label: 'Game night',
+    description: 'Board games, D&D, trivia, tabletop nights',
+    goodFor: ['game_night'],
+  },
+  {
+    id: 'meet-people',
+    label: 'Meet people',
+    description: 'Mixers, meetups, networking, community events',
+    goodFor: ['meet_people'],
   },
 ] as const satisfies readonly InterestPreset[];
+
+/**
+ * The preset id that triggers the "With kids" progressive disclosure
+ * (age-bucket sub-row + "remember my kids" toggle). Centralized as a constant
+ * so the FilterBar and the Expander never drift.
+ */
+export const WITH_KIDS_PRESET_ID = 'with-kids';
 
 export type InterestPresetId = (typeof INTEREST_PRESETS)[number]['id'];
 
