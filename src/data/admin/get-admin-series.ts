@@ -87,7 +87,10 @@ export async function getAdminSeries(
       organizer:organizers(name)
     `,
       { count: 'exact' }
-    );
+    )
+    // Hide soft-deleted series from the admin listing. (Cancelled rows
+    // still show — admin needs to see them. Deleted rows are scrubbed.)
+    .is('deleted_at', null);
 
   if (status) {
     query = query.eq('status', status);

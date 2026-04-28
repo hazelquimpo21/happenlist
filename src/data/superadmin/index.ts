@@ -27,11 +27,12 @@ export {
   superadminCreateEntity,
 } from './superadmin-entity-actions';
 
-// Series-specific cascade soft-delete (cancel series + all child events)
-export { superadminDeleteSeriesWithInstances } from './delete-series';
+// Series cancel-or-delete with optional event cascade
+export { superadminCancelOrDeleteSeries } from './delete-series';
 export type {
-  DeleteSeriesWithInstancesParams,
-  DeleteSeriesWithInstancesResult,
+  DeleteSeriesParams,
+  DeleteSeriesResult,
+  DeleteSeriesMode,
 } from './delete-series';
 export type {
   EditEntityParams,

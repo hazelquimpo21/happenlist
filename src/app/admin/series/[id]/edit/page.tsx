@@ -108,6 +108,7 @@ export default async function SuperadminSeriesEditPage({ params }: PageProps) {
               seriesId={series.id}
               seriesTitle={series.title}
               seriesStatus={series.status}
+              seriesDeleted={!!series.deleted_at}
               totalEventsCount={totalEventsCount}
               activeEventsCount={activeEventsCount}
             />

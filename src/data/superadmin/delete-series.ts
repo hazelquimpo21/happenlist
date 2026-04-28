@@ -1,24 +1,33 @@
 /**
- * SUPERADMIN: DELETE SERIES WITH INSTANCES
- * =========================================
- * Soft-cancels a series AND every non-cancelled child event in one shot.
+ * SUPERADMIN: CANCEL OR DELETE SERIES (with optional event cascade)
+ * =================================================================
+ * Two distinct destructive actions on a series:
  *
- * Why a dedicated module:
- *   superadminDeleteEntity handles single-row soft-delete for 5 entity
- *   types. Cascading to child events is series-specific and needs its
- *   own audit trail (count of children cancelled, reason). Isolating it
- *   keeps the generic helper simple.
+ *   - mode='cancel':  set status='cancelled' (events that get cascaded
+ *                     also get status='cancelled'). Communicates to users
+ *                     that the thing isn't happening — row stays visible
+ *                     in archives, may render with a "cancelled" badge.
  *
- * Reversibility:
- *   Soft-cancel sets status='cancelled' on series + events. Both can be
- *   restored via a SQL UPDATE flipping status back. No UI restore yet —
- *   if that pattern shows up, build it then.
+ *   - mode='delete':  set deleted_at=now() (events that get cascaded
+ *                     also get deleted_at=now()). Soft-erases — public
+ *                     and admin queries filter deleted_at IS NULL so
+ *                     the row vanishes from every surface.
+ *
+ * cascadeEvents controls whether attached non-cancelled, non-deleted child
+ * events get the same treatment. When true:
+ *   - Children are touched first, then the series, so an interruption
+ *     leaves the series alive (recoverable) instead of orphaning live
+ *     children under a dead series.
+ *
+ * Reversibility: both actions are soft. Restore via SQL flipping status
+ * back to 'published' or deleted_at back to NULL.
  *
  * Coupling:
- *   - Used by DELETE /api/superadmin/series/[id] when body.cascadeEvents=true.
+ *   - DELETE /api/superadmin/series/[id] dispatches on body.mode + body.cascadeEvents.
  *   - The events_series_start_datetime_uniq partial index excludes
- *     status='cancelled' rows, so re-creating the same series + dates
- *     after cancellation works without index conflicts.
+ *     status='cancelled' rows; recreate-after-cancel is conflict-free.
+ *   - Public/admin series queries must filter deleted_at IS NULL — see
+ *     src/data/series/* and src/data/admin/get-admin-series.ts.
  *
  * @module data/superadmin/delete-series
  */
@@ -28,21 +37,34 @@ import { requireSuperAdmin } from '@/lib/auth';
 import { superadminLogger } from '@/lib/utils/logger';
 import type { SuperadminActionResult } from './superadmin-event-actions';
 
-export interface DeleteSeriesWithInstancesParams {
+export type DeleteSeriesMode = 'cancel' | 'delete';
+
+export interface DeleteSeriesParams {
   seriesId: string;
   adminEmail: string;
   reason: string;
+  mode: DeleteSeriesMode;
+  /**
+   * If true, the same destructive transition is applied to every attached
+   * non-cancelled, non-deleted child event.
+   */
+  cascadeEvents: boolean;
 }
 
-export interface DeleteSeriesWithInstancesResult extends SuperadminActionResult {
-  /** Number of child events transitioned to cancelled. */
-  eventsCancelled?: number;
+export interface DeleteSeriesResult extends SuperadminActionResult {
+  /** Number of child events touched (cancelled or deleted, matching mode). */
+  eventsAffected?: number;
+  mode?: DeleteSeriesMode;
+  cascadeEvents?: boolean;
 }
 
-export async function superadminDeleteSeriesWithInstances(
-  params: DeleteSeriesWithInstancesParams
-): Promise<DeleteSeriesWithInstancesResult> {
-  const { seriesId, adminEmail, reason } = params;
+/**
+ * Soft-cancel or soft-delete a series, optionally cascading to attached events.
+ */
+export async function superadminCancelOrDeleteSeries(
+  params: DeleteSeriesParams
+): Promise<DeleteSeriesResult> {
+  const { seriesId, adminEmail, reason, mode, cascadeEvents } = params;
   const timestamp = new Date().toISOString();
 
   try {
@@ -56,21 +78,36 @@ export async function superadminDeleteSeriesWithInstances(
     };
   }
 
-  const timer = superadminLogger.time('superadminDeleteSeriesWithInstances', {
-    action: 'superadmin_cascade_delete_series',
+  const timer = superadminLogger.time(`superadminSeries_${mode}`, {
+    action: `superadmin_${mode}_series`,
     entityType: 'series',
     entityId: seriesId,
     adminEmail,
+    metadata: { cascadeEvents },
   });
+
+  // The transition we apply to a row.
+  // - cancel → status='cancelled'
+  // - delete → deleted_at=timestamp (status untouched so a later
+  //            restore can put it back to whatever it was)
+  const seriesPatch: Record<string, unknown> =
+    mode === 'cancel'
+      ? { status: 'cancelled', updated_at: timestamp }
+      : { deleted_at: timestamp, updated_at: timestamp };
+
+  const eventsPatch: Record<string, unknown> =
+    mode === 'cancel'
+      ? { status: 'cancelled', updated_at: timestamp }
+      : { deleted_at: timestamp, updated_at: timestamp };
 
   try {
     const supabase = createAdminClient();
 
-    // Fetch series for audit + existence check.
+    // Existence + audit context
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: series, error: fetchError } = await (supabase as any)
       .from('series')
-      .select('id, title, status')
+      .select('id, title, status, deleted_at')
       .eq('id', seriesId)
       .single();
 
@@ -84,77 +121,102 @@ export async function superadminDeleteSeriesWithInstances(
       };
     }
 
-    // Cancel all non-cancelled child events first. We do events before the
-    // series itself so an interruption mid-flight leaves the series alive
-    // (recoverable) instead of orphaning live children under a dead series.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: cancelledRows, error: eventsError } = await (supabase as any)
-      .from('events')
-      .update({ status: 'cancelled', updated_at: timestamp })
-      .eq('series_id', seriesId)
-      .neq('status', 'cancelled')
-      .select('id');
+    let eventsAffected = 0;
 
-    if (eventsError) {
-      timer.error('Failed to cancel child events', eventsError);
-      return {
-        success: false,
-        message: 'Failed to cancel attached events',
-        error: eventsError.message,
-        timestamp,
-      };
+    // Cascade children first (so an interruption leaves the series alive).
+    // We only touch rows that aren't already in the target state.
+    if (cascadeEvents) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let q = (supabase as any)
+        .from('events')
+        .update(eventsPatch)
+        .eq('series_id', seriesId);
+
+      // Don't double-touch rows that are already cancelled / deleted.
+      q = mode === 'cancel'
+        ? q.neq('status', 'cancelled').is('deleted_at', null)
+        : q.is('deleted_at', null);
+
+      const { data: cancelledRows, error: eventsError } = await q.select('id');
+
+      if (eventsError) {
+        timer.error('cascade events update failed', eventsError);
+        return {
+          success: false,
+          message: 'Failed to update attached events',
+          error: eventsError.message,
+          timestamp,
+        };
+      }
+
+      eventsAffected = cancelledRows?.length ?? 0;
     }
 
-    const eventsCancelled = cancelledRows?.length ?? 0;
-
-    // Now cancel the series itself.
+    // Apply the series row transition
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: seriesError } = await (supabase as any)
       .from('series')
-      .update({ status: 'cancelled', updated_at: timestamp })
+      .update(seriesPatch)
       .eq('id', seriesId);
 
     if (seriesError) {
-      timer.error('Failed to cancel series', seriesError);
+      timer.error('series update failed', seriesError);
       return {
         success: false,
-        message: 'Failed to cancel series (children were cancelled — restore them via SQL if needed)',
+        message: cascadeEvents
+          ? `Failed to ${mode} series (children were ${mode === 'cancel' ? 'cancelled' : 'deleted'} — restore via SQL if needed)`
+          : `Failed to ${mode} series`,
         error: seriesError.message,
         timestamp,
-        eventsCancelled,
+        eventsAffected,
+        mode,
+        cascadeEvents,
       };
     }
 
-    // Single audit log row for the whole cascade.
+    // Single audit row for the whole operation.
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any).from('admin_audit_log').insert({
-        action: 'superadmin_cascade_delete_series',
+        action: `superadmin_${mode}_series${cascadeEvents ? '_cascade' : ''}`,
         entity_type: 'series',
         entity_id: seriesId,
         admin_email: adminEmail,
         changes: {
+          mode,
+          cascade_events: cascadeEvents,
           series_title: (series as { title?: string }).title ?? null,
           previous_status: (series as { status?: string }).status ?? null,
-          events_cancelled: eventsCancelled,
+          previous_deleted_at:
+            (series as { deleted_at?: string | null }).deleted_at ?? null,
+          events_affected: eventsAffected,
         },
-        notes: reason || `Cascade-cancelled series and ${eventsCancelled} attached events`,
+        notes:
+          reason ||
+          `${mode === 'cancel' ? 'Cancelled' : 'Deleted'} series${
+            cascadeEvents ? ` and ${eventsAffected} attached event${eventsAffected === 1 ? '' : 's'}` : ''
+          }`,
       });
     } catch (auditErr) {
       // Don't fail the whole operation if audit insert fails — log and continue.
       console.error('[delete-series] audit log insert failed:', auditErr);
     }
 
-    timer.success(`series + ${eventsCancelled} events cancelled`, {
-      metadata: { seriesId, eventsCancelled },
+    timer.success(`series ${mode} (cascade=${cascadeEvents}, events=${eventsAffected})`, {
+      metadata: { seriesId, mode, cascadeEvents, eventsAffected },
     });
 
+    const verb = mode === 'cancel' ? 'Cancelled' : 'Deleted';
     return {
       success: true,
-      message: `Cancelled series and ${eventsCancelled} attached event${eventsCancelled === 1 ? '' : 's'}`,
+      message: cascadeEvents
+        ? `${verb} series and ${eventsAffected} attached event${eventsAffected === 1 ? '' : 's'}`
+        : `${verb} series`,
       eventId: seriesId,
       timestamp,
-      eventsCancelled,
+      eventsAffected,
+      mode,
+      cascadeEvents,
     };
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'Unknown error';

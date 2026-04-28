@@ -48,6 +48,7 @@ export async function getSeriesBySlug(
     )
     .eq('slug', slug)
     .eq('status', 'published')
+    .is('deleted_at', null)
     .single();
 
   if (error) {
@@ -130,6 +131,7 @@ export async function getSeriesById(
       days_of_week, total_sessions, sessions_remaining
     `)
     .eq('id', id)
+    .is('deleted_at', null)
     .single();
 
   if (error) {
@@ -331,6 +333,7 @@ export async function getRelatedSeries(params: {
     `
     )
     .eq('status', 'published')
+    .is('deleted_at', null)
     .neq('id', excludeSeriesId)
     .or(`end_date.gte.${today},end_date.is.null`)
     .limit(limit);

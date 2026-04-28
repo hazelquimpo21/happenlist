@@ -13,8 +13,9 @@ import { requireSuperadminAuth } from '@/lib/auth';
 import {
   superadminEditEntity,
   superadminDeleteEntity,
-  superadminDeleteSeriesWithInstances,
+  superadminCancelOrDeleteSeries,
 } from '@/data/superadmin';
+import type { DeleteSeriesMode } from '@/data/superadmin';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { extendSeriesInstances } from '@/data/series/extend-series';
 
@@ -144,7 +145,11 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       );
     }
 
-    let body: { reason: string; cascadeEvents?: boolean } = {
+    let body: {
+      reason: string;
+      mode?: DeleteSeriesMode;
+      cascadeEvents?: boolean;
+    } = {
       reason: 'No reason provided',
     };
     try {
@@ -154,14 +159,16 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       // Body is optional for DELETE
     }
 
-    // cascadeEvents=true: cancel series + every non-cancelled child event.
-    // Default behavior (false) only cancels the series row, leaving children
-    // attached but orphaned under a cancelled series.
-    if (body.cascadeEvents) {
-      const result = await superadminDeleteSeriesWithInstances({
+    // mode='cancel'|'delete' is the new shape. For backwards compatibility,
+    // a missing mode falls through to the legacy superadminDeleteEntity path
+    // (which sets status='cancelled' on the series row only).
+    if (body.mode === 'cancel' || body.mode === 'delete') {
+      const result = await superadminCancelOrDeleteSeries({
         seriesId: entityId,
         adminEmail: session.email,
         reason: body.reason,
+        mode: body.mode,
+        cascadeEvents: body.cascadeEvents === true,
       });
 
       if (!result.success) {
@@ -176,7 +183,9 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
         message: result.message,
         entityId: result.eventId,
         timestamp: result.timestamp,
-        eventsCancelled: result.eventsCancelled ?? 0,
+        mode: result.mode,
+        cascadeEvents: result.cascadeEvents,
+        eventsAffected: result.eventsAffected ?? 0,
       });
     }
 

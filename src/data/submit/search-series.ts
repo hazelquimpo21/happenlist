@@ -88,6 +88,7 @@ export async function searchSeries(
       `
       )
       .eq('status', 'published')
+      .is('deleted_at', null)
       .ilike('title', `%${query}%`)
       .limit(limit);
 

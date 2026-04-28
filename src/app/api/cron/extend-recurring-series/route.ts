@@ -90,6 +90,7 @@ export async function GET(request: NextRequest) {
     .select('id, title, series_type, recurrence_rule, end_date')
     .in('series_type', EXTENDABLE_SERIES_TYPES)
     .neq('status', 'cancelled')
+    .is('deleted_at', null)
     .not('recurrence_rule', 'is', null);
 
   if (seriesErr) {

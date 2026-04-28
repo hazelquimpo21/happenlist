@@ -152,7 +152,8 @@ export async function getSeries(
     `,
       { count: 'exact' }
     )
-    .eq('status', 'published');
+    .eq('status', 'published')
+    .is('deleted_at', null);
 
   // Exclude past series unless specifically included
   if (!includePast) {

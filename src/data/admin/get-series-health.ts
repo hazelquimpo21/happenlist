@@ -70,6 +70,7 @@ export async function getRunningLowSeries(): Promise<RunningLowSeries[]> {
     .select('id, title, slug, series_type, recurrence_rule')
     .in('series_type', EXTENDABLE_SERIES_TYPES)
     .neq('status', 'cancelled')
+    .is('deleted_at', null)
     .not('recurrence_rule', 'is', null);
 
   if (error) {
