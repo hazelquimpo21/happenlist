@@ -354,13 +354,26 @@ export function AdminSeriesGrid({ series }: AdminSeriesGridProps) {
                   )}
                 </div>
 
-                {/* Date range */}
+                {/* Date range. Open-ended series show "scheduled thru" so
+                    the end date doesn't read as a hard end — see
+                    lib/series/date-display.ts. */}
                 {(s.start_date || s.end_date) && (
                   <div className="flex items-center gap-1.5 text-xs text-zinc mb-3">
                     <Calendar className="w-3 h-3" />
-                    {formatDate(s.start_date)}
-                    {s.end_date && s.start_date !== s.end_date && (
-                      <> &ndash; {formatDate(s.end_date)}</>
+                    {s.is_open_ended ? (
+                      <>
+                        From {formatDate(s.start_date)}
+                        {s.end_date && s.start_date !== s.end_date && (
+                          <> · scheduled thru {formatDate(s.end_date)}</>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {formatDate(s.start_date)}
+                        {s.end_date && s.start_date !== s.end_date && (
+                          <> &ndash; {formatDate(s.end_date)}</>
+                        )}
+                      </>
                     )}
                   </div>
                 )}

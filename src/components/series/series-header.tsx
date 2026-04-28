@@ -22,7 +22,7 @@ import {
 import { Button } from '@/components/ui';
 import { SeriesTypeBadge } from './series-type-badge';
 import { SeriesPrice } from './series-price';
-import { formatDateRange } from '@/lib/utils/dates';
+import { buildPublicScheduleLabel } from '@/lib/series/date-display';
 import {
   formatRecurrence,
   formatAgeRange,
@@ -62,10 +62,14 @@ interface SeriesHeaderProps {
 export function SeriesHeader({ series, className }: SeriesHeaderProps) {
   const imageUrl = getBestImageUrl(series.thumbnail_url, series.image_url);
 
-  // Format date range
-  const dateDisplay = series.start_date
-    ? formatDateRange(series.start_date, series.end_date ?? undefined)
-    : null;
+  // Format date range. For open-ended recurring series, this returns null —
+  // the recurrenceDisplay below ("Every Wednesday at 7pm") tells the
+  // reader more than a moving end-date horizon would.
+  const dateDisplay = buildPublicScheduleLabel({
+    start_date: series.start_date,
+    end_date: series.end_date,
+    recurrence_rule: series.recurrence_rule,
+  });
 
   // Format recurrence for recurring series
   const recurrenceDisplay = series.recurrence_rule

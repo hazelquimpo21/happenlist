@@ -547,16 +547,57 @@ interface RecurrenceSectionProps {
   onSaved: () => void;
 }
 
+/**
+ * Outcome from the PATCH route's post-save extendSeriesInstances() call.
+ * Mirrors the `extend` field in the response. Optional because some saves
+ * (e.g. PATCHes that don't change recurrence_rule) don't run materialize.
+ */
+interface ExtendOutcome {
+  status: string;
+  generated: number;
+  futureCount: number;
+  reason: string | null;
+}
+
+function describeExtendOutcome(o: ExtendOutcome): string {
+  switch (o.status) {
+    case 'extended':
+      return `Generated ${o.generated} new instance${o.generated === 1 ? '' : 's'}.`;
+    case 'sufficient':
+      return o.generated > 0
+        ? `Generated ${o.generated} new instance${o.generated === 1 ? '' : 's'}.`
+        : 'No new instances needed — schedule is already filled out.';
+    case 'exhausted_count':
+      return 'No new instances — series has reached its end_count.';
+    case 'exhausted_date':
+      return 'No new instances — series has reached its end_date.';
+    case 'at_max_cap':
+      return o.generated > 0
+        ? `Generated ${o.generated}; further extension blocked by the 52-instance cap.`
+        : 'No new instances — series is at the 52-instance cap.';
+    case 'no_template':
+      return 'No new instances — this series has no existing events to clone fields from. Add at least one event first, then re-save the rule.';
+    case 'no_rule':
+      return 'No new instances — recurrence_rule was empty.';
+    case 'error':
+      return `Materialization error: ${o.reason ?? 'unknown'}`;
+    default:
+      return `Status: ${o.status}.`;
+  }
+}
+
 function RecurrenceSection({ seriesId, currentRule, startDate, onSaved }: RecurrenceSectionProps) {
   const [pendingRule, setPendingRule] = useState<RecurrenceRule | null>(null);
   const [pendingLabel, setPendingLabel] = useState<string>('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [extendOutcome, setExtendOutcome] = useState<ExtendOutcome | null>(null);
 
   const applyPending = async () => {
     if (!pendingRule) return;
     setSaveStatus('saving');
     setErrorMsg(null);
+    setExtendOutcome(null);
     try {
       const response = await fetch(`/api/superadmin/series/${seriesId}`, {
         method: 'PATCH',
@@ -566,11 +607,12 @@ function RecurrenceSection({ seriesId, currentRule, startDate, onSaved }: Recurr
           notes: `Recurrence updated via NL parser: "${pendingLabel}"`,
         }),
       });
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
         throw new Error(data.error || `Failed (${response.status})`);
       }
       setSaveStatus('saved');
+      setExtendOutcome(data.extend ?? null);
       setPendingRule(null);
       setPendingLabel('');
       onSaved();
@@ -623,7 +665,22 @@ function RecurrenceSection({ seriesId, currentRule, startDate, onSaved }: Recurr
       )}
 
       {saveStatus === 'saved' && (
-        <p className="text-sm text-emerald">Recurrence saved.</p>
+        <div className="space-y-1">
+          <p className="text-sm text-emerald">Recurrence saved.</p>
+          {extendOutcome && (
+            <p
+              className={`text-xs ${
+                extendOutcome.status === 'extended' || extendOutcome.generated > 0
+                  ? 'text-emerald'
+                  : extendOutcome.status === 'error'
+                  ? 'text-red-700'
+                  : 'text-zinc'
+              }`}
+            >
+              {describeExtendOutcome(extendOutcome)}
+            </p>
+          )}
+        </div>
       )}
       {saveStatus === 'error' && errorMsg && (
         <p className="text-sm text-red-700">{errorMsg}</p>

@@ -5,13 +5,18 @@
  *
  * Creates a new recurring series from a standalone event, links the original
  * event as instance #1, and generates future instances from a recurrence rule.
+ *
+ * Coupling:
+ *   - Insertion of children goes through src/data/series/materialize-instances.ts
+ *     so this route, attach-series, and the extend-recurring-series cron all
+ *     write rows the same way.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSuperadminAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { generateSlug } from '@/lib/utils/slug';
-import { calculateRecurringDates, addMinutesToTime } from '@/lib/utils/recurrence';
+import { materializeFutureInstances } from '@/data/series/materialize-instances';
 import type { RecurrenceRule } from '@/lib/supabase/types';
 
 interface RouteContext {
@@ -66,8 +71,19 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Create a recurring series from the event's metadata
+    const firstDate = event.start_datetime?.split('T')[0];
+    if (!firstDate) {
+      return NextResponse.json(
+        { success: false, error: 'Original event has no start date' },
+        { status: 400 }
+      );
+    }
+
+    // Create the series. attendance_mode defaults to whatever the event
+    // implied (registration_url present → registered, else drop_in).
     const seriesSlug = generateSlug(event.title || 'recurring-series');
+    const inferredAttendanceMode = event.registration_url ? 'registered' : 'drop_in';
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: series, error: seriesError } = await (supabase as any)
       .from('series')
@@ -86,7 +102,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         registration_url: event.registration_url || null,
         image_url: event.image_url || null,
         status: event.status || 'published',
-        attendance_mode: 'drop_in',
+        attendance_mode: inferredAttendanceMode,
         recurrence_rule: recurrenceRule as unknown as Record<string, unknown>,
       })
       .select()
@@ -99,7 +115,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Link the original event as instance #1
+    // Link the original event as instance #1.
+    // Also backfill instance_date so series-detail queries that order by
+    // instance_date don't see a NULL row floating ahead of everyone.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: linkError } = await (supabase as any)
       .from('events')
@@ -107,6 +125,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         series_id: series.id,
         is_series_instance: true,
         series_sequence: 1,
+        instance_date: firstDate,
       })
       .eq('id', eventId);
 
@@ -117,77 +136,30 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Generate future instances from the recurrence rule
-    const firstDate = event.start_datetime?.split('T')[0];
-    if (!firstDate) {
-      return NextResponse.json(
-        { success: false, error: 'Original event has no start date' },
-        { status: 400 }
-      );
+    // Generate future instances via the shared helper. excludeFromDate=true
+    // so we skip the original event's date (it's now instance #1).
+    const result = await materializeFutureInstances(supabase, {
+      seriesId: series.id,
+      recurrenceRule,
+      fromDate: firstDate,
+      template: event,
+      startingSequence: 2,
+      excludeFromDate: true,
+      source: 'manual',
+    });
+
+    if (result.error) {
+      console.error('[make-recurring] materialize failed:', result.error);
+      // Series + link still succeeded — surface the failure but don't roll back.
     }
 
-    const allDates = calculateRecurringDates(recurrenceRule, firstDate);
-    // Skip the first date (that's the original event)
-    const futureDates = allDates.filter(d => d !== firstDate);
-
-    let generatedCount = 0;
-
-    if (futureDates.length > 0) {
-      const time = recurrenceRule.time || event.start_datetime?.split('T')[1]?.substring(0, 5) || '19:00';
-      const durationMinutes = recurrenceRule.duration_minutes || 120;
-      const endTime = addMinutesToTime(time, durationMinutes);
-
-      const newEvents = futureDates.map((date, index) => ({
-        title: event.title,
-        slug: generateSlug(`${event.title || 'event'}-${date}`),
-        description: event.description || null,
-        short_description: event.short_description || null,
-        start_datetime: `${date}T${time}:00`,
-        end_datetime: `${date}T${endTime}:00`,
-        instance_date: date,
-        is_all_day: false,
-        timezone: event.timezone || 'America/Chicago',
-        category_id: event.category_id || null,
-        location_id: event.location_id || null,
-        organizer_id: event.organizer_id || null,
-        series_id: series.id,
-        is_series_instance: true,
-        series_sequence: index + 2, // +2 because original is #1
-        price_type: event.price_type || 'free',
-        price_low: event.price_low || null,
-        price_high: event.price_high || null,
-        price_details: event.price_details || null,
-        ticket_url: event.ticket_url || null,
-        image_url: event.image_url || null,
-        thumbnail_url: event.thumbnail_url || null,
-        website_url: event.website_url || null,
-        instagram_url: event.instagram_url || null,
-        facebook_url: event.facebook_url || null,
-        registration_url: event.registration_url || null,
-        status: event.status || 'published',
-        source: 'admin',
-      }));
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: inserted, error: insertError } = await (supabase as any)
-        .from('events')
-        .insert(newEvents)
-        .select('id');
-
-      if (insertError) {
-        console.error('Failed to generate recurring events:', insertError);
-      } else {
-        generatedCount = inserted?.length || 0;
-      }
-    }
-
-    // Update series with date range
-    const allEventDates = [firstDate, ...futureDates].sort();
+    // Update series with date range across all linked events.
+    const allDates = [firstDate, ...result.generatedDates].sort();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any).from('series').update({
-      start_date: allEventDates[0],
-      end_date: allEventDates[allEventDates.length - 1],
-      total_sessions: allEventDates.length,
+      start_date: allDates[0],
+      end_date: allDates[allDates.length - 1],
+      total_sessions: allDates.length,
     }).eq('id', series.id);
 
     // Audit log
@@ -200,16 +172,19 @@ export async function POST(request: NextRequest, context: RouteContext) {
       changes: {
         series_id: series.id,
         recurrence_rule: recurrenceRule,
-        events_generated: generatedCount,
+        events_generated: result.generatedCount,
+        skipped_existing: result.skippedExisting.length,
+        hit_max_cap: result.hitMaxCap,
       },
-      notes: `Made event recurring: created series with ${generatedCount + 1} total events`,
+      notes: `Made event recurring: created series with ${result.generatedCount + 1} total events`,
     });
 
     return NextResponse.json({
       success: true,
       seriesId: series.id,
-      eventCount: generatedCount + 1, // original + generated
-      message: `Created recurring series with ${generatedCount + 1} events`,
+      eventCount: result.generatedCount + 1,
+      hitMaxCap: result.hitMaxCap,
+      message: `Created recurring series with ${result.generatedCount + 1} events`,
     });
   } catch (error) {
     if (error instanceof Error && error.message.includes('access required')) {

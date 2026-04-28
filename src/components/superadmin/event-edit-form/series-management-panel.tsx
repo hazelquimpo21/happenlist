@@ -82,7 +82,12 @@ export function SeriesManagementPanel({
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to attach');
-      setSeriesMessage(`Attached to "${seriesTitle}"`);
+      const generated = data.eventsGenerated ?? 0;
+      setSeriesMessage(
+        generated > 0
+          ? `Attached to "${seriesTitle}" · generated ${generated} future instances`
+          : `Attached to "${seriesTitle}"`
+      );
       setSeriesPanel('idle');
       setTimeout(() => router.refresh(), 1500);
     } catch (error) {

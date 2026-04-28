@@ -103,6 +103,14 @@ export interface SeriesCard {
   skill_level?: SkillLevel | null;
   /** Whether extended care (after care) is available -- derived: extended_end_time IS NOT NULL */
   has_extended_care?: boolean;
+
+  /**
+   * True if recurrence_rule.end_type === 'never' (or rule is missing fields).
+   * Pre-computed in the data loader so card components don't have to carry
+   * the full recurrence_rule blob. Powers the "scheduled thru" vs "ends"
+   * date-label distinction (see src/lib/series/date-display.ts).
+   */
+  is_open_ended?: boolean;
 }
 
 /**

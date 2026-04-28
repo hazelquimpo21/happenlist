@@ -5,6 +5,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { isSeriesOpenEnded } from '@/lib/series/date-display';
 
 export interface AdminSeriesCard {
   id: string;
@@ -24,6 +25,8 @@ export interface AdminSeriesCard {
   attendance_mode: string;
   age_low: number | null;
   age_high: number | null;
+  /** True when recurrence_rule.end_type === 'never' — see lib/series/date-display */
+  is_open_ended: boolean;
 }
 
 export interface AdminSeriesFilters {
@@ -78,6 +81,7 @@ export async function getAdminSeries(
       attendance_mode,
       age_low,
       age_high,
+      recurrence_rule,
       category:categories(name),
       location:locations(name),
       organizer:organizers(name)
@@ -150,6 +154,7 @@ export async function getAdminSeries(
     attendance_mode: s.attendance_mode || 'drop_in',
     age_low: s.age_low,
     age_high: s.age_high,
+    is_open_ended: isSeriesOpenEnded(s.recurrence_rule),
   }));
 
   return {

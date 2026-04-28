@@ -11,6 +11,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { isSeriesOpenEnded } from '@/lib/series/date-display';
 import type { SeriesCard, SeriesQueryParams, SeriesQueryResult } from '@/types';
 import type { SeriesType, AttendanceMode, SkillLevel } from '@/lib/supabase/types';
 
@@ -61,6 +62,8 @@ function transformToSeriesCard(row: Record<string, unknown>): SeriesCard {
     skill_level: (row.skill_level as SkillLevel | null) ?? null,
     // Derived: has_extended_care is true when extended_end_time is set
     has_extended_care: row.extended_end_time != null,
+    // Derived from recurrence_rule.end_type — see lib/series/date-display
+    is_open_ended: isSeriesOpenEnded(row.recurrence_rule),
   };
 }
 
@@ -142,6 +145,7 @@ export async function getSeries(
       attendance_mode, per_session_price,
       age_low, age_high, skill_level,
       extended_end_time, days_of_week,
+      recurrence_rule,
       category:categories(name, slug),
       location:locations(name, slug),
       organizer:organizers(name, slug)

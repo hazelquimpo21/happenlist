@@ -29,6 +29,10 @@ export type {
 export { getAdminSeries } from './get-admin-series';
 export type { AdminSeriesCard, AdminSeriesFilters, AdminSeriesResult } from './get-admin-series';
 
+// Recurring series health (cron extension surface)
+export { getRunningLowSeries } from './get-series-health';
+export type { RunningLowSeries } from './get-series-health';
+
 // Directory entities (organizers, venues, performers, membership_orgs)
 export { getAdminEntities } from './get-admin-entities';
 export type {

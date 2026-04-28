@@ -1,11 +1,18 @@
 /**
  * SUPERADMIN SERIES API ROUTE
  * PATCH /api/superadmin/series/[id] - Edit any series
+ *
+ * Side effect: when `updates.recurrence_rule` is in the payload, after the
+ * row update succeeds we kick off extendSeriesInstances() so the operator
+ * gets immediate materialization rather than waiting for the nightly cron.
+ * The cron + this route share src/data/series/extend-series.ts.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSuperadminAuth } from '@/lib/auth';
 import { superadminEditEntity, superadminDeleteEntity } from '@/data/superadmin';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { extendSeriesInstances } from '@/data/series/extend-series';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -59,11 +66,56 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       );
     }
 
+    // If the operator changed recurrence_rule, materialize immediately
+    // so the result of the UI's Save lands without waiting for the cron.
+    let extend: Awaited<ReturnType<typeof extendSeriesInstances>> | null = null;
+    if (
+      'recurrence_rule' in updates &&
+      updates.recurrence_rule &&
+      typeof updates.recurrence_rule === 'object'
+    ) {
+      try {
+        const supabase = createAdminClient();
+        const { data: seriesRow } = await supabase
+          .from('series')
+          .select('id, title, recurrence_rule, end_date')
+          .eq('id', entityId)
+          .single();
+
+        if (seriesRow) {
+          extend = await extendSeriesInstances(
+            supabase,
+            {
+              id: (seriesRow as { id: string }).id,
+              title: (seriesRow as { title: string }).title,
+              recurrence_rule: (seriesRow as { recurrence_rule: unknown }).recurrence_rule,
+              end_date: (seriesRow as { end_date: string | null }).end_date,
+            },
+            // 'manual' satisfies events_source_check (allowed values:
+            // manual, scraper, user_submission, api, import).
+            { gateOnBuffer: false, source: 'manual' }
+          );
+        }
+      } catch (e) {
+        // Surface the error in the response but don't fail the PATCH —
+        // the rule update itself succeeded.
+        console.error('[superadmin/series] post-save materialize failed:', e);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: result.message,
       entityId: result.eventId,
       timestamp: result.timestamp,
+      extend: extend
+        ? {
+            status: extend.status,
+            generated: extend.generated,
+            futureCount: extend.futureCount,
+            reason: extend.reason ?? null,
+          }
+        : null,
     });
   } catch (error) {
     console.error('Unexpected error editing series:', error);

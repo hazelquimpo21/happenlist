@@ -13,6 +13,7 @@ import { Card, Badge } from '@/components/ui';
 import { SeriesTypeBadge } from './series-type-badge';
 import { SeriesPrice } from './series-price';
 import { formatDateRange } from '@/lib/utils/dates';
+import { buildPublicScheduleLabel } from '@/lib/series/date-display';
 import {
   formatAgeRange,
   ATTENDANCE_MODE_INFO,
@@ -84,9 +85,19 @@ export function SeriesCard({
     featured: 'text-h2',
   };
 
-  // Format date range for display
-  const dateDisplay = series.start_date
-    ? formatDateRange(series.start_date, series.end_date ?? undefined)
+  // Format date range for display.
+  // For open-ended recurring series we skip the range (end_date is just the
+  // materialized horizon, not a real end). The series-type badge or sessionInfo
+  // line carries the meaning instead. See lib/series/date-display.
+  const boundedRange = buildPublicScheduleLabel({
+    start_date: series.start_date,
+    // Synthesize a rule shape from the pre-computed flag so the helper works
+    // without us shipping the full recurrence_rule on this card type.
+    end_date: series.end_date,
+    recurrence_rule: series.is_open_ended ? { end_type: 'never' } : null,
+  });
+  const dateDisplay = boundedRange
+    ? boundedRange
     : series.next_event_date
     ? `Next: ${formatDateRange(series.next_event_date, undefined)}`
     : null;
