@@ -61,7 +61,7 @@ export default async function PendingEventsPage({ searchParams }: PageProps) {
           {/* Filter dropdown - simplified for now */}
           <div className="relative">
             <select
-              className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+              className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-10 text-sm focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
               defaultValue={source || 'all'}
             >
               <option value="all">All Sources</option>
@@ -74,7 +74,7 @@ export default async function PendingEventsPage({ searchParams }: PageProps) {
           {/* Sort dropdown */}
           <div className="relative">
             <select
-              className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+              className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-10 text-sm focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
               defaultValue={orderBy}
             >
               <option value="scraped_at">Scraped Date</option>

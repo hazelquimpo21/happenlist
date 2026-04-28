@@ -177,7 +177,7 @@ export function SuperadminVenueEditForm(props: Props) {
             value={state.name}
             onChange={onChange}
             required
-            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
           />
           {isCreate && <p className="text-xs text-zinc mt-1">Slug is auto-generated from the name.</p>}
         </div>
@@ -192,7 +192,7 @@ export function SuperadminVenueEditForm(props: Props) {
             value={state.description || ''}
             onChange={onChange}
             rows={4}
-            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none resize-y"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none resize-y"
           />
         </div>
 
@@ -205,7 +205,7 @@ export function SuperadminVenueEditForm(props: Props) {
             name="address_line"
             value={state.address_line || ''}
             onChange={onChange}
-            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
           />
         </div>
         <div>
@@ -217,7 +217,7 @@ export function SuperadminVenueEditForm(props: Props) {
             name="address_line_2"
             value={state.address_line_2 || ''}
             onChange={onChange}
-            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
           />
         </div>
 
@@ -232,7 +232,7 @@ export function SuperadminVenueEditForm(props: Props) {
               value={state.city}
               onChange={onChange}
               required
-              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
             />
           </div>
           <div>
@@ -244,7 +244,7 @@ export function SuperadminVenueEditForm(props: Props) {
               name="state"
               value={state.state || ''}
               onChange={onChange}
-              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
             />
           </div>
           <div>
@@ -256,7 +256,7 @@ export function SuperadminVenueEditForm(props: Props) {
               name="postal_code"
               value={state.postal_code || ''}
               onChange={onChange}
-              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
             />
           </div>
         </div>
@@ -270,7 +270,7 @@ export function SuperadminVenueEditForm(props: Props) {
             name="venue_type"
             value={state.venue_type}
             onChange={onChange}
-            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none bg-white"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none bg-white"
           >
             {VENUE_TYPE_OPTIONS.map((t) => (
               <option key={t} value={t}>
@@ -291,7 +291,7 @@ export function SuperadminVenueEditForm(props: Props) {
               name="website_url"
               value={state.website_url || ''}
               onChange={onChange}
-              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
               placeholder="https://..."
             />
           </div>
@@ -305,7 +305,7 @@ export function SuperadminVenueEditForm(props: Props) {
               name="phone"
               value={state.phone || ''}
               onChange={onChange}
-              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
             />
           </div>
         </div>
@@ -320,7 +320,7 @@ export function SuperadminVenueEditForm(props: Props) {
             name="image_url"
             value={state.image_url || ''}
             onChange={onChange}
-            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
             placeholder="https://..."
           />
         </div>
@@ -337,7 +337,7 @@ export function SuperadminVenueEditForm(props: Props) {
                 name="meta_title"
                 value={state.meta_title || ''}
                 onChange={onChange}
-                className="w-full px-3 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none text-sm"
+                className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none text-sm"
               />
             </div>
             <div>
@@ -350,7 +350,7 @@ export function SuperadminVenueEditForm(props: Props) {
                 value={state.meta_description || ''}
                 onChange={onChange}
                 rows={2}
-                className="w-full px-3 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none text-sm resize-none"
+                className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none text-sm resize-none"
               />
             </div>
           </div>

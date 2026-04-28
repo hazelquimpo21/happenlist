@@ -114,7 +114,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
           <select
             name="series"
             defaultValue={seriesFilter || ''}
-            className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-8 text-sm focus:border-coral outline-none cursor-pointer"
+            className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-8 text-sm focus:border-blue outline-none cursor-pointer"
           >
             <option value="">All Events</option>
             <option value="in_series">In a Series</option>
@@ -124,7 +124,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
           <select
             name="source"
             defaultValue={source || ''}
-            className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-8 text-sm focus:border-coral outline-none cursor-pointer"
+            className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-8 text-sm focus:border-blue outline-none cursor-pointer"
           >
             <option value="">All Sources</option>
             <option value="scraper">Scraped</option>
@@ -136,7 +136,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
           <select
             name="orderBy"
             defaultValue={orderBy}
-            className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-8 text-sm focus:border-coral outline-none cursor-pointer"
+            className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-8 text-sm focus:border-blue outline-none cursor-pointer"
           >
             <option value="created_at">Created Date</option>
             <option value="start_datetime">Event Date</option>
@@ -174,7 +174,7 @@ export default async function AllEventsPage({ searchParams }: PageProps) {
               name="q"
               defaultValue={search}
               placeholder="Search events..."
-              className="w-full px-4 py-2 pl-10 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+              className="w-full px-4 py-2 pl-10 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
             />
             <svg
               className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc"

@@ -141,7 +141,7 @@ export function SuperadminOrganizerEditForm(props: Props) {
             value={state.name}
             onChange={onChange}
             required
-            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
           />
           {isCreate && <p className="text-xs text-zinc mt-1">Slug is auto-generated from the name.</p>}
         </div>
@@ -156,7 +156,7 @@ export function SuperadminOrganizerEditForm(props: Props) {
             value={state.description || ''}
             onChange={onChange}
             rows={4}
-            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none resize-y"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none resize-y"
           />
         </div>
 
@@ -171,7 +171,7 @@ export function SuperadminOrganizerEditForm(props: Props) {
               name="email"
               value={state.email || ''}
               onChange={onChange}
-              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
               placeholder="contact@example.com"
             />
           </div>
@@ -185,7 +185,7 @@ export function SuperadminOrganizerEditForm(props: Props) {
               name="phone"
               value={state.phone || ''}
               onChange={onChange}
-              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
             />
           </div>
         </div>
@@ -201,7 +201,7 @@ export function SuperadminOrganizerEditForm(props: Props) {
               name="website_url"
               value={state.website_url || ''}
               onChange={onChange}
-              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
               placeholder="https://..."
             />
           </div>
@@ -215,7 +215,7 @@ export function SuperadminOrganizerEditForm(props: Props) {
               name="logo_url"
               value={state.logo_url || ''}
               onChange={onChange}
-              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
               placeholder="https://..."
             />
           </div>
@@ -233,7 +233,7 @@ export function SuperadminOrganizerEditForm(props: Props) {
                 name="meta_title"
                 value={state.meta_title || ''}
                 onChange={onChange}
-                className="w-full px-3 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none text-sm"
+                className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none text-sm"
               />
             </div>
             <div>
@@ -246,7 +246,7 @@ export function SuperadminOrganizerEditForm(props: Props) {
                 value={state.meta_description || ''}
                 onChange={onChange}
                 rows={2}
-                className="w-full px-3 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none text-sm resize-none"
+                className="w-full px-3 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none text-sm resize-none"
               />
             </div>
           </div>

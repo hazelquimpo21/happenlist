@@ -173,7 +173,7 @@ export function EventApprovalForm({ event }: EventApprovalFormProps) {
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Add any notes about this review..."
-          className="w-full px-3 py-2 border border-mist rounded-lg text-sm resize-none focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+          className="w-full px-3 py-2 border border-mist rounded-lg text-sm resize-none focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
           rows={2}
         />
       </div>
@@ -188,7 +188,7 @@ export function EventApprovalForm({ event }: EventApprovalFormProps) {
             <select
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              className="w-full px-3 py-2 border border-mist rounded-lg text-sm focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+              className="w-full px-3 py-2 border border-mist rounded-lg text-sm focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
             >
               <option value="">Select a reason...</option>
               <option value="duplicate">Duplicate event</option>
@@ -210,7 +210,7 @@ export function EventApprovalForm({ event }: EventApprovalFormProps) {
                 value={rejectReason === 'other' ? '' : rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 placeholder="Describe the reason..."
-                className="w-full px-3 py-2 border border-mist rounded-lg text-sm resize-none focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+                className="w-full px-3 py-2 border border-mist rounded-lg text-sm resize-none focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
                 rows={2}
               />
             </div>

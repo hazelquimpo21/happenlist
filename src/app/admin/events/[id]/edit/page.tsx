@@ -1,50 +1,28 @@
 /**
- * 🦸 SUPERADMIN EVENT EDIT PAGE
- * ==============================
- * Full edit page for superadmins to modify any event.
- *
- * This page allows superadmins to:
- * - Edit all event fields
- * - Change event status directly
- * - Delete or restore events
+ * SUPERADMIN EVENT EDIT PAGE
+ * ===========================
+ * Auth gate + data fetch. The actual layout (command bar, hero, sections,
+ * sidebar) lives inside SuperadminEventEditForm so the form can stay
+ * cohesive across full-page and embed contexts.
  *
  * @module app/admin/events/[id]/edit
  */
-
 import { notFound, redirect } from 'next/navigation';
-import Link from 'next/link';
-import { formatMKEPattern } from '@/lib/utils/dates';
-import {
-  ArrowLeft,
-  Shield,
-  Calendar,
-  MapPin,
-  User as UserIcon,
-  Clock,
-} from 'lucide-react';
-import { AdminHeader, AdminBreadcrumbs } from '@/components/admin';
 import { SuperadminEventEditForm } from '@/components/superadmin';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { getAdminEvent, getEventAuditHistory } from '@/data/admin';
+import { getAdminEvent } from '@/data/admin';
 import { getCategories } from '@/data/categories';
 import { getSession, isSuperAdmin } from '@/lib/auth';
 import { superadminLogger } from '@/lib/utils/logger';
 
-export const metadata = {
-  title: 'Edit Event',
-};
+export const metadata = { title: 'Edit Event' };
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
 export default async function SuperadminEventEditPage({ params }: PageProps) {
-  // Await params (Next.js 15+ requirement)
-  const resolvedParams = await params;
-  const eventId = resolvedParams.id;
+  const { id: eventId } = await params;
 
-  // 🔐 Check authentication and superadmin status
   const { session } = await getSession();
 
   if (!session) {
@@ -61,7 +39,6 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
       entityId: eventId,
       adminEmail: session.email,
     });
-    // Redirect to regular review page instead
     redirect('/admin/events/' + eventId);
   }
 
@@ -71,10 +48,8 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
     adminEmail: session.email,
   });
 
-  // Fetch event, audit history, and categories
-  const [event, auditHistory, categories] = await Promise.all([
+  const [event, categories] = await Promise.all([
     getAdminEvent(eventId),
-    getEventAuditHistory(eventId),
     getCategories(),
   ]);
 
@@ -85,239 +60,16 @@ export default async function SuperadminEventEditPage({ params }: PageProps) {
 
   timer.success(`Loaded event for editing: ${event.title}`);
 
-  // Format dates for display
-  const eventDate = formatMKEPattern(event.start_datetime, 'EEEE, MMMM d, yyyy');
-  const eventTime = formatMKEPattern(event.start_datetime, 'h:mm a');
+  // Re-key the form when the saved record changes so its dirty-diff
+  // baseline always matches the fresh server state. Otherwise router.refresh()
+  // after a save would leave the form's internal `originalState` stale.
+  const formKey = `${event.id}:${event.updated_at ?? ''}`;
 
   return (
-    <div className="min-h-screen">
-      <AdminHeader
-        title="Edit Event"
-        description="Superadmin editing mode"
-      >
-        <div className="flex items-center gap-3">
-          {/* Superadmin badge */}
-          <Badge className="bg-purple-100 text-purple-800 flex items-center gap-1.5">
-            <Shield className="w-3.5 h-3.5" />
-            Superadmin Mode
-          </Badge>
-
-          {/* Status badge */}
-          <Badge className={getStatusClassName(event.status ?? 'draft')}>
-            {getStatusLabel(event.status ?? 'draft')}
-          </Badge>
-
-          <div className="flex-1" />
-
-          {/* Back link */}
-          <Link
-            href={`/admin/events/${eventId}`}
-            className="flex items-center gap-2 text-sm text-zinc hover:text-ink transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Review
-          </Link>
-        </div>
-      </AdminHeader>
-
-      <div className="p-8">
-        <AdminBreadcrumbs
-          items={[
-            { label: 'Admin', href: '/admin' },
-            { label: 'Events', href: '/admin/events' },
-            { label: event.title, href: `/admin/events/${eventId}` },
-            { label: 'Edit' },
-          ]}
-        />
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main content - Edit form */}
-          <div className="lg:col-span-2">
-            <SuperadminEventEditForm event={event} categories={categories} />
-          </div>
-
-          {/* Sidebar - Event info and history */}
-          <div className="space-y-6">
-            {/* Quick info */}
-            <Card padding="lg" className="border border-mist">
-              <h3 className="font-medium text-ink mb-4 flex items-center gap-2">
-                📋 Event Summary
-              </h3>
-
-              <div className="space-y-3 text-sm">
-                {/* Date & Time */}
-                <div className="flex items-start gap-3">
-                  <Calendar className="w-4 h-4 text-blue mt-0.5" />
-                  <div>
-                    <p className="text-ink font-medium">{eventDate}</p>
-                    <p className="text-zinc">{eventTime}</p>
-                  </div>
-                </div>
-
-                {/* Location */}
-                {event.location && (
-                  <div className="flex items-start gap-3">
-                    <MapPin className="w-4 h-4 text-emerald mt-0.5" />
-                    <div>
-                      <p className="text-ink font-medium">{event.location.name}</p>
-                      <p className="text-zinc">
-                        {event.location.city}
-                        {event.location.state && `, ${event.location.state}`}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Organizer */}
-                {event.organizer && (
-                  <div className="flex items-start gap-3">
-                    <UserIcon className="w-4 h-4 text-zinc mt-0.5" />
-                    <p className="text-ink">{event.organizer.name}</p>
-                  </div>
-                )}
-              </div>
-            </Card>
-
-            {/* Event metadata */}
-            <Card padding="lg" className="border border-mist">
-              <h3 className="font-medium text-ink mb-4 flex items-center gap-2">
-                🔧 Metadata
-              </h3>
-
-              <dl className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <dt className="text-zinc">Event ID</dt>
-                  <dd className="text-ink font-mono text-xs">
-                    {event.id.slice(0, 8)}...
-                  </dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-zinc">Source</dt>
-                  <dd className="text-ink capitalize">{event.source}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-zinc">Created</dt>
-                  <dd className="text-ink">
-                    {formatMKEPattern(event.created_at!, 'MMM d, yyyy')}
-                  </dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-zinc">Updated</dt>
-                  <dd className="text-ink">
-                    {formatMKEPattern(event.updated_at!, 'MMM d, yyyy')}
-                  </dd>
-                </div>
-                {event.reviewed_by && (
-                  <div className="flex justify-between">
-                    <dt className="text-zinc">Reviewed by</dt>
-                    <dd className="text-ink text-right truncate max-w-[150px]">
-                      {event.reviewed_by}
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            </Card>
-
-            {/* Audit history */}
-            {auditHistory.length > 0 && (
-              <Card padding="lg" className="border border-mist">
-                <h3 className="font-medium text-ink mb-4 flex items-center gap-2">
-                  📜 Recent Activity
-                </h3>
-
-                <div className="space-y-3 max-h-80 overflow-y-auto">
-                  {auditHistory.slice(0, 10).map((entry) => (
-                    <div
-                      key={entry.id}
-                      className="flex items-start gap-3 text-sm pb-3 border-b border-mist/50 last:border-0"
-                    >
-                      <Clock className="w-4 h-4 text-zinc mt-0.5 flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-ink">
-                          <span className="font-medium">
-                            {formatActionName(entry.action)}
-                          </span>
-                        </p>
-                        {entry.notes && (
-                          <p className="text-zinc text-xs mt-0.5 truncate">
-                            {entry.notes}
-                          </p>
-                        )}
-                        <p className="text-zinc/70 text-xs mt-1">
-                          {formatMKEPattern(entry.created_at!, 'MMM d, h:mm a')}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {auditHistory.length > 10 && (
-                  <p className="text-xs text-zinc mt-3 text-center">
-                    + {auditHistory.length - 10} more entries
-                  </p>
-                )}
-              </Card>
-            )}
-
-            {/* Superadmin info */}
-            <Card padding="lg" className="border border-purple-200 bg-purple-50/50">
-              <h3 className="font-medium text-purple-800 mb-2 flex items-center gap-2">
-                <Shield className="w-4 h-4" />
-                Superadmin Editing
-              </h3>
-              <p className="text-sm text-purple-700">
-                You are editing this event as a superadmin. All changes are logged
-                to the audit trail. Use this power responsibly!
-              </p>
-            </Card>
-          </div>
-        </div>
-      </div>
-    </div>
+    <SuperadminEventEditForm
+      key={formKey}
+      event={event}
+      categories={categories}
+    />
   );
-}
-
-// ============================================================================
-// 🔧 HELPERS
-// ============================================================================
-
-function getStatusClassName(status: string): string {
-  const classes: Record<string, string> = {
-    draft: 'bg-stone/20 text-zinc',
-    pending_review: 'bg-amber-100 text-amber-800',
-    changes_requested: 'bg-orange-100 text-orange-800',
-    published: 'bg-emerald/20 text-emerald',
-    rejected: 'bg-red-100 text-red-800',
-    cancelled: 'bg-stone/30 text-zinc',
-  };
-  return classes[status] || classes.draft;
-}
-
-function getStatusLabel(status: string): string {
-  const labels: Record<string, string> = {
-    draft: 'Draft',
-    pending_review: 'Pending Review',
-    changes_requested: 'Changes Requested',
-    published: 'Published',
-    rejected: 'Rejected',
-    cancelled: 'Cancelled',
-  };
-  return labels[status] || status;
-}
-
-function formatActionName(action: string): string {
-  // Convert snake_case to Title Case with emoji
-  const actionMap: Record<string, string> = {
-    superadmin_edit: '✏️ Edited',
-    superadmin_soft_delete: '🗑️ Deleted',
-    superadmin_hard_delete: '💥 Permanently Deleted',
-    superadmin_restore: '♻️ Restored',
-    superadmin_status_change: '🔄 Status Changed',
-    event_approved: '✅ Approved',
-    event_rejected: '❌ Rejected',
-    event_edited: '✏️ Edited',
-    event_changes_req: '📝 Changes Requested',
-  };
-
-  return actionMap[action] || action.replace(/_/g, ' ');
 }

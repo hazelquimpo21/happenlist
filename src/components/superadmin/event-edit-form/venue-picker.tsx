@@ -161,7 +161,7 @@ export function VenuePicker({ initialVenue, onChange }: VenuePickerProps) {
               value={venueQuery}
               onChange={(e) => handleSearch(e.target.value)}
               placeholder="Type venue name or address..."
-              className="w-full pl-10 pr-10 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+              className="w-full pl-10 pr-10 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
               autoFocus
             />
             {isSearching && (

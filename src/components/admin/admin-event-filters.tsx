@@ -143,7 +143,7 @@ export function AdminEventFilters({
       {/* Series filter */}
       <div className="relative">
         <select
-          className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-blue outline-none cursor-pointer"
+          className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-10 text-sm focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none cursor-pointer"
           value={currentSeriesFilter || 'all'}
           onChange={handleSeriesFilterChange}
         >
@@ -157,7 +157,7 @@ export function AdminEventFilters({
       {/* Source filter */}
       <div className="relative">
         <select
-          className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-blue outline-none cursor-pointer"
+          className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-10 text-sm focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none cursor-pointer"
           value={currentSource || 'all'}
           onChange={handleSourceChange}
         >
@@ -173,7 +173,7 @@ export function AdminEventFilters({
       {/* Sort */}
       <div className="relative">
         <select
-          className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-10 text-sm focus:border-coral focus:ring-1 focus:ring-blue outline-none cursor-pointer"
+          className="appearance-none bg-pure border border-mist rounded-lg px-4 py-2 pr-10 text-sm focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none cursor-pointer"
           value={currentOrderBy}
           onChange={handleOrderChange}
         >

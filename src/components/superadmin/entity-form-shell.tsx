@@ -391,7 +391,7 @@ export function NotesField({ mode, value, onChange }: NotesFieldProps) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={2}
-        className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none resize-none"
+        className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none resize-none"
         placeholder={isCreate ? 'Context for this new record' : 'Why are you making these changes?'}
       />
     </div>

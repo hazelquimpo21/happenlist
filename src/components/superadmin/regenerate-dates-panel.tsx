@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { MiniCalendar, type MiniCalendarMark } from '@/components/admin/form-shell';
 
 interface KeepEntry {
   instance_date: string;
@@ -162,6 +163,10 @@ export function RegenerateDatesPanel({ seriesId }: Props) {
       )}
 
       {(stage === 'preview' || stage === 'applying') && diff && (
+        <DiffCalendar diff={diff} />
+      )}
+
+      {(stage === 'preview' || stage === 'applying') && diff && (
         <div className="space-y-4">
           <DiffColumns diff={diff} />
 
@@ -222,6 +227,36 @@ export function RegenerateDatesPanel({ seriesId }: Props) {
 // ============================================================================
 // Subcomponents
 // ============================================================================
+
+function DiffCalendar({ diff }: { diff: Diff }) {
+  const marks: MiniCalendarMark[] = [
+    ...diff.keep.map((k) => ({
+      date: k.instance_date,
+      status: 'keep' as const,
+      label: `Keep · ${k.existing_title}`,
+    })),
+    ...diff.add.map((a) => ({
+      date: a.instance_date,
+      status: 'add' as const,
+      label: 'Add · new instance',
+    })),
+    ...diff.drop.map((d) => ({
+      date: d.instance_date,
+      status: 'drop' as const,
+      label: `Drop · ${d.existing_title}`,
+    })),
+  ];
+  return (
+    <div className="rounded-md border border-mist bg-cloud/30 p-3">
+      <p className="text-xs text-zinc mb-2">
+        <span className="inline-block w-2 h-2 rounded-full bg-emerald mr-1" /> keep
+        <span className="ml-3 inline-block w-2 h-2 rounded-full bg-blue mr-1" /> add
+        <span className="ml-3 inline-block w-2 h-2 rounded-full bg-zinc/40 mr-1" /> drop
+      </p>
+      <MiniCalendar marks={marks} maxMonths={6} />
+    </div>
+  );
+}
 
 function DiffColumns({ diff }: { diff: Diff }) {
   return (

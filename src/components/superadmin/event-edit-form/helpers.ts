@@ -10,14 +10,8 @@
 import { formatMKEPattern } from '@/lib/utils/dates';
 import type { Hours } from '@/lib/events/hours-schema';
 
-export const STATUS_OPTIONS = [
-  { value: 'draft', label: 'Draft', color: 'bg-stone/20 text-zinc' },
-  { value: 'pending_review', label: 'Pending Review', color: 'bg-amber-100 text-amber-800' },
-  { value: 'changes_requested', label: 'Changes Requested', color: 'bg-orange-100 text-orange-800' },
-  { value: 'published', label: 'Published', color: 'bg-emerald/20 text-emerald' },
-  { value: 'rejected', label: 'Rejected', color: 'bg-red-100 text-red-800' },
-  { value: 'cancelled', label: 'Cancelled', color: 'bg-stone/30 text-zinc' },
-];
+// Status options now live in lib/constants/admin-status-palette.ts
+// (STATUS_META, STATUS_ORDER, getStatusMeta).
 
 export const PRICE_TYPES = [
   { value: 'free', label: 'Free' },

@@ -117,7 +117,7 @@ export function SuperadminPerformerEditForm(props: Props) {
             value={state.name}
             onChange={onChange}
             required
-            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
           />
           {isCreate && <p className="text-xs text-zinc mt-1">Slug is auto-generated from the name.</p>}
         </div>
@@ -132,7 +132,7 @@ export function SuperadminPerformerEditForm(props: Props) {
             value={state.genre || ''}
             onChange={onChange}
             placeholder="Jazz, Indie Rock, Folk..."
-            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
           />
         </div>
 
@@ -146,7 +146,7 @@ export function SuperadminPerformerEditForm(props: Props) {
             value={state.bio || ''}
             onChange={onChange}
             rows={6}
-            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none resize-y"
+            className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none resize-y"
           />
         </div>
 
@@ -162,7 +162,7 @@ export function SuperadminPerformerEditForm(props: Props) {
               value={state.website_url || ''}
               onChange={onChange}
               placeholder="https://..."
-              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
             />
           </div>
           <div>
@@ -176,7 +176,7 @@ export function SuperadminPerformerEditForm(props: Props) {
               value={state.image_url || ''}
               onChange={onChange}
               placeholder="https://..."
-              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+              className="w-full px-4 py-2 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
             />
           </div>
         </div>

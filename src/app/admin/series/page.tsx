@@ -111,7 +111,7 @@ export default async function AdminSeriesPage({ searchParams }: PageProps) {
               name="q"
               defaultValue={search}
               placeholder="Search series..."
-              className="w-full px-4 py-2 pl-10 border border-mist rounded-lg focus:border-coral focus:ring-1 focus:ring-blue outline-none"
+              className="w-full px-4 py-2 pl-10 border border-mist rounded-lg focus:border-blue focus:ring-2 focus:ring-blue/30 outline-none"
             />
             <svg
               className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc"
