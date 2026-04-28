@@ -55,7 +55,6 @@ export function calculateRecurringDates(
 ): string[] {
   const dates: string[] = [];
   const maxOccurrences = 52; // Safety cap: 1 year of weekly events
-  const defaultWeeks = 12;   // Default generation window
 
   // Determine how many events to generate and/or end date
   let maxCount = maxOccurrences;
@@ -72,9 +71,28 @@ export function calculateRecurringDates(
       break;
     case 'never':
     default:
-      // Generate defaultWeeks worth of events
+      // Frequency-aware window: aim for ≥ MIN_RECURRING_BUFFER (8) dates per cycle
+      // so the nightly cron isn't stuck topping up monthly/yearly series forever.
+      // Safety cap of maxOccurrences (52) still applies in the loops below.
       endDate = new Date(firstDate + 'T00:00:00');
-      endDate.setDate(endDate.getDate() + defaultWeeks * 7);
+      switch (rule.frequency) {
+        case 'daily':
+          endDate.setDate(endDate.getDate() + 30);
+          break;
+        case 'biweekly':
+          endDate.setDate(endDate.getDate() + 24 * 7);
+          break;
+        case 'monthly':
+          endDate.setMonth(endDate.getMonth() + 12);
+          break;
+        case 'yearly':
+          endDate.setFullYear(endDate.getFullYear() + 5);
+          break;
+        case 'weekly':
+        default:
+          endDate.setDate(endDate.getDate() + 12 * 7);
+          break;
+      }
       break;
   }
 
