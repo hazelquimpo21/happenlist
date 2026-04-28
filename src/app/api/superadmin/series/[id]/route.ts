@@ -10,7 +10,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSuperadminAuth } from '@/lib/auth';
-import { superadminEditEntity, superadminDeleteEntity } from '@/data/superadmin';
+import {
+  superadminEditEntity,
+  superadminDeleteEntity,
+  superadminDeleteSeriesWithInstances,
+} from '@/data/superadmin';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { extendSeriesInstances } from '@/data/series/extend-series';
 
@@ -140,12 +144,40 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       );
     }
 
-    let body = { reason: 'No reason provided' };
+    let body: { reason: string; cascadeEvents?: boolean } = {
+      reason: 'No reason provided',
+    };
     try {
       const parsed = await request.json();
       body = { ...body, ...parsed };
     } catch {
       // Body is optional for DELETE
+    }
+
+    // cascadeEvents=true: cancel series + every non-cancelled child event.
+    // Default behavior (false) only cancels the series row, leaving children
+    // attached but orphaned under a cancelled series.
+    if (body.cascadeEvents) {
+      const result = await superadminDeleteSeriesWithInstances({
+        seriesId: entityId,
+        adminEmail: session.email,
+        reason: body.reason,
+      });
+
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error, message: result.message },
+          { status: 400 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: result.message,
+        entityId: result.eventId,
+        timestamp: result.timestamp,
+        eventsCancelled: result.eventsCancelled ?? 0,
+      });
     }
 
     const result = await superadminDeleteEntity({

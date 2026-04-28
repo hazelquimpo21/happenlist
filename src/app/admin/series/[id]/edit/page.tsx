@@ -8,7 +8,11 @@ import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Shield } from 'lucide-react';
 import { AdminHeader, AdminBreadcrumbs } from '@/components/admin';
-import { SuperadminSeriesEditForm, SeriesEventManager } from '@/components/superadmin';
+import {
+  SuperadminSeriesEditForm,
+  SeriesEventManager,
+  SeriesDangerZone,
+} from '@/components/superadmin';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { createClient } from '@/lib/supabase/server';
@@ -36,20 +40,31 @@ export default async function SuperadminSeriesEditPage({ params }: PageProps) {
     redirect('/admin');
   }
 
-  // Fetch series
+  // Fetch series + attached event counts in parallel
   const supabase = await createClient();
-  const { data: seriesData, error } = await supabase
-    .from('series')
-    .select('*')
-    .eq('id', seriesId)
-    .single();
+  const [seriesRes, totalEventsRes, activeEventsRes] = await Promise.all([
+    supabase.from('series').select('*').eq('id', seriesId).single(),
+    supabase
+      .from('events')
+      .select('id', { count: 'exact', head: true })
+      .eq('series_id', seriesId),
+    supabase
+      .from('events')
+      .select('id', { count: 'exact', head: true })
+      .eq('series_id', seriesId)
+      .neq('status', 'cancelled'),
+  ]);
 
-  if (error || !seriesData) {
+  // Narrow via local var so TS sees the data type after the guard.
+  const seriesData = seriesRes.data;
+  if (seriesRes.error || !seriesData) {
     notFound();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const series = seriesData as any;
+  const totalEventsCount = totalEventsRes.count ?? 0;
+  const activeEventsCount = activeEventsRes.count ?? 0;
 
   return (
     <div className="min-h-screen">
@@ -85,10 +100,17 @@ export default async function SuperadminSeriesEditPage({ params }: PageProps) {
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main content - Edit form + Event Manager */}
+          {/* Main content - Edit form + Event Manager + Danger Zone */}
           <div className="lg:col-span-2 space-y-8">
             <SuperadminSeriesEditForm series={series} />
             <SeriesEventManager seriesId={series.id} />
+            <SeriesDangerZone
+              seriesId={series.id}
+              seriesTitle={series.title}
+              seriesStatus={series.status}
+              totalEventsCount={totalEventsCount}
+              activeEventsCount={activeEventsCount}
+            />
           </div>
 
           {/* Sidebar */}
@@ -118,6 +140,15 @@ export default async function SuperadminSeriesEditPage({ params }: PageProps) {
                     <dd className="text-ink">{series.total_sessions}</dd>
                   </div>
                 )}
+                <div className="flex justify-between">
+                  <dt className="text-zinc">Attached events</dt>
+                  <dd className="text-ink">
+                    {activeEventsCount} active
+                    {totalEventsCount > activeEventsCount && (
+                      <span className="text-zinc"> · {totalEventsCount - activeEventsCount} cancelled</span>
+                    )}
+                  </dd>
+                </div>
               </dl>
             </Card>
 

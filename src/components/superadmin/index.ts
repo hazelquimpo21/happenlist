@@ -11,6 +11,7 @@ export { EventImageEditor } from './event-image-editor';
 export { SuperadminOrganizerEditForm } from './organizer-edit-form';
 export { SuperadminVenueEditForm } from './venue-edit-form';
 export { SuperadminSeriesEditForm } from './series-edit-form';
+export { SeriesDangerZone } from './series-danger-zone';
 export { RecurrenceBuilder } from './recurrence-builder';
 export { SeriesSearch } from './series-search';
 export { SeriesEventManager } from './series-event-manager';
